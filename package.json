@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "biome check .",
     "format": "biome format . --write",
-    "ci": "biome ci ."
+    "ci": "biome ci .",
+    "lint:biome": "biome ci .",
+    "lint:typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "next": "15.3.2",
