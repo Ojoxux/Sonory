@@ -1,0 +1,45 @@
+name: Lint
+
+# トリガー条件: pushされたとき
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    # 複数の Node.js バージョンで並走実行
+    strategy:
+      matrix:
+        node-version: [22.x]
+
+    steps:
+      # 1. リポジトリをチェックアウト
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # 2. Node.js をセットアップ
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      # 3. npm キャッシュの復元 (ビルド高速化)
+      - name: Restore npm cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      # 4. 依存パッケージのインストール
+      - name: Install dependencies
+        run: npm ci
+
+      # 5. Biome (Lint + import 整理 + フォーマット検出)を実行
+      - name: Run Biome
+        run: npm run lint:biome
+
+      # 6. TS の型チェックを実行
+      - name: Run tsc
+        run: npm run lint:typecheck
