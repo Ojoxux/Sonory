@@ -1,9 +1,10 @@
 ---
-name: ♻️ リファクタリング
+name: "♻️ リファクタリング"
 about: 機能変更を伴わないコード改善の提案
 title: "[refactor] "
-labels: refactor
+labels: ''
 assignees: ''
+
 ---
 
 ## 概要
@@ -22,4 +23,4 @@ assignees: ''
 <!-- 参考資料など -->
 
 ## 関連 Issue / PR
-<!-- Closes #123 のように番号を記載 --> 
+<!-- Closes #123 のように番号を記載 -->

@@ -1,9 +1,10 @@
 ---
-name: ✅ テスト追加・修正
+name: "✅ テスト追加・修正"
 about: テストコードの追加や修正の提案
 title: "[test] "
-labels: test
+labels: ''
 assignees: ''
+
 ---
 
 ## 概要
@@ -22,4 +23,4 @@ assignees: ''
 <!-- 参考資料など -->
 
 ## 関連 Issue / PR
-<!-- Closes #123 のように番号を記載 --> 
+<!-- Closes #123 のように番号を記載 -->

@@ -1,9 +1,10 @@
 ---
-name: ✨ 機能追加
+name: "✨ 機能追加"
 about: 新機能要望のためのテンプレート
 title: "[feature] "
-labels: feature
+labels: ''
 assignees: ''
+
 ---
 
 ## 概要
@@ -19,4 +20,4 @@ assignees: ''
 <!-- スクリーンショット、参考資料など -->
 
 ## 関連 Issue / PR
-<!-- Closes #123 のように番号を記載 --> 
+<!-- Closes #123 のように番号を記載 -->

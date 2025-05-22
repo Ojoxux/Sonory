@@ -1,9 +1,10 @@
 ---
-name: 🔧 補助ツール／ビルド変更
+name: "\U0001F527 補助ツール／ビルド変更"
 about: ビルドプロセスや補助ツールの変更提案
 title: "[chore] "
-labels: chore
+labels: ''
 assignees: ''
+
 ---
 
 ## 概要
@@ -22,4 +23,4 @@ assignees: ''
 <!-- 参考資料など -->
 
 ## 関連 Issue / PR
-<!-- Closes #123 のように番号を記載 --> 
+<!-- Closes #123 のように番号を記載 -->
