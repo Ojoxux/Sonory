@@ -1,0 +1,47 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: Sonory アプリ全体の要件ガイドライン
+globs:
+   - "**/*"
+alwaysApply: true
+---
+
+# SoundStamp アプリ要件
+
+1. **フレームワーク: Next.js**  
+   - App Router + `src/` ディレクトリ構成  
+   - SSG／SSR を活用可能
+
+2. **UI: Chakra UI**  
+   - WCAG 2.1 AA 相当のアクセシビリティを満たす  
+   - カスタムテーマでブランディング対応
+
+3. **PWA 対応**  
+   - `next-pwa` でサービスワーカー登録  
+   - オフラインキャッシュ & ホーム画面追加
+
+4. **音声録音・再生**  
+   1. MediaRecorder API で 10秒録音  
+   2. wavesurfer.js で波形表示・再生 UI
+
+5. **AI 推論**  
+   - TensorFlow.js + 量子化 YAMNet でオンデバイス分類
+
+6. **データ保存・同期**  
+   - Supabase（PostgreSQL + Storage）  
+   - IndexedDB（`idb`）＋ Background Sync API
+
+7. **タグ付与**  
+   - 時間: JS Date API  
+   - 天気: Open-Meteo API
+
+8. **デプロイ**  
+   - Vercel で `npm run build` → `.next` 配備
+
+9. **コード品質**  
+   - Biome + Husky + lint-staged で pre-commit  
+   - GitHub Actions で CI（`biome ci .`, `tsc --noEmit`）
