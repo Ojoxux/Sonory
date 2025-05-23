@@ -1,3 +1,5 @@
+<!-- I want to review in Japanese. -->
+
 ## Pull Request 概要
 
 <!-- PR の目的・背景を簡潔に記載 -->
@@ -24,33 +26,14 @@
 <!-- 特に見てほしい箇所や注意点 -->
 - 
 
----
+<!-- for GitHub Copilot review rule -->
+<!--
+[must]       → must fix (修正必須)
+[suggestion]→ suggestion (提案)
+[nit]        → nit (軽微な指摘)
+[question]   → question (確認したい点)
+[info]       → info (参考情報)
+-->
+<!-- for GitHub Copilot review rule -->
 
-<!-- for GitHub Copilot review rule-->
-<!-- I want to review in Japanese. -->
-
-## GitHub Copilot レビュー指示
-
-<details>
-<summary>for GitHub Copilot review rule</summary>
-
-### Rules for AI
-
-- プルリクエストの概要、レビュー内容、コメントはすべて日本語で記述してください
-- フィードバックには以下の優先度を明記し、改善コード例と理由を添えてください
- - [重要]：修正必須の項目
- - [提案]：検討すべき提案
- - [軽微]：小さな改善点
- - [質問]：確認したい点
- - [情報]：参考情報
-
-### 1. 基本方針
-- 次の項目はレビュー対象外とします
-  - `db/**`, `**/*.lock`, `package-lock.json`
-  - 各種ドキュメント (`.md`, `.mdc`)
-- AIによるコードレビューを希望する場合は、必要に応じて追加情報を記載可能
-
-</details>
-
-<!-- for GitHub Copilot review rule-->
 <!-- I want to review in Japanese. -->
