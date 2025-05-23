@@ -1,0 +1,130 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: Sonory 用のアプリケーション構築厳格ルール
+alwaysApply: true
+---
+
+# Cursor Rules（2025 厳格版・日本語）
+
+---
+
+## TypeScript / 関数型コア
+- **コンパイラ設定**: `strict`, `noImplicitAny`, `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`, `noPropertyAccessFromIndexSignature` は常に有効。
+- **`any` 禁止**: 型が不明な場合は `unknown` → ナローイングで解決。
+- **戻り値を明示**: すべての公開関数・メソッドは戻り型を宣言。
+- **TSDoc 必須**: エクスポートする型・関数・コンポーネントには機能・前提・使用例を記載。
+- **型アサーション最小化**: `as` は最後の手段。根本的に正しい型設計を優先。
+- **`type` と `interface`**: 既存型の拡張・宣言マージ → `interface`／その他は `type`。
+- **ジェネリックを活用**: オーバーロードより型パラメータを選択。
+- **イミュータブル & 純粋関数**: `const`, `readonly`, `as const`／副作用は専用モジュールに隔離。
+- **関数は 20 行以下**: 単一責務に絞る。
+- **状態表現**: `Option`, `Either`, `TaskEither`（fp-ts）。全パターンを網羅的に処理。
+
+---
+
+## コンポーネント & ファイル構成
+- 各コンポーネントは `PascalCase/` ディレクトリ。
+  - UI: `index.tsx`　•　型: `type.ts`
+- ローカルフックは `index.tsx` の末尾に配置。
+- ルート階層のバレルファイルは作成しない。
+
+---
+
+## 命名規則
+- **コンポーネント**: PascalCase 例 `UserProfile`
+- **関数・変数**: camelCase 例 `getUserData`
+- **定数**: UPPER_SNAKE_CASE 例 `MAX_RETRY_COUNT`
+
+---
+
+## Atomic Design（App Router 版）
+- ディレクトリ階層: `atoms → molecules → organisms → templates`。
+- 下位レイヤは上位レイヤを参照しない。
+
+---
+
+## Next.js（App Router）
+- デフォルトは **Server Components**。インタラクション必須時のみ `"use client"`。
+- 各ページは `metadata` をエクスポート（`title`, `description`, `openGraph.images` 以上）。
+- 動的 SSG には `generateStaticParams()`、ISR は `revalidate` を設定。
+  - マーケ: 3600 秒
+  - ブログ: 86400 秒
+  - 価格: 300 秒
+- データ取得は Server Component 内 `fetch()` でキャッシュ利用。
+- フォーム: `react-hook-form` + `zod`、結果は `useActionState` で返却。
+
+---
+
+## パフォーマンス最適化
+- 画像は必ず `<Image>`（next/image）を使用し、レスポンシブと最適化を自動化。
+- 高再レンダーが懸念される箇所は `memo`／`useMemo`／`useCallback` を検討。
+- リスト描画時はユニークで安定した `key` を付与。
+- 不要な再描画を抑えるためのメモ化は必要最小限に留める。
+
+---
+
+## エラー処理とユーザー体験
+- **エラーバウンダリ**: 重大な UI 崩壊を防止。
+- **ローディング状態**: `Suspense` とスケルトン UI で視覚的フィードバック。
+- **NotFound**: `notFound()` API で明示的に 404 ハンドリング。
+- **非同期処理**: すべて `try / catch` または `TaskEither` で失敗を捕捉。
+- **ユーザーフィードバック**: 成功・失敗をトーストやアラートで即時通知。
+
+---
+
+## セキュリティ
+- API キーなどの機密情報は環境変数で管理し、クライアントに露出しない。
+- ユーザー入力は必ずスキーマバリデーション（`zod`）＋エスケープでサニタイズ。
+- XSS 対策: `dangerouslySetInnerHTML` を避け、必要な場合は sanitize ライブラリ利用。
+- `.env.*` は Git 管理外に置き、サンプル用に `.env.example` を用意。
+
+---
+
+## ドキュメンテーション
+- コンポーネントの意図・使い方を README か TSDoc に記述。
+- TSDoc には以下を含める:
+  - **概要**: 何をするコンポーネントか
+  - **制約**: 想定外の使い方・注意点
+  - **使用例**: 最小限のコードスニペット
+- 重要なビジネスロジックには補足コメントを残す。
+
+---
+
+## アクセシビリティ
+- セマンティック HTML を優先し、必要に応じて ARIA 属性を追加。
+- すべてのインタラクティブ要素はキーボード操作を保証。
+- カラーパレットは WCAG 準拠のコントラスト比を守る。
+- 画像には意味のある `alt` テキストを必ず設定。
+
+---
+
+## スタイリング & UI
+- Tailwind CSS のユーティリティを使用し、任意値（`[w-100px]` 等）は禁止。
+- トークンは `tailwind.config.ts` が単一の情報源。
+- アニメーションは Magic UI / shadcn/ui を利用し、`prefers-reduced-motion` を尊重。
+- モバイルファースト設計。カスタム CSS はトークンで表現できない場合のみ。
+
+---
+
+## Lint・フォーマット・テスト・Git
+- **Lint＆Format**: Biome を全面採用  
+  - ローカルチェック: `npm run lint` (`biome check .`)  
+  - 自動整形: `npm run format` (`biome format . --write`)  
+  - CI用: `npm run ci` (`biome ci .`)  
+- **型チェック**: `npm run lint:typecheck` (`tsc --noEmit`)  
+- **Git フック**  
+  - Husky を `prepare` スクリプトで初期化  
+  - lint-staged で以下をコミット前に実行  
+    - `biome check --apply`  
+    - `biome format --write`  
+    - `tsc --noEmit`  
+- **CI（GitHub Actions）**  
+  1. `npm ci`  
+  2. `npm run lint` (`biome ci .`)  
+  3. `npm run lint:typecheck` (`tsc --noEmit`)  
+  4. `npm run build` (`next build`)  
+  - いずれかで警告・エラーが残っていればワークフローを失敗させる  
