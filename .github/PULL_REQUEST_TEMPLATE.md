@@ -1,6 +1,3 @@
-<!-- I want to review in Japanese. -->
-<!-- for GitHub Copilot review rule-->
-
 ## Pull Request 概要
 
 <!-- PR の目的・背景を簡潔に記載 -->
@@ -28,6 +25,9 @@
 - 
 
 ---
+
+<!-- for GitHub Copilot review rule-->
+<!-- I want to review in Japanese. -->
 
 ## GitHub Copilot レビュー指示
 
