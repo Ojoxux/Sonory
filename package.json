@@ -33,12 +33,7 @@
     "typescript": "^5"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
-      "biome check --apply",
-      "biome format --write"
-    ],
-    "**/*.ts?(x)": [
-      "bash -c 'tsc --noEmit'"
-    ]
+    "*.{js,jsx,ts,tsx}": ["biome check --apply", "biome format --write"],
+    "**/*.ts?(x)": ["bash -c 'tsc --noEmit'"]
   }
 }
