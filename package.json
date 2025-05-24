@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
+    "@chakra-ui/icons": "^2.2.4",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
