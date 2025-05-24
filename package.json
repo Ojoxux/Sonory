@@ -29,7 +29,8 @@
     "uuid": "^11.1.0",
     "zustand": "^5.0.5",
     "recordrtc": "^5.6.2",
-    "wavesurfer.js": "^7.9.5"
+    "wavesurfer.js": "^7.9.5",
+    "zod": "^3.25.28"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
