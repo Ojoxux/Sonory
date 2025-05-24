@@ -13,7 +13,12 @@ export const useInferenceStore = create<InferenceState>((set) => ({
   isInferring: false,
   error: null,
 
-  // 推論開始
+  /**
+   * 音声データからAI推論を開始します
+   *
+   * @param _audioData - 推論対象の音声データ
+   * @throws 推論処理中にエラーが発生した場合
+   */
   startInference: async (_audioData: AudioData) => {
     try {
       set({ isInferring: true, error: null })
@@ -41,17 +46,33 @@ export const useInferenceStore = create<InferenceState>((set) => ({
     }
   },
 
-  // 推論結果のクリア
+  /**
+   * 推論結果をクリアし、初期状態に戻します
+   *
+   * 新しい推論を開始する前や、ユーザーが明示的に結果をリセットしたい場合に使用します
+   */
   clearResults: () => {
     set({ results: [], error: null })
   },
 
-  // 推論結果の設定
+  /**
+   * 推論結果を直接設定します
+   *
+   * 主にテストや外部からの結果インポート時に使用します
+   *
+   * @param results - 設定する推論結果の配列
+   */
   setResults: (results: InferenceResult[]) => {
     set({ results })
   },
 
-  // 推論エラーの設定
+  /**
+   * 推論エラー状態を設定します
+   *
+   * エラーのクリアや外部エラー処理からのエラー状態設定に使用します
+   *
+   * @param error - 設定するエラーオブジェクト、またはnull（エラークリア時）
+   */
   setError: (error: Error | null) => {
     set({ error })
   },
