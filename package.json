@@ -20,6 +20,7 @@
     "@emotion/styled": "^11.14.0",
     "@mapbox/mapbox-gl-geocoder": "^5.0.3",
     "@supabase/supabase-js": "^2.49.8",
+    "@tensorflow/tfjs": "^4.22.0",
     "framer-motion": "^12.12.2",
     "idb": "^8.0.3",
     "mapbox-gl": "^3.12.0",
