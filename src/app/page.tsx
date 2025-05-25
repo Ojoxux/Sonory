@@ -1,7 +1,7 @@
 'use client'
+import { MoonIcon, SearchIcon, SunIcon } from '@chakra-ui/icons' // chakra-ui/icons テスト
+import { Box, Button, Heading, Stack } from '@chakra-ui/react' // chakra-ui テスト
 import Image from 'next/image'
-import { Box, Button, Heading, Stack, IconButton } from '@chakra-ui/react' // chakra-ui テスト
-import { MoonIcon, SunIcon, SearchIcon } from '@chakra-ui/icons' // chakra-ui/icons テスト
 
 export default function Home() {
   return (
@@ -54,7 +54,7 @@ export default function Home() {
           </a>
         </div>
 
-      {/* 追加部分 chakra-UIテスト部分 */}
+        {/* 追加部分 chakra-UIテスト部分 */}
         <Box p={6} textAlign="center">
           <Heading mb={6}>Chakra-UI と Icons テスト</Heading>
           <Button colorScheme="teal">クリック！</Button>
@@ -64,9 +64,8 @@ export default function Home() {
             <SunIcon boxSize={8} color="orange.400" />
             <MoonIcon boxSize={8} color="blue.500" />
             <SearchIcon boxSize={8} color="gray.600" />
-          </Stack>            
+          </Stack>
         </Box>
-
       </main>
       <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
         <a
