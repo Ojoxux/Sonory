@@ -1,11 +1,15 @@
-# 𝑺𝒐𝒏𝒐𝒓𝒚
+<div align="center">
+  <img src="public/Sonory-App-Icon-v3.svg" width="280" alt="Sonory Logo">
+  <h1>Sonory</h1>
+  <p><strong>~ あなたの過ぎ去った10秒の軌跡を、地図に静かに印す ~</strong></p>
+  
+  <p>
+    Sonoryは、あなたの周りの環境音を10秒間録音し、AIが自動分類してスタンプ化、地図上に記録するPWA対応のウェブアプリケーションです。<br>
+    日常の一瞬を音で残します。
+  </p>
+</div>
 
-Sonoryは、あなたの周りの環境音を10秒間録音し、AIが自動分類してスタンプ化、地図上に記録するPWA対応のウェブアプリケーションです。「10秒の軌跡印」をコンセプトに、日常の一瞬を音で残します。
-
-## 𝑃𝑟𝑜𝑗𝑒𝑐𝑡 𝑂𝑣𝑒𝑟𝑣𝑖𝑒𝑤
-
-### コンセプト
-- **10秒の軌跡印** - あなたの過ぎ去った10秒の軌跡を、地図に静かに印す
+## 🎵 Project Overview
 
 ### 主要機能
 1. **環境音録音機能**
@@ -34,7 +38,9 @@ Sonoryは、あなたの周りの環境音を10秒間録音し、AIが自動分�
    - 時間帯（6時間区切り）の自動タグ付け
    - 天気情報の自動タグ付け（Open-Meteo API使用）
 
-## 𝐺𝑒𝑡𝑡𝑖𝑛𝑔 𝑆𝑡𝑎𝑟𝑡𝑒𝑑
+![Sonory App Screenshot](public/screenshot.png)
+
+## 🚀 Getting Started
 
 ### 必要条件
 
@@ -85,7 +91,7 @@ bun dev
 
 [http://localhost:3000](http://localhost:3000)をブラウザで開いて結果を確認できます。
 
-### 𝑃𝑟𝑜𝑗𝑒𝑐𝑡 𝑆𝑡𝑟𝑢𝑐𝑡𝑢𝑟𝑒
+## 🗂 Project Structure
 
 ```
 sonory/
@@ -106,7 +112,7 @@ sonory/
 └── styles/         # グローバルスタイル
 ```
 
-### 𝑇𝑒𝑐𝑛𝑖𝑐𝑎𝑙 𝑆𝑡𝑎𝑐𝑘
+## 💻 Technical Stack
 
 - **フレームワーク**: Next.js 15.3.2 (Turbopack使用)
 - **UI**: React 19 + Chakra UI + Tailwind CSS v4
@@ -119,7 +125,7 @@ sonory/
 - **リンター/フォーマッター**: Biome 1.9.4
 - **型システム**: TypeScript 5
 
-### 𝐷𝑒𝑣𝑒𝑙𝑜𝑝𝑚𝑒𝑛𝑡 𝑇𝑜𝑜𝑙𝑠
+## 🛠 Development Tools
 
 ```bash
 # リント実行
@@ -137,7 +143,7 @@ npm run lint:typecheck
 
 Huskyとlint-stagedを使用して、コミット前に自動的にリントとフォーマットが実行されます。
 
-### 𝐵𝑢𝑖𝑙𝑑 𝑎𝑛𝑑 𝐷𝑒𝑝𝑙𝑜𝑦
+## 🏗 Build and Deploy
 
 本番用ビルドの作成:
 
@@ -163,7 +169,7 @@ pnpm start
 bun start
 ```
 
-## 𝐷𝑒𝑣𝑒𝑙𝑜𝑝𝑚𝑒𝑛𝑡 𝐺𝑢𝑖𝑑𝑒𝑙𝑖𝑛𝑒
+## 📝 Development Guidelines
 
 ### ブランチ命名規則
 
@@ -207,7 +213,7 @@ fix/#[issues番号]: ほげほげ
 
 注意: `chore` の場合、スコープが大きくなりすぎる傾向があるため、パッケージインストールなどの依存関係変更の場合は `chore(deps): React v18.2.0へのアップデート` のように括弧内に固有名詞を記載してください。
 
-## 𝐶𝑜𝑛𝑡𝑟𝑖𝑏𝑢𝑡𝑖𝑜𝑛 𝐹𝑙𝑜𝑤
+## 🤝 Contribution Flow
 
 1. Issueの確認・作成
    - 作業前に対応するIssueが存在することを確認
@@ -234,7 +240,7 @@ fix/#[issues番号]: ほげほげ
    - 承認後、マージを実行
    - Issueをクローズ
 
-## 𝑇𝑟𝑎𝑏𝑙𝑒𝑠ℎ𝑢𝑡𝑖𝑛𝑔
+## 🔧 Troubleshooting
 
 ### よくある問題
 
