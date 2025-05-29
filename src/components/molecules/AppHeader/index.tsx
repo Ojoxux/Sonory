@@ -30,6 +30,7 @@ export function AppHeader({
   onSettingsClick,
   latitude,
   longitude,
+  debugTimeOverride,
 }: AppHeaderProps) {
   const [isDarkTime, setIsDarkTime] = useState(false)
 
@@ -57,7 +58,11 @@ export function AppHeader({
       <div className="flex items-start justify-between p-6">
         {/* 地域名表示 */}
         <div className="pointer-events-auto animate-fade-in-down">
-          <LocationDisplay latitude={latitude} longitude={longitude} />
+          <LocationDisplay
+            latitude={latitude}
+            longitude={longitude}
+            debugTimeOverride={debugTimeOverride}
+          />
         </div>
 
         {/* アクションボタン群 */}
