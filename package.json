@@ -14,15 +14,11 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@chakra-ui/next-js": "^2.4.2",
-    "@chakra-ui/react": "^3.19.1",
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.0",
     "@mapbox/mapbox-gl-geocoder": "^5.0.3",
     "@supabase/supabase-js": "^2.49.8",
     "@tensorflow-models/speech-commands": "^0.5.4",
     "@tensorflow/tfjs": "^3.21.0",
-    "framer-motion": "^12.12.2",
+    "framer-motion": "^12.15.0",
     "idb": "^8.0.3",
     "mapbox-gl": "^3.12.0",
     "next": "15.3.2",
@@ -38,7 +34,6 @@
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
-    "@chakra-ui/icons": "^2.2.4",
     "@tailwindcss/postcss": "^4",
     "@types/mapbox__mapbox-gl-geocoder": "^5.0.0",
     "@types/mapbox-gl": "^3.4.1",
