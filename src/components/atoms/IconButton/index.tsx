@@ -9,6 +9,11 @@ import type { IconButtonProps } from './type'
  * アイコンを表示するボタンのAtomコンポーネント
  * アクセシビリティとインタラクションを考慮した実装
  *
+ * @param icon アイコン
+ * @param ariaLabel アクセシビリティラベル
+ * @param onClick クリックハンドラー
+ * @param className クラス名
+ *
  * @example
  * ```tsx
  * import { MdSettings } from 'react-icons/md'

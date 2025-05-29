@@ -9,6 +9,8 @@ import type { AppTitleProps } from './type'
  * Sonoryアプリケーションのタイトルを表示するAtomコンポーネント
  * 音の波形をイメージしたグラデーションとアニメーションを含む
  *
+ * @param className クラス名
+ *
  * @example
  * ```tsx
  * <AppTitle />

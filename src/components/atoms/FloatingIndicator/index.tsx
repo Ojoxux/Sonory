@@ -9,6 +9,8 @@ import type { FloatingIndicatorProps } from './type'
  * 音の波形をイメージした浮遊するアニメーション効果を持つインジケーター
  * 録音ボタンの下に配置され、UIに動きと深みを与える
  *
+ * @param className クラス名
+ *
  * @example
  * ```tsx
  * <FloatingIndicator />

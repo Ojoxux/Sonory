@@ -12,6 +12,8 @@ import type { RecordButtonContentProps } from './type'
  * 録音ボタンの内部コンテンツを管理するMoleculeコンポーネント
  * 状態に応じてアイコン、テキスト、ローディングスピナーを表示
  *
+ * @param status 録音の状態
+ *
  * @example
  * ```tsx
  * <RecordButtonContent status="recording" />

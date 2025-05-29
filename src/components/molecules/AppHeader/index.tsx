@@ -13,6 +13,10 @@ import type { AppHeaderProps } from './type'
  * 現在地の地域名と設定ボタンを含むヘッダーMoleculeコンポーネント
  * 時間帯に応じてアイコンの色も変更
  *
+ * @param onSettingsClick 設定ボタンがクリックされた時のコールバック
+ * @param latitude 緯度
+ * @param longitude 経度
+ *
  * @example
  * ```tsx
  * <AppHeader

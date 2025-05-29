@@ -14,6 +14,10 @@ const locationCache = new Map<string, string>()
  * タイポグラフィを重視したデザイン
  * メモ化とキャッシュにより不要な再レンダリングとAPIコールを防止
  *
+ * @param latitude 緯度
+ * @param longitude 経度
+ * @param className クラス名
+ *
  * @example
  * ```tsx
  * <LocationDisplay latitude={37.1234} longitude={139.1234} />

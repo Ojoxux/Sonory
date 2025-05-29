@@ -11,6 +11,10 @@ import type { RecordButtonProps } from './type'
  * 状態に応じてスタイルとコンテンツが変化
  * ニューモーフィズムとグラスモーフィズムを組み合わせたデザイン
  *
+ * @param status 録音の状態
+ * @param onClick 録音ボタンがクリックされた時のコールバック
+ * @param disabled 録音ボタンが無効化されているかどうか
+ *
  * @example
  * ```tsx
  * <RecordButton

@@ -10,6 +10,8 @@ import type { RecordButtonIconProps } from './type'
  * 録音ボタンの状態に応じたアイコンを表示するAtomコンポーネント
  * モダンなアイコンとアニメーションを含む
  *
+ * @param status 録音の状態
+ *
  * @example
  * ```tsx
  * <RecordButtonIcon status="recording" />
