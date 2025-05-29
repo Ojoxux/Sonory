@@ -2,6 +2,7 @@
 
 import { useGeolocation } from '@/components/organisms/MapComponent/hooks/useGeolocation'
 import { UIOverlay } from '@/components/organisms/UIOverlay'
+import { useDebugStore } from '@/store'
 import dynamic from 'next/dynamic'
 import type { ReactElement } from 'react'
 
@@ -23,6 +24,7 @@ const MapComponent = dynamic(
  */
 export default function Home(): ReactElement {
   const { position } = useGeolocation()
+  const { debugTimeOverride } = useDebugStore()
 
   const handleSettingsClick = (): void => {
     console.log('設定ボタンがクリックされました')
@@ -39,6 +41,7 @@ export default function Home(): ReactElement {
           onSettingsClick={handleSettingsClick}
           latitude={position?.latitude}
           longitude={position?.longitude}
+          debugTimeOverride={debugTimeOverride}
         />
       </div>
     </div>
