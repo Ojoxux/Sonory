@@ -24,6 +24,7 @@ export function UIOverlay({
   onSettingsClick,
   latitude,
   longitude,
+  debugTimeOverride,
 }: UIOverlayProps) {
   return (
     <>
@@ -32,6 +33,7 @@ export function UIOverlay({
         onSettingsClick={onSettingsClick}
         latitude={latitude}
         longitude={longitude}
+        debugTimeOverride={debugTimeOverride}
       />
 
       {/* 録音インターフェース */}
