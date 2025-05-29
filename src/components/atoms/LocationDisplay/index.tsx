@@ -27,6 +27,7 @@ export const LocationDisplay = memo(function LocationDisplay({
   latitude,
   longitude,
   className = '',
+  debugTimeOverride = null,
 }: LocationDisplayProps) {
   // 前回の位置情報を保持
   const prevLocationRef = useRef<{
@@ -58,18 +59,20 @@ export const LocationDisplay = memo(function LocationDisplay({
   const [isDarkTime, setIsDarkTime] = useState(false)
   const fetchedRef = useRef(false)
 
-  // 時間帯をチェック（6時〜18時を明るい時間帯とする）
+  // 時間帯をチェック（18時以降を夜の時間帯とする）
   useEffect(() => {
     const checkTimeOfDay = () => {
-      const hour = new Date().getHours()
-      setIsDarkTime(hour < 6 || hour >= 18)
+      // デバッグ時間オーバーライドがある場合はそれを使用、なければ現在時刻
+      const hour =
+        debugTimeOverride !== null ? debugTimeOverride : new Date().getHours()
+      setIsDarkTime(hour >= 18 || hour < 6)
     }
 
     checkTimeOfDay()
     const interval = setInterval(checkTimeOfDay, 60000) // 1分ごとに更新
 
     return () => clearInterval(interval)
-  }, [])
+  }, [debugTimeOverride])
 
   useEffect(() => {
     const fetchLocationName = async () => {
