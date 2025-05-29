@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="public/Sonory-App-Icon-v3.svg" width="280" alt="Sonory Logo">
+  <img src="public/Sonory-App-Icon-PNG.png" width="280" alt="Sonory Logo">
   <h1>Sonory</h1>
   <p><strong>~ あなたの過ぎ去った10秒の軌跡を、地図に静かに印す ~</strong></p>
   
