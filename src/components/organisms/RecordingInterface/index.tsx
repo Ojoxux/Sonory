@@ -154,7 +154,7 @@ export function RecordingInterface({
           >
             <motion.button
               onClick={handleRecord}
-              className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-black hover:bg-gray-800 flex items-center justify-center shadow-2xl transition-all duration-300 touch-manipulation"
+              className="w-48 h-16 sm:w-20 sm:h-20 mb-5 rounded-full bg-black hover:bg-gray-800 flex items-center justify-center shadow-2xl transition-all duration-300 touch-manipulation"
               whileTap={{ scale: 0.95 }}
               whileHover={{ scale: 1.05 }}
             >
