@@ -19,7 +19,7 @@
 ## 関連Issue
 
 <!-- 関連する Issue 番号やリンクを記載 -->
-- Closes #
+- Closes #<issue_number> 
 
 ## レビューポイント
 
