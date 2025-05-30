@@ -3,9 +3,13 @@
 import { AnimatePresence, PanInfo, motion } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
 import { MdMic, MdStop } from 'react-icons/md'
+import { BlinkingIndicator } from '../../atoms/BlinkingIndicator'
+import { PulseEffect } from '../../atoms/PulseEffect'
+import { RippleEffect } from '../../atoms/RippleEffect'
 import { WaveformDisplay } from '../../molecules/WaveformDisplay'
 // 仮実装のモックを使用
 import { useMediaRecorderMock } from '../RecordSection/hooks/useMediaRecorderMock'
+import { useAsyncWaveform } from './hooks/useAsyncWaveform'
 import type { RecordingInterfaceProps } from './type'
 
 /**
@@ -27,10 +31,12 @@ export function RecordingInterface({
     'idle',
   )
   const [recordingTime, setRecordingTime] = useState(0)
-  const [waveformData, setWaveformData] = useState<number[]>([])
   // モック実装を使用
   const { startRecording, stopRecording } = useMediaRecorderMock()
   const constraintsRef = useRef(null)
+
+  // 非同期波形データフック
+  const waveformData = useAsyncWaveform(status === 'recording')
 
   // 録音時間のカウント（requestAnimationFrameを使用）
   useEffect(() => {
@@ -65,17 +71,6 @@ export function RecordingInterface({
     }
   }, [recordingTime, status])
 
-  // 波形データのシミュレーション（更新頻度を下げる）
-  useEffect(() => {
-    if (status === 'recording') {
-      const interval = setInterval(() => {
-        const newData = Array.from({ length: 3 }, () => Math.random() * 40 + 30)
-        setWaveformData((prev) => [...prev.slice(-27), ...newData])
-      }, 200) // 200msごとに更新
-      return () => clearInterval(interval)
-    }
-  }, [status])
-
   // 展開状態が変更されたときに親コンポーネントに通知
   useEffect(() => {
     onExpandedChange?.(isExpanded && status !== 'idle')
@@ -86,7 +81,6 @@ export function RecordingInterface({
       console.log('録音を開始します...')
       setStatus('recording')
       setRecordingTime(0)
-      setWaveformData([])
       await startRecording()
       console.log('録音が開始されました')
     } catch (error) {
@@ -111,7 +105,6 @@ export function RecordingInterface({
       setTimeout(() => {
         setStatus('idle')
         setRecordingTime(0)
-        setWaveformData([])
         setIsExpanded(false)
       }, 2000)
     } catch (error) {
@@ -252,14 +245,11 @@ export function RecordingInterface({
                         />
                       )}
 
-                      {/* 録音中のパルスエフェクト（will-changeで最適化） */}
-                      {status === 'recording' && (
-                        <motion.div
-                          className="absolute inset-0 rounded-full border-2 border-red-500 will-change-transform"
-                          animate={{ scale: [1, 1.3], opacity: [0.5, 0] }}
-                          transition={{ duration: 1.5, repeat: Infinity }}
-                        />
-                      )}
+                      {/* 録音中のパルスエフェクト */}
+                      <PulseEffect
+                        isActive={status === 'recording'}
+                        borderColor="border-red-500"
+                      />
                     </motion.button>
 
                     {/* 波形表示 */}
@@ -303,8 +293,8 @@ export function RecordingInterface({
                       transition={{ duration: 0.3 }}
                       className="flex-1 flex flex-col"
                     >
-                      {/* ヘッダー部分 */}
-                      <div className="flex justify-between items-center px-6 sm:px-8 py-4 sm:py-6 relative">
+                      {/* ヘッダー部分 - 下部のpadding調整 */}
+                      <div className="flex justify-between items-center px-6 sm:px-8 py-4 pb-2 sm:pb-3 relative">
                         <button
                           onClick={() => {
                             handleStop()
@@ -316,7 +306,11 @@ export function RecordingInterface({
                         </button>
 
                         <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-2">
-                          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                          <BlinkingIndicator
+                            isActive={status === 'recording'}
+                            size="w-2 h-2"
+                            color="bg-red-500"
+                          />
                           <span className="text-gray-900 font-medium text-base sm:text-lg">
                             録音中
                           </span>
@@ -332,26 +326,26 @@ export function RecordingInterface({
                         </button>
                       </div>
 
-                      {/* メインコンテンツエリア */}
-                      <div className="flex-1 flex flex-col items-center justify-center px-6 sm:px-8 py-8">
-                        {/* タイマー表示 */}
+                      {/* メインコンテンツエリア - コンテンツを上部寄りに配置 */}
+                      <div className="flex-1 flex flex-col items-center justify-start pt-4 px-6 sm:px-8">
+                        {/* タイマー表示 - 上部マージンを削除 */}
                         <motion.div
                           initial={{ scale: 0.8, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
                           transition={{ delay: 0.1 }}
-                          className="mb-12 sm:mb-16"
+                          className="mt-8 sm:mt-10 mb-8 sm:mb-10"
                         >
                           <div className="font-mono text-6xl sm:text-7xl lg:text-8xl font-light text-gray-900 tracking-wider">
                             {formatTime(recordingTime)}
                           </div>
                         </motion.div>
 
-                        {/* 波形表示 */}
+                        {/* 波形表示 - 余白を調整 */}
                         <motion.div
                           initial={{ scale: 0.9, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
                           transition={{ delay: 0.2 }}
-                          className="w-full max-w-2xl px-4"
+                          className="w-full max-w-2xl px-4 mb-4"
                         >
                           <WaveformDisplay
                             isRecording={status === 'recording'}
@@ -367,22 +361,24 @@ export function RecordingInterface({
                         </motion.div>
                       </div>
 
-                      {/* 下部のコントロール */}
-                      <div className="pb-6 sm:pb-8 flex justify-center">
+                      {/* 一時停止ボタン - 画面下部に固定配置 */}
+                      <motion.div
+                        className="fixed left-0 right-0 bottom-20 sm:bottom-10 md:bottom-12 flex justify-center"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{
+                          delay: 0.3,
+                          type: 'spring',
+                          stiffness: 200,
+                        }}
+                      >
                         <motion.button
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{
-                            delay: 0.3,
-                            type: 'spring',
-                            stiffness: 200,
-                          }}
                           onClick={() => {
                             if (status === 'recording') {
                               handleStop()
                             }
                           }}
-                          className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all duration-300 shadow-lg touch-manipulation"
+                          className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all duration-300 shadow-lg touch-manipulation z-50"
                           whileTap={{ scale: 0.95 }}
                         >
                           {/* 一時停止アイコン */}
@@ -391,16 +387,13 @@ export function RecordingInterface({
                             <div className="w-1 h-8 sm:h-10 bg-gray-900 rounded-full" />
                           </div>
 
-                          {/* リップルエフェクト（will-changeで最適化） */}
-                          {status === 'recording' && (
-                            <motion.div
-                              className="absolute inset-0 rounded-full border-2 border-gray-400 will-change-transform"
-                              animate={{ scale: [1, 1.2], opacity: [0.3, 0] }}
-                              transition={{ duration: 1.5, repeat: Infinity }}
-                            />
-                          )}
+                          {/* リップルエフェクト */}
+                          <RippleEffect
+                            isActive={status === 'recording'}
+                            borderColor="border-gray-400"
+                          />
                         </motion.button>
-                      </div>
+                      </motion.div>
                     </motion.div>
                   )}
                 </AnimatePresence>
