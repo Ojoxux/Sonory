@@ -28,7 +28,7 @@ alwaysApply: true
 
 ## コンポーネント & ファイル構成
 - 各コンポーネントは `PascalCase/` ディレクトリ。
-  - UI: `index.tsx`　•　型: `type.ts`
+  - UI: `index.tsx`　•　型: `types.ts`
 - ローカルフックは `index.tsx` の末尾に配置。
 - ルート階層のバレルファイルは作成しない。
 
