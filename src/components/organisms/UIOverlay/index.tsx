@@ -22,18 +22,22 @@ import type { UIOverlayProps } from './type'
  */
 export function UIOverlay({
   onSettingsClick,
+  onCompassClick,
   latitude,
   longitude,
   debugTimeOverride,
+  mapBearing,
 }: UIOverlayProps) {
   return (
     <>
       {/* ヘッダー（常に表示） */}
       <AppHeader
         onSettingsClick={onSettingsClick}
+        onCompassClick={onCompassClick}
         latitude={latitude}
         longitude={longitude}
         debugTimeOverride={debugTimeOverride}
+        mapBearing={mapBearing}
       />
 
       {/* 録音インターフェース */}
