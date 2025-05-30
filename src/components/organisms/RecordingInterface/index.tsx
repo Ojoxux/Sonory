@@ -1,15 +1,12 @@
 'use client'
 
-import { AnimatePresence, PanInfo, motion } from 'framer-motion'
-import { useEffect, useRef, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { MdMic, MdStop } from 'react-icons/md'
 import { BlinkingIndicator } from '../../atoms/BlinkingIndicator'
 import { PulseEffect } from '../../atoms/PulseEffect'
 import { RippleEffect } from '../../atoms/RippleEffect'
 import { WaveformDisplay } from '../../molecules/WaveformDisplay'
-// 仮実装のモックを使用
-import { useMediaRecorderMock } from '../RecordSection/hooks/useMediaRecorderMock'
-import { useAsyncWaveform } from './hooks/useAsyncWaveform'
+import { useRecordingInterface } from './hooks/useRecordingInterface'
 import type { RecordingInterfaceProps } from './type'
 
 /**
@@ -26,110 +23,27 @@ export function RecordingInterface({
   className = '',
   onExpandedChange,
 }: RecordingInterfaceProps) {
-  const [isExpanded, setIsExpanded] = useState(false)
-  const [status, setStatus] = useState<'idle' | 'recording' | 'completed'>(
-    'idle',
-  )
-  const [recordingTime, setRecordingTime] = useState(0)
-  // モック実装を使用
-  const { startRecording, stopRecording } = useMediaRecorderMock()
-  const constraintsRef = useRef(null)
-
-  // 非同期波形データフック
-  const waveformData = useAsyncWaveform(status === 'recording')
-
-  // 録音時間のカウント（requestAnimationFrameを使用）
-  useEffect(() => {
-    if (status !== 'recording') return
-
-    let animationId: number
-    let lastTime = performance.now()
-
-    const updateTime = (currentTime: number) => {
-      const deltaTime = (currentTime - lastTime) / 1000 // ミリ秒を秒に変換
-      lastTime = currentTime
-
-      setRecordingTime((prev) => {
-        const newTime = prev + deltaTime
-        return newTime >= 10 ? 10 : newTime
-      })
-
-      animationId = requestAnimationFrame(updateTime)
-    }
-
-    animationId = requestAnimationFrame(updateTime)
-
-    return () => {
-      cancelAnimationFrame(animationId)
-    }
-  }, [status])
-
-  // 10秒で自動停止
-  useEffect(() => {
-    if (recordingTime >= 10 && status === 'recording') {
-      handleStop()
-    }
-  }, [recordingTime, status])
-
-  // 展開状態が変更されたときに親コンポーネントに通知
-  useEffect(() => {
-    onExpandedChange?.(isExpanded && status !== 'idle')
-  }, [isExpanded, status, onExpandedChange])
-
-  const handleRecord = async () => {
-    try {
-      console.log('録音を開始します...')
-      setStatus('recording')
-      setRecordingTime(0)
-      await startRecording()
-      console.log('録音が開始されました')
-    } catch (error) {
-      console.error('録音の開始に失敗しました:', error)
-      setStatus('idle')
-      // モック実装なのでアラートは表示しない
-    }
-  }
-
-  const handleStop = async () => {
-    try {
-      console.log('録音を停止します...', { currentStatus: status })
-      setStatus('completed')
-      await stopRecording()
-      console.log('録音が停止されました', { newStatus: 'completed' })
-
-      // デバッグ: 状態変更後の確認
-      setTimeout(() => {
-        console.log('Status after stop:', status)
-      }, 100)
-
-      setTimeout(() => {
-        setStatus('idle')
-        setRecordingTime(0)
-        setIsExpanded(false)
-      }, 2000)
-    } catch (error) {
-      console.error('録音の停止に失敗しました:', error)
-      setStatus('idle')
-    }
-  }
-
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60)
-    const seconds = Math.floor(time % 60)
-    const milliseconds = Math.floor((time % 1) * 100)
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(2, '0')}`
-  }
-
-  const handleDragEnd = (
-    _event: MouseEvent | TouchEvent | PointerEvent,
-    info: PanInfo,
-  ) => {
-    if (info.offset.y < -50) {
-      setIsExpanded(true)
-    } else if (info.offset.y > 50) {
-      setIsExpanded(false)
-    }
-  }
+  const {
+    isExpanded,
+    setIsExpanded,
+    status,
+    recordingTime,
+    showInstructions,
+    setShowInstructions,
+    isClosing,
+    setIsClosing,
+    checkedItems,
+    constraintsRef,
+    waveformData,
+    handleRecord,
+    handleStartRecording,
+    handleCheckboxChange,
+    handleStop,
+    formatTime,
+    handleDragEnd,
+    allItemsChecked,
+    instructionItems,
+  } = useRecordingInterface(onExpandedChange)
 
   return (
     <div
@@ -145,14 +59,406 @@ export function RecordingInterface({
             exit={{ opacity: 0, y: 20 }}
             className="absolute bottom-6 left-1/2 transform -translate-x-1/2 safe-bottom"
           >
-            <motion.button
-              onClick={handleRecord}
-              className="w-48 h-16 sm:w-20 sm:h-20 mb-5 rounded-full bg-black hover:bg-gray-800 flex items-center justify-center shadow-2xl transition-all duration-300 touch-manipulation"
-              whileTap={{ scale: 0.95 }}
-              whileHover={{ scale: 1.05 }}
-            >
-              <MdMic className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
-            </motion.button>
+            {!showInstructions ? (
+              <motion.button
+                onClick={handleRecord}
+                className="w-48 h-16 sm:w-20 sm:h-20 mb-5 rounded-full bg-black hover:bg-gray-800 flex items-center justify-center shadow-2xl transition-all duration-300 touch-manipulation"
+                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.05 }}
+              >
+                <MdMic className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+              </motion.button>
+            ) : (
+              <motion.div
+                initial={{
+                  width: '12rem',
+                  height: '4rem',
+                  backgroundColor: 'rgba(0, 0, 0, 0.95)',
+                  borderRadius: '2rem',
+                  scale: 1,
+                  rotateX: 0,
+                  rotateY: 0,
+                }}
+                animate={
+                  isClosing
+                    ? {
+                        // スムーズな戻りアニメーション（閉じる時）
+                        width: '12rem',
+                        height: '4rem',
+                        backgroundColor: 'rgba(0, 0, 0, 0.95)',
+                        borderRadius: '2rem',
+                        scale: 1,
+                        rotateX: 0,
+                        rotateY: 0,
+                      }
+                    : {
+                        // 通常のアニメーション（開く時）
+                        width: ['12rem', '14rem', '18rem', '20rem'],
+                        height: ['4rem', '4rem', '8rem', '26rem'],
+                        backgroundColor: [
+                          'rgba(0, 0, 0, 0.95)',
+                          'rgba(30, 30, 30, 0.95)',
+                          'rgba(200, 200, 200, 0.95)',
+                          'rgba(255, 255, 255, 0.95)',
+                        ],
+                        borderRadius: ['2rem', '2.5rem', '2.5rem', '2rem'],
+                        scale: [1, 1.05, 1.02, 1],
+                        rotateX: [0, -2, 2, 0],
+                        rotateY: [0, 1, -1, 0],
+                      }
+                }
+                transition={
+                  isClosing
+                    ? {
+                        // 戻る時はスムーズなイージング
+                        duration: 0.8,
+                        ease: [0.25, 0.46, 0.45, 0.94],
+                      }
+                    : {
+                        // 開く時は従来のアニメーション
+                        width: {
+                          duration: 1.2,
+                          times: [0, 0.3, 0.6, 1],
+                          ease: [0.68, -0.55, 0.265, 1.55],
+                        },
+                        height: {
+                          duration: 1.2,
+                          times: [0, 0.3, 0.6, 1],
+                          ease: [0.68, -0.55, 0.265, 1.55],
+                        },
+                        backgroundColor: {
+                          duration: 1.2,
+                          times: [0, 0.3, 0.7, 1],
+                          ease: [0.25, 0.46, 0.45, 0.94],
+                        },
+                        borderRadius: {
+                          duration: 1.2,
+                          times: [0, 0.3, 0.6, 1],
+                          ease: [0.25, 0.46, 0.45, 0.94],
+                        },
+                        scale: {
+                          duration: 1.2,
+                          times: [0, 0.3, 0.6, 1],
+                          ease: [0.68, -0.55, 0.265, 1.55],
+                        },
+                        rotateX: {
+                          duration: 1.2,
+                          times: [0, 0.3, 0.6, 1],
+                          ease: [0.25, 0.46, 0.45, 0.94],
+                        },
+                        rotateY: {
+                          duration: 1.2,
+                          times: [0, 0.3, 0.6, 1],
+                          ease: [0.25, 0.46, 0.45, 0.94],
+                        },
+                      }
+                }
+                className="shadow-[0_20px_60px_rgba(0,0,0,0.3)] backdrop-blur-xl border border-white/20 p-6 mb-5 overflow-hidden flex flex-col relative"
+                style={{
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  perspective: '1000px',
+                  transformStyle: 'preserve-3d',
+                }}
+              >
+                {/* パーティクルエフェクト */}
+                {[...Array(8)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{
+                      opacity: 0,
+                      scale: 0,
+                      x: 0,
+                      y: 0,
+                    }}
+                    animate={{
+                      opacity: [0, 1, 0],
+                      scale: [0, 1, 0],
+                      x: [0, (Math.random() - 0.5) * 200],
+                      y: [0, (Math.random() - 0.5) * 200],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      delay: 0.3 + i * 0.1,
+                      ease: [0.25, 0.46, 0.45, 0.94],
+                    }}
+                    className="absolute w-2 h-2 bg-blue-400 rounded-full"
+                    style={{
+                      left: '50%',
+                      top: '50%',
+                      transform: 'translate(-50%, -50%)',
+                    }}
+                  />
+                ))}
+
+                {/* グロー効果 */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: [0, 0.3, 0], scale: [0.8, 1.2, 1] }}
+                  transition={{
+                    duration: 1.5,
+                    delay: 0.2,
+                    ease: [0.25, 0.46, 0.45, 0.94],
+                  }}
+                  className="absolute inset-0 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-[2rem] blur-xl"
+                />
+                {/* ヘッダー */}
+                <motion.div
+                  initial={{ opacity: 0, y: -30, scale: 0.8 }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                    scale: [0.8, 1.1, 1],
+                  }}
+                  transition={{
+                    delay: 0.8,
+                    duration: 0.8,
+                    ease: [0.68, -0.55, 0.265, 1.55],
+                  }}
+                  className="text-center mb-6 relative z-10"
+                >
+                  <motion.h3
+                    initial={{ letterSpacing: '0.1em' }}
+                    animate={{ letterSpacing: ['0.1em', '0.2em', '0.05em'] }}
+                    transition={{ duration: 1, delay: 1 }}
+                    className="text-gray-900 text-lg font-semibold mb-2 tracking-tight"
+                  >
+                    録音前の確認
+                  </motion.h3>
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: [0, 1] }}
+                    transition={{ delay: 1.2, duration: 0.6 }}
+                    className="text-gray-600 text-sm font-medium"
+                  >
+                    以下の項目をご確認ください
+                  </motion.p>
+                </motion.div>
+
+                {/* チェックボックスリスト */}
+                <div className="space-y-3 mb-6 flex-1 relative z-10">
+                  {instructionItems.map((item, index) => (
+                    <motion.div
+                      key={item.key}
+                      initial={{
+                        opacity: 0,
+                        x: -50,
+                        rotateY: -90,
+                        scale: 0.8,
+                      }}
+                      animate={{
+                        opacity: 1,
+                        x: 0,
+                        rotateY: 0,
+                        scale: 1,
+                      }}
+                      transition={{
+                        delay: 1.2 + index * 0.15,
+                        duration: 0.8,
+                        ease: [0.68, -0.55, 0.265, 1.55],
+                      }}
+                      className="flex items-start gap-3"
+                      style={{ transformStyle: 'preserve-3d' }}
+                    >
+                      <motion.button
+                        onClick={() => handleCheckboxChange(item.key)}
+                        className={`
+                          w-5 h-5 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0 relative
+                          transition-all duration-300 ease-out
+                          ${
+                            checkedItems[item.key]
+                              ? 'bg-blue-500 shadow-[0_4px_12px_rgba(59,130,246,0.4)]'
+                              : 'bg-gray-200 hover:bg-gray-300 shadow-[0_2px_8px_rgba(0,0,0,0.1)]'
+                          }
+                        `}
+                        whileTap={{
+                          scale: 0.7,
+                          rotate: 360,
+                        }}
+                        whileHover={{
+                          scale: 1.2,
+                          boxShadow: '0 8px 25px rgba(59,130,246,0.6)',
+                        }}
+                        animate={
+                          checkedItems[item.key]
+                            ? {
+                                boxShadow: [
+                                  '0 4px 12px rgba(59,130,246,0.4)',
+                                  '0 8px 25px rgba(59,130,246,0.8)',
+                                  '0 4px 12px rgba(59,130,246,0.4)',
+                                ],
+                              }
+                            : {}
+                        }
+                        transition={{
+                          boxShadow: {
+                            duration: 2,
+                            repeat: Infinity,
+                            ease: 'easeInOut',
+                          },
+                        }}
+                      >
+                        {checkedItems[item.key] && (
+                          <>
+                            <motion.svg
+                              initial={{ scale: 0, rotate: -180 }}
+                              animate={{
+                                scale: [0, 1.3, 1],
+                                rotate: [-180, 0, 360, 0],
+                              }}
+                              transition={{
+                                duration: 0.8,
+                                ease: [0.68, -0.55, 0.265, 1.55],
+                              }}
+                              className="w-3 h-3 text-white relative z-10"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                              />
+                            </motion.svg>
+                            {/* チェック時のパーティクル */}
+                            {[...Array(6)].map((_, i) => (
+                              <motion.div
+                                key={i}
+                                initial={{ opacity: 0, scale: 0 }}
+                                animate={{
+                                  opacity: [0, 1, 0],
+                                  scale: [0, 1, 0],
+                                  x: [0, (Math.random() - 0.5) * 40],
+                                  y: [0, (Math.random() - 0.5) * 40],
+                                }}
+                                transition={{
+                                  duration: 1,
+                                  delay: i * 0.1,
+                                  ease: [0.25, 0.46, 0.45, 0.94],
+                                }}
+                                className="absolute w-1 h-1 bg-blue-300 rounded-full"
+                                style={{
+                                  left: '50%',
+                                  top: '50%',
+                                  transform: 'translate(-50%, -50%)',
+                                }}
+                              />
+                            ))}
+                          </>
+                        )}
+                      </motion.button>
+                      <motion.span
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{
+                          delay: 1.4 + index * 0.15,
+                          duration: 0.6,
+                        }}
+                        className="text-gray-800 text-sm leading-relaxed font-medium"
+                      >
+                        {item.text}
+                      </motion.span>
+                    </motion.div>
+                  ))}
+                </div>
+
+                {/* 録音開始ボタン */}
+                <motion.div
+                  initial={{ opacity: 0, y: 50, scale: 0.8 }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                    scale: [0.8, 1.1, 1],
+                  }}
+                  transition={{
+                    delay: 2,
+                    duration: 0.8,
+                    ease: [0.68, -0.55, 0.265, 1.55],
+                  }}
+                  className="flex gap-3 mt-auto relative z-10"
+                >
+                  <motion.button
+                    onClick={() => {
+                      setIsClosing(true)
+                      // アニメーション完了後にshowInstructionsをfalseにする
+                      setTimeout(() => {
+                        setShowInstructions(false)
+                        setIsClosing(false)
+                      }, 800) // 戻りアニメーション時間と同じ
+                    }}
+                    className="flex-1 py-3 px-4 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold transition-all duration-200 shadow-[0_2px_8px_rgba(0,0,0,0.1)] relative overflow-hidden"
+                    whileTap={{ scale: 0.95, rotateX: 5 }}
+                    whileHover={{
+                      scale: 1.05,
+                      boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
+                    }}
+                  >
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                      initial={{ x: '-100%' }}
+                      whileHover={{ x: '100%' }}
+                      transition={{ duration: 0.6 }}
+                    />
+                    キャンセル
+                  </motion.button>
+                  <motion.button
+                    onClick={handleStartRecording}
+                    disabled={!allItemsChecked}
+                    className={`
+                      flex-1 py-3 px-4 rounded-xl font-semibold transition-all duration-300 relative overflow-hidden
+                      ${
+                        allItemsChecked
+                          ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-[0_8px_24px_rgba(59,130,246,0.4)] hover:shadow-[0_12px_32px_rgba(59,130,246,0.5)]'
+                          : 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-[0_2px_8px_rgba(0,0,0,0.1)]'
+                      }
+                    `}
+                    whileTap={
+                      allItemsChecked ? { scale: 0.95, rotateX: 5 } : {}
+                    }
+                    whileHover={
+                      allItemsChecked
+                        ? {
+                            scale: 1.05,
+                            boxShadow: '0 15px 35px rgba(59,130,246,0.6)',
+                          }
+                        : {}
+                    }
+                    animate={
+                      allItemsChecked
+                        ? {
+                            boxShadow: [
+                              '0 8px 24px rgba(59,130,246,0.4)',
+                              '0 12px 32px rgba(59,130,246,0.6)',
+                              '0 8px 24px rgba(59,130,246,0.4)',
+                            ],
+                          }
+                        : {}
+                    }
+                    transition={{
+                      boxShadow: {
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                      },
+                    }}
+                  >
+                    {allItemsChecked && (
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                        initial={{ x: '-100%' }}
+                        animate={{ x: '100%' }}
+                        transition={{
+                          duration: 1.5,
+                          repeat: Infinity,
+                          repeatDelay: 1,
+                        }}
+                      />
+                    )}
+                    録音開始
+                  </motion.button>
+                </motion.div>
+              </motion.div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
