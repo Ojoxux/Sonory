@@ -1,7 +1,14 @@
 /**
  * MapComponentのプロパティ型定義
  */
-export type MapComponentProps = Record<string, never>
+export type MapComponentProps = {
+  /** 位置情報取得関数への参照を受け取るコールバック */
+  onGeolocationReady?: (triggerGeolocation: () => void) => void
+  /** 現在位置に戻る関数への参照を受け取るコールバック */
+  onReturnToLocationReady?: (returnToLocation: () => void) => void
+  /** マップのbearing（回転角度）が変更された時のコールバック */
+  onBearingChange?: (bearing: number) => void
+}
 
 /**
  * 位置情報の型定義

@@ -20,6 +20,7 @@ import {
 import type {
   GeoJSONLineStringFeature,
   LocationData,
+  MapComponentProps,
   MapboxLightConfig,
   MapboxNonStandardMethods,
 } from './type'
@@ -93,7 +94,11 @@ const mapboxHelpers: MapboxNonStandardMethods = {
  * Zenlyスタイルのシンプルな地図表示と、時間帯に応じた色変化を提供
  * 3D建物表示機能を含む
  */
-export function MapComponent(): ReactElement {
+export function MapComponent({
+  onGeolocationReady,
+  onReturnToLocationReady,
+  onBearingChange,
+}: MapComponentProps): ReactElement {
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const mapInitializedRef = useRef<boolean>(false)
 
@@ -315,6 +320,88 @@ export function MapComponent(): ReactElement {
       1,
     )
   }, [geolocateInitialized, showNotification, map, debugMode]) // debugModeを依存関係に追加
+
+  // 現在位置に確実に戻る関数
+  const returnToCurrentLocation = useCallback(() => {
+    console.log('現在位置に戻ります...')
+
+    // まず保存された位置情報があるかチェック
+    const savedPosition = localStorage.getItem('sonory_last_position')
+    let fallbackPosition: LocationData | null = null
+
+    if (savedPosition) {
+      try {
+        const parsed = JSON.parse(savedPosition) as LocationData
+        // 24時間以内の位置情報のみ使用
+        const isRecent = Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000
+        if (isRecent) {
+          fallbackPosition = parsed
+        }
+      } catch (error) {
+        console.error('保存された位置情報の解析エラー:', error)
+      }
+    }
+
+    // 現在の位置情報または保存された位置情報を使用
+    const targetPosition = position || fallbackPosition
+
+    if (targetPosition && map) {
+      console.log('位置情報が利用可能です。マップを移動します:', targetPosition)
+
+      // マップの視点を現在位置に移動
+      map.flyTo({
+        center: [targetPosition.longitude, targetPosition.latitude],
+        zoom: 18,
+        pitch: 50,
+        bearing: -20,
+        essential: true,
+        duration: 2000,
+      })
+
+      // マーカーも更新（直接作成）
+      if (userMarkerRef.current) {
+        userMarkerRef.current.remove()
+      }
+
+      try {
+        const marker = new mapboxgl.Marker({
+          color: '#ff6b6b',
+        })
+          .setLngLat([targetPosition.longitude, targetPosition.latitude])
+          .addTo(map)
+
+        userMarkerRef.current = marker
+        console.log('ユーザーマーカーを作成しました:', {
+          lng: targetPosition.longitude,
+          lat: targetPosition.latitude,
+        })
+      } catch (error) {
+        console.error('マーカー作成エラー:', error)
+      }
+
+      // 通知
+      showNotification('現在位置に戻りました', 'success')
+    } else {
+      console.log('位置情報が利用できません。新しい位置情報を取得します...')
+
+      // 位置情報が利用できない場合は新しく取得を試行
+      attemptGeolocation()
+    }
+  }, [position, map, showNotification, attemptGeolocation])
+
+  // 位置情報取得関数を親コンポーネントに公開
+  useEffect(() => {
+    if (onGeolocationReady && attemptGeolocation) {
+      onGeolocationReady(attemptGeolocation)
+    }
+  }, [onGeolocationReady, attemptGeolocation])
+
+  // 現在位置に戻る関数を親コンポーネントに公開
+  useEffect(() => {
+    if (onReturnToLocationReady && returnToCurrentLocation) {
+      onReturnToLocationReady(returnToCurrentLocation)
+    }
+  }, [onReturnToLocationReady, returnToCurrentLocation])
 
   // マップの初期化（一度だけ実行）
   useEffect(() => {
@@ -573,6 +660,18 @@ export function MapComponent(): ReactElement {
     mapInstance.on('load', () => {
       console.log('マップがロードされました')
       setGeolocateInitialized(true)
+
+      // 初期bearing値を通知
+      if (onBearingChange) {
+        onBearingChange(mapInstance.getBearing())
+      }
+    })
+
+    // マップの回転（bearing）変更を監視
+    mapInstance.on('rotate', () => {
+      if (onBearingChange) {
+        onBearingChange(mapInstance.getBearing())
+      }
     })
 
     setMap(mapInstance)
