@@ -39,6 +39,7 @@ const config: Config = {
       fontFamily: {
         sans: ['var(--font-sans)', 'Arial', 'Helvetica', 'sans-serif'],
         mono: ['var(--font-mono)', 'monospace'],
+        nunito: ['var(--font-nunito)', 'Nunito', 'sans-serif'],
       },
       animation: {
         'pulse-slow': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
