@@ -170,7 +170,7 @@ export const LocationDisplay = memo(function LocationDisplay({
               className={`w-3 h-3 rounded-full animate-pulse ${isDarkTime ? 'bg-white/50' : 'bg-gray-400'}`}
             />
             <span
-              className={`text-5xl font-bold tracking-tight ${isDarkTime ? 'text-white/50' : 'text-gray-400'}`}
+              className={`text-5xl font-bold tracking-tight font-mplus ${isDarkTime ? 'text-white/50' : 'text-gray-400'}`}
             >
               Loading
             </span>
@@ -178,13 +178,13 @@ export const LocationDisplay = memo(function LocationDisplay({
         ) : (
           <div className="inline-block">
             <h2
-              className={`text-6xl font-bold tracking-tight ${textColorClass} pb-2 leading-none`}
+              className={`text-6xl font-bold tracking-tight font-mplus ${textColorClass} pb-2 leading-none`}
             >
               {locationName}
             </h2>
             <div className={`h-0.5 w-full ${borderColorClass} border-b-2`} />
             <p
-              className={`text-sm mt-3 font-medium tracking-wide ${isDarkTime ? 'text-white/50' : 'text-gray-500'}`}
+              className={`text-sm mt-3 font-bold tracking-wide font-mplus ${isDarkTime ? 'text-white/50' : 'text-gray-500'}`}
             >
               {latitude.toFixed(4)}° N, {longitude.toFixed(4)}° E
             </p>
