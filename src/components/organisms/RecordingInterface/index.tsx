@@ -82,78 +82,104 @@ export function RecordingInterface({
                 animate={
                   isClosing
                     ? {
-                        // スムーズな戻りアニメーション（閉じる時）
-                        width: '12rem',
-                        height: '4rem',
-                        backgroundColor: 'rgba(0, 0, 0, 0.95)',
-                        borderRadius: '2rem',
-                        scale: 1,
-                        rotateX: 0,
-                        rotateY: 0,
+                        // 閉じる時：高さから幅の順序で2段階アニメーション
+                        height: ['26rem', '4rem'],
+                        width: ['20rem', '12rem'],
+                        backgroundColor: [
+                          'rgba(30, 30, 30, 0.95)',
+                          'rgba(0, 0, 0, 0.95)',
+                        ],
+                        borderRadius: ['2rem', '2rem'],
+                        scale: [1, 1],
+                        rotateX: [0, 0],
+                        rotateY: [0, 0],
                       }
                     : {
-                        // 通常のアニメーション（開く時）
-                        width: ['12rem', '14rem', '18rem', '20rem'],
-                        height: ['4rem', '4rem', '8rem', '26rem'],
+                        // 開く時：幅から高さの順序で2段階アニメーション
+                        width: ['12rem', '20rem'],
+                        height: ['4rem', '26rem'],
                         backgroundColor: [
                           'rgba(0, 0, 0, 0.95)',
                           'rgba(30, 30, 30, 0.95)',
-                          'rgba(200, 200, 200, 0.95)',
-                          'rgba(255, 255, 255, 0.95)',
                         ],
-                        borderRadius: ['2rem', '2.5rem', '2.5rem', '2rem'],
-                        scale: [1, 1.05, 1.02, 1],
-                        rotateX: [0, -2, 2, 0],
-                        rotateY: [0, 1, -1, 0],
+                        borderRadius: ['2rem', '2rem'],
+                        scale: [1, 1],
+                        rotateX: [0, 0],
+                        rotateY: [0, 0],
                       }
                 }
                 transition={
                   isClosing
                     ? {
-                        // 戻る時はスムーズなイージング
-                        duration: 0.8,
-                        ease: [0.25, 0.46, 0.45, 0.94],
-                      }
-                    : {
-                        // 開く時は従来のアニメーション
-                        width: {
-                          duration: 1.2,
-                          times: [0, 0.3, 0.6, 1],
-                          ease: [0.68, -0.55, 0.265, 1.55],
-                        },
+                        // 閉じる時：高さを先に変化させてから幅を変化
                         height: {
-                          duration: 1.2,
-                          times: [0, 0.3, 0.6, 1],
-                          ease: [0.68, -0.55, 0.265, 1.55],
+                          duration: 0.6,
+                          times: [0, 1],
+                          ease: [0.25, 0.46, 0.45, 0.94],
+                        },
+                        width: {
+                          duration: 0.6,
+                          delay: 0.6, // 高さのアニメーション完了後に開始
+                          times: [0, 1],
+                          ease: [0.25, 0.46, 0.45, 0.94],
                         },
                         backgroundColor: {
                           duration: 1.2,
-                          times: [0, 0.3, 0.7, 1],
                           ease: [0.25, 0.46, 0.45, 0.94],
                         },
                         borderRadius: {
                           duration: 1.2,
-                          times: [0, 0.3, 0.6, 1],
                           ease: [0.25, 0.46, 0.45, 0.94],
                         },
                         scale: {
                           duration: 1.2,
-                          times: [0, 0.3, 0.6, 1],
-                          ease: [0.68, -0.55, 0.265, 1.55],
+                          ease: [0.25, 0.46, 0.45, 0.94],
                         },
                         rotateX: {
                           duration: 1.2,
-                          times: [0, 0.3, 0.6, 1],
                           ease: [0.25, 0.46, 0.45, 0.94],
                         },
                         rotateY: {
                           duration: 1.2,
-                          times: [0, 0.3, 0.6, 1],
+                          ease: [0.25, 0.46, 0.45, 0.94],
+                        },
+                      }
+                    : {
+                        // 開く時：幅を先に変化させてから高さを変化
+                        width: {
+                          duration: 0.6,
+                          times: [0, 1],
+                          ease: [0.25, 0.46, 0.45, 0.94],
+                        },
+                        height: {
+                          duration: 0.6,
+                          delay: 0.6, // 幅のアニメーション完了後に開始
+                          times: [0, 1],
+                          ease: [0.25, 0.46, 0.45, 0.94],
+                        },
+                        backgroundColor: {
+                          duration: 1.2,
+                          ease: [0.25, 0.46, 0.45, 0.94],
+                        },
+                        borderRadius: {
+                          duration: 1.2,
+                          ease: [0.25, 0.46, 0.45, 0.94],
+                        },
+                        scale: {
+                          duration: 1.2,
+                          ease: [0.25, 0.46, 0.45, 0.94],
+                        },
+                        rotateX: {
+                          duration: 1.2,
+                          ease: [0.25, 0.46, 0.45, 0.94],
+                        },
+                        rotateY: {
+                          duration: 1.2,
                           ease: [0.25, 0.46, 0.45, 0.94],
                         },
                       }
                 }
-                className="shadow-[0_20px_60px_rgba(0,0,0,0.3)] backdrop-blur-xl border border-white/20 p-6 mb-5 overflow-hidden flex flex-col relative"
+                className="shadow-[0_20px_60px_rgba(0,0,0,0.5)] backdrop-blur-xl border border-neutral-600/30 p-4 mb-5 overflow-hidden flex flex-col relative"
                 style={{
                   backdropFilter: 'blur(20px)',
                   WebkitBackdropFilter: 'blur(20px)',
@@ -182,7 +208,7 @@ export function RecordingInterface({
                       delay: 0.3 + i * 0.1,
                       ease: [0.25, 0.46, 0.45, 0.94],
                     }}
-                    className="absolute w-2 h-2 bg-blue-400 rounded-full"
+                    className="absolute w-2 h-2 bg-neutral-300 rounded-full"
                     style={{
                       left: '50%',
                       top: '50%',
@@ -200,28 +226,36 @@ export function RecordingInterface({
                     delay: 0.2,
                     ease: [0.25, 0.46, 0.45, 0.94],
                   }}
-                  className="absolute inset-0 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-[2rem] blur-xl"
+                  className="absolute inset-0 bg-gradient-to-br from-neutral-400/10 to-neutral-600/10 rounded-[2rem] blur-xl"
                 />
                 {/* ヘッダー */}
                 <motion.div
                   initial={{ opacity: 0, y: -30, scale: 0.8 }}
-                  animate={{
-                    opacity: 1,
-                    y: 0,
-                    scale: [0.8, 1.1, 1],
-                  }}
-                  transition={{
-                    delay: 0.8,
-                    duration: 0.8,
-                    ease: [0.68, -0.55, 0.265, 1.55],
-                  }}
-                  className="text-center mb-6 relative z-10"
+                  animate={
+                    isClosing
+                      ? { opacity: 0, scale: 0.8 }
+                      : {
+                          opacity: 1,
+                          y: 0,
+                          scale: [0.8, 1.1, 1],
+                        }
+                  }
+                  transition={
+                    isClosing
+                      ? { duration: 0.2 }
+                      : {
+                          delay: 0.8,
+                          duration: 0.8,
+                          ease: [0.68, -0.55, 0.265, 1.55],
+                        }
+                  }
+                  className="text-center mb-4 relative z-10"
                 >
                   <motion.h3
                     initial={{ letterSpacing: '0.1em' }}
                     animate={{ letterSpacing: ['0.1em', '0.2em', '0.05em'] }}
                     transition={{ duration: 1, delay: 1 }}
-                    className="text-gray-900 text-lg font-semibold mb-2 tracking-tight"
+                    className="text-white text-lg font-bold mb-2 tracking-tight"
                   >
                     録音前の確認
                   </motion.h3>
@@ -229,14 +263,26 @@ export function RecordingInterface({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: [0, 1] }}
                     transition={{ delay: 1.2, duration: 0.6 }}
-                    className="text-gray-600 text-sm font-medium"
+                    className="text-neutral-200 text-base font-normal leading-relaxed"
                   >
                     以下の項目をご確認ください
                   </motion.p>
                 </motion.div>
 
                 {/* チェックボックスリスト */}
-                <div className="space-y-3 mb-6 flex-1 relative z-10">
+                <motion.div
+                  className="space-y-2 mb-4 flex-1 relative z-10"
+                  animate={
+                    isClosing
+                      ? { opacity: 0, scale: 0.9 }
+                      : { opacity: 1, scale: 1 }
+                  }
+                  transition={
+                    isClosing
+                      ? { duration: 0.2 }
+                      : { duration: 0.3, delay: 1.2 }
+                  }
+                >
                   {instructionItems.map((item, index) => (
                     <motion.div
                       key={item.key}
@@ -246,29 +292,37 @@ export function RecordingInterface({
                         rotateY: -90,
                         scale: 0.8,
                       }}
-                      animate={{
-                        opacity: 1,
-                        x: 0,
-                        rotateY: 0,
-                        scale: 1,
-                      }}
-                      transition={{
-                        delay: 1.2 + index * 0.15,
-                        duration: 0.8,
-                        ease: [0.68, -0.55, 0.265, 1.55],
-                      }}
-                      className="flex items-start gap-3"
+                      animate={
+                        isClosing
+                          ? { opacity: 0, x: -30, scale: 0.8 }
+                          : {
+                              opacity: 1,
+                              x: 0,
+                              rotateY: 0,
+                              scale: 1,
+                            }
+                      }
+                      transition={
+                        isClosing
+                          ? { duration: 0.2, delay: index * 0.05 }
+                          : {
+                              delay: 1.2 + index * 0.15,
+                              duration: 0.8,
+                              ease: [0.68, -0.55, 0.265, 1.55],
+                            }
+                      }
+                      className="flex items-start gap-2.5 p-2 rounded-md bg-black/20 backdrop-blur-sm border border-neutral-700/50"
                       style={{ transformStyle: 'preserve-3d' }}
                     >
                       <motion.button
                         onClick={() => handleCheckboxChange(item.key)}
                         className={`
-                          w-5 h-5 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0 relative
-                          transition-all duration-300 ease-out
+                          w-5 h-5 rounded-md flex items-center justify-center mt-0.5 flex-shrink-0 relative
+                          transition-all duration-300 ease-out border-2
                           ${
                             checkedItems[item.key]
-                              ? 'bg-blue-500 shadow-[0_4px_12px_rgba(59,130,246,0.4)]'
-                              : 'bg-gray-200 hover:bg-gray-300 shadow-[0_2px_8px_rgba(0,0,0,0.1)]'
+                              ? 'bg-white border-white shadow-[0_4px_12px_rgba(255,255,255,0.3)]'
+                              : 'bg-transparent border-neutral-400 hover:border-neutral-300 shadow-[0_2px_8px_rgba(0,0,0,0.3)]'
                           }
                         `}
                         whileTap={{
@@ -277,15 +331,15 @@ export function RecordingInterface({
                         }}
                         whileHover={{
                           scale: 1.2,
-                          boxShadow: '0 8px 25px rgba(59,130,246,0.6)',
+                          boxShadow: '0 8px 25px rgba(255,255,255,0.4)',
                         }}
                         animate={
                           checkedItems[item.key]
                             ? {
                                 boxShadow: [
-                                  '0 4px 12px rgba(59,130,246,0.4)',
-                                  '0 8px 25px rgba(59,130,246,0.8)',
-                                  '0 4px 12px rgba(59,130,246,0.4)',
+                                  '0 4px 12px rgba(255,255,255,0.3)',
+                                  '0 8px 25px rgba(255,255,255,0.5)',
+                                  '0 4px 12px rgba(255,255,255,0.3)',
                                 ],
                               }
                             : {}
@@ -310,7 +364,7 @@ export function RecordingInterface({
                                 duration: 0.8,
                                 ease: [0.68, -0.55, 0.265, 1.55],
                               }}
-                              className="w-3 h-3 text-white relative z-10"
+                              className="w-3 h-3 text-black relative z-10"
                               fill="currentColor"
                               viewBox="0 0 20 20"
                             >
@@ -336,7 +390,7 @@ export function RecordingInterface({
                                   delay: i * 0.1,
                                   ease: [0.25, 0.46, 0.45, 0.94],
                                 }}
-                                className="absolute w-1 h-1 bg-blue-300 rounded-full"
+                                className="absolute w-1 h-1 bg-neutral-400 rounded-full"
                                 style={{
                                   left: '50%',
                                   top: '50%',
@@ -354,28 +408,36 @@ export function RecordingInterface({
                           delay: 1.4 + index * 0.15,
                           duration: 0.6,
                         }}
-                        className="text-gray-800 text-sm leading-relaxed font-medium"
+                        className="text-neutral-100 text-sm leading-relaxed font-medium"
                       >
                         {item.text}
                       </motion.span>
                     </motion.div>
                   ))}
-                </div>
+                </motion.div>
 
                 {/* 録音開始ボタン */}
                 <motion.div
                   initial={{ opacity: 0, y: 50, scale: 0.8 }}
-                  animate={{
-                    opacity: 1,
-                    y: 0,
-                    scale: [0.8, 1.1, 1],
-                  }}
-                  transition={{
-                    delay: 2,
-                    duration: 0.8,
-                    ease: [0.68, -0.55, 0.265, 1.55],
-                  }}
-                  className="flex gap-3 mt-auto relative z-10"
+                  animate={
+                    isClosing
+                      ? { opacity: 0, y: 30, scale: 0.8 }
+                      : {
+                          opacity: 1,
+                          y: 0,
+                          scale: [0.8, 1.1, 1],
+                        }
+                  }
+                  transition={
+                    isClosing
+                      ? { duration: 0.2 }
+                      : {
+                          delay: 2,
+                          duration: 0.8,
+                          ease: [0.68, -0.55, 0.265, 1.55],
+                        }
+                  }
+                  className="flex gap-2.5 mt-auto relative z-10"
                 >
                   <motion.button
                     onClick={() => {
@@ -384,9 +446,9 @@ export function RecordingInterface({
                       setTimeout(() => {
                         setShowInstructions(false)
                         setIsClosing(false)
-                      }, 800) // 戻りアニメーション時間と同じ
+                      }, 1200) // 閉じるアニメーション時間と同じ
                     }}
-                    className="flex-1 py-3 px-4 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold transition-all duration-200 shadow-[0_2px_8px_rgba(0,0,0,0.1)] relative overflow-hidden"
+                    className="flex-1 py-2.5 px-3 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white font-semibold text-sm transition-all duration-200 shadow-[0_4px_16px_rgba(0,0,0,0.4)] relative overflow-hidden border border-neutral-600"
                     whileTap={{ scale: 0.95, rotateX: 5 }}
                     whileHover={{
                       scale: 1.05,
@@ -394,7 +456,7 @@ export function RecordingInterface({
                     }}
                   >
                     <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-neutral-400/20 to-transparent"
                       initial={{ x: '-100%' }}
                       whileHover={{ x: '100%' }}
                       transition={{ duration: 0.6 }}
@@ -405,11 +467,11 @@ export function RecordingInterface({
                     onClick={handleStartRecording}
                     disabled={!allItemsChecked}
                     className={`
-                      flex-1 py-3 px-4 rounded-xl font-semibold transition-all duration-300 relative overflow-hidden
+                      flex-1 py-2.5 px-3 rounded-lg font-semibold text-sm transition-all duration-300 relative overflow-hidden border
                       ${
                         allItemsChecked
-                          ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-[0_8px_24px_rgba(59,130,246,0.4)] hover:shadow-[0_12px_32px_rgba(59,130,246,0.5)]'
-                          : 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-[0_2px_8px_rgba(0,0,0,0.1)]'
+                          ? 'bg-white hover:bg-neutral-50 text-black shadow-[0_8px_24px_rgba(255,255,255,0.4)] hover:shadow-[0_12px_32px_rgba(255,255,255,0.5)] border-white'
+                          : 'bg-neutral-700 text-neutral-400 cursor-not-allowed shadow-[0_2px_8px_rgba(0,0,0,0.3)] border-neutral-600'
                       }
                     `}
                     whileTap={
@@ -419,7 +481,7 @@ export function RecordingInterface({
                       allItemsChecked
                         ? {
                             scale: 1.05,
-                            boxShadow: '0 15px 35px rgba(59,130,246,0.6)',
+                            boxShadow: '0 15px 35px rgba(255,255,255,0.6)',
                           }
                         : {}
                     }
@@ -427,9 +489,9 @@ export function RecordingInterface({
                       allItemsChecked
                         ? {
                             boxShadow: [
-                              '0 8px 24px rgba(59,130,246,0.4)',
-                              '0 12px 32px rgba(59,130,246,0.6)',
-                              '0 8px 24px rgba(59,130,246,0.4)',
+                              '0 8px 24px rgba(255,255,255,0.4)',
+                              '0 12px 32px rgba(255,255,255,0.6)',
+                              '0 8px 24px rgba(255,255,255,0.4)',
                             ],
                           }
                         : {}
@@ -444,7 +506,7 @@ export function RecordingInterface({
                   >
                     {allItemsChecked && (
                       <motion.div
-                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-neutral-600/20 to-transparent"
                         initial={{ x: '-100%' }}
                         animate={{ x: '100%' }}
                         transition={{
