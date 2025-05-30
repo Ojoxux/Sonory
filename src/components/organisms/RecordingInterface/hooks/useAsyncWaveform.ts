@@ -8,6 +8,9 @@ import { useEffect, useState } from 'react'
  * @description
  * 独立したタイミングで波形データを更新する
  * 他のアニメーションと同期しないように設計
+ *
+ * @param isRecording 録音中かどうか
+ * @returns 波形データ
  */
 export function useAsyncWaveform(isRecording: boolean) {
   const [waveformData, setWaveformData] = useState<number[]>([])
