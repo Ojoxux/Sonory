@@ -1,5 +1,6 @@
 'use client'
 
+import { CompassIcon } from '@/components/atoms/CompassIcon'
 import { IconButton } from '@/components/atoms/IconButton'
 import { LocationDisplay } from '@/components/atoms/LocationDisplay'
 import { useEffect, useState } from 'react'
@@ -16,6 +17,10 @@ import type { AppHeaderProps } from './type'
  * @param onSettingsClick 設定ボタンがクリックされた時のコールバック
  * @param latitude 緯度
  * @param longitude 経度
+ * @param mapBearing マップのbearing（回転角度）
+ * @param onCompassClick コンパスボタンがクリックされた時のコールバック
+ * @param debugTimeOverride デバッグ用時間オーバーライド（時間のみ0-23）
+ * @param mapBearing マップのbearing（回転角度）
  *
  * @example
  * ```tsx
@@ -28,9 +33,11 @@ import type { AppHeaderProps } from './type'
  */
 export function AppHeader({
   onSettingsClick,
+  onCompassClick,
   latitude,
   longitude,
   debugTimeOverride,
+  mapBearing,
 }: AppHeaderProps) {
   const [isDarkTime, setIsDarkTime] = useState(false)
 
@@ -67,6 +74,14 @@ export function AppHeader({
 
         {/* アクションボタン群 */}
         <div className="flex items-center gap-3 pointer-events-auto animate-fade-in-down">
+          {/* コンパスボタン */}
+          <IconButton
+            icon={<CompassIcon className="w-5 h-5" mapBearing={mapBearing} />}
+            ariaLabel="現在位置に戻る"
+            onClick={onCompassClick}
+            className={`${iconBgClass} ${iconColorClass} backdrop-blur-sm`}
+          />
+
           {/* 情報ボタン */}
           <IconButton
             icon={<MdInfo className="w-5 h-5" />}
