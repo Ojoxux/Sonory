@@ -107,8 +107,10 @@ sonory/
 │   ├── audio/      # 音声処理関連
 │   ├── map/        # Mapbox関連
 │   └── api/        # APIクライアント
-├── public/         # 静的ファイル
+├── public/         # 静的ファイル（PWA用アイコンなど）
+│   ├── images/     # 画像ファイル
 │   └── models/     # AI推論モデル
+├── store/          # 状態管理関連のファイル
 └── styles/         # グローバルスタイル
 ```
 
