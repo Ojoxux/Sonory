@@ -1,6 +1,6 @@
 'use client'
 
-import { CompassIcon } from '@/components/atoms/CompassIcon'
+import { CompassButton } from '@/components/atoms/CompassButton'
 import { IconButton } from '@/components/atoms/IconButton'
 import { LocationDisplay } from '@/components/atoms/LocationDisplay'
 import { useEffect, useState } from 'react'
@@ -63,25 +63,24 @@ export function AppHeader({
   return (
     <header className="fixed top-0 left-0 right-0 z-[100] pointer-events-none">
       <div className="flex items-start justify-between p-6">
-        {/* 地域名表示 */}
-        <div className="pointer-events-auto animate-fade-in-down">
+        {/* 地域名表示とコンパスボタン */}
+        <div className="flex flex-col items-start gap-2 pointer-events-auto animate-fade-in-down">
           <LocationDisplay
             latitude={latitude}
             longitude={longitude}
             debugTimeOverride={debugTimeOverride}
           />
+
+          {/* コンパスボタン */}
+          <CompassButton
+            onClick={onCompassClick}
+            mapBearing={mapBearing}
+            isDarkMode={isDarkTime}
+          />
         </div>
 
         {/* アクションボタン群 */}
         <div className="flex items-center gap-3 pointer-events-auto animate-fade-in-down">
-          {/* コンパスボタン */}
-          <IconButton
-            icon={<CompassIcon className="w-5 h-5" mapBearing={mapBearing} />}
-            ariaLabel="現在位置に戻る"
-            onClick={onCompassClick}
-            className={`${iconBgClass} ${iconColorClass} backdrop-blur-sm`}
-          />
-
           {/* 情報ボタン */}
           <IconButton
             icon={<MdInfo className="w-5 h-5" />}
