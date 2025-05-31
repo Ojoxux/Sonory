@@ -6,4 +6,5 @@
 
 export * from './useRecorderStore'
 export * from './useInferenceStore'
+export * from './useDebugStore'
 export * from './types'

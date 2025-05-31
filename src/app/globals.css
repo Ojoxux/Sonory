@@ -10,6 +10,12 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-nunito: var(--font-nunito);
+  --font-mplus: var(--font-mplus-rounded);
+
+  /* カスタムアニメーション */
+  --animate-pulse-slow: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-spin-slow: spin 3s linear infinite;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,4 +29,76 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* フォントクラス */
+.font-mplus {
+  font-family: var(--font-mplus-rounded);
+}
+
+/* カスタムアニメーション定義 */
+@keyframes pulse-slow {
+  0%,
+  100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+/* ユーティリティクラス */
+.animate-pulse-slow {
+  animation: var(--animate-pulse-slow);
+}
+
+.animate-spin-slow {
+  animation: var(--animate-spin-slow);
+}
+
+/* アクセシビリティ: モーション軽減設定を尊重 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse-slow,
+  .animate-spin-slow,
+  .animate-pulse,
+  .animate-spin {
+    animation: none;
+  }
+}
+
+/* PWA セーフエリア対応 */
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-left {
+  padding-left: env(safe-area-inset-left);
+}
+
+.safe-right {
+  padding-right: env(safe-area-inset-right);
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* タッチ操作の最適化 */
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* モバイルファーストのレスポンシブユーティリティ */
+@media (max-width: 640px) {
+  .mobile-full-height {
+    height: 100vh;
+    height: 100dvh; /* 動的ビューポート高さ */
+  }
 }
