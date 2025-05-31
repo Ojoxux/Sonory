@@ -187,37 +187,7 @@ export function RecordingInterface({
                   transformStyle: 'preserve-3d',
                 }}
               >
-                {/* パーティクルエフェクト */}
-                {[...Array(8)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{
-                      opacity: 0,
-                      scale: 0,
-                      x: 0,
-                      y: 0,
-                    }}
-                    animate={{
-                      opacity: [0, 1, 0],
-                      scale: [0, 1, 0],
-                      x: [0, (Math.random() - 0.5) * 200],
-                      y: [0, (Math.random() - 0.5) * 200],
-                    }}
-                    transition={{
-                      duration: 1.5,
-                      delay: 0.3 + i * 0.1,
-                      ease: [0.25, 0.46, 0.45, 0.94],
-                    }}
-                    className="absolute w-2 h-2 bg-neutral-300 rounded-full"
-                    style={{
-                      left: '50%',
-                      top: '50%',
-                      transform: 'translate(-50%, -50%)',
-                    }}
-                  />
-                ))}
-
-                {/* グロー効果 */}
+                ｓ{/* グロー効果 */}
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: [0, 0.3, 0], scale: [0.8, 1.2, 1] }}
@@ -268,7 +238,6 @@ export function RecordingInterface({
                     以下の項目をご確認ください
                   </motion.p>
                 </motion.div>
-
                 {/* チェックボックスリスト */}
                 <motion.div
                   className="space-y-2 mb-4 flex-1 relative z-10"
@@ -415,7 +384,6 @@ export function RecordingInterface({
                     </motion.div>
                   ))}
                 </motion.div>
-
                 {/* 録音開始ボタン */}
                 <motion.div
                   initial={{ opacity: 0, y: 50, scale: 0.8 }}
