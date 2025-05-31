@@ -1,7 +1,7 @@
 'use client'
 
 import { CompassIcon } from '@/components/atoms/CompassIcon'
-import { useState } from 'react'
+import { motion } from 'framer-motion'
 import type { CompassButtonProps } from './type'
 
 /**
@@ -30,55 +30,104 @@ export function CompassButton({
   className = '',
   isDarkMode = false,
 }: CompassButtonProps) {
-  // ホバー状態を管理
-  const [isHovered, setIsHovered] = useState(false)
-  // アクティブ状態を管理
-  const [isActive, setIsActive] = useState(false)
-
-  // 色の設定
-  const baseColor = isDarkMode ? 'text-white' : 'text-gray-900'
-  const bgColor = isDarkMode
-    ? 'bg-white/10 hover:bg-white/20'
-    : 'bg-black/10 hover:bg-black/20'
-
   // マップのbearingに応じて回転状態を管理
   const hasRotation = mapBearing !== 0
+
+  // カラーテーマの設定 - モノクロベース
+  const baseColor = isDarkMode ? 'text-white' : 'text-gray-800'
+  const bgBase = isDarkMode
+    ? 'bg-white/10 hover:bg-white/15'
+    : 'bg-white/70 hover:bg-white/80'
+  const borderColor = isDarkMode
+    ? 'border border-white/20'
+    : 'border border-black/5'
+  const shadowColor = isDarkMode
+    ? 'shadow-[0_4px_12px_rgba(0,0,0,0.3)]'
+    : 'shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
+  const rotationIndicator = isDarkMode ? 'border-white/30' : 'border-black/20'
+
+  // 回転インジケーターのバリアント
+  const pulseVariants = {
+    pulse: {
+      scale: [1.12, 1.18, 1.12],
+      opacity: [0.5, 0.7, 0.5],
+      transition: {
+        duration: 2,
+        repeat: Infinity,
+        ease: 'easeInOut',
+      },
+    },
+  }
 
   return (
     <div className="relative">
       {/* マップが回転している場合のみ表示される外側のインジケーター */}
       {hasRotation && (
-        <span
-          className="absolute inset-0 rounded-full border-2 border-blue-500/40 animate-pulse"
-          style={{ transform: 'scale(1.15)' }}
-        />
+        <>
+          {/* モノクロの背景リング */}
+          <motion.span
+            className={`absolute inset-0 rounded-full ${isDarkMode ? 'bg-white/20' : 'bg-black/10'}`}
+            style={{ filter: 'blur(1px)' }}
+            initial="pulse"
+            animate="pulse"
+            variants={pulseVariants}
+          />
+
+          {/* 外側の薄いリング */}
+          <motion.span
+            className={`absolute inset-0 rounded-full border-2 ${rotationIndicator}`}
+            style={{ transform: 'scale(1.25)' }}
+            animate={{
+              rotate: [0, 360],
+            }}
+            transition={{
+              duration: 8,
+              repeat: Infinity,
+              ease: 'linear',
+            }}
+          />
+        </>
       )}
 
-      <button
+      <motion.button
         aria-label="現在位置に戻る"
         onClick={onClick}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => {
-          setIsHovered(false)
-          setIsActive(false)
-        }}
-        onMouseDown={() => setIsActive(true)}
-        onMouseUp={() => setIsActive(false)}
         className={`
-          w-12 h-12 rounded-full
-          transition-all duration-200 ease-in-out
+          w-14 h-14 rounded-full
           flex items-center justify-center
-          backdrop-blur-sm
-          ${bgColor}
+          backdrop-blur-md
+          ${bgBase}
+          ${borderColor}
           ${baseColor}
-          ${isHovered ? 'scale-105 -translate-y-px shadow-md' : ''}
-          ${isActive ? 'scale-[1.02] translate-y-0 shadow-sm' : ''}
+          ${shadowColor}
           ${className}
         `}
+        whileHover={{
+          scale: 1.05,
+          y: -2,
+          boxShadow: isDarkMode
+            ? '0 8px 16px rgba(0,0,0,0.4)'
+            : '0 8px 16px rgba(0,0,0,0.15)',
+        }}
+        whileTap={{
+          scale: 0.98,
+          y: 0,
+          boxShadow: isDarkMode
+            ? '0 3px 6px rgba(0,0,0,0.3)'
+            : '0 3px 6px rgba(0,0,0,0.1)',
+        }}
+        transition={{
+          type: 'spring',
+          stiffness: 400,
+          damping: 17,
+        }}
       >
-        {/* コンパスアイコン */}
-        <CompassIcon className="w-6 h-6" mapBearing={mapBearing} />
-      </button>
+        {/* コンパスアイコン - より大きく */}
+        <CompassIcon
+          className={`w-10 h-10 ${hasRotation ? 'opacity-90' : 'opacity-80'}`}
+          mapBearing={mapBearing}
+        />
+      </motion.button>
     </div>
   )
 }
