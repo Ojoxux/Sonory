@@ -3,7 +3,7 @@ declare global {
     gtag: (
       command: 'event' | 'config' | 'consent' | 'js' | 'set',
       targetId: string | Date,
-      parameters?: Record<string, any>
+      parameters?: Record<string, any>,
     ) => void
   }
 }

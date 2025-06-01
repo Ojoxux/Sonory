@@ -52,23 +52,23 @@ export default function Home(): ReactElement {
         </script>
       </Head>
       <div className="relative h-screen w-screen overflow-hidden">
-      <div className="absolute inset-0 z-0 pointer-events-auto">
-        <MapComponent
-          onGeolocationReady={handleGeolocationReady}
-          onReturnToLocationReady={handleReturnToLocationReady}
-          onBearingChange={handleBearingChange}
-        />
-      </div>
-      <div className="absolute inset-0 z-10 pointer-events-none">
-        <UIOverlay
-          onSettingsClick={handleSettingsClick}
-          onCompassClick={handleCompassClick}
-          latitude={position?.latitude}
-          longitude={position?.longitude}
-          debugTimeOverride={debugTimeOverride}
-          mapBearing={mapBearing}
-        />
-      </div>
+        <div className="absolute inset-0 z-0 pointer-events-auto">
+          <MapComponent
+            onGeolocationReady={handleGeolocationReady}
+            onReturnToLocationReady={handleReturnToLocationReady}
+            onBearingChange={handleBearingChange}
+          />
+        </div>
+        <div className="absolute inset-0 z-10 pointer-events-none">
+          <UIOverlay
+            onSettingsClick={handleSettingsClick}
+            onCompassClick={handleCompassClick}
+            latitude={position?.latitude}
+            longitude={position?.longitude}
+            debugTimeOverride={debugTimeOverride}
+            mapBearing={mapBearing}
+          />
+        </div>
       </div>
     </>
   )
