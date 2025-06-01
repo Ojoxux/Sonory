@@ -1,5 +1,6 @@
 'use client'
 
+import { PWAInstallPrompt } from '@/components/atoms/PWAInstallPrompt'
 import { AppHeader } from '@/components/molecules/AppHeader'
 import { RecordingInterface } from '@/components/organisms/RecordingInterface'
 import type { UIOverlayProps } from './type'
@@ -9,7 +10,7 @@ import type { UIOverlayProps } from './type'
  *
  * @description
  * マップ上に表示されるUI要素を統合するOrganismコンポーネント
- * ヘッダーと録音インターフェースを含む
+ * ヘッダー、PWAインストールプロンプト、録音インターフェースを含む
  *
  * @example
  * ```tsx
@@ -38,6 +39,16 @@ export function UIOverlay({
         longitude={longitude}
         debugTimeOverride={debugTimeOverride}
         mapBearing={mapBearing}
+      />
+
+      {/* PWAインストールプロンプト */}
+      <PWAInstallPrompt
+        onInstallSuccess={() => {
+          console.log('PWAインストール成功')
+        }}
+        onDismiss={() => {
+          console.log('PWAインストールプロンプトを閉じました')
+        }}
       />
 
       {/* 録音インターフェース */}

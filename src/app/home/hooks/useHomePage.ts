@@ -1,7 +1,7 @@
 'use client'
 
 import { useGeolocation } from '@/components/organisms/MapComponent/hooks/useGeolocation'
-import { useDebugStore } from '@/store'
+import { useDebugStore } from '@/store/useDebugStore'
 import { useState } from 'react'
 
 /**
