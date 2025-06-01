@@ -125,13 +125,27 @@ export function usePWAInstallState(
   const [isVisible, setIsVisible] = useState<boolean>(false)
 
   /**
+   * プロンプト閉じる処理
+   */
+  const handleDismiss = useCallback((): void => {
+    setIsExpanded(false)
+    setIsVisible(false)
+    // 閉じるアニメーション後に非表示
+    setTimeout(() => {
+      setShowPrompt(false)
+      setIsDebugActive(false)
+      onDismiss?.()
+    }, ANIMATION_DELAYS.CLOSE_ANIMATION)
+  }, [onDismiss])
+
+  /**
    * インストールボタンクリック処理
    */
   const handleInstallClick = useCallback(async (): Promise<void> => {
     if (!deferredPrompt && !isDebugActive) return
 
     if (isDebugActive) {
-      console.log(DEBUG_MESSAGES.INSTALL_CLICKED)
+      console.debug(DEBUG_MESSAGES.INSTALL_CLICKED)
       handleDismiss()
       return
     }
@@ -160,21 +174,7 @@ export function usePWAInstallState(
     } catch (error) {
       console.error('PWA install error:', error)
     }
-  }, [deferredPrompt, isDebugActive, onInstallSuccess])
-
-  /**
-   * プロンプト閉じる処理
-   */
-  const handleDismiss = useCallback((): void => {
-    setIsExpanded(false)
-    setIsVisible(false)
-    // 閉じるアニメーション後に非表示
-    setTimeout(() => {
-      setShowPrompt(false)
-      setIsDebugActive(false)
-      onDismiss?.()
-    }, ANIMATION_DELAYS.CLOSE_ANIMATION)
-  }, [onDismiss])
+  }, [deferredPrompt, isDebugActive, handleDismiss, onInstallSuccess])
 
   /**
    * プロンプト全体のクリック/タップでトグル
@@ -182,6 +182,25 @@ export function usePWAInstallState(
   const handlePromptClick = useCallback((): void => {
     setIsExpanded(!isExpanded)
   }, [isExpanded])
+
+  // PWAインストール成功イベントの Analytics 送信
+  useEffect(() => {
+    const onAppInstalled = (): void => {
+      if (
+        typeof window !== 'undefined' &&
+        'gtag' in window &&
+        typeof window.gtag === 'function'
+      ) {
+        window.gtag('event', 'app_install', { method: 'pwa' })
+      }
+    }
+
+    window.addEventListener(EVENT_NAMES.APP_INSTALLED, onAppInstalled)
+
+    return () => {
+      window.removeEventListener(EVENT_NAMES.APP_INSTALLED, onAppInstalled)
+    }
+  }, [])
 
   return {
     deferredPrompt,

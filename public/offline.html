@@ -11,8 +11,24 @@
             box-sizing: border-box;
         }
         
+        @font-face {
+            font-family: 'Nunito';
+            src: url('/fonts/Nunito-Regular.woff2') format('woff2'),
+                 url('/fonts/Nunito-Regular.woff') format('woff');
+            font-weight: 400;
+            font-style: normal;
+        }
+        
+        @font-face {
+            font-family: 'M PLUS Rounded';
+            src: url('/fonts/MPLUSRounded1c-Regular.woff2') format('woff2'),
+                 url('/fonts/MPLUSRounded1c-Regular.woff') format('woff');
+            font-weight: 400;
+            font-style: normal;
+        }
+
         body {
-            font-family: 'Apple Garamond', 'Garamond', serif;
+            font-family: 'Nunito', 'M PLUS Rounded', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background-color: #000000;
             min-height: 100vh;
             display: flex;
@@ -77,7 +93,7 @@
             border-radius: 2px;
             cursor: pointer;
             font-size: 0.85rem;
-            font-family: 'Apple Garamond', 'Garamond', serif;
+            font-family: 'Nunito', 'M PLUS Rounded', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             transition: all 0.2s ease;
             letter-spacing: 2px;
             text-transform: uppercase;
@@ -129,14 +145,6 @@
             margin-right: 16px;
         }
 
-        @font-face {
-            font-family: 'Apple Garamond';
-            src: local('Apple Garamond'), local('AppleGaramond'),
-                 url('https://fonts.cdnfonts.com/css/apple-garamond') format('woff2');
-            font-weight: normal;
-            font-style: normal;
-            font-display: swap;
-        }
     </style>
 </head>
 <body>

@@ -138,13 +138,13 @@ export default function RootLayout({
           rel="icon"
           type="image/png"
           sizes="32x32"
-          href="/icons/icon-192x192.png"
+          href="/icons/icon-32x32.png"
         />
         <link
           rel="icon"
           type="image/png"
           sizes="16x16"
-          href="/icons/icon-192x192.png"
+          href="/icons/icon-16x16.png"
         />
         <link rel="mask-icon" href="/Sonory-App-Icon.svg" color="#1a202c" />
 
