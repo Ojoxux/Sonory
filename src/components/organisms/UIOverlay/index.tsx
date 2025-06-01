@@ -1,7 +1,7 @@
 'use client'
 
-import { PWAInstallPrompt } from '@/components/atoms/PWAInstallPrompt'
 import { AppHeader } from '@/components/molecules/AppHeader'
+import { PWAInstallPrompt } from '@/components/organisms/PWAInstallPrompt'
 import { RecordingInterface } from '@/components/organisms/RecordingInterface'
 import type { UIOverlayProps } from './type'
 

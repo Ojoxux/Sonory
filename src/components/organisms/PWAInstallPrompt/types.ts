@@ -1,6 +1,7 @@
 /**
  * PWAInstallPromptコンポーネントの型定義
  */
+
 export interface PWAInstallPromptProps {
   /** 追加のCSSクラス名 */
   className?: string
