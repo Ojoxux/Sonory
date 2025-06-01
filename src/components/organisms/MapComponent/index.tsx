@@ -9,7 +9,7 @@ import {
   useState,
 } from 'react'
 import 'mapbox-gl/dist/mapbox-gl.css'
-import { useDebugStore } from '@/store'
+import { useDebugStore } from '@/store/useDebugStore'
 import { useGeolocation } from './hooks/useGeolocation'
 import {
   applyNightLighting,
@@ -120,8 +120,12 @@ export function MapComponent({
   )
   const [map, setMap] = useState<mapboxgl.Map | null>(null)
   const [mapStyleLoaded, setMapStyleLoaded] = useState<boolean>(false)
-  const [debugMode, setDebugMode] = useState<boolean>(false)
-  const { debugTimeOverride, setDebugTimeOverride } = useDebugStore()
+  const {
+    debugMode,
+    toggleDebugMode,
+    debugTimeOverride,
+    setDebugTimeOverride,
+  } = useDebugStore()
   const [geolocateInitialized, setGeolocateInitialized] =
     useState<boolean>(false)
   const [geolocateAttempted, setGeolocateAttempted] = useState<boolean>(false)
@@ -706,7 +710,7 @@ export function MapComponent({
       // Shift + D でデバッグモード切り替え
       if (e.shiftKey && e.key === 'D') {
         console.log('デバッグモード切り替え')
-        setDebugMode((prev) => !prev)
+        toggleDebugMode() // グローバルなデバッグモード切り替え
       }
 
       // Shift + G で位置情報を再取得
@@ -787,7 +791,7 @@ export function MapComponent({
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [attemptGeolocation]) // attemptGeolocationを依存関係に追加
+  }, [attemptGeolocation, toggleDebugMode]) // 依存関係に toggleDebugMode を追加
 
   // シンプルなマーカーを作成する関数
   const createUserMarker = useCallback(
@@ -1160,6 +1164,49 @@ ${
             >
               実時間に戻す
             </button>
+          </div>
+
+          {/* PWAインストールプロンプト操作 */}
+          <div className="pointer-events-auto mt-4">
+            <div className="text-white text-xs mb-2 font-semibold">
+              PWAインストールプロンプト:
+            </div>
+            <div className="grid grid-cols-2 gap-1">
+              <button
+                onClick={() => {
+                  // PWAインストールプロンプトを表示するためにイベントを発火
+                  const event = new CustomEvent('pwa-debug-show', {
+                    detail: { expanded: false },
+                  })
+                  window.dispatchEvent(event)
+                }}
+                className="px-2 py-1 rounded text-xs transition-colors bg-gray-600 hover:bg-gray-500 text-gray-200"
+              >
+                表示（縮小）
+              </button>
+              <button
+                onClick={() => {
+                  // PWAインストールプロンプトを展開表示
+                  const event = new CustomEvent('pwa-debug-show', {
+                    detail: { expanded: true },
+                  })
+                  window.dispatchEvent(event)
+                }}
+                className="px-2 py-1 rounded text-xs transition-colors bg-gray-600 hover:bg-gray-500 text-gray-200"
+              >
+                表示（展開）
+              </button>
+              <button
+                onClick={() => {
+                  // PWAインストールプロンプトを非表示
+                  const event = new CustomEvent('pwa-debug-hide')
+                  window.dispatchEvent(event)
+                }}
+                className="col-span-2 px-2 py-1 rounded text-xs transition-colors bg-gray-600 hover:bg-gray-500 text-gray-200"
+              >
+                非表示
+              </button>
+            </div>
           </div>
 
           <div className="pointer-events-none mt-3 text-xs text-gray-300">

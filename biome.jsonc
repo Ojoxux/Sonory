@@ -91,7 +91,15 @@
         "useValidTypeof": "error"
       }
     },
-    "ignore": ["**/next.config.js", "**/*.d.ts", "**/server.js", "**/routes.js"]
+    "ignore": [
+      "**/next.config.js",
+      "**/*.d.ts",
+      "**/server.js",
+      "**/routes.js",
+      "**/public/sw.js",
+      "**/public/workbox-*.js",
+      "**/public/worker-*.js"
+    ]
   },
   "javascript": {
     "formatter": {
@@ -142,6 +150,13 @@
     }
   ],
   "files": {
-    "ignore": [".next/**"]
+    "ignore": [
+      ".next/**",
+      "public/sw.js",
+      "public/workbox-*.js",
+      "public/worker-*.js",
+      "public/fallback-*.js",
+      "public/*.map"
+    ]
   }
 }
