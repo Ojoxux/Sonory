@@ -2,8 +2,9 @@
 
 import { PanInfo } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
-// 仮実装のモックを使用
-import { useMediaRecorderMock } from '../../RecordSection/hooks/useMediaRecorderMock'
+import { useRecorderStore } from '../../../../store/useRecorderStore'
+// 実際のMediaRecorder APIを使用
+import { useMediaRecorder } from '../../RecordSection/hooks/useMediaRecorder'
 import { useAsyncWaveform } from './useAsyncWaveform'
 
 /**
@@ -22,6 +23,7 @@ export function useRecordingInterface(
   const [recordingTime, setRecordingTime] = useState(0)
   const [showInstructions, setShowInstructions] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
+  const [showPlayback, setShowPlayback] = useState(false)
   const [checkedItems, setCheckedItems] = useState({
     micPermission: false,
     autoStop: false,
@@ -29,8 +31,13 @@ export function useRecordingInterface(
     noiseWarning: false,
   })
 
-  // モック実装を使用
-  const { startRecording, stopRecording } = useMediaRecorderMock()
+  // 実際のMediaRecorder APIを使用
+  const {
+    startRecording,
+    stopRecording,
+    error: recordingError,
+  } = useMediaRecorder()
+  const { audioData } = useRecorderStore()
   const constraintsRef = useRef(null)
 
   // 非同期波形データフック
@@ -74,6 +81,22 @@ export function useRecordingInterface(
     onExpandedChange?.(isExpanded && status !== 'idle')
   }, [isExpanded, status, onExpandedChange])
 
+  // 録音完了後、audioDataが設定されたら再生画面を表示
+  useEffect(() => {
+    console.log('useEffect triggered:', {
+      status,
+      hasAudioData: !!audioData,
+      audioData,
+    })
+    if (status === 'completed' && audioData) {
+      console.log('AudioData detected, showing playback screen')
+      setShowPlayback(true)
+      setStatus('idle')
+      setRecordingTime(0)
+      setIsExpanded(false)
+    }
+  }, [status, audioData])
+
   const handleRecord = async () => {
     // 注意書きを表示
     setShowInstructions(true)
@@ -98,6 +121,10 @@ export function useRecordingInterface(
       console.error('録音の開始に失敗しました:', error)
       setStatus('idle')
       setShowInstructions(false)
+      // エラーメッセージを表示（将来的にはUIで表示）
+      alert(
+        `録音の開始に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`,
+      )
     }
   }
 
@@ -114,16 +141,6 @@ export function useRecordingInterface(
       setStatus('completed')
       await stopRecording()
       console.log('録音が停止されました', { newStatus: 'completed' })
-
-      setTimeout(() => {
-        console.log('Status after stop:', status)
-      }, 100)
-
-      setTimeout(() => {
-        setStatus('idle')
-        setRecordingTime(0)
-        setIsExpanded(false)
-      }, 2000)
     } catch (error) {
       console.error('録音の停止に失敗しました:', error)
       setStatus('idle')
@@ -146,6 +163,14 @@ export function useRecordingInterface(
     } else if (info.offset.y > 50) {
       setIsExpanded(false)
     }
+  }
+
+  const handleClosePlayback = () => {
+    setShowPlayback(false)
+  }
+
+  const handleDownloadAudio = (data: NonNullable<typeof audioData>) => {
+    console.log('音声をダウンロードしました:', data)
   }
 
   const allItemsChecked = Object.values(checkedItems).every(Boolean)
@@ -173,16 +198,21 @@ export function useRecordingInterface(
     setShowInstructions,
     isClosing,
     setIsClosing,
+    showPlayback,
     checkedItems,
     constraintsRef,
     waveformData,
+    audioData,
     handleRecord,
     handleStartRecording,
     handleCheckboxChange,
     handleStop,
+    handleClosePlayback,
+    handleDownloadAudio,
     formatTime,
     handleDragEnd,
     allItemsChecked,
     instructionItems,
+    recordingError,
   }
 }
