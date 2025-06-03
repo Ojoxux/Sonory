@@ -169,10 +169,6 @@ export function useRecordingInterface(
     setShowPlayback(false)
   }
 
-  const handleDownloadAudio = (data: NonNullable<typeof audioData>) => {
-    console.log('音声をダウンロードしました:', data)
-  }
-
   const allItemsChecked = Object.values(checkedItems).every(Boolean)
 
   const instructionItems = [
@@ -208,7 +204,6 @@ export function useRecordingInterface(
     handleCheckboxChange,
     handleStop,
     handleClosePlayback,
-    handleDownloadAudio,
     formatTime,
     handleDragEnd,
     allItemsChecked,

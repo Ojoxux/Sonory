@@ -43,7 +43,6 @@ export function RecordingInterface({
     handleCheckboxChange,
     handleStop,
     handleClosePlayback,
-    handleDownloadAudio,
     formatTime,
     handleDragEnd,
     allItemsChecked,
@@ -747,11 +746,7 @@ export function RecordingInterface({
       {/* 音声再生モーダル */}
       <AnimatePresence>
         {showPlayback && audioData && (
-          <AudioPlayback
-            audioData={audioData}
-            onClose={handleClosePlayback}
-            onDownload={handleDownloadAudio}
-          />
+          <AudioPlayback audioData={audioData} onClose={handleClosePlayback} />
         )}
       </AnimatePresence>
     </div>

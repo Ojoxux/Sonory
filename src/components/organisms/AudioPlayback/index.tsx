@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { MdClose, MdDownload } from 'react-icons/md'
+import { MdClose } from 'react-icons/md'
 import { WaveformPlayer } from '../../molecules/WaveformPlayer'
 import type { AudioPlaybackProps } from './types'
 
@@ -9,12 +9,11 @@ import type { AudioPlaybackProps } from './types'
  * 録音完了後の音声再生コンポーネント
  *
  * @description
- * 録音が完了した音声データの再生、ダウンロード、削除機能を提供します。
+ * 録音が完了した音声データの再生と削除機能を提供します。
  * wavesurfer.jsを使用した波形表示と再生コントロールを含みます。
  *
  * @param audioData 再生する音声データ
  * @param onClose 閉じるボタンが押されたときのコールバック
- * @param onDownload ダウンロードボタンが押されたときのコールバック
  * @param className クラス名
  *
  * @example
@@ -22,33 +21,14 @@ import type { AudioPlaybackProps } from './types'
  * <AudioPlayback
  *   audioData={audioData}
  *   onClose={() => setShowPlayback(false)}
- *   onDownload={(data) => downloadAudio(data)}
  * />
  * ```
  */
 export function AudioPlayback({
   audioData,
   onClose,
-  onDownload,
   className = '',
 }: AudioPlaybackProps) {
-  const handleDownload = (): void => {
-    if (!audioData || typeof window === 'undefined') return
-
-    try {
-      const link = document.createElement('a')
-      link.href = audioData.url
-      link.download = `recording_${audioData.recordedAt.toISOString().slice(0, 19).replace(/:/g, '-')}.webm`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-
-      onDownload?.(audioData)
-    } catch (error) {
-      console.error('ダウンロードに失敗しました:', error)
-    }
-  }
-
   /**
    * 録音時間をフォーマット
    */
@@ -132,14 +112,7 @@ export function AudioPlayback({
           </div>
 
           {/* アクションボタン */}
-          <div className="flex gap-3">
-            <button
-              onClick={handleDownload}
-              className="flex-1 flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 text-white py-3 px-4 rounded-lg font-medium transition-colors touch-manipulation"
-            >
-              <MdDownload className="w-5 h-5" />
-              ダウンロード
-            </button>
+          <div className="flex">
             <button
               onClick={onClose}
               className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-900 py-3 px-4 rounded-lg font-medium transition-colors touch-manipulation"

@@ -8,8 +8,6 @@ export type AudioPlaybackProps = {
   audioData: AudioData | null
   /** 閉じるボタンが押されたときのコールバック */
   onClose: () => void
-  /** ダウンロードボタンが押されたときのコールバック */
-  onDownload?: (audioData: AudioData) => void
   /** クラス名 */
   className?: string
 }
