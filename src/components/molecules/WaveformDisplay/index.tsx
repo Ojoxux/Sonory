@@ -59,7 +59,7 @@ export function WaveformDisplay({
     if (!canvas || !container) return
 
     const width = container.offsetWidth
-    const dpr = window.devicePixelRatio || 1
+    const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1
 
     canvas.width = width * dpr
     canvas.height = height * dpr
@@ -82,7 +82,7 @@ export function WaveformDisplay({
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    const dpr = window.devicePixelRatio || 1
+    const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1
     const width = canvas.width / dpr
     const canvasHeight = canvas.height / dpr
 
