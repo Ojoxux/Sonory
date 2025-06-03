@@ -6,6 +6,7 @@ import { BlinkingIndicator } from '../../atoms/BlinkingIndicator'
 import { PulseEffect } from '../../atoms/PulseEffect'
 import { RippleEffect } from '../../atoms/RippleEffect'
 import { WaveformDisplay } from '../../molecules/WaveformDisplay'
+import { AudioPlayback } from '../AudioPlayback'
 import { useRecordingInterface } from './hooks/useRecordingInterface'
 import type { RecordingInterfaceProps } from './type'
 
@@ -32,13 +33,16 @@ export function RecordingInterface({
     setShowInstructions,
     isClosing,
     setIsClosing,
+    showPlayback,
     checkedItems,
     constraintsRef,
     waveformData,
+    audioData,
     handleRecord,
     handleStartRecording,
     handleCheckboxChange,
     handleStop,
+    handleClosePlayback,
     formatTime,
     handleDragEnd,
     allItemsChecked,
@@ -187,7 +191,7 @@ export function RecordingInterface({
                   transformStyle: 'preserve-3d',
                 }}
               >
-                ｓ{/* グロー効果 */}
+                {/* グロー効果 */}
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: [0, 0.3, 0], scale: [0.8, 1.2, 1] }}
@@ -736,6 +740,13 @@ export function RecordingInterface({
               </div>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 音声再生モーダル */}
+      <AnimatePresence>
+        {showPlayback && audioData && (
+          <AudioPlayback audioData={audioData} onClose={handleClosePlayback} />
         )}
       </AnimatePresence>
     </div>
