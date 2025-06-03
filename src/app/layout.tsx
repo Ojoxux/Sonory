@@ -1,16 +1,55 @@
 import type { Metadata, Viewport } from 'next'
-import { Geist, Geist_Mono, M_PLUS_Rounded_1c, Nunito } from 'next/font/google'
+import localFont from 'next/font/local'
 import './globals.css'
 import { Providers } from './providers'
 
-const geistSans = Geist({
+const geistSans = localFont({
+  src: [
+    {
+      path: '../../public/fonts/Nunito-Regular.woff2',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: '../../public/fonts/Nunito-Medium.woff2',
+      weight: '500',
+      style: 'normal',
+    },
+    {
+      path: '../../public/fonts/Nunito-SemiBold.woff2',
+      weight: '600',
+      style: 'normal',
+    },
+    {
+      path: '../../public/fonts/Nunito-Bold.woff2',
+      weight: '700',
+      style: 'normal',
+    },
+  ],
   variable: '--font-geist-sans',
-  subsets: ['latin'],
+  display: 'swap',
 })
 
-const geistMono = Geist_Mono({
+const geistMono = localFont({
+  src: [
+    {
+      path: '../../public/fonts/MPLUSRounded1c-Regular.woff2',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: '../../public/fonts/MPLUSRounded1c-Medium.woff2',
+      weight: '500',
+      style: 'normal',
+    },
+    {
+      path: '../../public/fonts/MPLUSRounded1c-Bold.woff2',
+      weight: '700',
+      style: 'normal',
+    },
+  ],
   variable: '--font-geist-mono',
-  subsets: ['latin'],
+  display: 'swap',
 })
 
 /**
@@ -18,16 +57,72 @@ const geistMono = Geist_Mono({
  * 将来的にはどちらか一方を使用するようにしたい。
  * その際には、このコメントを削除して、使用するフォントを変更する。
  */
-const nunito = Nunito({
+const nunito = localFont({
+  src: [
+    {
+      path: '../../public/fonts/Nunito-Regular.woff2',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: '../../public/fonts/Nunito-Medium.woff2',
+      weight: '500',
+      style: 'normal',
+    },
+    {
+      path: '../../public/fonts/Nunito-SemiBold.woff2',
+      weight: '600',
+      style: 'normal',
+    },
+    {
+      path: '../../public/fonts/Nunito-Bold.woff2',
+      weight: '700',
+      style: 'normal',
+    },
+    {
+      path: '../../public/fonts/Nunito-ExtraBold.woff2',
+      weight: '800',
+      style: 'normal',
+    },
+    {
+      path: '../../public/fonts/Nunito-Black.woff2',
+      weight: '900',
+      style: 'normal',
+    },
+  ],
   variable: '--font-nunito',
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800', '900'],
+  display: 'swap',
 })
 
-const mPlusRounded = M_PLUS_Rounded_1c({
+const mPlusRounded = localFont({
+  src: [
+    {
+      path: '../../public/fonts/MPLUSRounded1c-Regular.woff2',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: '../../public/fonts/MPLUSRounded1c-Medium.woff2',
+      weight: '500',
+      style: 'normal',
+    },
+    {
+      path: '../../public/fonts/MPLUSRounded1c-Bold.woff2',
+      weight: '700',
+      style: 'normal',
+    },
+    {
+      path: '../../public/fonts/MPLUSRounded1c-ExtraBold.woff2',
+      weight: '800',
+      style: 'normal',
+    },
+    {
+      path: '../../public/fonts/MPLUSRounded1c-Black.woff2',
+      weight: '900',
+      style: 'normal',
+    },
+  ],
   variable: '--font-mplus-rounded',
-  weight: ['400', '500', '700', '800', '900'],
-  preload: false,
   display: 'swap',
 })
 
