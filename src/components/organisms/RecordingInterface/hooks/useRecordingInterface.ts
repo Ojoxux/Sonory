@@ -108,6 +108,7 @@ export function useRecordingInterface(
       setStatus('recording')
       setRecordingTime(0)
       setShowInstructions(false)
+      setIsClosing(false)
       // チェックボックスをリセット
       setCheckedItems({
         micPermission: false,
@@ -133,6 +134,16 @@ export function useRecordingInterface(
       ...prev,
       [key]: !prev[key],
     }))
+  }
+
+  const handleSelectAll = () => {
+    const newValue = !allItemsChecked
+    setCheckedItems({
+      micPermission: newValue,
+      autoStop: newValue,
+      manualStop: newValue,
+      noiseWarning: newValue,
+    })
   }
 
   const handleStop = async () => {
@@ -202,6 +213,7 @@ export function useRecordingInterface(
     handleRecord,
     handleStartRecording,
     handleCheckboxChange,
+    handleSelectAll,
     handleStop,
     handleClosePlayback,
     formatTime,

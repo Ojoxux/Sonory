@@ -5,6 +5,7 @@ import { MdMic, MdStop } from 'react-icons/md'
 import { BlinkingIndicator } from '../../atoms/BlinkingIndicator'
 import { PulseEffect } from '../../atoms/PulseEffect'
 import { RippleEffect } from '../../atoms/RippleEffect'
+import { SelectAllButton } from '../../atoms/SelectAllButton'
 import { WaveformDisplay } from '../../molecules/WaveformDisplay'
 import { AudioPlayback } from '../AudioPlayback'
 import { useRecordingInterface } from './hooks/useRecordingInterface'
@@ -41,6 +42,7 @@ export function RecordingInterface({
     handleRecord,
     handleStartRecording,
     handleCheckboxChange,
+    handleSelectAll,
     handleStop,
     handleClosePlayback,
     formatTime,
@@ -87,7 +89,7 @@ export function RecordingInterface({
                   isClosing
                     ? {
                         // 閉じる時：高さから幅の順序で2段階アニメーション
-                        height: ['26rem', '4rem'],
+                        height: ['30rem', '4rem'],
                         width: ['20rem', '12rem'],
                         backgroundColor: [
                           'rgba(30, 30, 30, 0.95)',
@@ -101,7 +103,7 @@ export function RecordingInterface({
                     : {
                         // 開く時：幅から高さの順序で2段階アニメーション
                         width: ['12rem', '20rem'],
-                        height: ['4rem', '26rem'],
+                        height: ['4rem', '30rem'],
                         backgroundColor: [
                           'rgba(0, 0, 0, 0.95)',
                           'rgba(30, 30, 30, 0.95)',
@@ -388,6 +390,28 @@ export function RecordingInterface({
                     </motion.div>
                   ))}
                 </motion.div>
+
+                {/* 全選択ボタン */}
+                <motion.div
+                  className="mb-4 relative z-10"
+                  animate={
+                    isClosing
+                      ? { opacity: 0, scale: 0.9 }
+                      : { opacity: 1, scale: 1 }
+                  }
+                  transition={
+                    isClosing
+                      ? { duration: 0.2 }
+                      : { duration: 0.3, delay: 2.0 }
+                  }
+                >
+                  <SelectAllButton
+                    isAllSelected={allItemsChecked}
+                    onToggleAll={handleSelectAll}
+                    disabled={false}
+                  />
+                </motion.div>
+
                 {/* 録音開始ボタン */}
                 <motion.div
                   initial={{ opacity: 0, y: 50, scale: 0.8 }}
@@ -404,7 +428,7 @@ export function RecordingInterface({
                     isClosing
                       ? { duration: 0.2 }
                       : {
-                          delay: 2,
+                          delay: 2.2,
                           duration: 0.8,
                           ease: [0.68, -0.55, 0.265, 1.55],
                         }
@@ -466,14 +490,20 @@ export function RecordingInterface({
                               '0 8px 24px rgba(255,255,255,0.4)',
                             ],
                           }
-                        : {}
+                        : {
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                          }
                     }
                     transition={{
-                      boxShadow: {
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: 'easeInOut',
-                      },
+                      boxShadow: allItemsChecked
+                        ? {
+                            duration: 2,
+                            repeat: Infinity,
+                            ease: 'easeInOut',
+                          }
+                        : {
+                            duration: 0.3,
+                          },
                     }}
                   >
                     {allItemsChecked && (
@@ -486,6 +516,7 @@ export function RecordingInterface({
                           repeat: Infinity,
                           repeatDelay: 1,
                         }}
+                        key={`shimmer-${allItemsChecked}`}
                       />
                     )}
                     録音開始
