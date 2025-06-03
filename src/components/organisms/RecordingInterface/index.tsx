@@ -5,6 +5,7 @@ import { MdMic, MdStop } from 'react-icons/md'
 import { BlinkingIndicator } from '../../atoms/BlinkingIndicator'
 import { PulseEffect } from '../../atoms/PulseEffect'
 import { RippleEffect } from '../../atoms/RippleEffect'
+import { SelectAllButton } from '../../atoms/SelectAllButton'
 import { WaveformDisplay } from '../../molecules/WaveformDisplay'
 import { AudioPlayback } from '../AudioPlayback'
 import { useRecordingInterface } from './hooks/useRecordingInterface'
@@ -41,6 +42,7 @@ export function RecordingInterface({
     handleRecord,
     handleStartRecording,
     handleCheckboxChange,
+    handleSelectAll,
     handleStop,
     handleClosePlayback,
     formatTime,
@@ -242,6 +244,27 @@ export function RecordingInterface({
                     以下の項目をご確認ください
                   </motion.p>
                 </motion.div>
+                {/* 全選択ボタン */}
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={
+                    isClosing
+                      ? { opacity: 0, y: -10, scale: 0.9 }
+                      : { opacity: 1, y: 0, scale: 1 }
+                  }
+                  transition={
+                    isClosing
+                      ? { duration: 0.2 }
+                      : { duration: 0.5, delay: 1.1 }
+                  }
+                  className="relative z-10"
+                >
+                  <SelectAllButton
+                    isAllChecked={allItemsChecked}
+                    onSelectAll={handleSelectAll}
+                  />
+                </motion.div>
+
                 {/* チェックボックスリスト */}
                 <motion.div
                   className="space-y-2 mb-4 flex-1 relative z-10"
