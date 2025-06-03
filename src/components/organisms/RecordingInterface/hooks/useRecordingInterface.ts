@@ -135,6 +135,17 @@ export function useRecordingInterface(
     }))
   }
 
+  const handleSelectAll = () => {
+    const areAllChecked = Object.values(checkedItems).every(Boolean)
+    const newValue = !areAllChecked
+    setCheckedItems({
+      micPermission: newValue,
+      autoStop: newValue,
+      manualStop: newValue,
+      noiseWarning: newValue,
+    })
+  }
+
   const handleStop = async () => {
     try {
       console.log('録音を停止します...', { currentStatus: status })
@@ -202,6 +213,7 @@ export function useRecordingInterface(
     handleRecord,
     handleStartRecording,
     handleCheckboxChange,
+    handleSelectAll,
     handleStop,
     handleClosePlayback,
     formatTime,
