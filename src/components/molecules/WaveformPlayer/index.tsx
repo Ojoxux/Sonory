@@ -232,11 +232,27 @@ export function WaveformPlayer({
       try {
         if (audioData.url) {
           console.log('Loading audio from URL:', audioData.url)
-          await wavesurfer.load(audioData.url)
+          wavesurfer.on('ready', () => {
+            console.log('WaveSurfer ready (from URL) - auto-playing')
+            setIsLoading(false)
+            setIsInitialized(true)
+            setDuration(wavesurfer.getDuration())
+            onReady?.()
+            wavesurfer.play()
+          })
+          wavesurfer.load(audioData.url)
           console.log('Audio URL loaded successfully')
         } else if (audioData.blob) {
           console.log('Loading audio from blob:', audioData.blob.size, 'bytes')
-          await wavesurfer.loadBlob(audioData.blob)
+          wavesurfer.on('ready', () => {
+            console.log('WaveSurfer ready (from blob)')
+            setIsLoading(false)
+            setIsInitialized(true)
+            setDuration(wavesurfer.getDuration())
+            onReady?.()
+            wavesurfer.play()
+          })
+          wavesurfer.loadBlob(audioData.blob)
           console.log('Audio blob loaded successfully')
         } else {
           console.error('No valid audio data found')
