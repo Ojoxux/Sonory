@@ -169,6 +169,16 @@ export function useRecordingInterface(
     setShowPlayback(false)
   }
 
+  const handleSelectAll = () => {
+    const newValue = !allItemsChecked
+    setCheckedItems({
+      micPermission: newValue,
+      autoStop: newValue,
+      manualStop: newValue,
+      noiseWarning: newValue,
+    })
+  }
+
   const allItemsChecked = Object.values(checkedItems).every(Boolean)
 
   const instructionItems = [
@@ -206,6 +216,7 @@ export function useRecordingInterface(
     handleClosePlayback,
     formatTime,
     handleDragEnd,
+    handleSelectAll,
     allItemsChecked,
     instructionItems,
     recordingError,

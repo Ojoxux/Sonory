@@ -7,6 +7,7 @@ import { PulseEffect } from '../../atoms/PulseEffect'
 import { RippleEffect } from '../../atoms/RippleEffect'
 import { WaveformDisplay } from '../../molecules/WaveformDisplay'
 import { AudioPlayback } from '../AudioPlayback'
+import { SelectAllButton } from '../../atoms/SelectAllButton'
 import { useRecordingInterface } from './hooks/useRecordingInterface'
 import type { RecordingInterfaceProps } from './type'
 
@@ -45,6 +46,7 @@ export function RecordingInterface({
     handleClosePlayback,
     formatTime,
     handleDragEnd,
+    handleSelectAll,
     allItemsChecked,
     instructionItems,
   } = useRecordingInterface(onExpandedChange)
@@ -87,7 +89,7 @@ export function RecordingInterface({
                   isClosing
                     ? {
                         // 閉じる時：高さから幅の順序で2段階アニメーション
-                        height: ['26rem', '4rem'],
+                        height: ['30rem', '4rem'],
                         width: ['20rem', '12rem'],
                         backgroundColor: [
                           'rgba(30, 30, 30, 0.95)',
@@ -101,7 +103,7 @@ export function RecordingInterface({
                     : {
                         // 開く時：幅から高さの順序で2段階アニメーション
                         width: ['12rem', '20rem'],
-                        height: ['4rem', '26rem'],
+                        height: ['4rem', '30rem'],
                         backgroundColor: [
                           'rgba(0, 0, 0, 0.95)',
                           'rgba(30, 30, 30, 0.95)',
@@ -388,6 +390,11 @@ export function RecordingInterface({
                     </motion.div>
                   ))}
                 </motion.div>
+                {/* 全選択ボタン */}
+                <SelectAllButton
+                  isAllSelected={allItemsChecked}
+                  onToggle={handleSelectAll}
+                />
                 {/* 録音開始ボタン */}
                 <motion.div
                   initial={{ opacity: 0, y: 50, scale: 0.8 }}
