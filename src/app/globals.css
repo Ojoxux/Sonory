@@ -8,10 +8,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-nunito: var(--font-nunito);
-  --font-mplus: var(--font-mplus-rounded);
+  --font-arial-rounded-mt-pro: var(--font-arial-rounded-mt-pro);
 
   /* カスタムアニメーション */
   --animate-pulse-slow: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
@@ -28,12 +25,16 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-arial-rounded-mt-pro), Arial, Helvetica, sans-serif;
 }
 
 /* フォントクラス */
 .font-mplus {
-  font-family: var(--font-mplus-rounded);
+  font-family: var(--font-arial-rounded-mt-pro);
+}
+
+.font-arial-rounded {
+  font-family: var(--font-arial-rounded-mt-pro);
 }
 
 /* カスタムアニメーション定義 */

@@ -3,126 +3,11 @@ import localFont from 'next/font/local'
 import './globals.css'
 import { Providers } from './providers'
 
-const geistSans = localFont({
-  src: [
-    {
-      path: '../../public/fonts/Nunito-Regular.woff2',
-      weight: '400',
-      style: 'normal',
-    },
-    {
-      path: '../../public/fonts/Nunito-Medium.woff2',
-      weight: '500',
-      style: 'normal',
-    },
-    {
-      path: '../../public/fonts/Nunito-SemiBold.woff2',
-      weight: '600',
-      style: 'normal',
-    },
-    {
-      path: '../../public/fonts/Nunito-Bold.woff2',
-      weight: '700',
-      style: 'normal',
-    },
-  ],
-  variable: '--font-geist-sans',
-  display: 'swap',
-})
-
-const geistMono = localFont({
-  src: [
-    {
-      path: '../../public/fonts/MPLUSRounded1c-Regular.woff2',
-      weight: '400',
-      style: 'normal',
-    },
-    {
-      path: '../../public/fonts/MPLUSRounded1c-Medium.woff2',
-      weight: '500',
-      style: 'normal',
-    },
-    {
-      path: '../../public/fonts/MPLUSRounded1c-Bold.woff2',
-      weight: '700',
-      style: 'normal',
-    },
-  ],
-  variable: '--font-geist-mono',
-  display: 'swap',
-})
-
-/**
- * MEMO: 現在はNunitoとM PLUS Rounded 1cを使用しているが、
- * 将来的にはどちらか一方を使用するようにしたい。
- * その際には、このコメントを削除して、使用するフォントを変更する。
- */
-const nunito = localFont({
-  src: [
-    {
-      path: '../../public/fonts/Nunito-Regular.woff2',
-      weight: '400',
-      style: 'normal',
-    },
-    {
-      path: '../../public/fonts/Nunito-Medium.woff2',
-      weight: '500',
-      style: 'normal',
-    },
-    {
-      path: '../../public/fonts/Nunito-SemiBold.woff2',
-      weight: '600',
-      style: 'normal',
-    },
-    {
-      path: '../../public/fonts/Nunito-Bold.woff2',
-      weight: '700',
-      style: 'normal',
-    },
-    {
-      path: '../../public/fonts/Nunito-ExtraBold.woff2',
-      weight: '800',
-      style: 'normal',
-    },
-    {
-      path: '../../public/fonts/Nunito-Black.woff2',
-      weight: '900',
-      style: 'normal',
-    },
-  ],
-  variable: '--font-nunito',
-  display: 'swap',
-})
-
-const mPlusRounded = localFont({
-  src: [
-    {
-      path: '../../public/fonts/MPLUSRounded1c-Regular.woff2',
-      weight: '400',
-      style: 'normal',
-    },
-    {
-      path: '../../public/fonts/MPLUSRounded1c-Medium.woff2',
-      weight: '500',
-      style: 'normal',
-    },
-    {
-      path: '../../public/fonts/MPLUSRounded1c-Bold.woff2',
-      weight: '700',
-      style: 'normal',
-    },
-    {
-      path: '../../public/fonts/MPLUSRounded1c-ExtraBold.woff2',
-      weight: '800',
-      style: 'normal',
-    },
-    {
-      path: '../../public/fonts/MPLUSRounded1c-Black.woff2',
-      weight: '900',
-      style: 'normal',
-    },
-  ],
-  variable: '--font-mplus-rounded',
+const arialRoundedMTPro = localFont({
+  src: '../../public/fonts/Arial-Rounded-MT-Pro-Bold.woff2',
+  weight: '700',
+  style: 'normal',
+  variable: '--font-arial-rounded-mt-pro',
   display: 'swap',
 })
 
@@ -248,7 +133,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://api.open-meteo.com" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${nunito.variable} ${mPlusRounded.variable} antialiased touch-manipulation`}
+        className={`${arialRoundedMTPro.variable} antialiased touch-manipulation`}
       >
         <Providers>{children}</Providers>
       </body>
