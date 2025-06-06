@@ -149,6 +149,11 @@ export function WaveformPlayer({
         return
       }
 
+      if (wavesurferRef.current) {
+        wavesurferRef.current.unAll?.()
+        wavesurferRef.current.destroy()
+      }
+
       // WaveSurferインスタンスを作成
       const wavesurfer = WaveSurfer.create({
         container: containerRef.current,
@@ -186,6 +191,15 @@ export function WaveformPlayer({
           'WaveSurfer ready for playback',
         )
         onReady?.()
+        wavesurfer.play() // 再生を ready イベント内で確実に実行
+      })
+
+      wavesurfer.on('audioprocess', () => {
+        setCurrentTime(wavesurfer.getCurrentTime())
+      })
+
+      wavesurfer.on('timeupdate', () => {
+        setCurrentTime(wavesurfer.getCurrentTime())
       })
 
       wavesurfer.on('play', () => {
@@ -201,6 +215,7 @@ export function WaveformPlayer({
       wavesurfer.on('finish', () => {
         console.log('WaveSurfer finish event fired - playback completed')
         setIsPlaying(false)
+        wavesurfer.seekTo(0) // ここが追加ポイント：終了時に先頭に戻す
         const finalTime = wavesurfer.getDuration()
         setCurrentTime(finalTime)
         onFinish?.()
@@ -232,11 +247,27 @@ export function WaveformPlayer({
       try {
         if (audioData.url) {
           console.log('Loading audio from URL:', audioData.url)
-          await wavesurfer.load(audioData.url)
+          wavesurfer.on('ready', () => {
+            console.log('WaveSurfer ready (from URL) - auto-playing')
+            setIsLoading(false)
+            setIsInitialized(true)
+            setDuration(wavesurfer.getDuration())
+            onReady?.()
+            wavesurfer.play()
+          })
+          wavesurfer.load(audioData.url)
           console.log('Audio URL loaded successfully')
         } else if (audioData.blob) {
           console.log('Loading audio from blob:', audioData.blob.size, 'bytes')
-          await wavesurfer.loadBlob(audioData.blob)
+          wavesurfer.on('ready', () => {
+            console.log('WaveSurfer ready (from blob)')
+            setIsLoading(false)
+            setIsInitialized(true)
+            setDuration(wavesurfer.getDuration())
+            onReady?.()
+            wavesurfer.play()
+          })
+          wavesurfer.loadBlob(audioData.blob)
           console.log('Audio blob loaded successfully')
         } else {
           console.error('No valid audio data found')
@@ -300,6 +331,19 @@ export function WaveformPlayer({
           }
         : null,
     })
+    const wavesurfer = wavesurferRef.current
+
+    if (wavesurfer && isInitialized) {
+      if (wavesurfer.isPlaying()) {
+        wavesurfer.pause()
+        setIsPlaying(false)
+      } else {
+        wavesurfer.play()
+        setIsPlaying(true)
+      }
+    } else {
+      initializeWaveSurfer()
+    }
 
     if (!wavesurferRef.current || !isInitialized) {
       console.warn(
@@ -370,6 +414,8 @@ export function WaveformPlayer({
     }
 
     return () => {
+      wavesurferRef.current?.unAll?.()
+      wavesurferRef.current?.destroy()
       destroyWaveSurfer().catch((error) => {
         console.warn('WaveSurfer cleanup error:', error)
       })
