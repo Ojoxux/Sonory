@@ -24,12 +24,9 @@ export function useRecordingInterface(
   const [showInstructions, setShowInstructions] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
   const [showPlayback, setShowPlayback] = useState(false)
-  const [checkedItems, setCheckedItems] = useState({
-    micPermission: false,
-    autoStop: false,
-    manualStop: false,
-    noiseWarning: false,
-  })
+  const [isAgreed, setIsAgreed] = useState(false)
+  const [showConfirmationComplete, setShowConfirmationComplete] =
+    useState(false)
 
   // 実際のMediaRecorder APIを使用
   const {
@@ -42,6 +39,35 @@ export function useRecordingInterface(
 
   // 非同期波形データフック
   const waveformData = useAsyncWaveform(status === 'recording')
+
+  // 外部クリック検知用のref
+  const instructionsRef = useRef<HTMLDivElement>(null)
+
+  // 外部クリック検知
+  useEffect(() => {
+    if (!showInstructions) return
+
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (
+        instructionsRef.current &&
+        !instructionsRef.current.contains(event.target as Node)
+      ) {
+        handleCloseInstructions()
+      }
+    }
+
+    // イベントリスナーを追加（少し遅延させて、開くアニメーション中のクリックを無視）
+    const timeoutId = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside)
+      document.addEventListener('touchstart', handleClickOutside)
+    }, 300)
+
+    return () => {
+      clearTimeout(timeoutId)
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
+    }
+  }, [showInstructions])
 
   // 録音時間のカウント（requestAnimationFrameを使用）
   useEffect(() => {
@@ -94,6 +120,10 @@ export function useRecordingInterface(
       setStatus('idle')
       setRecordingTime(0)
       setIsExpanded(false)
+      // 確認関連の状態をリセット
+      setIsAgreed(false)
+      setShowConfirmationComplete(false)
+      setShowInstructions(false)
     }
   }, [status, audioData])
 
@@ -108,13 +138,9 @@ export function useRecordingInterface(
       setStatus('recording')
       setRecordingTime(0)
       setShowInstructions(false)
-      // チェックボックスをリセット
-      setCheckedItems({
-        micPermission: false,
-        autoStop: false,
-        manualStop: false,
-        noiseWarning: false,
-      })
+      // 確認関連の状態をリセット
+      setIsAgreed(false)
+      setShowConfirmationComplete(false)
       await startRecording()
       console.log('録音が開始されました')
     } catch (error) {
@@ -128,11 +154,12 @@ export function useRecordingInterface(
     }
   }
 
-  const handleCheckboxChange = (key: keyof typeof checkedItems) => {
-    setCheckedItems((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }))
+  const handleAgree = () => {
+    setIsAgreed(true)
+    // 確認ボタンのアニメーション完了まで待ってから確認完了画面を表示
+    setTimeout(() => {
+      setShowConfirmationComplete(true)
+    }, 1200)
   }
 
   const handleStop = async () => {
@@ -167,31 +194,29 @@ export function useRecordingInterface(
 
   const handleClosePlayback = () => {
     setShowPlayback(false)
+    // 次回の録音のために確認関連の状態をリセット
+    setIsAgreed(false)
+    setShowConfirmationComplete(false)
+    setShowInstructions(false)
+    setIsClosing(false)
   }
 
-  const handleSelectAll = () => {
-    const newValue = !allItemsChecked
-    setCheckedItems({
-      micPermission: newValue,
-      autoStop: newValue,
-      manualStop: newValue,
-      noiseWarning: newValue,
-    })
+  const handleCloseInstructions = () => {
+    setIsClosing(true)
+    // アニメーション完了後に状態をリセット
+    setTimeout(() => {
+      setShowInstructions(false)
+      setIsClosing(false)
+      setIsAgreed(false)
+      setShowConfirmationComplete(false)
+    }, 1200) // クローズアニメーションの時間に合わせる（0.6 + 0.6 = 1.2秒）
   }
-
-  const allItemsChecked = Object.values(checkedItems).every(Boolean)
 
   const instructionItems = [
-    { key: 'micPermission' as const, text: 'マイクへのアクセス許可が必要です' },
-    { key: 'autoStop' as const, text: '録音は最大10秒まで自動停止します' },
-    {
-      key: 'manualStop' as const,
-      text: '録音中にもう一度ボタンを押すと録音を停止します',
-    },
-    {
-      key: 'noiseWarning' as const,
-      text: '周囲の雑音が多いと AI 分類の精度が低下する場合があります',
-    },
+    'マイクへのアクセス許可が必要です',
+    '録音は最大10秒まで自動停止します',
+    '録音中にもう一度ボタンを押すと録音を停止します',
+    '周囲の雑音が多いと AI 分類の精度が低下する場合があります',
   ]
 
   return {
@@ -205,19 +230,21 @@ export function useRecordingInterface(
     isClosing,
     setIsClosing,
     showPlayback,
-    checkedItems,
+    isAgreed,
+    showConfirmationComplete,
+    setShowConfirmationComplete,
     constraintsRef,
+    instructionsRef,
     waveformData,
     audioData,
     handleRecord,
     handleStartRecording,
-    handleCheckboxChange,
+    handleAgree,
     handleStop,
     handleClosePlayback,
+    handleCloseInstructions,
     formatTime,
     handleDragEnd,
-    handleSelectAll,
-    allItemsChecked,
     instructionItems,
     recordingError,
   }
