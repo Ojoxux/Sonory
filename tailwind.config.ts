@@ -37,10 +37,18 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ['var(--font-sans)', 'Arial', 'Helvetica', 'sans-serif'],
-        mono: ['var(--font-mono)', 'monospace'],
-        nunito: ['var(--font-nunito)', 'Nunito', 'sans-serif'],
-        mplus: ['var(--font-mplus-rounded)', 'sans-serif'],
+        sans: [
+          'var(--font-arial-rounded-mt-pro)',
+          'Arial',
+          'Helvetica',
+          'sans-serif',
+        ],
+        'arial-rounded': [
+          'var(--font-arial-rounded-mt-pro)',
+          'Arial',
+          'Helvetica',
+          'sans-serif',
+        ],
       },
       animation: {
         'pulse-slow': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
