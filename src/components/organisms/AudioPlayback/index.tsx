@@ -92,25 +92,6 @@ export function AudioPlayback({
             />
           </div>
 
-          {/* 音声情報 */}
-          <div className="bg-gray-50 rounded-lg p-4 mb-6">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">音声情報</h3>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-gray-500">ファイルサイズ:</span>
-                <span className="ml-2 font-mono">
-                  {(audioData.blob.size / 1024).toFixed(1)} KB
-                </span>
-              </div>
-              <div>
-                <span className="text-gray-500">形式:</span>
-                <span className="ml-2 font-mono">
-                  {audioData.blob.type || 'audio/webm'}
-                </span>
-              </div>
-            </div>
-          </div>
-
           {/* アクションボタン */}
           <div className="flex">
             <button
