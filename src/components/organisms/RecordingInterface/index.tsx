@@ -271,7 +271,7 @@ export function RecordingInterface({
                 ) : (
                   <>
                     {/* 確認完了画面 */}
-                    <ConfirmationComplete />
+                    <ConfirmationComplete isClosing={isClosing} />
 
                     {/* スライドバー（確認完了後のみ表示） */}
                     <motion.div
