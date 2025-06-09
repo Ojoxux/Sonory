@@ -87,7 +87,7 @@ pnpm dev
 bun dev
 ```
 
-[http://localhost:3000](http://localhost:3000)をブラウザで開いて結果を確認できます。
+[http://localhost:3000](http://localhost:3000)をブラウザで開いて開発を始めましょう！！
 
 ## 🗂 Project Structure
 
