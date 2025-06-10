@@ -38,8 +38,6 @@
    - 時間帯（6時間区切り）の自動タグ付け
    - 天気情報の自動タグ付け（Open-Meteo API使用）
 
-![Sonory App Screenshot](public/screenshot.png)
-
 ## 🚀 Getting Started
 
 ### 必要条件
