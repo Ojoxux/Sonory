@@ -176,44 +176,63 @@ bun start
 ### ブランチ命名規則
 
 ```
-feature/#[issues番号]_hoge-fuga-hoge
+feature/i[issues番号]_hoge-fuga-hoge
 ```
 
 例:
-- `feature/#123_add-user-authentication`
-- `bugfix/#456_fix-login-error`
+- `feature/i123_add-user-authentication`
+- `bugfix/i456_fix-login-error`
 
 ### コミットメッセージ
 
-- 英語で記述すること
+- 英語、日本語どちらでも可
 - プレフィックスを使用すること
+- 機能やコンポーネントの種類に応じてスコープを括弧内に明示すること
+- 絵文字の使用も可（特に録音・音声関連は🎤、音楽関連は🎵を使用）
 
 ```
-feature: implement user authentication
-fix: resolve login error
-docs: update API documentation
-test: add unit tests for auth module
-refactor: simplify error handling logic
-chore(deps): update react to v18.2.0
+feat(atoms): チェックマークアイコンコンポーネントと型定義を作成
+feat(organisms): RecordingInterfaceに確認完了機能を追加
+feat(MediaRecorder): 🎤 録音機能を強化し、一時停止・再開機能を追加
+fix(molecules): 確認完了画面のアニメーション問題を修正
+fix(WaveformPlayer): 音声再生時のシークバー動作を修正
+style(organisms): AudioPlayback音声情報表記を削除
+refactor(fonts): フォント設定を整理しArial Rounded MT Pro追加
+remove(atoms): SelectAllButtonコンポーネントを削除
+chore(deps): next-pwaをdependenciesに追加
 ```
 
-注意: chore プレフィックスは範囲が広くなりがちです。依存関係の変更（パッケージのインストールなど）を行う場合は、具体的な内容を示すために `chore(deps):` のように括弧内に対象を明記してください。
+**スコープの例:**
+- **コンポーネント**: `(atoms)`, `(molecules)`, `(organisms)`
+- **機能名**: `(MediaRecorder)`, `(WaveformPlayer)`, `(AudioPlayback)`, `(RecordingInterface)`
+- **技術関連**: `(fonts)`, `(deps)`, `(biome)`
 
 ### プルリクエストタイトル記載ルール
 
 - 日本語で記述すること
 - 以下の形式で記載すること
+- 機能やコンポーネントの種類に応じてスコープを括弧内に明示すること
 
 ```
-feature/#[issues番号]: ほげほげ
-fix/#[issues番号]: ほげほげ
+feature(scope)/#[issues番号]: ほげほげ
+fix(scope)/#[issues番号]: ほげほげ
+style(scope)/#[issues番号]: ほげほげ
 ```
 
 例:
-- `feature/#123: ユーザー認証機能の実装`
-- `fix/#456: ログインエラーの修正`
+- `feature(atoms)/#123: チェックマークアイコンコンポーネントの実装`
+- `feature(organisms)/#124: RecordingInterface確認完了機能の追加`
+- `fix(molecules)/#456: 確認完了画面のアニメーション問題修正`
+- `fix(WaveformPlayer)/#457: 音声再生時のシークバー動作修正`
+- `style(organisms)/#458: AudioPlayback音声情報表記の削除`
+- `refactor(fonts)/#459: フォント設定の整理`
 
-注意: `chore` の場合、スコープが大きくなりすぎる傾向があるため、パッケージインストールなどの依存関係変更の場合は `chore(deps): React v18.2.0へのアップデート` のように括弧内に固有名詞を記載してください。
+**スコープの例:**
+- **コンポーネント**: `(atoms)`, `(molecules)`, `(organisms)`
+- **機能名**: `(MediaRecorder)`, `(WaveformPlayer)`, `(AudioPlayback)`, `(RecordingInterface)`
+- **技術関連**: `(fonts)`, `(deps)`, `(biome)`
+
+- 注意: 変更の対象となる機能やコンポーネントの種類を括弧内に明記することで、変更の範囲と内容を明確にしてください。
 
 ## 🤝 Contribution Flow
 
@@ -223,7 +242,7 @@ fix/#[issues番号]: ほげほげ
 
 2. ブランチの作成
    - ブランチ命名規則に従ったブランチを作成
-   - `git checkout -b 'feature/#123_add-new-feature'`
+   - `git checkout -b 'feature/i123_add-new-feature'`
 
 3. 開発作業
    - 小さな単位でコミット
