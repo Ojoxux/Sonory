@@ -20,7 +20,7 @@ jobs:
           # Ojoxux/Sonoryリポジトリ用のプロジェクトURL
           # プロジェクト番号は env.PROJECT_URL で管理
           project-url: ${{ env.PROJECT_URL }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.PROJECT_PAT }}
           
       # デフォルトで「💡 アイデア」ステータスを設定
       - name: Set Default Status
@@ -28,7 +28,7 @@ jobs:
         uses: titoportas/update-project-fields@v0.1.0
         with:
           project-url: ${{ env.PROJECT_URL }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.PROJECT_PAT }}
           item-id: ${{ steps.add-to-project.outputs.itemId }}
           field-keys: Status
           field-values: "💡 アイデア" 
