@@ -59,13 +59,16 @@ export const LocationDisplay = memo(function LocationDisplay({
   const [isDarkTime, setIsDarkTime] = useState(false)
   const fetchedRef = useRef(false)
 
-  // 時間帯をチェック（18時以降を夜の時間帯とする）
+  const EVENING_START_HOUR = 17 // 17時以降を夜の時間帯とする
+  const MORNING_END_HOUR = 5 // 5時までを夜の時間帯とする
+
+  // 時間帯をチェック（17時以降を夜の時間帯とする）
   useEffect(() => {
     const checkTimeOfDay = () => {
       // デバッグ時間オーバーライドがある場合はそれを使用、なければ現在時刻
       const hour =
         debugTimeOverride !== null ? debugTimeOverride : new Date().getHours()
-      setIsDarkTime(hour >= 18 || hour < 6)
+      setIsDarkTime(hour >= EVENING_START_HOUR || hour < MORNING_END_HOUR)
     }
 
     checkTimeOfDay()
