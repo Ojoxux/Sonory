@@ -1,6 +1,6 @@
 'use client'
 
-import { useGeolocation } from '@/components/organisms/MapComponent/hooks/useGeolocation'
+import { useBrowserGeolocation } from '@/components/organisms/MapComponent/hooks/useBrowserGeolocation'
 import { useDebugStore } from '@/store/useDebugStore'
 import { useState } from 'react'
 
@@ -35,7 +35,7 @@ export const useHomePage = (): {
   handleReturnToLocationReady: (returnFunction: () => void) => void
   handleBearingChange: (bearing: number) => void
 } => {
-  const { position } = useGeolocation()
+  const { position } = useBrowserGeolocation()
   const { debugTimeOverride } = useDebugStore()
   const [triggerGeolocation, setTriggerGeolocation] = useState<
     (() => void) | null

@@ -8,13 +8,13 @@ type Position = {
 }
 
 /**
- * デバイスの位置情報を取得するフック
+ * ブラウザのGeolocation APIを使用して位置情報を取得するフック
  *
  * Geolocation APIを使用して現在の位置情報を取得する
  * 高精度モードを有効にし、位置情報の更新を継続的に監視
  * @returns 現在位置と取得エラー
  */
-export function useGeolocation() {
+export function useBrowserGeolocation() {
   const [position, setPosition] = useState<Position | null>(null)
   const [error, setError] = useState<GeolocationPositionError | null>(null)
   const [permissionStatus, setPermissionStatus] = useState<string>('pending')

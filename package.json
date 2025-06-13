@@ -19,6 +19,7 @@
     "@supabase/supabase-js": "^2.49.8",
     "@tensorflow-models/speech-commands": "^0.5.4",
     "@tensorflow/tfjs": "^3.21.0",
+    "fp-ts": "^2.16.10",
     "framer-motion": "^12.15.0",
     "idb": "^8.0.3",
     "lucide-react": "^0.514.0",
