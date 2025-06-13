@@ -1,0 +1,160 @@
+name: Add Issue to Project with Smart Status
+
+on:
+  issues:
+    types:
+      - opened
+      - reopened
+      - labeled
+
+jobs:
+  add-issue-with-status:
+    name: Add Issue to Project with Status
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add Issue to Project
+        uses: actions/add-to-project@v0.5.0
+        id: add-to-project
+        with:
+          project-url: https://github.com/users/Ojoxux/projects/1
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          
+      # 新機能・機能改善の場合
+      - name: Set Status - やること（新機能）
+        if: success() && (contains(github.event.issue.labels.*.name, 'feature') || contains(github.event.issue.labels.*.name, 'enhancement'))
+        uses: titoportas/update-project-fields@v0.1.0
+        with:
+          project-url: https://github.com/users/Ojoxux/projects/1
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          item-id: ${{ steps.add-to-project.outputs.itemId }}
+          field-keys: Status
+          field-values: "📝 やること（TODO）"
+          
+      # バグ修正の場合（優先度高）
+      - name: Set Status - やること（バグ修正）
+        if: success() && contains(github.event.issue.labels.*.name, 'bug')
+        uses: titoportas/update-project-fields@v0.1.0
+        with:
+          project-url: https://github.com/users/Ojoxux/projects/1
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          item-id: ${{ steps.add-to-project.outputs.itemId }}
+          field-keys: Status
+          field-values: "📝 やること（TODO）"
+          
+      # リファクタリング・コード整理の場合
+      - name: Set Status - やること（リファクタリング）
+        if: success() && (contains(github.event.issue.labels.*.name, 'refactor') || contains(github.event.issue.labels.*.name, 'style') || contains(github.event.issue.labels.*.name, 'chore'))
+        uses: titoportas/update-project-fields@v0.1.0
+        with:
+          project-url: https://github.com/users/Ojoxux/projects/1
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          item-id: ${{ steps.add-to-project.outputs.itemId }}
+          field-keys: Status
+          field-values: "📝 やること（TODO）"
+          
+      # ドキュメント・CI/CD関連の場合
+      - name: Set Status - やること（その他）
+        if: success() && (contains(github.event.issue.labels.*.name, 'documentation') || contains(github.event.issue.labels.*.name, 'ci/cd'))
+        uses: titoportas/update-project-fields@v0.1.0
+        with:
+          project-url: https://github.com/users/Ojoxux/projects/1
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          item-id: ${{ steps.add-to-project.outputs.itemId }}
+          field-keys: Status
+          field-values: "📝 やること（TODO）"
+          
+      # 優先度ラベルがある場合もTODOに設定（実際の作業開始は手動で変更）
+      - name: Set Status - やること（高優先度）
+        if: |
+          success() && contains(github.event.issue.labels.*.name, '優先度: 高')
+        uses: titoportas/update-project-fields@v0.1.0
+        with:
+          project-url: https://github.com/users/Ojoxux/projects/1
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          item-id: ${{ steps.add-to-project.outputs.itemId }}
+          field-keys: Status
+          field-values: "📝 やること（TODO）"
+          
+      # デフォルト（アイデア段階）
+      - name: Set Status - アイデア
+        if: |
+          success() && 
+          !contains(github.event.issue.labels.*.name, 'feature') && 
+          !contains(github.event.issue.labels.*.name, 'enhancement') && 
+          !contains(github.event.issue.labels.*.name, 'bug') && 
+          !contains(github.event.issue.labels.*.name, 'refactor') && 
+          !contains(github.event.issue.labels.*.name, 'style') && 
+          !contains(github.event.issue.labels.*.name, 'chore') && 
+          !contains(github.event.issue.labels.*.name, 'documentation') && 
+          !contains(github.event.issue.labels.*.name, 'ci/cd') && 
+          !contains(github.event.issue.labels.*.name, '優先度: 高')
+        uses: titoportas/update-project-fields@v0.1.0
+        with:
+          project-url: https://github.com/users/Ojoxux/projects/1
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          item-id: ${{ steps.add-to-project.outputs.itemId }}
+          field-keys: Status
+          field-values: "💡 アイデア"
+
+  # Issueのラベル変更時にステータスを更新
+  update-status-on-label-change:
+    name: Update Status on Label Change
+    runs-on: ubuntu-latest
+    if: github.event.action == 'labeled' || github.event.action == 'unlabeled'
+    steps:
+      - name: Get Project Item ID
+        id: get-item
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const query = `
+              query($owner: String!, $repo: String!, $issue_number: Int!) {
+                repository(owner: $owner, name: $repo) {
+                  issue(number: $issue_number) {
+                    projectItems(first: 10) {
+                      nodes {
+                        id
+                        project {
+                          id
+                          title
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            `;
+            
+            const variables = {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            };
+            
+            const result = await github.graphql(query, variables);
+            const projectItems = result.repository.issue.projectItems.nodes;
+            
+            if (projectItems.length > 0) {
+              return projectItems[0].id;
+            }
+            return null;
+            
+      # ラベルに基づいてステータスを更新
+      - name: Update Status Based on Labels
+        if: steps.get-item.outputs.result
+        uses: titoportas/update-project-fields@v0.1.0
+        with:
+          project-url: https://github.com/users/Ojoxux/projects/1
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          item-id: ${{ steps.get-item.outputs.result }}
+          field-keys: Status
+          field-values: |
+            ${{
+              contains(github.event.issue.labels.*.name, '優先度: 高') && '📝 やること（TODO）' ||
+              contains(github.event.issue.labels.*.name, 'bug') && '📝 やること（TODO）' ||
+              (contains(github.event.issue.labels.*.name, 'feature') || contains(github.event.issue.labels.*.name, 'enhancement')) && '📝 やること（TODO）' ||
+              (contains(github.event.issue.labels.*.name, 'refactor') || contains(github.event.issue.labels.*.name, 'style') || contains(github.event.issue.labels.*.name, 'chore')) && '📝 やること（TODO）' ||
+              (contains(github.event.issue.labels.*.name, 'documentation') || contains(github.event.issue.labels.*.name, 'ci/cd')) && '📝 やること（TODO）' ||
+              '💡 アイデア'
+            }} 
