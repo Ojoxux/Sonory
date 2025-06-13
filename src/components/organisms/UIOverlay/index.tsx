@@ -56,6 +56,11 @@ export function UIOverlay({
         onExpandedChange={() => {
           /* no-op */
         }}
+        currentPosition={
+          latitude !== undefined && longitude !== undefined
+            ? { latitude, longitude }
+            : null
+        }
       />
     </>
   )
