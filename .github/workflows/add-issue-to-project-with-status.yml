@@ -7,6 +7,9 @@ on:
       - reopened
       - labeled
 
+env:
+  PROJECT_URL: https://github.com/users/Ojoxux/projects/1
+
 jobs:
   add-issue-with-status:
     name: Add Issue to Project with Status
@@ -16,7 +19,7 @@ jobs:
         uses: actions/add-to-project@v0.5.0
         id: add-to-project
         with:
-          project-url: https://github.com/users/Ojoxux/projects/1
+          project-url: ${{ env.PROJECT_URL }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           
       # 新機能・機能改善の場合
@@ -24,7 +27,7 @@ jobs:
         if: success() && (contains(github.event.issue.labels.*.name, 'feature') || contains(github.event.issue.labels.*.name, 'enhancement'))
         uses: titoportas/update-project-fields@v0.1.0
         with:
-          project-url: https://github.com/users/Ojoxux/projects/1
+          project-url: ${{ env.PROJECT_URL }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           item-id: ${{ steps.add-to-project.outputs.itemId }}
           field-keys: Status
@@ -35,7 +38,7 @@ jobs:
         if: success() && contains(github.event.issue.labels.*.name, 'bug')
         uses: titoportas/update-project-fields@v0.1.0
         with:
-          project-url: https://github.com/users/Ojoxux/projects/1
+          project-url: ${{ env.PROJECT_URL }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           item-id: ${{ steps.add-to-project.outputs.itemId }}
           field-keys: Status
@@ -46,7 +49,7 @@ jobs:
         if: success() && (contains(github.event.issue.labels.*.name, 'refactor') || contains(github.event.issue.labels.*.name, 'style') || contains(github.event.issue.labels.*.name, 'chore'))
         uses: titoportas/update-project-fields@v0.1.0
         with:
-          project-url: https://github.com/users/Ojoxux/projects/1
+          project-url: ${{ env.PROJECT_URL }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           item-id: ${{ steps.add-to-project.outputs.itemId }}
           field-keys: Status
@@ -57,19 +60,23 @@ jobs:
         if: success() && (contains(github.event.issue.labels.*.name, 'documentation') || contains(github.event.issue.labels.*.name, 'ci/cd'))
         uses: titoportas/update-project-fields@v0.1.0
         with:
-          project-url: https://github.com/users/Ojoxux/projects/1
+          project-url: ${{ env.PROJECT_URL }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           item-id: ${{ steps.add-to-project.outputs.itemId }}
           field-keys: Status
           field-values: "📝 やること（TODO）"
           
       # 優先度ラベルがある場合もTODOに設定（実際の作業開始は手動で変更）
-      - name: Set Status - やること（高優先度）
+      - name: Set Status - やること（優先度付き）
         if: |
-          success() && contains(github.event.issue.labels.*.name, '優先度: 高')
+          success() && (
+            contains(github.event.issue.labels.*.name, '優先度: 高') ||
+            contains(github.event.issue.labels.*.name, '優先度: 中') ||
+            contains(github.event.issue.labels.*.name, '優先度: 低')
+          )
         uses: titoportas/update-project-fields@v0.1.0
         with:
-          project-url: https://github.com/users/Ojoxux/projects/1
+          project-url: ${{ env.PROJECT_URL }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           item-id: ${{ steps.add-to-project.outputs.itemId }}
           field-keys: Status
@@ -87,10 +94,12 @@ jobs:
           !contains(github.event.issue.labels.*.name, 'chore') && 
           !contains(github.event.issue.labels.*.name, 'documentation') && 
           !contains(github.event.issue.labels.*.name, 'ci/cd') && 
-          !contains(github.event.issue.labels.*.name, '優先度: 高')
+          !contains(github.event.issue.labels.*.name, '優先度: 高') &&
+          !contains(github.event.issue.labels.*.name, '優先度: 中') &&
+          !contains(github.event.issue.labels.*.name, '優先度: 低')
         uses: titoportas/update-project-fields@v0.1.0
         with:
-          project-url: https://github.com/users/Ojoxux/projects/1
+          project-url: ${{ env.PROJECT_URL }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           item-id: ${{ steps.add-to-project.outputs.itemId }}
           field-keys: Status
@@ -145,13 +154,13 @@ jobs:
         if: steps.get-item.outputs.result
         uses: titoportas/update-project-fields@v0.1.0
         with:
-          project-url: https://github.com/users/Ojoxux/projects/1
+          project-url: ${{ env.PROJECT_URL }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           item-id: ${{ steps.get-item.outputs.result }}
           field-keys: Status
           field-values: |
             ${{
-              contains(github.event.issue.labels.*.name, '優先度: 高') && '📝 やること（TODO）' ||
+              (contains(github.event.issue.labels.*.name, '優先度: 高') || contains(github.event.issue.labels.*.name, '優先度: 中') || contains(github.event.issue.labels.*.name, '優先度: 低')) && '📝 やること（TODO）' ||
               contains(github.event.issue.labels.*.name, 'bug') && '📝 やること（TODO）' ||
               (contains(github.event.issue.labels.*.name, 'feature') || contains(github.event.issue.labels.*.name, 'enhancement')) && '📝 やること（TODO）' ||
               (contains(github.event.issue.labels.*.name, 'refactor') || contains(github.event.issue.labels.*.name, 'style') || contains(github.event.issue.labels.*.name, 'chore')) && '📝 やること（TODO）' ||

@@ -5,6 +5,9 @@ on:
     types:
       - opened
 
+env:
+  PROJECT_URL: https://github.com/users/Ojoxux/projects/1
+
 jobs:
   add-to-project:
     name: Add Issue to Project
@@ -15,8 +18,8 @@ jobs:
         id: add-to-project
         with:
           # Ojoxux/Sonoryリポジトリ用のプロジェクトURL
-          # プロジェクト番号は実際のプロジェクト番号に変更してください
-          project-url: https://github.com/users/Ojoxux/projects/1
+          # プロジェクト番号は env.PROJECT_URL で管理
+          project-url: ${{ env.PROJECT_URL }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           
       # デフォルトで「💡 アイデア」ステータスを設定
@@ -24,7 +27,7 @@ jobs:
         if: success()
         uses: titoportas/update-project-fields@v0.1.0
         with:
-          project-url: https://github.com/users/Ojoxux/projects/1
+          project-url: ${{ env.PROJECT_URL }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           item-id: ${{ steps.add-to-project.outputs.itemId }}
           field-keys: Status
