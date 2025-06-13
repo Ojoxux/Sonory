@@ -21,6 +21,9 @@ jobs:
           echo "Project URL: ${{ env.PROJECT_URL }}"
           echo "Issue Number: ${{ github.event.issue.number }}"
           echo "Issue Labels: ${{ toJson(github.event.issue.labels) }}"
+          echo "Event Action: ${{ github.event.action }}"
+          echo "Repository: ${{ github.repository }}"
+          echo "Actor: ${{ github.actor }}"
           
       - name: Add Issue to Project
         uses: actions/add-to-project@v0.5.0
