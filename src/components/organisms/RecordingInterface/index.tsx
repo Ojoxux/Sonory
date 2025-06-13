@@ -23,10 +23,12 @@ import type { RecordingInterfaceProps } from './type'
  *
  * @param className クラス名
  * @param onExpandedChange 展開状態が変更されたときに呼び出されるコールバック関数
+ * @param currentPosition 現在の位置
  */
 export function RecordingInterface({
   className = '',
   onExpandedChange,
+  currentPosition,
 }: RecordingInterfaceProps) {
   const {
     isExpanded,
@@ -552,7 +554,11 @@ export function RecordingInterface({
       {/* 音声再生モーダル */}
       <AnimatePresence>
         {showPlayback && audioData && (
-          <AudioPlayback audioData={audioData} onClose={handleClosePlayback} />
+          <AudioPlayback
+            audioData={audioData}
+            onClose={handleClosePlayback}
+            currentPosition={currentPosition}
+          />
         )}
       </AnimatePresence>
     </div>
