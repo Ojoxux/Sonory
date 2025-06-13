@@ -9,7 +9,10 @@ import {
   useState,
 } from 'react'
 import 'mapbox-gl/dist/mapbox-gl.css'
+import { CarIcon } from '@/components/atoms/CarIcon'
 import { useDebugStore } from '@/store/useDebugStore'
+import { useSoundPinStore } from '@/store/useSoundPinStore'
+import { createRoot } from 'react-dom/client'
 import { useGeolocation } from './hooks/useGeolocation'
 import {
   applyNightLighting,
@@ -139,6 +142,104 @@ export function MapComponent({
   const geolocateControlRef = useRef<mapboxgl.GeolocateControl | null>(null)
   const userMarkerRef = useRef<mapboxgl.Marker | null>(null)
   const hasInitialPositionSet = useRef<boolean>(false)
+
+  // 音声ピンストアから状態を取得
+  const { pins, selectedPinId, selectPin } = useSoundPinStore()
+  const soundPinMarkersRef = useRef<Map<string, mapboxgl.Marker>>(new Map())
+
+  /**
+   * 音声ピンのマーカーを作成
+   *
+   * @param pinId - ピンのID
+   * @param latitude - 緯度
+   * @param longitude - 経度
+   * @param onClick - クリック時のコールバック
+   * @returns Mapboxマーカーインスタンス
+   */
+  const createSoundPinMarker = useCallback(
+    (
+      pinId: string,
+      latitude: number,
+      longitude: number,
+      onClick: () => void,
+    ): mapboxgl.Marker | null => {
+      if (!map) return null
+
+      try {
+        // マーカー用のDOM要素を作成
+        const markerElement = document.createElement('div')
+        markerElement.className = 'sound-pin-marker'
+        markerElement.style.cursor = 'pointer'
+
+        // Reactコンポーネントをマーカー要素にレンダリング
+        const root = createRoot(markerElement)
+        root.render(
+          <CarIcon
+            size="medium"
+            color="text-blue-600"
+            onClick={onClick}
+            className={selectedPinId === pinId ? 'ring-2 ring-blue-400' : ''}
+          />,
+        )
+
+        // Mapboxマーカーを作成
+        const marker = new mapboxgl.Marker({
+          element: markerElement,
+          anchor: 'center',
+        })
+          .setLngLat([longitude, latitude])
+          .addTo(map)
+
+        return marker
+      } catch (error) {
+        console.error('音声ピンマーカーの作成に失敗:', error)
+        return null
+      }
+    },
+    [map, selectedPinId],
+  )
+
+  /**
+   * 音声ピンマーカーを更新
+   */
+  const updateSoundPinMarkers = useCallback(() => {
+    if (!map || !mapStyleLoaded) return
+
+    // 既存のマーカーをクリア
+    soundPinMarkersRef.current.forEach((marker) => {
+      marker.remove()
+    })
+    soundPinMarkersRef.current.clear()
+
+    // 新しいマーカーを作成
+    pins.forEach((pin) => {
+      const marker = createSoundPinMarker(
+        pin.id,
+        pin.latitude,
+        pin.longitude,
+        () => {
+          console.log('音声ピンがクリックされました:', pin.primaryLabel)
+          selectPin(selectedPinId === pin.id ? null : pin.id)
+        },
+      )
+
+      if (marker) {
+        soundPinMarkersRef.current.set(pin.id, marker)
+      }
+    })
+  }, [
+    map,
+    mapStyleLoaded,
+    pins,
+    selectedPinId,
+    createSoundPinMarker,
+    selectPin,
+  ])
+
+  // 音声ピンが変更されたときにマーカーを更新
+  useEffect(() => {
+    updateSoundPinMarkers()
+  }, [updateSoundPinMarkers])
 
   // 保存された位置情報をローカルストレージから取得
   useEffect(() => {
