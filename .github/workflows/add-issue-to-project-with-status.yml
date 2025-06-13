@@ -19,6 +19,7 @@ jobs:
       - name: Debug Info
         run: |
           echo "Project URL: ${{ env.PROJECT_URL }}"
+          echo "Project ID: ${{ secrets.PROJECT_ID }}"
           echo "Issue Number: ${{ github.event.issue.number }}"
           echo "Issue Labels: ${{ toJson(github.event.issue.labels) }}"
           echo "Event Action: ${{ github.event.action }}"
@@ -26,31 +27,48 @@ jobs:
           echo "Actor: ${{ github.actor }}"
           
       - name: Add Issue to Project
-        uses: actions/add-to-project@v0.5.0
         id: add-to-project
-        with:
-          project-url: ${{ env.PROJECT_URL }}
-          github-token: ${{ secrets.PROJECT_PAT }}
-        continue-on-error: true
-        
-      # エラーチェック
-      - name: Check if project addition failed
-        if: steps.add-to-project.outcome == 'failure'
+        env:
+          GITHUB_PAT: ${{ secrets.PROJECT_PAT }}
+          ISSUE_ID: ${{ github.event.issue.node_id }}
+          PROJECT_ID: ${{ secrets.PROJECT_ID }}
         run: |
-          echo "::error::Failed to add issue to project. Please check:"
-          echo "::error::1. Project URL is correct: ${{ env.PROJECT_URL }}"
-          echo "::error::2. Project exists and is accessible"
-          echo "::error::3. GITHUB_TOKEN has required permissions"
-          exit 1
+          # GraphQL APIを使用してIssueをプロジェクトに追加
+          response=$(curl -s -X POST \
+            -H "Authorization: bearer $GITHUB_PAT" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\": \"mutation { addProjectV2ItemById(input: {projectId: \\\"$PROJECT_ID\\\", contentId: \\\"$ISSUE_ID\\\"}) { item { id } } }\"}" \
+            https://api.github.com/graphql)
+          
+          echo "GraphQL Response: $response"
+          
+          # レスポンスからitem IDを抽出
+          item_id=$(echo "$response" | jq -r '.data.addProjectV2ItemById.item.id // empty')
+          
+          if [ -n "$item_id" ]; then
+            echo "Successfully added issue to project. Item ID: $item_id"
+            echo "item_id=$item_id" >> $GITHUB_OUTPUT
+          else
+            echo "Failed to add issue to project"
+            echo "$response" | jq '.errors // empty'
+            exit 1
+          fi
+        
+      # 成功確認
+      - name: Confirm project addition
+        if: steps.add-to-project.outputs.item_id
+        run: |
+          echo "✅ Issue successfully added to project!"
+          echo "Item ID: ${{ steps.add-to-project.outputs.item_id }}"
       
       # 新機能・機能改善の場合
       - name: Set Status - やること（新機能）
-        if: success() && (contains(github.event.issue.labels.*.name, 'feature') || contains(github.event.issue.labels.*.name, 'enhancement'))
+        if: steps.add-to-project.outputs.item_id && (contains(github.event.issue.labels.*.name, 'feature') || contains(github.event.issue.labels.*.name, 'enhancement'))
         uses: titoportas/update-project-fields@v0.1.0
         with:
           project-url: ${{ env.PROJECT_URL }}
           github-token: ${{ secrets.PROJECT_PAT }}
-          item-id: ${{ steps.add-to-project.outputs.itemId }}
+          item-id: ${{ steps.add-to-project.outputs.item_id }}
           field-keys: Status
           field-values: "📝 やること（TODO）"
           
