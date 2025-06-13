@@ -3,6 +3,7 @@
 import { motion, useMotionValue, useTransform } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
 import { MdArrowForward } from 'react-icons/md'
+import { DropRippleEffect } from '../../atoms/DropRippleEffect'
 import type { SlideToStartProps } from './types'
 
 /**
@@ -24,6 +25,7 @@ export function SlideToStart({
 }: SlideToStartProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [slideDistance, setSlideDistance] = useState(160)
+  const [showDropEffect, setShowDropEffect] = useState(false)
   const x = useMotionValue(0)
   const opacity = useTransform(x, [0, slideDistance], [1, 0])
 
@@ -47,6 +49,21 @@ export function SlideToStart({
     x.set(0)
   }
 
+  const handleSlideComplete = () => {
+    // 雫エフェクトを発動
+    setShowDropEffect(true)
+
+    // 波紋エフェクトが完了してから画面遷移（2.5秒後）
+    setTimeout(() => {
+      onComplete()
+    }, 2500)
+
+    // エフェクト完了後にリセット
+    setTimeout(() => {
+      setShowDropEffect(false)
+    }, 3000)
+  }
+
   return (
     <div className={`mb-4 ${className}`}>
       <div
@@ -60,6 +77,13 @@ export function SlideToStart({
           }
         `}
       >
+        {/* 雫の波紋エフェクト */}
+        <DropRippleEffect
+          isActive={showDropEffect}
+          color="white"
+          size="medium"
+        />
+
         <motion.div
           drag={!disabled ? 'x' : false}
           dragConstraints={{ left: 0, right: slideDistance }}
@@ -74,11 +98,9 @@ export function SlideToStart({
           onDragEnd={(_, info) => {
             if (
               !disabled &&
-              (info.offset.x >= slideDistance * 0.95 || info.velocity.x > 500)
+              (info.offset.x >= slideDistance * 0.98 || info.velocity.x > 500)
             ) {
-              onComplete()
-              // 完了後にスライダーをリセット
-              setTimeout(() => resetSlider(), 100)
+              handleSlideComplete()
             } else {
               resetSlider()
             }
