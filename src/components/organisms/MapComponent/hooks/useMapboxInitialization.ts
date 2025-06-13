@@ -171,11 +171,13 @@ const CUSTOM_STYLE = {
 /**
  * Mapbox GLの初期化と制御を行うフック
  *
- * マップの初期化と制御機能を提供する
+ * @description
+ * Mapboxマップの初期化、スタイル設定、3D建物表示などの
+ * 基本的なマップ機能を提供する
  *
- * @returns Mapboxの初期化関数
+ * @returns Mapboxの初期化関数とマップ制御機能
  */
-export function useMapbox() {
+export function useMapboxInitialization() {
   // Mapbox Access Tokenを設定
   if (MAPBOX_ACCESS_TOKEN) {
     mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN
