@@ -56,6 +56,7 @@ export const LocationDisplay = memo(function LocationDisplay({
     return locationName === ''
   })
 
+  const [hasError, setHasError] = useState(false)
   const [isDarkTime, setIsDarkTime] = useState(false)
   const fetchedRef = useRef(false)
 
@@ -104,21 +105,25 @@ export const LocationDisplay = memo(function LocationDisplay({
 
       try {
         setIsLoading(true)
+        setHasError(false)
 
-        // Nominatim APIを使用して逆ジオコーディング
+        // 自前のAPI Routeを使用して逆ジオコーディング（CORSエラー回避）
         const response = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=en`,
+          `/api/geocoding/reverse?lat=${latitude}&lon=${longitude}&lang=en`,
         )
+
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`)
+        }
+
         const data = await response.json()
 
-        // 地域名の優先順位: city > town > village > county > state
-        const location =
-          data.address?.city ||
-          data.address?.town ||
-          data.address?.village ||
-          data.address?.county ||
-          data.address?.state ||
-          ''
+        // エラーレスポンスの場合
+        if (data.error) {
+          throw new Error(data.error)
+        }
+
+        const location = data.locationName || ''
 
         setLocationName(location)
 
@@ -138,7 +143,9 @@ export const LocationDisplay = memo(function LocationDisplay({
         }
       } catch (error) {
         console.error('Failed to fetch location name:', error)
-        setLocationName('')
+        setHasError(true)
+        // エラー時は座標表示をフォールバックとして使用
+        setLocationName(`${latitude.toFixed(3)}°N, ${longitude.toFixed(3)}°E`)
       } finally {
         setIsLoading(false)
         fetchedRef.current = false
@@ -181,7 +188,7 @@ export const LocationDisplay = memo(function LocationDisplay({
         ) : (
           <div className="inline-block">
             <h2
-              className={`text-6xl font-bold tracking-tight font-arial-rounded-mt-pro ${textColorClass} pb-2 leading-none`}
+              className={`text-6xl font-bold tracking-tight font-arial-rounded-mt-pro ${textColorClass} pb-2 leading-none ${hasError ? 'text-yellow-500' : ''}`}
             >
               {locationName}
             </h2>
@@ -190,6 +197,11 @@ export const LocationDisplay = memo(function LocationDisplay({
               className={`text-sm mt-3 font-bold tracking-wide font-arial-rounded-mt-pro ${isDarkTime ? 'text-white/50' : 'text-gray-500'}`}
             >
               {latitude.toFixed(4)}° N, {longitude.toFixed(4)}° E
+              {hasError && (
+                <span className="ml-2 text-yellow-500 text-xs">
+                  (位置情報取得エラー)
+                </span>
+              )}
             </p>
           </div>
         )}
