@@ -79,7 +79,7 @@ jobs:
         with:
           project-url: ${{ env.PROJECT_URL }}
           github-token: ${{ secrets.PROJECT_PAT }}
-          item-id: ${{ steps.add-to-project.outputs.itemId }}
+          item-id: ${{ steps.add-to-project.outputs.item_id }}
           field-keys: Status
           field-values: "📝 やること（TODO）"
           
@@ -90,7 +90,7 @@ jobs:
         with:
           project-url: ${{ env.PROJECT_URL }}
           github-token: ${{ secrets.PROJECT_PAT }}
-          item-id: ${{ steps.add-to-project.outputs.itemId }}
+          item-id: ${{ steps.add-to-project.outputs.item_id }}
           field-keys: Status
           field-values: "📝 やること（TODO）"
           
@@ -101,7 +101,7 @@ jobs:
         with:
           project-url: ${{ env.PROJECT_URL }}
           github-token: ${{ secrets.PROJECT_PAT }}
-          item-id: ${{ steps.add-to-project.outputs.itemId }}
+          item-id: ${{ steps.add-to-project.outputs.item_id }}
           field-keys: Status
           field-values: "📝 やること（TODO）"
           
@@ -117,7 +117,7 @@ jobs:
         with:
           project-url: ${{ env.PROJECT_URL }}
           github-token: ${{ secrets.PROJECT_PAT }}
-          item-id: ${{ steps.add-to-project.outputs.itemId }}
+          item-id: ${{ steps.add-to-project.outputs.item_id }}
           field-keys: Status
           field-values: "📝 やること（TODO）"
           
@@ -140,7 +140,7 @@ jobs:
         with:
           project-url: ${{ env.PROJECT_URL }}
           github-token: ${{ secrets.PROJECT_PAT }}
-          item-id: ${{ steps.add-to-project.outputs.itemId }}
+          item-id: ${{ steps.add-to-project.outputs.item_id }}
           field-keys: Status
           field-values: "💡 アイデア"
 
