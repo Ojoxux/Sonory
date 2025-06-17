@@ -420,18 +420,34 @@ export function useMapComponent({
       // コールバック関数を設定
       onGeolocationReady?.(attemptGeolocation)
       onReturnToLocationReady?.(() => {
-        if (position) {
-          userInteractionRef.current = false
-          lastInteractionTimeRef.current = 0
-          console.log('手動で現在地に戻ります')
+        // ユーザー操作フラグをリセットして自動センタリングを有効化
+        userInteractionRef.current = false
+        lastInteractionTimeRef.current = 0
+        console.log('手動で現在地に戻ります')
+
+        // 現在の位置情報を取得（シンプルなアプローチ）
+        const currentPosition =
+          customPosition && isValidPosition(customPosition)
+            ? customPosition
+            : savedPosition && isValidPosition(savedPosition)
+              ? savedPosition
+              : null
+
+        if (currentPosition) {
+          // 位置情報がある場合は即座に移動
+          console.log('既存の位置情報で即座に移動:', currentPosition)
           mapInstance.flyTo({
-            center: [position.longitude, position.latitude],
+            center: [currentPosition.longitude, currentPosition.latitude],
             zoom: 18,
             pitch: 50,
             bearing: -20,
             essential: true,
-            duration: 2000,
+            duration: 1500, // 少し短縮してレスポンシブに
           })
+        } else {
+          // 位置情報がない場合は取得を試行
+          console.log('位置情報がないため取得を試行します')
+          attemptGeolocation()
         }
       })
     } catch (error) {
