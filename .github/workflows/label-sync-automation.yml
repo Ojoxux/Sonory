@@ -1,0 +1,136 @@
+name: Label Sync Automation
+
+on:
+  issues:
+    types: [labeled, unlabeled]
+
+env:
+  # 進捗ラベル定義
+  PROGRESS_LABELS: '["todo", "in progress", "review", "done"]'
+  # プロジェクトURL（既存のワークフローと統合）
+  PROJECT_URL: https://github.com/users/Ojoxux/projects/1
+
+jobs:
+  sync-progress-labels:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+    
+    steps:
+      - name: Ensure single progress label
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const progressLabels = JSON.parse(process.env.PROGRESS_LABELS);
+            const eventLabel = context.payload.label.name;
+            
+            // 進捗ラベルの変更でない場合はスキップ
+            if (!progressLabels.includes(eventLabel)) {
+              console.log(`ℹ️ Label '${eventLabel}' is not a progress label, skipping`);
+              return;
+            }
+            
+            // 現在のIssueラベルを取得
+            const { data: issue } = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+            
+            const currentLabels = issue.labels.map(label => label.name);
+            const currentProgressLabels = currentLabels.filter(label => 
+              progressLabels.includes(label)
+            );
+            
+            console.log(`Current progress labels: ${currentProgressLabels.join(', ')}`);
+            
+            // ラベル追加の場合
+            if (context.payload.action === 'labeled') {
+              // 複数の進捗ラベルがある場合、新しく追加されたもの以外を削除
+              if (currentProgressLabels.length > 1) {
+                const labelsToRemove = currentProgressLabels.filter(label => label !== eventLabel);
+                
+                for (const label of labelsToRemove) {
+                  await github.rest.issues.removeLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: context.issue.number,
+                    name: label
+                  });
+                  console.log(`🗑️ Removed duplicate progress label '${label}' from issue #${context.issue.number}`);
+                }
+                
+                console.log(`✅ Ensured single progress label '${eventLabel}' on issue #${context.issue.number}`);
+              }
+            }
+            
+            // ラベル削除の場合
+            if (context.payload.action === 'unlabeled') {
+              // 進捗ラベルが全くない場合、デフォルトで'todo'を追加
+              if (currentProgressLabels.length === 0) {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  labels: ['todo']
+                });
+                console.log(`✅ Added default 'todo' label to issue #${context.issue.number} (no progress labels)`);
+              }
+            }
+
+  # 既存のプロジェクト同期機能と統合
+  update-project-status:
+    runs-on: ubuntu-latest
+    needs: sync-progress-labels
+    if: contains(fromJSON('["todo", "in progress", "review", "done"]'), github.event.label.name)
+    steps:
+      - name: Get Project Item ID
+        id: get-item
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PROJECT_PAT }}
+          script: |
+            const query = `
+              query($owner: String!, $repo: String!, $issue_number: Int!) {
+                repository(owner: $owner, name: $repo) {
+                  issue(number: $issue_number) {
+                    projectItems(first: 10) {
+                      nodes {
+                        id
+                        project { id title }
+                      }
+                    }
+                  }
+                }
+              }
+            `;
+            const variables = {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            };
+            const result = await github.graphql(query, variables);
+            const projectItems = result.repository.issue.projectItems.nodes;
+            if (projectItems.length > 0) {
+              return projectItems[0].id;
+            }
+            return null;
+
+      - name: Update Project Status Based on Progress Labels
+        if: steps.get-item.outputs.result
+        uses: titoportas/update-project-fields@v0.1.0
+        with:
+          project-url: ${{ env.PROJECT_URL }}
+          github-token: ${{ secrets.PROJECT_PAT }}
+          item-id: ${{ steps.get-item.outputs.result }}
+          field-keys: Status
+          field-values: |
+            ${{
+              contains(github.event.issue.labels.*.name, 'done') && '✅ 完了' ||
+              contains(github.event.issue.labels.*.name, 'review') && '👀 レビュー中' ||
+              contains(github.event.issue.labels.*.name, 'in progress') && '🚧 進行中' ||
+              contains(github.event.issue.labels.*.name, 'todo') && '📝 やること（TODO）' ||
+              '📝 やること（TODO）'
+            }} 
