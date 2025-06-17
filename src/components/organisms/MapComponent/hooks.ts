@@ -118,52 +118,74 @@ const supportsMethod = <T extends object>(obj: T, method: string): boolean =>
 const createMapboxHelpers = (): MapboxNonStandardMethods => ({
   setConfigProperty: (map, namespace, property, value) =>
     pipe(supportsMethod(map, 'setConfigProperty'), (isSupported) => {
-      if (isSupported) {
+      if (isSupported && map.isStyleLoaded()) {
         try {
           const extendedMap = map as MapboxExtendedMap
           if (extendedMap.setConfigProperty) {
             extendedMap.setConfigProperty(namespace, property, value)
-            if (process.env.NODE_ENV === 'development') {
-              console.log(
-                `setConfigProperty成功: ${namespace}.${property} = ${value}`,
-              )
-            }
           }
         } catch (error) {
-          console.error('setConfigProperty エラー:', error)
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('⚠️ setConfigProperty実行エラー:', error)
+          }
         }
-      } else {
-        console.warn('setConfigProperty メソッドがサポートされていません')
+      } else if (process.env.NODE_ENV === 'development') {
+        console.warn('⚠️ setConfigProperty: スタイル未読み込みまたは非サポート')
       }
     }),
 
   setTerrain: (map, config) =>
     pipe(supportsMethod(map, 'setTerrain'), (isSupported) => {
-      if (isSupported) {
-        const extendedMap = map as MapboxExtendedMap
-        if (extendedMap.setTerrain) {
-          extendedMap.setTerrain(config)
+      if (isSupported && map.isStyleLoaded()) {
+        try {
+          const extendedMap = map as MapboxExtendedMap
+          if (extendedMap.setTerrain) {
+            extendedMap.setTerrain(config)
+          }
+        } catch (error) {
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('⚠️ setTerrain実行エラー:', error)
+          }
+          // 他のヘルパーメソッドと統一してエラーを再スローしない
         }
+      } else if (process.env.NODE_ENV === 'development') {
+        console.warn('⚠️ setTerrain: スタイル未読み込みまたは非サポート')
       }
     }),
 
   setLight: (map, config) =>
     pipe(supportsMethod(map, 'setLight'), (isSupported) => {
-      if (isSupported) {
-        const extendedMap = map as MapboxExtendedMap
-        if (extendedMap.setLight) {
-          extendedMap.setLight(config)
+      if (isSupported && map.isStyleLoaded()) {
+        try {
+          const extendedMap = map as MapboxExtendedMap
+          if (extendedMap.setLight) {
+            extendedMap.setLight(config)
+          }
+        } catch (error) {
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('⚠️ setLight実行エラー:', error)
+          }
         }
+      } else if (process.env.NODE_ENV === 'development') {
+        console.warn('⚠️ setLight: スタイル未読み込みまたは非サポート')
       }
     }),
 
   setFog: (map, config) =>
     pipe(supportsMethod(map, 'setFog'), (isSupported) => {
-      if (isSupported) {
-        const extendedMap = map as MapboxExtendedMap
-        if (extendedMap.setFog) {
-          extendedMap.setFog(config)
+      if (isSupported && map.isStyleLoaded()) {
+        try {
+          const extendedMap = map as MapboxExtendedMap
+          if (extendedMap.setFog) {
+            extendedMap.setFog(config)
+          }
+        } catch (error) {
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('⚠️ setFog実行エラー:', error)
+          }
         }
+      } else if (process.env.NODE_ENV === 'development') {
+        console.warn('⚠️ setFog: スタイル未読み込みまたは非サポート')
       }
     }),
 })
@@ -408,6 +430,9 @@ export function useMapComponent({
 
       // イベントリスナー設定
       mapInstance.on('load', () => {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🗺️ マップ初期読み込み完了')
+        }
         setMapStyleLoaded(true)
 
         // ユーザーパス用のソースとレイヤーを追加
@@ -437,20 +462,34 @@ export function useMapComponent({
             'line-opacity': 0.8,
           },
         })
-
-        // 初期ライティング設定を適用
-        setTimeout(() => {
-          updateLightingAndShadows(mapInstance)
-        }, 100)
       })
 
+      // スタイル読み込み完了時の処理（より確実な検知）
       mapInstance.on('styledata', () => {
-        setMapStyleLoaded(true)
+        if (mapInstance.isStyleLoaded()) {
+          if (process.env.NODE_ENV === 'development') {
+            console.log('🎨 スタイル読み込み完了')
+          }
+          setMapStyleLoaded(true)
 
-        // スタイル更新後にライティング設定を再適用
-        setTimeout(() => {
-          updateLightingAndShadows(mapInstance)
-        }, 100)
+          // スタイル読み込み完了後にライティング設定を適用
+          setTimeout(() => {
+            if (mapInstance.isStyleLoaded()) {
+              updateLightingAndShadows(mapInstance)
+            }
+          }, 500)
+        }
+      })
+
+      // スタイルが完全に読み込まれた時の追加チェック
+      mapInstance.on('idle', () => {
+        // スタイルは読み込まれているがマップ全体の初期化が完了していない場合の補完的チェック
+        if (mapInstance.isStyleLoaded() && !mapInitializedRef.current) {
+          if (process.env.NODE_ENV === 'development') {
+            console.log('🔄 マップアイドル状態でスタイル読み込み完了を検知')
+          }
+          setMapStyleLoaded(true)
+        }
       })
 
       mapInstance.on('rotate', () => {
