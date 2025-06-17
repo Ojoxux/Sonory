@@ -50,6 +50,8 @@ import { useMapEnvironment } from './hooks/useMapEnvironment'
 import type {
   GeoJSONLineStringFeature,
   LocationData,
+  MapboxExtendedMap,
+  MapboxMapOptions,
   MapboxNonStandardMethods,
 } from './type'
 import {
@@ -117,42 +119,49 @@ const createMapboxHelpers = (): MapboxNonStandardMethods => ({
   setConfigProperty: (map, namespace, property, value) =>
     pipe(supportsMethod(map, 'setConfigProperty'), (isSupported) => {
       if (isSupported) {
-        const method = (map as unknown as Record<string, unknown>)
-          .setConfigProperty as (
-          importId: string,
-          configName: string,
-          value: unknown,
-        ) => void
-        method.call(map, namespace, property, value)
+        try {
+          const extendedMap = map as MapboxExtendedMap
+          if (extendedMap.setConfigProperty) {
+            extendedMap.setConfigProperty(namespace, property, value)
+            console.log(
+              `setConfigProperty成功: ${namespace}.${property} = ${value}`,
+            )
+          }
+        } catch (error) {
+          console.error('setConfigProperty エラー:', error)
+        }
+      } else {
+        console.warn('setConfigProperty メソッドがサポートされていません')
       }
     }),
 
   setTerrain: (map, config) =>
     pipe(supportsMethod(map, 'setTerrain'), (isSupported) => {
       if (isSupported) {
-        const method = (map as unknown as Record<string, unknown>)
-          .setTerrain as (config: Record<string, unknown>) => void
-        method.call(map, config)
+        const extendedMap = map as MapboxExtendedMap
+        if (extendedMap.setTerrain) {
+          extendedMap.setTerrain(config)
+        }
       }
     }),
 
   setLight: (map, config) =>
     pipe(supportsMethod(map, 'setLight'), (isSupported) => {
       if (isSupported) {
-        const method = (map as unknown as Record<string, unknown>).setLight as (
-          config: unknown,
-        ) => void
-        method.call(map, config)
+        const extendedMap = map as MapboxExtendedMap
+        if (extendedMap.setLight) {
+          extendedMap.setLight(config)
+        }
       }
     }),
 
   setFog: (map, config) =>
     pipe(supportsMethod(map, 'setFog'), (isSupported) => {
       if (isSupported) {
-        const method = (map as unknown as Record<string, unknown>).setFog as (
-          config: Record<string, unknown>,
-        ) => void
-        method.call(map, config)
+        const extendedMap = map as MapboxExtendedMap
+        if (extendedMap.setFog) {
+          extendedMap.setFog(config)
+        }
       }
     }),
 })
@@ -306,7 +315,41 @@ export function useMapComponent({
     mapboxgl.accessToken = mapboxToken
 
     try {
-      const mapInstance = new mapboxgl.Map({
+      // 現在時刻に基づいて初期lightPresetを決定（正常マッピング）
+      const currentHour =
+        debugTimeOverride !== null ? debugTimeOverride : new Date().getHours()
+      let initialLightPreset: 'day' | 'dawn' | 'dusk' | 'night' = 'dawn'
+
+      // 昼の時間帯（8時から17時）→ 明るい空が必要 → 'day'を使用
+      if (currentHour >= 8 && currentHour < 17) {
+        initialLightPreset = 'day' // 正常
+      }
+      // 夜の時間帯（22時から4時）→ 暗い空が必要 → 'night'を使用
+      else if (currentHour >= 22 || currentHour < 4) {
+        initialLightPreset = 'night' // 正常
+      }
+      // 夕方・早朝の時間帯（17時-22時、4時-8時）
+      else if (
+        (currentHour >= 17 && currentHour < 22) ||
+        (currentHour >= 4 && currentHour < 8)
+      ) {
+        initialLightPreset = 'dusk'
+      }
+
+      console.log(
+        '🌅 マップ初期化時のlightPreset (正常):',
+        initialLightPreset,
+        'hour:',
+        currentHour,
+        '期待結果:',
+        currentHour >= 8 && currentHour < 17
+          ? '明るい空'
+          : currentHour >= 22 || currentHour < 4
+            ? '暗い空'
+            : '薄明',
+      )
+
+      const mapOptions: MapboxMapOptions = {
         container: mapContainerRef.current,
         style: 'mapbox://styles/mapbox/standard',
         center: [139.6917, 35.6895], // 東京駅
@@ -314,7 +357,19 @@ export function useMapComponent({
         pitch: 45,
         bearing: -20,
         antialias: true,
-      })
+        // Standard Style の初期設定（現在時刻に基づく）
+        config: {
+          basemap: {
+            lightPreset: initialLightPreset,
+            showPlaceLabels: true,
+            showPointOfInterestLabels: true,
+            showRoadLabels: true,
+            showTransitLabels: true,
+          },
+        },
+      }
+
+      const mapInstance = new mapboxgl.Map(mapOptions)
 
       // Geolocationコントロールを追加
       const geolocateControl = new mapboxgl.GeolocateControl({
@@ -388,11 +443,21 @@ export function useMapComponent({
             'line-opacity': 0.8,
           },
         })
+
+        // 初期ライティング設定を適用
+        setTimeout(() => {
+          updateLightingAndShadows(mapInstance)
+        }, 100)
       })
 
       mapInstance.on('styledata', () => {
         console.log('スタイルデータが更新されました')
         setMapStyleLoaded(true)
+
+        // スタイル更新後にライティング設定を再適用
+        setTimeout(() => {
+          updateLightingAndShadows(mapInstance)
+        }, 100)
       })
 
       mapInstance.on('rotate', () => {
