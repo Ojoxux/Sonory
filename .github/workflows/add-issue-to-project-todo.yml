@@ -1,0 +1,46 @@
+name: Add Issue to Project as TODO
+
+on:
+  issues:
+    types:
+      - opened
+      - reopened
+
+env:
+  PROJECT_URL: https://github.com/users/Ojoxux/projects/1
+
+jobs:
+  add-issue-as-todo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add Issue to Project
+        id: add-to-project
+        env:
+          GITHUB_PAT: ${{ secrets.PROJECT_PAT }}
+          ISSUE_ID: ${{ github.event.issue.node_id }}
+          PROJECT_ID: ${{ secrets.PROJECT_ID }}
+        run: |
+          response=$(curl -s -X POST \
+            -H "Authorization: bearer $GITHUB_PAT" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\": \"mutation { addProjectV2ItemById(input: {projectId: \\\"$PROJECT_ID\\\", contentId: \\\"$ISSUE_ID\\\"}) { item { id } } }\"}" \
+            https://api.github.com/graphql)
+          echo "GraphQL Response: $response"
+          item_id=$(echo "$response" | jq -r '.data.addProjectV2ItemById.item.id // empty')
+          if [ -n "$item_id" ]; then
+            echo "item_id=$item_id" >> $GITHUB_OUTPUT
+          else
+            echo "Failed to add issue to project"
+            echo "$response" | jq '.errors // empty'
+            exit 1
+          fi
+
+      - name: Set Status - TODO
+        if: steps.add-to-project.outputs.item_id
+        uses: titoportas/update-project-fields@v0.1.0
+        with:
+          project-url: ${{ env.PROJECT_URL }}
+          github-token: ${{ secrets.PROJECT_PAT }}
+          item-id: ${{ steps.add-to-project.outputs.item_id }}
+          field-keys: Status
+          field-values: "📝 やること（TODO）"
