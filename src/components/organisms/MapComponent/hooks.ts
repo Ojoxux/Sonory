@@ -146,7 +146,7 @@ const createMapboxHelpers = (): MapboxNonStandardMethods => ({
           if (process.env.NODE_ENV === 'development') {
             console.warn('⚠️ setTerrain実行エラー:', error)
           }
-          throw error
+          // 他のヘルパーメソッドと統一してエラーを再スローしない
         }
       } else if (process.env.NODE_ENV === 'development') {
         console.warn('⚠️ setTerrain: スタイル未読み込みまたは非サポート')
@@ -483,7 +483,8 @@ export function useMapComponent({
 
       // スタイルが完全に読み込まれた時の追加チェック
       mapInstance.on('idle', () => {
-        if (mapInstance.isStyleLoaded() && !mapInstance.loaded()) {
+        // スタイルは読み込まれているがマップ全体の初期化が完了していない場合の補完的チェック
+        if (mapInstance.isStyleLoaded() && !mapInitializedRef.current) {
           if (process.env.NODE_ENV === 'development') {
             console.log('🔄 マップアイドル状態でスタイル読み込み完了を検知')
           }
