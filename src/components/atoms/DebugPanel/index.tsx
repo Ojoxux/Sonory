@@ -54,7 +54,27 @@ ${
     : ''
 }
 
-現在時間: ${debugTimeOverride !== null ? `${debugTimeOverride}時 (デバッグ)` : `${new Date().getHours()}時 (実時間)`}`
+現在時間: ${debugTimeOverride !== null ? `${debugTimeOverride}時 (デバッグ)` : `${new Date().getHours()}時 (実時間)`}
+時間帯: ${(() => {
+                const hour =
+                  debugTimeOverride !== null
+                    ? debugTimeOverride
+                    : new Date().getHours()
+                if (hour >= 8 && hour < 17) {
+                  return '昼 (day)'
+                } else if (hour >= 17 && hour < 19) {
+                  return '夕方初期 (dusk)'
+                } else if (hour >= 19 && hour < 22) {
+                  return '夕方後期 (dusk)'
+                } else if (hour >= 22 || hour < 4) {
+                  return '夜 (night)'
+                } else if (hour >= 4 && hour < 6) {
+                  return '早朝暗め (night)'
+                } else if (hour >= 6 && hour < 8) {
+                  return '朝自然 (day)'
+                }
+                return '不明'
+              })()}`
             : '位置情報: 取得中...'}
         </pre>
       </div>
@@ -64,14 +84,24 @@ ${
         <div className="text-white text-xs mb-2 font-semibold">時間帯変更:</div>
         <div className="grid grid-cols-2 gap-1 mb-2">
           <button
-            onClick={() => handleTimeChange(6)}
+            onClick={() => handleTimeChange(5)}
             className={`px-2 py-1 rounded text-xs transition-colors ${
-              debugTimeOverride === 6
-                ? 'bg-orange-500 text-white'
+              debugTimeOverride === 5
+                ? 'bg-indigo-600 text-white'
                 : 'bg-gray-600 hover:bg-gray-500 text-gray-200'
             }`}
           >
-            朝 (6時)
+            早朝暗め (5時)
+          </button>
+          <button
+            onClick={() => handleTimeChange(7)}
+            className={`px-2 py-1 rounded text-xs transition-colors ${
+              debugTimeOverride === 7
+                ? 'bg-blue-400 text-white'
+                : 'bg-gray-600 hover:bg-gray-500 text-gray-200'
+            }`}
+          >
+            朝自然 (7時)
           </button>
           <button
             onClick={() => handleTimeChange(12)}
@@ -84,15 +114,27 @@ ${
             昼 (12時)
           </button>
           <button
-            onClick={() => handleTimeChange(18)}
+            onClick={() => handleTimeChange(17)}
             className={`px-2 py-1 rounded text-xs transition-colors ${
-              debugTimeOverride === 18
+              debugTimeOverride === 17
                 ? 'bg-orange-600 text-white'
                 : 'bg-gray-600 hover:bg-gray-500 text-gray-200'
             }`}
           >
-            夕方 (18時)
+            夕方初期 (17時)
           </button>
+          <button
+            onClick={() => handleTimeChange(20)}
+            className={`px-2 py-1 rounded text-xs transition-colors ${
+              debugTimeOverride === 20
+                ? 'bg-red-600 text-white'
+                : 'bg-gray-600 hover:bg-gray-500 text-gray-200'
+            }`}
+          >
+            夕方後期 (20時)
+          </button>
+        </div>
+        <div className="grid grid-cols-2 gap-1 mb-2">
           <button
             onClick={() => handleTimeChange(22)}
             className={`px-2 py-1 rounded text-xs transition-colors ${
@@ -102,6 +144,16 @@ ${
             }`}
           >
             夜 (22時)
+          </button>
+          <button
+            onClick={() => handleTimeChange(2)}
+            className={`px-2 py-1 rounded text-xs transition-colors ${
+              debugTimeOverride === 2
+                ? 'bg-indigo-900 text-white'
+                : 'bg-gray-600 hover:bg-gray-500 text-gray-200'
+            }`}
+          >
+            深夜 (2時)
           </button>
         </div>
         <button

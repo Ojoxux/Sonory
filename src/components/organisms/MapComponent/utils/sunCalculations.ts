@@ -124,7 +124,7 @@ export function getLightingConfig(sunAltitude: number): LightingConfig {
       sunColor: '#000033',
       ambientColor: '#1a1a3e',
       fogColor: '#0a0a1f',
-      fogDensity: 0.8,
+      fogDensity: 0, // 霧を無効化
       shadowIntensity: 0,
     }
   }
@@ -138,35 +138,35 @@ export function getLightingConfig(sunAltitude: number): LightingConfig {
       sunColor: '#ff6b6b',
       ambientColor: '#4a5568',
       fogColor: '#2d3748',
-      fogDensity: 0.6,
+      fogDensity: 0, // 霧を無効化
       shadowIntensity: 0.1 * factor,
     }
   }
 
-  // 日の出・日の入り（0-10度）
+  // 日の出・日の入り（0-10度）- より自然なオレンジに調整
   if (sunAltitude < 10) {
     const factor = sunAltitude / 10
     return {
       sunIntensity: 0.3 + 0.4 * factor,
       ambientIntensity: 0.6 + 0.2 * factor,
-      sunColor: interpolateColor('#ff6347', '#ffd700', factor),
-      ambientColor: interpolateColor('#ff7f50', '#87ceeb', factor),
-      fogColor: interpolateColor('#ff6347', '#87ceeb', factor),
-      fogDensity: 0.4 - 0.2 * factor,
+      sunColor: interpolateColor('#ffb366', '#ffd700', factor), // より柔らかいオレンジ
+      ambientColor: interpolateColor('#ffcc99', '#87ceeb', factor), // より自然な朝の色
+      fogColor: interpolateColor('#ffe6cc', '#87ceeb', factor), // 柔らかい朝霧色
+      fogDensity: 0, // 霧を無効化
       shadowIntensity: 0.3 + 0.3 * factor,
     }
   }
 
-  // 朝・夕方（10-30度）
+  // 朝・夕方（10-30度）- より自然な朝の光に調整
   if (sunAltitude < 30) {
     const factor = (sunAltitude - 10) / 20
     return {
       sunIntensity: 0.7 + 0.2 * factor,
       ambientIntensity: 0.8 + 0.1 * factor,
-      sunColor: interpolateColor('#ffd700', '#ffffff', factor),
-      ambientColor: interpolateColor('#87ceeb', '#b0e0e6', factor),
-      fogColor: '#87ceeb',
-      fogDensity: 0.2 - 0.1 * factor,
+      sunColor: interpolateColor('#ffe066', '#ffffff', factor), // より自然な朝の太陽色
+      ambientColor: interpolateColor('#b8d4f0', '#b0e0e6', factor), // 柔らかい朝の空色
+      fogColor: '#b8d4f0', // 自然な朝の霧色
+      fogDensity: 0, // 霧を無効化
       shadowIntensity: 0.6 + 0.2 * factor,
     }
   }
@@ -178,7 +178,7 @@ export function getLightingConfig(sunAltitude: number): LightingConfig {
     sunColor: '#ffffff',
     ambientColor: '#b0e0e6',
     fogColor: '#e0f2fe',
-    fogDensity: 0.1,
+    fogDensity: 0, // 霧を無効化
     shadowIntensity: 0.8,
   }
 }
@@ -248,10 +248,7 @@ export function applyWeatherEffects(
     ...lighting,
     sunIntensity: lighting.sunIntensity * (1 - weather.cloudCoverage * 0.7),
     ambientIntensity: lighting.ambientIntensity + weather.cloudCoverage * 0.2,
-    fogDensity:
-      lighting.fogDensity +
-      weather.precipitation * 0.5 +
-      (1 - weather.visibility) * 0.3,
+    fogDensity: 0, // 天候に関係なく霧を無効化
     shadowIntensity:
       lighting.shadowIntensity * (1 - weather.cloudCoverage * 0.5),
   }

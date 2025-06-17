@@ -50,6 +50,8 @@ import { useMapEnvironment } from './hooks/useMapEnvironment'
 import type {
   GeoJSONLineStringFeature,
   LocationData,
+  MapboxExtendedMap,
+  MapboxMapOptions,
   MapboxNonStandardMethods,
 } from './type'
 import {
@@ -117,42 +119,51 @@ const createMapboxHelpers = (): MapboxNonStandardMethods => ({
   setConfigProperty: (map, namespace, property, value) =>
     pipe(supportsMethod(map, 'setConfigProperty'), (isSupported) => {
       if (isSupported) {
-        const method = (map as unknown as Record<string, unknown>)
-          .setConfigProperty as (
-          importId: string,
-          configName: string,
-          value: unknown,
-        ) => void
-        method.call(map, namespace, property, value)
+        try {
+          const extendedMap = map as MapboxExtendedMap
+          if (extendedMap.setConfigProperty) {
+            extendedMap.setConfigProperty(namespace, property, value)
+            if (process.env.NODE_ENV === 'development') {
+              console.log(
+                `setConfigProperty成功: ${namespace}.${property} = ${value}`,
+              )
+            }
+          }
+        } catch (error) {
+          console.error('setConfigProperty エラー:', error)
+        }
+      } else {
+        console.warn('setConfigProperty メソッドがサポートされていません')
       }
     }),
 
   setTerrain: (map, config) =>
     pipe(supportsMethod(map, 'setTerrain'), (isSupported) => {
       if (isSupported) {
-        const method = (map as unknown as Record<string, unknown>)
-          .setTerrain as (config: Record<string, unknown>) => void
-        method.call(map, config)
+        const extendedMap = map as MapboxExtendedMap
+        if (extendedMap.setTerrain) {
+          extendedMap.setTerrain(config)
+        }
       }
     }),
 
   setLight: (map, config) =>
     pipe(supportsMethod(map, 'setLight'), (isSupported) => {
       if (isSupported) {
-        const method = (map as unknown as Record<string, unknown>).setLight as (
-          config: unknown,
-        ) => void
-        method.call(map, config)
+        const extendedMap = map as MapboxExtendedMap
+        if (extendedMap.setLight) {
+          extendedMap.setLight(config)
+        }
       }
     }),
 
   setFog: (map, config) =>
     pipe(supportsMethod(map, 'setFog'), (isSupported) => {
       if (isSupported) {
-        const method = (map as unknown as Record<string, unknown>).setFog as (
-          config: Record<string, unknown>,
-        ) => void
-        method.call(map, config)
+        const extendedMap = map as MapboxExtendedMap
+        if (extendedMap.setFog) {
+          extendedMap.setFog(config)
+        }
       }
     }),
 })
@@ -306,7 +317,37 @@ export function useMapComponent({
     mapboxgl.accessToken = mapboxToken
 
     try {
-      const mapInstance = new mapboxgl.Map({
+      // 現在時刻に基づいて初期lightPresetを決定（正常マッピング）
+      const currentHour =
+        debugTimeOverride !== null ? debugTimeOverride : new Date().getHours()
+      let initialLightPreset: 'day' | 'dawn' | 'dusk' | 'night' = 'dawn'
+
+      // 昼の時間帯（8時から17時）→ 明るい空が必要 → 'day'を使用
+      if (currentHour >= 8 && currentHour < 17) {
+        initialLightPreset = 'day' // 正常
+      }
+      // 夜の時間帯（22時から4時）→ 暗い空が必要 → 'night'を使用
+      else if (currentHour >= 22 || currentHour < 4) {
+        initialLightPreset = 'night' // 正常
+      }
+      // 夕方・早朝の時間帯（17時-22時、4時-8時）
+      else if (
+        (currentHour >= 17 && currentHour < 22) ||
+        (currentHour >= 4 && currentHour < 8)
+      ) {
+        initialLightPreset = 'dusk'
+      }
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log(
+          '🌅 マップ初期化時のlightPreset:',
+          initialLightPreset,
+          'hour:',
+          currentHour,
+        )
+      }
+
+      const mapOptions: MapboxMapOptions = {
         container: mapContainerRef.current,
         style: 'mapbox://styles/mapbox/standard',
         center: [139.6917, 35.6895], // 東京駅
@@ -314,7 +355,19 @@ export function useMapComponent({
         pitch: 45,
         bearing: -20,
         antialias: true,
-      })
+        // Standard Style の初期設定（現在時刻に基づく）
+        config: {
+          basemap: {
+            lightPreset: initialLightPreset,
+            showPlaceLabels: true,
+            showPointOfInterestLabels: true,
+            showRoadLabels: true,
+            showTransitLabels: true,
+          },
+        },
+      }
+
+      const mapInstance = new mapboxgl.Map(mapOptions)
 
       // Geolocationコントロールを追加
       const geolocateControl = new mapboxgl.GeolocateControl({
@@ -336,9 +389,6 @@ export function useMapComponent({
       const handleUserInteraction = () => {
         userInteractionRef.current = true
         lastInteractionTimeRef.current = Date.now()
-        if (process.env.NODE_ENV !== 'production') {
-          console.log('ユーザーが地図を操作しました')
-        }
       }
 
       // refに保存してクリーンアップで使用
@@ -358,7 +408,6 @@ export function useMapComponent({
 
       // イベントリスナー設定
       mapInstance.on('load', () => {
-        console.log('マップが読み込まれました')
         setMapStyleLoaded(true)
 
         // ユーザーパス用のソースとレイヤーを追加
@@ -388,11 +437,20 @@ export function useMapComponent({
             'line-opacity': 0.8,
           },
         })
+
+        // 初期ライティング設定を適用
+        setTimeout(() => {
+          updateLightingAndShadows(mapInstance)
+        }, 100)
       })
 
       mapInstance.on('styledata', () => {
-        console.log('スタイルデータが更新されました')
         setMapStyleLoaded(true)
+
+        // スタイル更新後にライティング設定を再適用
+        setTimeout(() => {
+          updateLightingAndShadows(mapInstance)
+        }, 100)
       })
 
       mapInstance.on('rotate', () => {
@@ -402,7 +460,6 @@ export function useMapComponent({
 
       // Geolocationコントロールのイベント
       geolocateControl.on('geolocate', (e) => {
-        console.log('Geolocation成功:', e.coords)
         const newPosition = {
           latitude: e.coords.latitude,
           longitude: e.coords.longitude,
@@ -413,16 +470,17 @@ export function useMapComponent({
       })
 
       geolocateControl.on('trackuserlocationstart', () => {
-        console.log('位置追跡開始')
         setGeolocateInitialized(true)
       })
 
       geolocateControl.on('trackuserlocationend', () => {
-        console.log('位置追跡終了')
+        // 位置追跡終了
       })
 
       geolocateControl.on('error', (error) => {
-        console.error('Geolocation エラー:', error)
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Geolocation エラー:', error)
+        }
       })
 
       setMap(mapInstance)
@@ -434,9 +492,6 @@ export function useMapComponent({
         // ユーザー操作フラグをリセットして自動センタリングを有効化
         userInteractionRef.current = false
         lastInteractionTimeRef.current = 0
-        if (process.env.NODE_ENV !== 'production') {
-          console.log('手動で現在地に戻ります')
-        }
 
         // 現在の位置情報を取得（シンプルなアプローチ）
         const currentPosition =
@@ -448,9 +503,6 @@ export function useMapComponent({
 
         if (currentPosition) {
           // 位置情報がある場合は即座に移動
-          if (process.env.NODE_ENV !== 'production') {
-            console.log('既存の位置情報で即座に移動:', currentPosition)
-          }
           mapInstance.flyTo({
             center: [currentPosition.longitude, currentPosition.latitude],
             zoom: 18,
@@ -461,9 +513,6 @@ export function useMapComponent({
           })
         } else {
           // 位置情報がない場合は取得を試行
-          if (process.env.NODE_ENV !== 'production') {
-            console.log('位置情報がないため取得を試行します')
-          }
           attemptGeolocation()
         }
       })
@@ -506,17 +555,16 @@ export function useMapComponent({
     const shouldAutoCenter =
       !userInteractionRef.current || timeSinceLastInteraction > 30000 // 30秒以上操作がない場合
 
-    console.log('マップ更新:', {
-      source: positionState.positionSource,
-      latitude: position.latitude,
-      longitude: position.longitude,
-      accuracy: position.accuracy,
-      timestamp: new Date(position.timestamp).toLocaleTimeString(),
-      isInitial: !hasInitialPositionSet.current,
-      userInteracted: userInteractionRef.current,
-      timeSinceLastInteraction,
-      shouldAutoCenter,
-    })
+    if (process.env.NODE_ENV === 'development') {
+      console.log('マップ更新:', {
+        source: positionState.positionSource,
+        latitude: position.latitude,
+        longitude: position.longitude,
+        accuracy: position.accuracy,
+        isInitial: !hasInitialPositionSet.current,
+        shouldAutoCenter,
+      })
+    }
 
     // 初回の位置設定は必ず実行
     if (!hasInitialPositionSet.current) {
@@ -529,9 +577,6 @@ export function useMapComponent({
       hasInitialPositionSet.current = true
     } else if (shouldAutoCenter) {
       // ユーザーが操作していない、または30秒以上操作がない場合のみ自動センタリング
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('自動センタリングを実行します')
-      }
       map.flyTo({
         center: [position.longitude, position.latitude],
         zoom: 18,
@@ -539,10 +584,6 @@ export function useMapComponent({
         essential: true,
         duration: 2000,
       })
-    } else {
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('ユーザー操作中のため自動センタリングをスキップします')
-      }
     }
 
     // ユーザーパスを更新

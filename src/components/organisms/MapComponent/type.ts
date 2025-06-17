@@ -34,6 +34,48 @@ export type MapboxStandardStyleConfig = {
 }
 
 /**
+ * Mapboxマップ初期化時のconfig型定義
+ */
+export type MapboxMapConfig = {
+  config: MapboxStandardStyleConfig
+}
+
+/**
+ * Mapboxマップ初期化オプションの型定義
+ */
+export type MapboxMapOptions = {
+  container: HTMLElement
+  style: string
+  center: [number, number]
+  zoom: number
+  pitch: number
+  bearing: number
+  antialias: boolean
+  config: MapboxStandardStyleConfig
+}
+
+/**
+ * MapboxのsetStyleメソッドのオプション型定義
+ */
+export type MapboxSetStyleOptions = {
+  config: MapboxStandardStyleConfig
+}
+
+/**
+ * Mapboxの拡張メソッドを持つMap型
+ */
+export type MapboxExtendedMap = mapboxgl.Map & {
+  setConfigProperty?: (
+    namespace: string,
+    property: string,
+    value: unknown,
+  ) => void
+  setTerrain?: (config: Record<string, unknown>) => void
+  setLight?: (config: MapboxLightConfig) => void
+  setFog?: (config: Record<string, unknown>) => void
+}
+
+/**
  * Mapbox Light設定の型定義
  */
 export type MapboxLightConfig = {

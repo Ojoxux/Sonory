@@ -38,7 +38,9 @@ export function useLocationStorage(): UseLocationStorageReturn {
   const savePosition = useCallback((position: LocationData): void => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(position))
-      console.log('位置情報をローカルストレージに保存しました')
+      if (process.env.NODE_ENV === 'development') {
+        console.log('位置情報をローカルストレージに保存しました')
+      }
     } catch (error) {
       console.error('位置情報の保存に失敗:', error)
     }
@@ -51,7 +53,9 @@ export function useLocationStorage(): UseLocationStorageReturn {
     try {
       localStorage.removeItem(STORAGE_KEY)
       setSavedPosition(null)
-      console.log('保存された位置情報をクリアしました')
+      if (process.env.NODE_ENV === 'development') {
+        console.log('保存された位置情報をクリアしました')
+      }
     } catch (error) {
       console.error('位置情報のクリアに失敗:', error)
     }
@@ -71,10 +75,14 @@ export function useLocationStorage(): UseLocationStorageReturn {
           POSITION_EXPIRY_HOURS * 60 * 60 * 1000
 
         if (isRecent) {
-          console.log('保存された位置情報を読み込みました:', parsedPosition)
+          if (process.env.NODE_ENV === 'development') {
+            console.log('保存された位置情報を読み込みました:', parsedPosition)
+          }
           setSavedPosition(parsedPosition)
         } else {
-          console.log('保存された位置情報が古いため使用しません')
+          if (process.env.NODE_ENV === 'development') {
+            console.log('保存された位置情報が古いため使用しません')
+          }
           localStorage.removeItem(STORAGE_KEY)
         }
       }
