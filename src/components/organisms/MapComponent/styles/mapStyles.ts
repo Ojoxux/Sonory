@@ -55,10 +55,12 @@ export function applyNightLighting(
   // 10: 薄明（その他）
   const isNight = sunAltitudeOrTimeBasedValue < 0
 
-  // lightPreset設定と整合性を保つためのログ
-  console.log(
-    `🌙 時間ベース夜間モード: ${isNight ? '有効 (night/暗い空)' : '無効 (day/明るい空)'}, 値: ${sunAltitudeOrTimeBasedValue}`,
-  )
+  // lightPreset設定と整合性を保つためのログ（開発環境のみ）
+  if (process.env.NODE_ENV === 'development') {
+    console.log(
+      `🌙 時間ベース夜間モード: ${isNight ? '有効' : '無効'}, 値: ${sunAltitudeOrTimeBasedValue}`,
+    )
+  }
 
   // Standard Styleが自動的に夜間の照明を処理するため、
   // 追加のカスタマイズは最小限に留める

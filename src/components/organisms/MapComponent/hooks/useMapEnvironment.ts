@@ -53,10 +53,6 @@ export type UseMapLightingReturn = {
   updateLightingAndShadows: (mapInstance?: mapboxgl.Map) => void
 }
 
-// 時間帯の定数（参考用）
-// const EVENING_START_HOUR = 17 // 17時以降を夜の時間帯とする
-// const MORNING_END_HOUR = 5 // 5時までを夜の時間帯とする
-
 /**
  * 現在時刻から適切な lightPreset を決定
  * LocationDisplayコンポーネントの時間帯判定ロジックを参考
@@ -114,8 +110,6 @@ function setMapboxLightPreset(
   lightPreset: 'day' | 'dawn' | 'dusk' | 'night',
 ): void {
   try {
-    console.log(`🔧 lightPreset設定を試行: ${lightPreset}`)
-
     // MapboxExtendedMapとして型安全に扱う
     const extendedMap = map as MapboxExtendedMap
 
@@ -125,19 +119,12 @@ function setMapboxLightPreset(
       typeof extendedMap.setConfigProperty === 'function'
     ) {
       extendedMap.setConfigProperty('basemap', 'lightPreset', lightPreset)
-      console.log(`✅ setConfigProperty で設定完了: ${lightPreset}`)
-
-      // 設定が反映されたか確認
-      setTimeout(() => {
-        console.log('🔍 設定反映確認中...')
-      }, 500)
       return
     }
 
     // Method 2: setStyle の config オプションを使用（フォールバック）
     const currentStyle = map.getStyle()
     if (currentStyle) {
-      console.log('📝 setStyle でのlightPreset設定を試行')
       const setStyleOptions: MapboxSetStyleOptions = {
         config: {
           basemap: {
@@ -158,17 +145,19 @@ function setMapboxLightPreset(
         'mapbox://styles/mapbox/standard',
         setStyleOptions,
       )
-      console.log(`✅ setStyle で設定完了: ${lightPreset}`)
       return
     }
 
-    console.warn('⚠️ すべてのlightPreset設定方法が失敗しました')
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('⚠️ すべてのlightPreset設定方法が失敗しました')
+    }
   } catch (error) {
-    console.error('❌ lightPreset設定エラー:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('❌ lightPreset設定エラー:', error)
+    }
 
     // 最後の手段: スタイル全体をリロード
     try {
-      console.log('🔄 スタイル全体のリロードを試行')
       map.setStyle('mapbox://styles/mapbox/standard')
       setTimeout(() => {
         const extendedMap = map as MapboxExtendedMap
@@ -177,11 +166,12 @@ function setMapboxLightPreset(
           typeof extendedMap.setConfigProperty === 'function'
         ) {
           extendedMap.setConfigProperty('basemap', 'lightPreset', lightPreset)
-          console.log(`🔄 リロード後にlightPreset設定: ${lightPreset}`)
         }
       }, 1000)
     } catch (reloadError) {
-      console.error('❌ スタイルリロードも失敗:', reloadError)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('❌ スタイルリロードも失敗:', reloadError)
+      }
     }
   }
 }
@@ -222,54 +212,16 @@ export function useMapEnvironment({
         // 時間ベースでlightPresetを決定
         const lightPreset = getLightPresetFromTime(debugTimeOverride)
 
-        console.log('🌅 時間ベースのライティング設定 (正常):', {
-          currentHour,
-          lightPreset,
-          isDebugMode: debugTimeOverride !== null,
-          正常マッピング:
-            'day=明るい空, dusk=夕焼け空, night=暗い空, dawn=朝焼け空',
-          expectedResult:
-            lightPreset === 'day'
-              ? currentHour >= 6 && currentHour < 8
-                ? '自然な明るい空 (朝・オレンジ過ぎない)'
-                : '明るい空 (昼間)'
-              : lightPreset === 'night'
-                ? '暗い空 (夜間・早朝)'
-                : lightPreset === 'dusk'
-                  ? '夕焼け空 (夕方)'
-                  : '朝焼け空 (早朝)',
-        })
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🌅 時間ベースのライティング設定:', {
+            currentHour,
+            lightPreset,
+            isDebugMode: debugTimeOverride !== null,
+          })
+        }
 
         // Mapbox Standard Style の lightPreset を設定
         setMapboxLightPreset(targetMap, lightPreset)
-
-        // 設定後の確認（デバッグ用）
-        setTimeout(() => {
-          console.log('🔍 lightPreset設定後の確認:', {
-            設定値: lightPreset,
-            期待する表示:
-              lightPreset === 'day'
-                ? currentHour >= 6 && currentHour < 8
-                  ? '自然な明るい空（朝・オレンジ過ぎない）'
-                  : '明るい空（昼）'
-                : lightPreset === 'night'
-                  ? '暗い空'
-                  : lightPreset === 'dusk'
-                    ? '夕焼け空'
-                    : '朝焼け空',
-            時間帯:
-              currentHour >= 8 && currentHour < 17
-                ? '昼間'
-                : currentHour >= 17 && currentHour < 22
-                  ? '夕方'
-                  : currentHour >= 22 || currentHour < 4
-                    ? '夜間'
-                    : currentHour >= 4 && currentHour < 6
-                      ? '早朝（暗め）'
-                      : '朝（明るめ）',
-            太陽高度: sunAltitude,
-          })
-        }, 300)
 
         // 時間ベースでの夜間判定（太陽高度ではなく時間で判定）
         const isNightTime = currentHour >= 22 || currentHour < 4
@@ -300,7 +252,7 @@ export function useMapEnvironment({
           sunAltitude = 0 // デフォルト
         }
 
-        if (position) {
+        if (position && process.env.NODE_ENV === 'development') {
           const sunPosition = calculateSunPosition(
             now,
             position.latitude,
@@ -345,14 +297,14 @@ export function useMapEnvironment({
         // 時間ベースで夜間の照明効果を適用
         applyNightLighting(targetMap, isNightTime ? -20 : 45) // 時間ベースの値を渡す
 
-        console.log('ライティング更新完了:', {
-          lightPreset,
-          hour: currentHour,
-          isNightTime,
-          isDayTime,
-          sunAltitudeUsed: sunAltitude,
-          lighting: weatherAdjustedLighting,
-        })
+        if (process.env.NODE_ENV === 'development') {
+          console.log('ライティング更新完了:', {
+            lightPreset,
+            hour: currentHour,
+            isNightTime,
+            isDayTime,
+          })
+        }
       } catch (error) {
         console.error('光と影の更新エラー:', error)
       }
@@ -386,7 +338,9 @@ export function useMapEnvironment({
   useEffect(() => {
     if (!map || !mapStyleLoaded) return
 
-    console.log('デバッグ時間が変更されました:', debugTimeOverride)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('デバッグ時間が変更されました:', debugTimeOverride)
+    }
     // 少し遅延を入れてスタイル更新の競合を避ける
     setTimeout(() => {
       updateLightingAndShadows(map)

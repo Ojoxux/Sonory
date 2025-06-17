@@ -123,9 +123,11 @@ const createMapboxHelpers = (): MapboxNonStandardMethods => ({
           const extendedMap = map as MapboxExtendedMap
           if (extendedMap.setConfigProperty) {
             extendedMap.setConfigProperty(namespace, property, value)
-            console.log(
-              `setConfigProperty成功: ${namespace}.${property} = ${value}`,
-            )
+            if (process.env.NODE_ENV === 'development') {
+              console.log(
+                `setConfigProperty成功: ${namespace}.${property} = ${value}`,
+              )
+            }
           }
         } catch (error) {
           console.error('setConfigProperty エラー:', error)
@@ -336,18 +338,14 @@ export function useMapComponent({
         initialLightPreset = 'dusk'
       }
 
-      console.log(
-        '🌅 マップ初期化時のlightPreset (正常):',
-        initialLightPreset,
-        'hour:',
-        currentHour,
-        '期待結果:',
-        currentHour >= 8 && currentHour < 17
-          ? '明るい空'
-          : currentHour >= 22 || currentHour < 4
-            ? '暗い空'
-            : '薄明',
-      )
+      if (process.env.NODE_ENV === 'development') {
+        console.log(
+          '🌅 マップ初期化時のlightPreset:',
+          initialLightPreset,
+          'hour:',
+          currentHour,
+        )
+      }
 
       const mapOptions: MapboxMapOptions = {
         container: mapContainerRef.current,
@@ -391,9 +389,6 @@ export function useMapComponent({
       const handleUserInteraction = () => {
         userInteractionRef.current = true
         lastInteractionTimeRef.current = Date.now()
-        if (process.env.NODE_ENV !== 'production') {
-          console.log('ユーザーが地図を操作しました')
-        }
       }
 
       // refに保存してクリーンアップで使用
@@ -413,7 +408,6 @@ export function useMapComponent({
 
       // イベントリスナー設定
       mapInstance.on('load', () => {
-        console.log('マップが読み込まれました')
         setMapStyleLoaded(true)
 
         // ユーザーパス用のソースとレイヤーを追加
@@ -451,7 +445,6 @@ export function useMapComponent({
       })
 
       mapInstance.on('styledata', () => {
-        console.log('スタイルデータが更新されました')
         setMapStyleLoaded(true)
 
         // スタイル更新後にライティング設定を再適用
@@ -467,7 +460,6 @@ export function useMapComponent({
 
       // Geolocationコントロールのイベント
       geolocateControl.on('geolocate', (e) => {
-        console.log('Geolocation成功:', e.coords)
         const newPosition = {
           latitude: e.coords.latitude,
           longitude: e.coords.longitude,
@@ -478,16 +470,17 @@ export function useMapComponent({
       })
 
       geolocateControl.on('trackuserlocationstart', () => {
-        console.log('位置追跡開始')
         setGeolocateInitialized(true)
       })
 
       geolocateControl.on('trackuserlocationend', () => {
-        console.log('位置追跡終了')
+        // 位置追跡終了
       })
 
       geolocateControl.on('error', (error) => {
-        console.error('Geolocation エラー:', error)
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Geolocation エラー:', error)
+        }
       })
 
       setMap(mapInstance)
@@ -499,9 +492,6 @@ export function useMapComponent({
         // ユーザー操作フラグをリセットして自動センタリングを有効化
         userInteractionRef.current = false
         lastInteractionTimeRef.current = 0
-        if (process.env.NODE_ENV !== 'production') {
-          console.log('手動で現在地に戻ります')
-        }
 
         // 現在の位置情報を取得（シンプルなアプローチ）
         const currentPosition =
@@ -513,9 +503,6 @@ export function useMapComponent({
 
         if (currentPosition) {
           // 位置情報がある場合は即座に移動
-          if (process.env.NODE_ENV !== 'production') {
-            console.log('既存の位置情報で即座に移動:', currentPosition)
-          }
           mapInstance.flyTo({
             center: [currentPosition.longitude, currentPosition.latitude],
             zoom: 18,
@@ -526,9 +513,6 @@ export function useMapComponent({
           })
         } else {
           // 位置情報がない場合は取得を試行
-          if (process.env.NODE_ENV !== 'production') {
-            console.log('位置情報がないため取得を試行します')
-          }
           attemptGeolocation()
         }
       })
@@ -571,17 +555,16 @@ export function useMapComponent({
     const shouldAutoCenter =
       !userInteractionRef.current || timeSinceLastInteraction > 30000 // 30秒以上操作がない場合
 
-    console.log('マップ更新:', {
-      source: positionState.positionSource,
-      latitude: position.latitude,
-      longitude: position.longitude,
-      accuracy: position.accuracy,
-      timestamp: new Date(position.timestamp).toLocaleTimeString(),
-      isInitial: !hasInitialPositionSet.current,
-      userInteracted: userInteractionRef.current,
-      timeSinceLastInteraction,
-      shouldAutoCenter,
-    })
+    if (process.env.NODE_ENV === 'development') {
+      console.log('マップ更新:', {
+        source: positionState.positionSource,
+        latitude: position.latitude,
+        longitude: position.longitude,
+        accuracy: position.accuracy,
+        isInitial: !hasInitialPositionSet.current,
+        shouldAutoCenter,
+      })
+    }
 
     // 初回の位置設定は必ず実行
     if (!hasInitialPositionSet.current) {
@@ -594,9 +577,6 @@ export function useMapComponent({
       hasInitialPositionSet.current = true
     } else if (shouldAutoCenter) {
       // ユーザーが操作していない、または30秒以上操作がない場合のみ自動センタリング
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('自動センタリングを実行します')
-      }
       map.flyTo({
         center: [position.longitude, position.latitude],
         zoom: 18,
@@ -604,10 +584,6 @@ export function useMapComponent({
         essential: true,
         duration: 2000,
       })
-    } else {
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('ユーザー操作中のため自動センタリングをスキップします')
-      }
     }
 
     // ユーザーパスを更新
