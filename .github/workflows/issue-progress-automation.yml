@@ -1,0 +1,121 @@
+name: Issue Progress Automation
+
+on:
+  issues:
+    types: [opened, assigned, unassigned]
+
+env:
+  # 進捗ラベル定義
+  PROGRESS_LABELS: '["todo", "in progress", "review", "done"]'
+  
+jobs:
+  manage-issue-progress:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+    
+    steps:
+      - name: Add todo label on issue creation
+        if: github.event.action == 'opened'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            // Issue作成時に自動でtodoラベルを付与
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['todo']
+            });
+            
+            console.log(`✅ Added 'todo' label to issue #${context.issue.number}`);
+
+      - name: Update progress on assignee change
+        if: github.event.action == 'assigned'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const progressLabels = JSON.parse(process.env.PROGRESS_LABELS);
+            
+            // 現在のラベルを取得
+            const { data: issue } = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+            
+            const currentLabels = issue.labels.map(label => label.name);
+            const currentProgressLabels = currentLabels.filter(label => 
+              progressLabels.includes(label)
+            );
+            
+            // 既存の進捗ラベルを削除
+            for (const label of currentProgressLabels) {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                name: label
+              });
+              console.log(`🗑️ Removed '${label}' label from issue #${context.issue.number}`);
+            }
+            
+            // 'in progress'ラベルを追加
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['in progress']
+            });
+            
+            console.log(`✅ Added 'in progress' label to issue #${context.issue.number}`);
+
+      - name: Revert to todo on unassign
+        if: github.event.action == 'unassigned'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const progressLabels = JSON.parse(process.env.PROGRESS_LABELS);
+            
+            // 現在のラベルを取得
+            const { data: issue } = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+            
+            // アサインされている人がまだいるかチェック
+            if (issue.assignees && issue.assignees.length > 0) {
+              console.log(`ℹ️ Issue #${context.issue.number} still has assignees, keeping current progress status`);
+              return;
+            }
+            
+            const currentLabels = issue.labels.map(label => label.name);
+            const currentProgressLabels = currentLabels.filter(label => 
+              progressLabels.includes(label)
+            );
+            
+            // 既存の進捗ラベルを削除
+            for (const label of currentProgressLabels) {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                name: label
+              });
+              console.log(`🗑️ Removed '${label}' label from issue #${context.issue.number}`);
+            }
+            
+            // 'todo'ラベルを追加
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['todo']
+            });
+            
+            console.log(`✅ Added 'todo' label to issue #${context.issue.number} (no assignees)`); 
