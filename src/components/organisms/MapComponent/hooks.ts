@@ -173,6 +173,8 @@ export function useMapComponent({
   const mapInitializedRef = useRef<boolean>(false)
   const geolocateControlRef = useRef<mapboxgl.GeolocateControl | null>(null)
   const hasInitialPositionSet = useRef<boolean>(false)
+  const userInteractionRef = useRef<boolean>(false)
+  const lastInteractionTimeRef = useRef<number>(0)
 
   // 状態管理
   const [map, setMap] = useState<mapboxgl.Map | null>(null)
@@ -329,6 +331,20 @@ export function useMapComponent({
       mapInstance.addControl(geolocateControl, 'bottom-right')
       geolocateControlRef.current = geolocateControl
 
+      // HACK: ユーザーの地図操作をリスナーで検知するようにした
+      const handleUserInteraction = () => {
+        userInteractionRef.current = true
+        lastInteractionTimeRef.current = Date.now()
+        console.log('ユーザーが地図を操作しました')
+      }
+
+      // HACK: 各種ユーザー操作イベントを監視しておく
+      mapInstance.on('dragstart', handleUserInteraction)
+      mapInstance.on('zoomstart', handleUserInteraction)
+      mapInstance.on('rotatestart', handleUserInteraction)
+      mapInstance.on('pitchstart', handleUserInteraction)
+      mapInstance.on('touchstart', handleUserInteraction)
+
       // イベントリスナー設定
       mapInstance.on('load', () => {
         console.log('マップが読み込まれました')
@@ -405,6 +421,9 @@ export function useMapComponent({
       onGeolocationReady?.(attemptGeolocation)
       onReturnToLocationReady?.(() => {
         if (position) {
+          userInteractionRef.current = false
+          lastInteractionTimeRef.current = 0
+          console.log('手動で現在地に戻ります')
           mapInstance.flyTo({
             center: [position.longitude, position.latitude],
             zoom: 18,
@@ -429,9 +448,14 @@ export function useMapComponent({
     }
   }, []) // 依存関係を空にして一度だけ実行
 
-  // 位置情報が取得できたらマップの中心を移動
+  // 位置情報が取得できたらマップの中心を移動（ユーザー操作を考慮）
   useEffect(() => {
     if (!map || !position || !mapStyleLoaded) return
+
+    const now = Date.now()
+    const timeSinceLastInteraction = now - lastInteractionTimeRef.current
+    const shouldAutoCenter =
+      !userInteractionRef.current || timeSinceLastInteraction > 30000 // 30秒以上操作がない場合
 
     console.log('マップ更新:', {
       source: positionState.positionSource,
@@ -440,9 +464,12 @@ export function useMapComponent({
       accuracy: position.accuracy,
       timestamp: new Date(position.timestamp).toLocaleTimeString(),
       isInitial: !hasInitialPositionSet.current,
+      userInteracted: userInteractionRef.current,
+      timeSinceLastInteraction,
+      shouldAutoCenter,
     })
 
-    // 初回の位置設定かどうかで処理を分ける
+    // 初回の位置設定は必ず実行
     if (!hasInitialPositionSet.current) {
       // 初回は即座に移動（アニメーションなし）
       map.jumpTo({
@@ -451,8 +478,9 @@ export function useMapComponent({
         pitch: 50,
       })
       hasInitialPositionSet.current = true
-    } else {
-      // 2回目以降はアニメーション付きで移動
+    } else if (shouldAutoCenter) {
+      // ユーザーが操作していない、または30秒以上操作がない場合のみ自動センタリング
+      console.log('自動センタリングを実行します')
       map.flyTo({
         center: [position.longitude, position.latitude],
         zoom: 18,
@@ -460,6 +488,8 @@ export function useMapComponent({
         essential: true,
         duration: 2000,
       })
+    } else {
+      console.log('ユーザー操作中のため自動センタリングをスキップします')
     }
 
     // ユーザーパスを更新
