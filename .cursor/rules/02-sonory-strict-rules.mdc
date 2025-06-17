@@ -28,8 +28,11 @@ alwaysApply: true
 
 ## コンポーネント & ファイル構成
 - 各コンポーネントは `PascalCase/` ディレクトリ。
-  - UI: `index.tsx`　•　型: `types.ts`
-- ローカルフックは `index.tsx` の末尾に配置。
+  - UI: `index.tsx`
+  - 型: `types.ts`
+  - ローカルカスタムフック: `hooks.ts`
+  - 純粋関数・ヘルパー: `utils.ts`
+  - コンポーネント固有の定数: `constants.ts`
 - ルート階層のバレルファイルは作成しない。
 
 ---
@@ -51,9 +54,6 @@ alwaysApply: true
 - デフォルトは **Server Components**。インタラクション必須時のみ `"use client"`。
 - 各ページは `metadata` をエクスポート（`title`, `description`, `openGraph.images` 以上）。
 - 動的 SSG には `generateStaticParams()`、ISR は `revalidate` を設定。
-  - マーケ: 3600 秒
-  - ブログ: 86400 秒
-  - 価格: 300 秒
 - データ取得は Server Component 内 `fetch()` でキャッシュ利用。
 - フォーム: `react-hook-form` + `zod`、結果は `useActionState` で返却。
 
@@ -105,7 +105,7 @@ alwaysApply: true
 ## スタイリング & UI
 - Tailwind CSS のユーティリティを使用し、任意値（`[w-100px]` 等）は禁止。
 - トークンは `tailwind.config.ts` が単一の情報源。
-- アニメーションは Magic UI / shadcn/ui を利用し、`prefers-reduced-motion` を尊重。
+- アニメーションは Framer or Tailwind を利用し、`prefers-reduced-motion` を尊重。
 - モバイルファースト設計。カスタム CSS はトークンで表現できない場合のみ。
 
 ---
