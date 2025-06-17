@@ -43,16 +43,24 @@ export function getAtmosphereConfig(
 
 /**
  * 夜間の照明効果を適用
- * Mapbox Standard Styleの夜間モードを補完
+ * 時間ベースの判定に対応（lightPreset設定と整合性を保つ）
  */
 export function applyNightLighting(
   _map: mapboxgl.Map,
-  sunAltitude: number,
+  sunAltitudeOrTimeBasedValue: number,
 ): void {
+  // 時間ベースの値を受け取る場合:
+  // -20: 夜間（22時-4時）
+  // 45: 昼間（8時-17時）
+  // 10: 薄明（その他）
+  const isNight = sunAltitudeOrTimeBasedValue < 0
+
+  // lightPreset設定と整合性を保つためのログ
+  console.log(
+    `🌙 時間ベース夜間モード: ${isNight ? '有効 (night/暗い空)' : '無効 (day/明るい空)'}, 値: ${sunAltitudeOrTimeBasedValue}`,
+  )
+
   // Standard Styleが自動的に夜間の照明を処理するため、
   // 追加のカスタマイズは最小限に留める
-  const isNight = sunAltitude < -6
-
   // 必要に応じて追加の夜間効果をここに実装
-  console.log(`夜間モード: ${isNight ? '有効' : '無効'}`)
 }
