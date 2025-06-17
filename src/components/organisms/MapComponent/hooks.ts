@@ -175,6 +175,7 @@ export function useMapComponent({
   const hasInitialPositionSet = useRef<boolean>(false)
   const userInteractionRef = useRef<boolean>(false)
   const lastInteractionTimeRef = useRef<number>(0)
+  const userInteractionHandlerRef = useRef<(() => void) | null>(null)
 
   // 状態管理
   const [map, setMap] = useState<mapboxgl.Map | null>(null)
@@ -335,15 +336,25 @@ export function useMapComponent({
       const handleUserInteraction = () => {
         userInteractionRef.current = true
         lastInteractionTimeRef.current = Date.now()
-        console.log('ユーザーが地図を操作しました')
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('ユーザーが地図を操作しました')
+        }
       }
 
-      // HACK: 各種ユーザー操作イベントを監視しておく
-      mapInstance.on('dragstart', handleUserInteraction)
-      mapInstance.on('zoomstart', handleUserInteraction)
-      mapInstance.on('rotatestart', handleUserInteraction)
-      mapInstance.on('pitchstart', handleUserInteraction)
-      mapInstance.on('touchstart', handleUserInteraction)
+      // refに保存してクリーンアップで使用
+      userInteractionHandlerRef.current = handleUserInteraction
+
+      // 各種ユーザー操作イベントを監視
+      const eventTypes = [
+        'dragstart',
+        'zoomstart',
+        'rotatestart',
+        'pitchstart',
+        'touchstart',
+      ] as const
+      eventTypes.forEach((eventType) => {
+        mapInstance.on(eventType, handleUserInteraction)
+      })
 
       // イベントリスナー設定
       mapInstance.on('load', () => {
@@ -423,7 +434,9 @@ export function useMapComponent({
         // ユーザー操作フラグをリセットして自動センタリングを有効化
         userInteractionRef.current = false
         lastInteractionTimeRef.current = 0
-        console.log('手動で現在地に戻ります')
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('手動で現在地に戻ります')
+        }
 
         // 現在の位置情報を取得（シンプルなアプローチ）
         const currentPosition =
@@ -435,7 +448,9 @@ export function useMapComponent({
 
         if (currentPosition) {
           // 位置情報がある場合は即座に移動
-          console.log('既存の位置情報で即座に移動:', currentPosition)
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('既存の位置情報で即座に移動:', currentPosition)
+          }
           mapInstance.flyTo({
             center: [currentPosition.longitude, currentPosition.latitude],
             zoom: 18,
@@ -446,7 +461,9 @@ export function useMapComponent({
           })
         } else {
           // 位置情報がない場合は取得を試行
-          console.log('位置情報がないため取得を試行します')
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('位置情報がないため取得を試行します')
+          }
           attemptGeolocation()
         }
       })
@@ -456,6 +473,22 @@ export function useMapComponent({
 
     return () => {
       if (mapInitializedRef.current && map) {
+        // イベントリスナーをクリーンアップ
+        if (userInteractionHandlerRef.current) {
+          const eventTypes = [
+            'dragstart',
+            'zoomstart',
+            'rotatestart',
+            'pitchstart',
+            'touchstart',
+          ] as const
+          eventTypes.forEach((eventType) => {
+            if (userInteractionHandlerRef.current) {
+              map.off(eventType, userInteractionHandlerRef.current)
+            }
+          })
+        }
+
         map.remove()
         setMap(null)
         mapInitializedRef.current = false
@@ -496,7 +529,9 @@ export function useMapComponent({
       hasInitialPositionSet.current = true
     } else if (shouldAutoCenter) {
       // ユーザーが操作していない、または30秒以上操作がない場合のみ自動センタリング
-      console.log('自動センタリングを実行します')
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('自動センタリングを実行します')
+      }
       map.flyTo({
         center: [position.longitude, position.latitude],
         zoom: 18,
@@ -505,7 +540,9 @@ export function useMapComponent({
         duration: 2000,
       })
     } else {
-      console.log('ユーザー操作中のため自動センタリングをスキップします')
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('ユーザー操作中のため自動センタリングをスキップします')
+      }
     }
 
     // ユーザーパスを更新
