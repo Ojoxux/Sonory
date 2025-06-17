@@ -7,6 +7,8 @@ on:
 env:
   # 進捗ラベル定義
   PROGRESS_LABELS: '["todo", "in progress", "review", "done"]'
+  # プロジェクトURL
+  PROJECT_URL: https://github.com/users/Ojoxux/projects/1
   
 jobs:
   manage-issue-progress:
@@ -118,4 +120,57 @@ jobs:
               labels: ['todo']
             });
             
-            console.log(`✅ Added 'todo' label to issue #${context.issue.number} (no assignees)`); 
+            console.log(`✅ Added 'todo' label to issue #${context.issue.number} (no assignees)`);
+
+  # プロジェクトステータス同期
+  update-project-status:
+    runs-on: ubuntu-latest
+    needs: manage-issue-progress
+    if: github.event.action == 'assigned' || github.event.action == 'unassigned'
+    steps:
+      - name: Get Project Item ID
+        id: get-item
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PROJECT_PAT }}
+          script: |
+            const query = `
+              query($owner: String!, $repo: String!, $issue_number: Int!) {
+                repository(owner: $owner, name: $repo) {
+                  issue(number: $issue_number) {
+                    projectItems(first: 10) {
+                      nodes {
+                        id
+                        project { id title }
+                      }
+                    }
+                  }
+                }
+              }
+            `;
+            const variables = {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            };
+            const result = await github.graphql(query, variables);
+            const projectItems = result.repository.issue.projectItems.nodes;
+            if (projectItems.length > 0) {
+              return projectItems[0].id;
+            }
+            return null;
+
+      - name: Update Project Status
+        if: steps.get-item.outputs.result
+        uses: titoportas/update-project-fields@v0.1.0
+        with:
+          project-url: ${{ env.PROJECT_URL }}
+          github-token: ${{ secrets.PROJECT_PAT }}
+          item-id: ${{ steps.get-item.outputs.result }}
+          field-keys: Status
+          field-values: |
+            ${{
+              github.event.action == 'assigned' && '🚧 進行中' ||
+              github.event.action == 'unassigned' && '📝 やること（TODO）' ||
+              '📝 やること（TODO）'
+            }} 
