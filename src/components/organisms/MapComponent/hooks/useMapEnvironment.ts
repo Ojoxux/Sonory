@@ -102,14 +102,23 @@ function getLightPresetFromTime(
 }
 
 /**
- * Mapbox Standard Style の lightPreset を直接設定する関数
- * 複数の方法を試して、最も確実な方法を使用
+ * Mapbox Standard Style の lightPreset を設定する関数
  */
 function setMapboxLightPreset(
   map: mapboxgl.Map,
   lightPreset: 'day' | 'dawn' | 'dusk' | 'night',
 ): void {
   try {
+    // スタイルが完全に読み込まれているかチェック
+    if (!map.isStyleLoaded()) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(
+          '⚠️ スタイルがまだ読み込み中です。lightPreset設定をスキップします。',
+        )
+      }
+      return
+    }
+
     // MapboxExtendedMapとして型安全に扱う
     const extendedMap = map as MapboxExtendedMap
 
@@ -118,7 +127,12 @@ function setMapboxLightPreset(
       'setConfigProperty' in extendedMap &&
       typeof extendedMap.setConfigProperty === 'function'
     ) {
+      // スタイルが完全に読み込まれてから設定
       extendedMap.setConfigProperty('basemap', 'lightPreset', lightPreset)
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log('✅ lightPreset設定成功:', lightPreset)
+      }
       return
     }
 
@@ -145,6 +159,10 @@ function setMapboxLightPreset(
         'mapbox://styles/mapbox/standard',
         setStyleOptions,
       )
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log('✅ lightPreset設定成功 (setStyle方式):', lightPreset)
+      }
       return
     }
 
@@ -156,16 +174,17 @@ function setMapboxLightPreset(
       console.error('❌ lightPreset設定エラー:', error)
     }
 
-    // 最後の手段: スタイル全体をリロード
+    // 最後の手段: スタイル全体をリロード（遅延実行）
     try {
-      map.setStyle('mapbox://styles/mapbox/standard')
       setTimeout(() => {
-        const extendedMap = map as MapboxExtendedMap
-        if (
-          'setConfigProperty' in extendedMap &&
-          typeof extendedMap.setConfigProperty === 'function'
-        ) {
-          extendedMap.setConfigProperty('basemap', 'lightPreset', lightPreset)
+        if (map.isStyleLoaded()) {
+          const extendedMap = map as MapboxExtendedMap
+          if (
+            'setConfigProperty' in extendedMap &&
+            typeof extendedMap.setConfigProperty === 'function'
+          ) {
+            extendedMap.setConfigProperty('basemap', 'lightPreset', lightPreset)
+          }
         }
       }, 1000)
     } catch (reloadError) {
@@ -198,6 +217,16 @@ export function useMapEnvironment({
     (mapInstance?: mapboxgl.Map): void => {
       const targetMap = mapInstance || map
       if (!targetMap || !mapStyleLoaded) return
+
+      // スタイルが完全に読み込まれているかチェック
+      if (!targetMap.isStyleLoaded()) {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(
+            '⚠️ スタイルがまだ読み込み中です。ライティング更新をスキップします。',
+          )
+        }
+        return
+      }
 
       try {
         // 現在時刻を取得（デバッグモード時はオーバーライド）
@@ -277,25 +306,43 @@ export function useMapEnvironment({
         )
         setCurrentLighting(weatherAdjustedLighting)
 
-        // 3D地形を設定
-        const terrainConfig = get3DTerrainConfig()
-        if (!targetMap.getSource('mapbox-dem')) {
-          targetMap.addSource('mapbox-dem', terrainSource)
+        // 3D地形を設定（エラーハンドリング強化）
+        try {
+          const terrainConfig = get3DTerrainConfig()
+          if (!targetMap.getSource('mapbox-dem')) {
+            targetMap.addSource('mapbox-dem', terrainSource)
+          }
+          mapboxHelpers.setTerrain(targetMap, terrainConfig)
+        } catch (terrainError) {
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('⚠️ 地形設定をスキップ:', terrainError)
+          }
         }
-        mapboxHelpers.setTerrain(targetMap, terrainConfig)
 
         // 環境光を設定（Standard Style と併用）
-        const atmosphereConfig = getAtmosphereConfig(weatherAdjustedLighting)
-        const fogConfig = {
-          ...atmosphereConfig,
-          range: [0.5, 10],
-          color: weatherAdjustedLighting.fogColor,
-          'horizon-blend': weatherAdjustedLighting.fogDensity * 0.5,
+        try {
+          const atmosphereConfig = getAtmosphereConfig(weatherAdjustedLighting)
+          const fogConfig = {
+            ...atmosphereConfig,
+            range: [0.5, 10],
+            color: weatherAdjustedLighting.fogColor,
+            'horizon-blend': weatherAdjustedLighting.fogDensity * 0.5,
+          }
+          mapboxHelpers.setFog(targetMap, fogConfig)
+        } catch (fogError) {
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('⚠️ フォグ設定をスキップ:', fogError)
+          }
         }
-        mapboxHelpers.setFog(targetMap, fogConfig)
 
         // 時間ベースで夜間の照明効果を適用
-        applyNightLighting(targetMap, isNightTime ? -20 : 45) // 時間ベースの値を渡す
+        try {
+          applyNightLighting(targetMap, isNightTime ? -20 : 45) // 時間ベースの値を渡す
+        } catch (lightingError) {
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('⚠️ 夜間照明設定をスキップ:', lightingError)
+          }
+        }
 
         if (process.env.NODE_ENV === 'development') {
           console.log('ライティング更新完了:', {
@@ -323,12 +370,24 @@ export function useMapEnvironment({
   useEffect(() => {
     if (!map || !mapStyleLoaded) return
 
-    // 初回更新
-    updateLightingAndShadows(map)
+    // スタイルが完全に読み込まれるまで待機
+    const checkStyleAndUpdate = () => {
+      if (map.isStyleLoaded()) {
+        updateLightingAndShadows(map)
+      } else {
+        // スタイルがまだ読み込み中の場合、少し待ってから再試行
+        setTimeout(checkStyleAndUpdate, 100)
+      }
+    }
+
+    // 初回更新（遅延実行）
+    setTimeout(checkStyleAndUpdate, 300)
 
     // 1分ごとに更新
     const interval = setInterval(() => {
-      updateLightingAndShadows(map)
+      if (map.isStyleLoaded()) {
+        updateLightingAndShadows(map)
+      }
     }, 60000)
 
     return () => clearInterval(interval)
@@ -341,10 +400,17 @@ export function useMapEnvironment({
     if (process.env.NODE_ENV === 'development') {
       console.log('デバッグ時間が変更されました:', debugTimeOverride)
     }
-    // 少し遅延を入れてスタイル更新の競合を避ける
-    setTimeout(() => {
-      updateLightingAndShadows(map)
-    }, 200)
+
+    // スタイル更新の競合を避けるため、スタイルが読み込まれてから実行
+    const updateWithStyleCheck = () => {
+      if (map.isStyleLoaded()) {
+        updateLightingAndShadows(map)
+      } else {
+        setTimeout(updateWithStyleCheck, 100)
+      }
+    }
+
+    setTimeout(updateWithStyleCheck, 500)
   }, [debugTimeOverride, map, mapStyleLoaded, updateLightingAndShadows])
 
   return {
