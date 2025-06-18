@@ -5,8 +5,6 @@ alwaysApply: true
 ---
 ---
 description: Sonory アプリ全体の要件ガイドライン
-globs:
-   - "**/*"
 alwaysApply: true
 ---
 
