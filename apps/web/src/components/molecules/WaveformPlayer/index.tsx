@@ -6,7 +6,15 @@ import WaveSurfer from 'wavesurfer.js'
 import type { AudioData } from '../../../store/types'
 
 /**
- * WaveformPlayerコンポーネントのプロパティ型
+ * @typedef WaveformPlayerProps
+ * @description wavesurfer.jsを使用した音声再生・波形表示コンポーネントのプロパティ型
+ * @property audioData 再生する音声データ
+ * @property height 波形の高さ（ピクセル）
+ * @property waveColor 波形の色
+ * @property progressColor 再生プログレスの色
+ * @property className クラス名
+ * @property onReady 初期化完了時のコールバック
+ * @property onFinish 再生完了時のコールバック
  */
 type WaveformPlayerProps = {
    /** 再生する音声データ */
@@ -27,6 +35,8 @@ type WaveformPlayerProps = {
 
 /**
  * wavesurfer.jsを使用した音声再生・波形表示コンポーネント
+ * @param props WaveformPlayerProps
+ * @returns JSX.Element
  */
 export function WaveformPlayer({
    audioData,
@@ -37,15 +47,20 @@ export function WaveformPlayer({
    onReady,
    onFinish,
 }: WaveformPlayerProps) {
+   // DOM参照
    const containerRef = useRef<HTMLDivElement>(null)
    const wavesurferRef = useRef<WaveSurfer | null>(null)
    const isDestroyingRef = useRef<boolean>(false)
+   // 状態管理
    const [isPlaying, setIsPlaying] = useState<boolean>(false)
    const [isLoading, setIsLoading] = useState<boolean>(false)
    const [duration, setDuration] = useState<number>(0)
    const [currentTime, setCurrentTime] = useState<number>(0)
    const [error, setError] = useState<Error | null>(null)
    const [isInitialized, setIsInitialized] = useState<boolean>(false)
+   const initIdRef = useRef<number>(0)
+   // 定数
+   const SECONDS_IN_MINUTE = 60
 
    /**
     * WaveSurferインスタンスを安全に破棄
@@ -63,7 +78,11 @@ export function WaveformPlayer({
 
             if (wavesurferRef.current && typeof wavesurferRef.current.destroy === 'function') {
                try {
-                  if (wavesurferRef.current?.isPlaying?.()) {
+                  if (
+                     wavesurferRef.current.isPlaying &&
+                     typeof wavesurferRef.current.isPlaying === 'function' &&
+                     wavesurferRef.current.isPlaying()
+                  ) {
                      console.log('Stopping playback before destroy')
                      wavesurferRef.current.pause()
                   }
@@ -71,10 +90,18 @@ export function WaveformPlayer({
                   console.warn('Error pausing before destroy:', pauseError)
                }
 
+               // 即座に破棄せず、少し遅延させる
                setTimeout(() => {
                   try {
                      if (wavesurferRef.current) {
                         console.log('Destroying WaveSurfer instance')
+
+                        // すべてのイベントリスナーを先に解除
+                        if (typeof wavesurferRef.current.unAll === 'function') {
+                           wavesurferRef.current.unAll()
+                        }
+
+                        // 破棄処理を実行
                         wavesurferRef.current.destroy()
                      }
                   } catch (error) {
@@ -84,7 +111,7 @@ export function WaveformPlayer({
                      isDestroyingRef.current = false
                      resolve()
                   }
-               }, 100)
+               }, 200) // 遅延時間を増やす
             } else {
                wavesurferRef.current = null
                isDestroyingRef.current = false
@@ -101,8 +128,12 @@ export function WaveformPlayer({
 
    /**
     * WaveSurferインスタンスを初期化
+    * - 既存インスタンスの破棄と競合防止
+    * - 音声データの有効性チェック
+    * - イベントリスナー登録
     */
    const initializeWaveSurfer = useCallback(async (): Promise<void> => {
+      const myInitId = ++initIdRef.current
       console.log('initializeWaveSurfer called with:', {
          hasWindow: typeof window !== 'undefined',
          hasContainer: !!containerRef.current,
@@ -127,14 +158,24 @@ export function WaveformPlayer({
          return
       }
 
+      // BlobやURLの有効性を事前にチェック
+      if (!audioData.url && (!audioData.blob || audioData.blob.size === 0)) {
+         setError(new Error('有効な音声データが見つかりません'))
+         setIsLoading(false)
+         return
+      }
+
       try {
          console.log('Starting WaveSurfer initialization...')
          setError(null)
          setIsLoading(true)
          setIsInitialized(false)
 
-         // 既存のインスタンスを安全に破棄
+         // 既存のインスタンスを安全に破棄（Promiseの完了を必ず待つ）
          await destroyWaveSurfer()
+
+         // ここで新しい初期化が走っていないかチェック
+         if (myInitId !== initIdRef.current) return
 
          // コンテナが DOM に存在することを確認
          if (!containerRef.current.isConnected) {
@@ -184,14 +225,30 @@ export function WaveformPlayer({
             wavesurfer.play() // 再生を ready イベント内で確実に実行
          })
 
-         wavesurfer.on('audioprocess', () => {
-            setCurrentTime(wavesurfer.getCurrentTime())
+         // 再生中の現在時刻を更新
+         wavesurfer.on('audioprocess', (time: number) => {
+            setCurrentTime(time)
+            // 終了間近になったら手動で終了処理をトリガーする
+            const duration = wavesurfer.getDuration()
+            if (duration > 0 && time >= duration - 0.05) {
+               // すでに再生が停止していなければ、手動で停止し、終了処理を呼び出す
+               if (wavesurfer.isPlaying()) {
+                  console.log('WaveSurfer Manually triggering finish due to reaching end of audio')
+                  wavesurfer.pause() // 再生を停止
+                  setIsPlaying(false)
+                  wavesurfer.seekTo(0) // 再生位置を先頭に
+                  setCurrentTime(0) // UI上の時間もリセット
+                  onFinish?.() // 親コンポーネントに終了を通知
+               }
+            }
          })
 
-         wavesurfer.on('timeupdate', () => {
-            setCurrentTime(wavesurfer.getCurrentTime())
+         // 再生位置が変化したときの現在時刻を更新
+         wavesurfer.on('timeupdate', (time: number) => {
+            setCurrentTime(time)
          })
 
+         // 再生・一時停止状態の管理
          wavesurfer.on('play', () => {
             console.log('WaveSurfer play event fired - playback started')
             setIsPlaying(true)
@@ -211,20 +268,13 @@ export function WaveformPlayer({
             onFinish?.()
          })
 
-         // audioprocessイベントで現在時刻を更新（最も頻繁に発火）
-         wavesurfer.on('audioprocess', (time: number) => {
-            setCurrentTime(time)
-         })
-
-         // timeupdateイベントでも現在時刻を更新
-         wavesurfer.on('timeupdate', (time: number) => {
-            setCurrentTime(time)
-         })
+         // シーク時の再生位置更新
 
          wavesurfer.on('seeking', (time: number) => {
             setCurrentTime(time)
          })
 
+         // エラー時の状態管理
          wavesurfer.on('error', (err: Error) => {
             console.error('WaveSurfer error event:', err)
             setError(err)
@@ -362,28 +412,32 @@ export function WaveformPlayer({
    }, [isPlaying, isLoading, currentTime, duration, initializeWaveSurfer, audioData, isInitialized])
 
    /**
-    * 時間をフォーマット
+    * 秒数をMM:SS形式でフォーマット
     */
    const formatTime = useCallback((time: number): string => {
-      const minutes = Math.floor(time / 60)
-      const seconds = Math.floor(time % 60)
+      const SECONDS_IN_MINUTE = 60
+      const minutes = Math.floor(time / SECONDS_IN_MINUTE)
+      const seconds = Math.round(time % SECONDS_IN_MINUTE)
       return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
    }, [])
 
    // 音声データが変更されたときにWaveSurferを再初期化
    useEffect(() => {
-      if (audioData) {
-         initializeWaveSurfer().catch(error => {
-            console.error('WaveSurfer initialization failed:', error)
-            setError(error instanceof Error ? error : new Error('初期化に失敗しました'))
-            setIsLoading(false)
-         })
+      let isCancelled = false
+      const safeInitialize = async () => {
+         await initializeWaveSurfer()
+         if (isCancelled) return
       }
-
+      if (audioData) {
+         safeInitialize()
+      }
       return () => {
+         isCancelled = true
+         initIdRef.current++
          wavesurferRef.current?.unAll?.()
          wavesurferRef.current?.destroy()
          destroyWaveSurfer().catch(error => {
+            // eslint-disable-next-line no-console
             console.warn('WaveSurfer cleanup error:', error)
          })
       }
