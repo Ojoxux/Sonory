@@ -1,0 +1,30 @@
+name = "sonory-api"
+main = "src/index.ts"
+compatibility_date = "2024-12-18"
+compatibility_flags = ["nodejs_compat"]
+
+# 環境変数の定義（実際の値は.envまたはsecretsで管理）
+[env.production]
+vars = { ENVIRONMENT = "production" }
+
+[env.development]
+vars = { ENVIRONMENT = "development" }
+
+# KVネームスペース（必要に応じて）
+# [[kv_namespaces]]
+# binding = "CACHE"
+# id = "your-kv-namespace-id"
+
+# R2バケット（必要に応じて）
+# [[r2_buckets]]
+# binding = "AUDIO_STORAGE"
+# bucket_name = "sonory-audio"
+
+# Durable Objects（必要に応じて）
+# [[durable_objects.bindings]]
+# name = "RATE_LIMITER"
+# class_name = "RateLimiter"
+
+# [[migrations]]
+# tag = "v1"
+# new_classes = ["RateLimiter"] 
