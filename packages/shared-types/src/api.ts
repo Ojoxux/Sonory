@@ -118,6 +118,22 @@ export const APIErrorSchema = z.object({
 	requestId: z.string(),
 });
 
+/**
+ * API成功レスポンスの型定義
+ */
+export interface APIResponse<T = unknown> {
+	success: true;
+	data: T;
+}
+
+/**
+ * APIエラーレスポンスの型定義
+ */
+export interface APIErrorResponse {
+	success: false;
+	error: APIError;
+}
+
 // 型エクスポート
 export type Location = z.infer<typeof LocationSchema>;
 export type WeatherData = z.infer<typeof WeatherDataSchema>;
