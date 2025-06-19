@@ -58,3 +58,42 @@ next-env.d.ts
 
 # vscode settings
 .vscode
+
+# Turborepo
+.turbo
+
+# モノレポ各アプリの生成ファイル
+apps/*/.next/
+apps/*/.turbo/
+apps/*/out/
+apps/*/build/
+apps/*/dist/
+apps/*/*.tsbuildinfo
+apps/*/next-env.d.ts
+
+# パッケージの生成ファイル
+packages/*/dist/
+packages/*/build/
+packages/*/*.tsbuildinfo
+
+# Cloudflare Workers (将来のapi app用)
+apps/api/.wrangler/
+apps/api/dist/
+
+# ログファイル
+*.log
+
+# OS生成ファイル
+Thumbs.db
+.DS_Store
+*~
+
+# エディタ設定
+.idea/
+*.swp
+*.swo
+*~
+
+# 一時ファイル
+*.tmp
+*.temp
