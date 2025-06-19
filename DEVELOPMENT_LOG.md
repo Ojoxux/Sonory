@@ -191,27 +191,48 @@ sonory/
 - ✅ Biomeによる自動フォーマット・リント
 - ✅ 型チェック・リントエラーゼロ
 
-## 📋 次のステップ（Phase 2: 音声・ピン管理API）
+## 📋 Phase 2: 音声・ピン管理API実装中
 
-### 1. **音声アップロードAPI**
-   - `POST /api/audio/upload` - ファイルアップロード
-   - ファイルバリデーション（形式、サイズ、長さ）
-   - Supabase Storage連携
-   - メタデータ抽出
+### ✅ Step 1: Supabaseクライアント基盤構築（完了）
 
-### 2. **ピン管理API**
-   - `POST /api/pins` - ピン作成
-   - `GET /api/pins/nearby` - 範囲内ピン取得
-   - `GET /api/pins/:id` - ピン詳細取得
-   - `PUT /api/pins/:id` - ピン更新
-   - `DELETE /api/pins/:id` - ピン削除
-   - 地理空間クエリ実装
+1. **Supabaseクライアント実装**
+   - `apps/api/src/services/supabase.ts` - クライアント管理
+   - 環境変数による設定
+   - シングルトンパターンでインスタンス管理
+   - 通常クライアントと管理クライアントの分離
 
-### 3. **必要な実装**
-   - Supabaseクライアント初期化
-   - ストレージサービス
-   - 地理空間サービス
-   - バリデーションミドルウェアの活用
+2. **基底サービスクラス実装**
+   - `apps/api/src/services/base.service.ts` - 共通機能
+   - ログ機能統合
+   - 環境変数アクセス
+   - リクエストIDトラッキング
+
+3. **型安全性の確保**
+   - 具体的な`Env`型を使用してインデックスシグネチャ問題を解決
+   - 厳格なTypeScript設定への準拠
+   - Biomeによるコード品質の保証
+
+### 🔄 次のステップ: ピン管理API実装
+
+1. **データベース設計**
+   - Supabaseでテーブル作成
+   - PostGIS拡張の有効化
+   - インデックス設定
+
+2. **ピンリポジトリ実装**
+   - `apps/api/src/repositories/pin.repository.ts`
+   - CRUD操作の実装
+   - 地理空間クエリ
+
+3. **ピンサービス実装**
+   - `apps/api/src/services/pin.service.ts`
+   - ビジネスロジック
+   - バリデーション
+
+4. **APIルート実装**
+   - `apps/api/src/routes/pins.ts`
+   - エンドポイント定義
+   - ミドルウェア統合
 
 ## 🔧 技術スタック
 
