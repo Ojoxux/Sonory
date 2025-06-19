@@ -37,7 +37,9 @@ export function AudioVisualizer({
       }
 
       const interval = setInterval(() => {
-         setBars(new Array(barCount).fill(0).map(() => Math.random() * 0.8 + 0.2))
+         setBars(
+            new Array(barCount).fill(0).map(() => Math.random() * 0.8 + 0.2),
+         )
       }, 150)
 
       return () => clearInterval(interval)

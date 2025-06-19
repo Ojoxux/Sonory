@@ -10,8 +10,11 @@ import { useHomePage } from './hooks/useHomePage'
 
 // MapComponentをクライアントサイドのみでロードするために動的インポート（SSRなし）
 const MapComponent = dynamic(
-   () => import('@/components/organisms/MapComponent').then(mod => mod.MapComponent),
-   { ssr: false }
+   () =>
+      import('@/components/organisms/MapComponent').then(
+         (mod) => mod.MapComponent,
+      ),
+   { ssr: false },
 )
 
 /**
@@ -45,7 +48,7 @@ export default function Home(): ReactElement {
    return (
       <>
          <Head>
-            <script type='application/ld+json'>
+            <script type="application/ld+json">
                {`
           {
             "@context": "https://schema.org",
@@ -59,15 +62,15 @@ export default function Home(): ReactElement {
           `}
             </script>
          </Head>
-         <div className='relative h-screen w-screen overflow-hidden'>
-            <div className='absolute inset-0 z-0 pointer-events-auto'>
+         <div className="relative h-screen w-screen overflow-hidden">
+            <div className="absolute inset-0 z-0 pointer-events-auto">
                <MapComponent
                   onGeolocationReady={handleGeolocationReady}
                   onReturnToLocationReady={handleReturnToLocationReady}
                   onBearingChange={handleBearingChange}
                />
             </div>
-            <div className='absolute inset-0 z-10 pointer-events-none'>
+            <div className="absolute inset-0 z-10 pointer-events-none">
                <UIOverlay
                   onSettingsClick={handleSettingsClick}
                   onCompassClick={handleCompassClick}

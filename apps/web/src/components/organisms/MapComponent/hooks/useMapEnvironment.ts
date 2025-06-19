@@ -62,10 +62,11 @@ export type UseMapLightingReturn = {
  * 朝の時間帯も細分化して自然な色合いに調整
  */
 function getLightPresetFromTime(
-   debugTimeOverride: number | null
+   debugTimeOverride: number | null,
 ): 'day' | 'dawn' | 'dusk' | 'night' {
    // デバッグ時間オーバーライドがある場合はそれを使用、なければ現在時刻
-   const hour = debugTimeOverride !== null ? debugTimeOverride : new Date().getHours()
+   const hour =
+      debugTimeOverride !== null ? debugTimeOverride : new Date().getHours()
 
    // 昼の時間帯（8時から17時）→ 明るい空が必要
    if (hour >= 8 && hour < 17) {
@@ -105,13 +106,15 @@ function getLightPresetFromTime(
  */
 function setMapboxLightPreset(
    map: mapboxgl.Map,
-   lightPreset: 'day' | 'dawn' | 'dusk' | 'night'
+   lightPreset: 'day' | 'dawn' | 'dusk' | 'night',
 ): void {
    try {
       // スタイルが完全に読み込まれているかチェック
       if (!map.isStyleLoaded()) {
          if (process.env.NODE_ENV === 'development') {
-            console.warn('⚠️ スタイルがまだ読み込み中です。lightPreset設定をスキップします。')
+            console.warn(
+               '⚠️ スタイルがまだ読み込み中です。lightPreset設定をスキップします。',
+            )
          }
          return
       }
@@ -153,9 +156,15 @@ function setMapboxLightPreset(
 
          // setStyleの型定義を拡張して呼び出し
          const mapWithSetStyle = map as mapboxgl.Map & {
-            setStyle(style: string, options?: MapboxSetStyleOptions): mapboxgl.Map
+            setStyle(
+               style: string,
+               options?: MapboxSetStyleOptions,
+            ): mapboxgl.Map
          }
-         mapWithSetStyle.setStyle('mapbox://styles/mapbox/standard', setStyleOptions)
+         mapWithSetStyle.setStyle(
+            'mapbox://styles/mapbox/standard',
+            setStyleOptions,
+         )
 
          // 録音データを復元
          if (recordingData) {
@@ -188,7 +197,11 @@ function setMapboxLightPreset(
                   'setConfigProperty' in extendedMap &&
                   typeof extendedMap.setConfigProperty === 'function'
                ) {
-                  extendedMap.setConfigProperty('basemap', 'lightPreset', lightPreset)
+                  extendedMap.setConfigProperty(
+                     'basemap',
+                     'lightPreset',
+                     lightPreset,
+                  )
 
                   // 録音データを復元
                   if (recordingData) {
@@ -215,7 +228,8 @@ export function useMapEnvironment({
    debugTimeOverride,
    mapboxHelpers,
 }: UseMapLightingProps): UseMapLightingReturn {
-   const [currentLighting, setCurrentLighting] = useState<LightingConfig | null>(null)
+   const [currentLighting, setCurrentLighting] =
+      useState<LightingConfig | null>(null)
    const [currentWeather] = useState<WeatherEffects>(defaultWeather)
 
    /**
@@ -229,7 +243,9 @@ export function useMapEnvironment({
          // スタイルが完全に読み込まれているかチェック
          if (!targetMap.isStyleLoaded()) {
             if (process.env.NODE_ENV === 'development') {
-               console.warn('⚠️ スタイルがまだ読み込み中です。ライティング更新をスキップします。')
+               console.warn(
+                  '⚠️ スタイルがまだ読み込み中です。ライティング更新をスキップします。',
+               )
             }
             return
          }
@@ -241,7 +257,8 @@ export function useMapEnvironment({
                now.setHours(debugTimeOverride, 0, 0, 0)
             }
 
-            const currentHour = debugTimeOverride !== null ? debugTimeOverride : now.getHours()
+            const currentHour =
+               debugTimeOverride !== null ? debugTimeOverride : now.getHours()
 
             // 時間ベースでlightPresetを決定
             const lightPreset = getLightPresetFromTime(debugTimeOverride)
@@ -287,13 +304,17 @@ export function useMapEnvironment({
             }
 
             if (position && process.env.NODE_ENV === 'development') {
-               const sunPosition = calculateSunPosition(now, position.latitude, position.longitude)
+               const sunPosition = calculateSunPosition(
+                  now,
+                  position.latitude,
+                  position.longitude,
+               )
                // 実際の太陽高度は参考程度に使用
                console.log(
                   '📍 実際の太陽高度 (参考):',
                   sunPosition.altitude,
                   '使用値:',
-                  sunAltitude
+                  sunAltitude,
                )
             }
 
@@ -301,7 +322,10 @@ export function useMapEnvironment({
             const lighting = getLightingConfig(sunAltitude)
 
             // 天候効果を適用
-            const weatherAdjustedLighting = applyWeatherEffects(lighting, currentWeather)
+            const weatherAdjustedLighting = applyWeatherEffects(
+               lighting,
+               currentWeather,
+            )
             setCurrentLighting(weatherAdjustedLighting)
 
             // 3D地形を設定（エラーハンドリング強化）
@@ -319,7 +343,9 @@ export function useMapEnvironment({
 
             // 環境光を設定（Standard Style と併用）
             try {
-               const atmosphereConfig = getAtmosphereConfig(weatherAdjustedLighting)
+               const atmosphereConfig = getAtmosphereConfig(
+                  weatherAdjustedLighting,
+               )
                const fogConfig = {
                   ...atmosphereConfig,
                   range: [0.5, 10],
@@ -354,7 +380,14 @@ export function useMapEnvironment({
             console.error('光と影の更新エラー:', error)
          }
       },
-      [map, mapStyleLoaded, position, currentWeather, debugTimeOverride, mapboxHelpers]
+      [
+         map,
+         mapStyleLoaded,
+         position,
+         currentWeather,
+         debugTimeOverride,
+         mapboxHelpers,
+      ],
    )
 
    // 定期的に光と影を更新

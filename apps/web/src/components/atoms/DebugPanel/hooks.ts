@@ -50,13 +50,15 @@ export function useYAMNetDebug() {
       const interval = setInterval(() => {
          // メモリ使用量の推定
          const memoryEstimate = (
-            window.performance as unknown as { memory?: { usedJSHeapSize: number } }
+            window.performance as unknown as {
+               memory?: { usedJSHeapSize: number }
+            }
          ).memory?.usedJSHeapSize
          const memoryUsage = memoryEstimate
             ? Math.round(memoryEstimate / 1024 / 1024)
             : Math.round(Math.random() * 50 + 10) // フォールバック: 10-60MB
 
-         setPerformanceData(prev => ({
+         setPerformanceData((prev) => ({
             ...prev,
             memoryUsage,
             frameRate: Math.round(Math.random() * 10 + 55), // 55-65fps の範囲でランダム
@@ -74,7 +76,7 @@ export function useYAMNetDebug() {
          timestamp: new Date().toLocaleTimeString(),
       }
 
-      setLogs(prev => [newLog, ...prev].slice(0, 50)) // 最新50件のみ保持
+      setLogs((prev) => [newLog, ...prev].slice(0, 50)) // 最新50件のみ保持
    }
 
    const clearLogs = () => {
@@ -82,7 +84,7 @@ export function useYAMNetDebug() {
    }
 
    const updateProcessingTime = (time: number) => {
-      setPerformanceData(prev => ({
+      setPerformanceData((prev) => ({
          ...prev,
          lastAIProcessingTime: time,
       }))

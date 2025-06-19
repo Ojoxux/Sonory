@@ -59,7 +59,8 @@ export function WaveformDisplay({
       if (!canvas || !container) return
 
       const width = container.offsetWidth
-      const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1
+      const dpr =
+         typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1
 
       canvas.width = width * dpr
       canvas.height = height * dpr
@@ -82,7 +83,8 @@ export function WaveformDisplay({
       const ctx = canvas.getContext('2d')
       if (!ctx) return
 
-      const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1
+      const dpr =
+         typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1
       const width = canvas.width / dpr
       const canvasHeight = canvas.height / dpr
 
@@ -97,7 +99,8 @@ export function WaveformDisplay({
       const progress = Math.min(recordingTime / maxDuration, 1)
 
       // 録音完了の判定
-      const isRecordingComplete = isCompleted || (!isRecording && recordingTime > 0)
+      const isRecordingComplete =
+         isCompleted || (!isRecording && recordingTime > 0)
 
       // バーを描画
       for (let i = 0; i < maxBars; i++) {
@@ -175,7 +178,11 @@ export function WaveformDisplay({
 
    return (
       <div ref={containerRef} className={`relative w-full ${className}`}>
-         <canvas ref={canvasRef} className='w-full block' style={{ height: `${height}px` }} />
+         <canvas
+            ref={canvasRef}
+            className="w-full block"
+            style={{ height: `${height}px` }}
+         />
       </div>
    )
 }

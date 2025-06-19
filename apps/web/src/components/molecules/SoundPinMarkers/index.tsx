@@ -57,7 +57,7 @@ export function SoundPinMarkers({
          pinId: string,
          latitude: number,
          longitude: number,
-         onClick: () => void
+         onClick: () => void,
       ): mapboxgl.Marker | null => {
          if (!map) return null
 
@@ -71,11 +71,13 @@ export function SoundPinMarkers({
             const root = createRoot(markerElement)
             root.render(
                <CarIcon
-                  size='medium'
-                  color='text-blue-600'
+                  size="medium"
+                  color="text-blue-600"
                   onClick={onClick}
-                  className={selectedPinId === pinId ? 'ring-2 ring-blue-400' : ''}
-               />
+                  className={
+                     selectedPinId === pinId ? 'ring-2 ring-blue-400' : ''
+                  }
+               />,
             )
 
             // Mapboxマーカーを作成
@@ -92,7 +94,7 @@ export function SoundPinMarkers({
             return null
          }
       },
-      [map, selectedPinId]
+      [map, selectedPinId],
    )
 
    /**
@@ -109,16 +111,28 @@ export function SoundPinMarkers({
 
       // 新しいマーカーを作成
       for (const pin of pins) {
-         const marker = createSoundPinMarker(pin.id, pin.latitude, pin.longitude, () => {
-            console.log('音声ピンがクリックされました:', pin.primaryLabel)
-            onPinSelect(selectedPinId === pin.id ? null : pin.id)
-         })
+         const marker = createSoundPinMarker(
+            pin.id,
+            pin.latitude,
+            pin.longitude,
+            () => {
+               console.log('音声ピンがクリックされました:', pin.primaryLabel)
+               onPinSelect(selectedPinId === pin.id ? null : pin.id)
+            },
+         )
 
          if (marker) {
             soundPinMarkersRef.current.set(pin.id, marker)
          }
       }
-   }, [map, mapStyleLoaded, pins, selectedPinId, createSoundPinMarker, onPinSelect])
+   }, [
+      map,
+      mapStyleLoaded,
+      pins,
+      selectedPinId,
+      createSoundPinMarker,
+      onPinSelect,
+   ])
 
    // 音声ピンが変更されたときにマーカーを更新
    useEffect(() => {

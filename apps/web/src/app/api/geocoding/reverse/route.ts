@@ -1,4 +1,7 @@
-import type { ReverseGeocodingError, ReverseGeocodingResponse } from '@/types/geocoding'
+import type {
+   ReverseGeocodingError,
+   ReverseGeocodingResponse,
+} from '@/types/geocoding'
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 
@@ -10,7 +13,7 @@ import { NextResponse } from 'next/server'
  */
 
 export async function GET(
-   request: NextRequest
+   request: NextRequest,
 ): Promise<NextResponse<ReverseGeocodingResponse | ReverseGeocodingError>> {
    try {
       const { searchParams } = new URL(request.url)
@@ -22,7 +25,7 @@ export async function GET(
       if (!lat || !lon) {
          return NextResponse.json(
             { error: 'Missing required parameters: lat, lon' },
-            { status: 400 }
+            { status: 400 },
          )
       }
 
@@ -40,12 +43,14 @@ export async function GET(
       ) {
          return NextResponse.json(
             { error: 'Invalid latitude or longitude values' },
-            { status: 400 }
+            { status: 400 },
          )
       }
 
       // OpenStreetMap Nominatim APIを呼び出し
-      const nominatimUrl = new URL('https://nominatim.openstreetmap.org/reverse')
+      const nominatimUrl = new URL(
+         'https://nominatim.openstreetmap.org/reverse',
+      )
       nominatimUrl.searchParams.set('format', 'json')
       nominatimUrl.searchParams.set('lat', lat)
       nominatimUrl.searchParams.set('lon', lon)
@@ -84,7 +89,8 @@ export async function GET(
       // キャッシュヘッダーを設定（1時間キャッシュ）
       return NextResponse.json(result, {
          headers: {
-            'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+            'Cache-Control':
+               'public, s-maxage=3600, stale-while-revalidate=86400',
          },
       })
    } catch (error) {
@@ -95,7 +101,7 @@ export async function GET(
             error: 'Failed to fetch location data',
             details: error instanceof Error ? error.message : 'Unknown error',
          },
-         { status: 500 }
+         { status: 500 },
       )
    }
 }

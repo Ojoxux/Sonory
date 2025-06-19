@@ -24,7 +24,11 @@ import type { RecordButtonProps } from './type'
  * />
  * ```
  */
-export function RecordButton({ status, onClick, disabled = false }: RecordButtonProps) {
+export function RecordButton({
+   status,
+   onClick,
+   disabled = false,
+}: RecordButtonProps) {
    // 状態に応じた背景グラデーションを取得
    const getBackgroundGradient = (): string => {
       switch (status) {
@@ -66,7 +70,7 @@ export function RecordButton({ status, onClick, disabled = false }: RecordButton
    }
 
    return (
-      <div className='relative'>
+      <div className="relative">
          {/* 背景の光彩エフェクト */}
          <div
             className={`absolute inset-0 ${getBackgroundGradient()} rounded-full blur-2xl opacity-50 ${getAnimationClass()}`}
@@ -74,7 +78,7 @@ export function RecordButton({ status, onClick, disabled = false }: RecordButton
 
          {/* メインボタン */}
          <button
-            type='button'
+            type="button"
             onClick={onClick}
             disabled={disabled}
             className={`
@@ -89,15 +93,16 @@ export function RecordButton({ status, onClick, disabled = false }: RecordButton
           ${getAnimationClass()}
           group
         `}
-            aria-label='録音'>
+            aria-label="録音"
+         >
             {/* グラスエフェクト */}
-            <div className='absolute inset-0 rounded-full bg-white/10 backdrop-blur-sm' />
+            <div className="absolute inset-0 rounded-full bg-white/10 backdrop-blur-sm" />
 
             {/* 内部の光沢 */}
-            <div className='absolute top-2 left-2 right-2 h-1/3 bg-gradient-to-b from-white/30 to-transparent rounded-t-full' />
+            <div className="absolute top-2 left-2 right-2 h-1/3 bg-gradient-to-b from-white/30 to-transparent rounded-t-full" />
 
             {/* コンテンツ */}
-            <div className='relative z-10'>
+            <div className="relative z-10">
                <RecordButtonContent status={status} />
             </div>
          </button>
@@ -105,8 +110,8 @@ export function RecordButton({ status, onClick, disabled = false }: RecordButton
          {/* 波紋エフェクト（録音中） */}
          {status === 'recording' && (
             <>
-               <div className='absolute inset-0 rounded-full border-2 border-red-400/50 animate-ping-slow' />
-               <div className='absolute inset-0 rounded-full border-2 border-red-400/30 animate-ping-slower' />
+               <div className="absolute inset-0 rounded-full border-2 border-red-400/50 animate-ping-slow" />
+               <div className="absolute inset-0 rounded-full border-2 border-red-400/30 animate-ping-slower" />
             </>
          )}
       </div>

@@ -23,7 +23,10 @@ export type UseMapGeolocationProps = {
    /** デバッグモードの状態 */
    debugMode: boolean
    /** 通知表示関数 */
-   showNotification: (message: string, type: 'success' | 'error' | 'warning') => void
+   showNotification: (
+      message: string,
+      type: 'success' | 'error' | 'warning',
+   ) => void
    /** 位置情報更新時のコールバック */
    onPositionUpdate: (position: LocationData) => void
    /** マップインスタンス */
@@ -52,7 +55,9 @@ export function useLocationIntegration({
    onPositionUpdate,
    map,
 }: UseMapGeolocationProps): UseMapGeolocationReturn {
-   const [mapboxPosition, setMapboxPosition] = useState<LocationData | null>(null)
+   const [mapboxPosition, setMapboxPosition] = useState<LocationData | null>(
+      null,
+   )
    const [geolocateAttempted, setGeolocateAttempted] = useState<boolean>(false)
 
    /**
@@ -86,10 +91,16 @@ export function useLocationIntegration({
       }
 
       // 段階的フォールバック戦略
-      const tryGeolocation = (options: PositionOptions, fallbackLevel: number): void => {
+      const tryGeolocation = (
+         options: PositionOptions,
+         fallbackLevel: number,
+      ): void => {
          navigator.geolocation.getCurrentPosition(
-            position => {
-               console.log(`位置情報取得成功 (レベル${fallbackLevel}):`, position.coords)
+            (position) => {
+               console.log(
+                  `位置情報取得成功 (レベル${fallbackLevel}):`,
+                  position.coords,
+               )
                const newPosition = {
                   latitude: position.coords.latitude,
                   longitude: position.coords.longitude,
@@ -126,8 +137,12 @@ export function useLocationIntegration({
                   })
                }
             },
-            error => {
-               console.log(`位置情報取得失敗 (レベル${fallbackLevel}):`, error.code, error.message)
+            (error) => {
+               console.log(
+                  `位置情報取得失敗 (レベル${fallbackLevel}):`,
+                  error.code,
+                  error.message,
+               )
 
                // 段階的フォールバック
                if (fallbackLevel === 1 && error.code === 3) {
@@ -139,12 +154,14 @@ export function useLocationIntegration({
                         timeout: 15000,
                         maximumAge: 300000, // 5分以内のキャッシュを許可
                      },
-                     2
+                     2,
                   )
                } else if (fallbackLevel === 2) {
                   // レベル2失敗 → レベル3: 保存された位置情報を使用
                   console.log('レベル3フォールバック: 保存された位置情報を使用')
-                  const savedPosition = localStorage.getItem('sonory_last_position')
+                  const savedPosition = localStorage.getItem(
+                     'sonory_last_position',
+                  )
                   if (savedPosition) {
                      try {
                         const parsed = JSON.parse(savedPosition) as LocationData
@@ -152,7 +169,8 @@ export function useLocationIntegration({
                         setMapboxPosition(parsed)
 
                         // 位置情報を更新する前に録音データを保存
-                        const recordingData = localStorage.getItem('recording_data')
+                        const recordingData =
+                           localStorage.getItem('recording_data')
 
                         // 位置情報を更新
                         onPositionUpdate(parsed)
@@ -163,17 +181,25 @@ export function useLocationIntegration({
                         }
 
                         if (debugMode) {
-                           showNotification('保存された位置情報を使用しました', 'warning')
+                           showNotification(
+                              '保存された位置情報を使用しました',
+                              'warning',
+                           )
                         }
                         return
                      } catch (parseError) {
-                        console.error('保存された位置情報の解析エラー:', parseError)
+                        console.error(
+                           '保存された位置情報の解析エラー:',
+                           parseError,
+                        )
                      }
                   }
 
                   // レベル4: Mapboxのgeolocationコントロールを試行
                   if (geolocateControl && geolocateInitialized) {
-                     console.log('レベル4フォールバック: Mapboxコントロールを使用')
+                     console.log(
+                        'レベル4フォールバック: Mapboxコントロールを使用',
+                     )
                      try {
                         geolocateControl.trigger()
                      } catch (triggerError) {
@@ -190,7 +216,7 @@ export function useLocationIntegration({
                   console.log('位置情報の取得に失敗しました:', error.message)
                }
             },
-            options
+            options,
          )
       }
 
@@ -201,7 +227,7 @@ export function useLocationIntegration({
             timeout: 10000,
             maximumAge: 60000, // 1分以内のキャッシュを許可
          },
-         1
+         1,
       )
    }, [
       geolocateControl,

@@ -1,10 +1,10 @@
-"use client";
+'use client'
 
-import { memo, useEffect, useRef, useState } from "react";
-import type { LocationDisplayProps } from "./type";
+import { memo, useEffect, useRef, useState } from 'react'
+import type { LocationDisplayProps } from './type'
 
 // 位置情報のキャッシュ
-const locationCache = new Map<string, string>();
+const locationCache = new Map<string, string>()
 
 /**
  * 位置情報表示コンポーネント
@@ -24,188 +24,194 @@ const locationCache = new Map<string, string>();
  * ```
  */
 export const LocationDisplay = memo(function LocationDisplay({
-	latitude,
-	longitude,
-	className = "",
-	debugTimeOverride = null,
+   latitude,
+   longitude,
+   className = '',
+   debugTimeOverride = null,
 }: LocationDisplayProps) {
-	// 前回の位置情報を保持
-	const prevLocationRef = useRef<{
-		lat: number;
-		lon: number;
-		name: string;
-	} | null>(null);
+   // 前回の位置情報を保持
+   const prevLocationRef = useRef<{
+      lat: number
+      lon: number
+      name: string
+   } | null>(null)
 
-	const [locationName, setLocationName] = useState<string>(() => {
-		// 前回の位置情報があれば使用
-		if (prevLocationRef.current && latitude && longitude) {
-			const prevLat = Math.round(prevLocationRef.current.lat * 100) / 100;
-			const prevLon = Math.round(prevLocationRef.current.lon * 100) / 100;
-			const currentLat = Math.round(latitude * 100) / 100;
-			const currentLon = Math.round(longitude * 100) / 100;
+   const [locationName, setLocationName] = useState<string>(() => {
+      // 前回の位置情報があれば使用
+      if (prevLocationRef.current && latitude && longitude) {
+         const prevLat = Math.round(prevLocationRef.current.lat * 100) / 100
+         const prevLon = Math.round(prevLocationRef.current.lon * 100) / 100
+         const currentLat = Math.round(latitude * 100) / 100
+         const currentLon = Math.round(longitude * 100) / 100
 
-			if (prevLat === currentLat && prevLon === currentLon) {
-				return prevLocationRef.current.name;
-			}
-		}
-		return "";
-	});
+         if (prevLat === currentLat && prevLon === currentLon) {
+            return prevLocationRef.current.name
+         }
+      }
+      return ''
+   })
 
-	const [isLoading, setIsLoading] = useState(() => {
-		// 既に位置情報がある場合はローディングをスキップ
-		return locationName === "";
-	});
+   const [isLoading, setIsLoading] = useState(() => {
+      // 既に位置情報がある場合はローディングをスキップ
+      return locationName === ''
+   })
 
-	const [hasError, setHasError] = useState(false);
-	const [isDarkTime, setIsDarkTime] = useState(false);
-	const fetchedRef = useRef(false);
+   const [hasError, setHasError] = useState(false)
+   const [isDarkTime, setIsDarkTime] = useState(false)
+   const fetchedRef = useRef(false)
 
-	const EVENING_START_HOUR = 17; // 17時以降を夜の時間帯とする
-	const MORNING_END_HOUR = 5; // 5時までを夜の時間帯とする
+   const EVENING_START_HOUR = 17 // 17時以降を夜の時間帯とする
+   const MORNING_END_HOUR = 5 // 5時までを夜の時間帯とする
 
-	// 時間帯をチェック（17時以降を夜の時間帯とする）
-	useEffect(() => {
-		const checkTimeOfDay = () => {
-			// デバッグ時間オーバーライドがある場合はそれを使用、なければ現在時刻
-			const hour =
-				debugTimeOverride !== null ? debugTimeOverride : new Date().getHours();
-			setIsDarkTime(hour >= EVENING_START_HOUR || hour < MORNING_END_HOUR);
-		};
+   // 時間帯をチェック（17時以降を夜の時間帯とする）
+   useEffect(() => {
+      const checkTimeOfDay = () => {
+         // デバッグ時間オーバーライドがある場合はそれを使用、なければ現在時刻
+         const hour =
+            debugTimeOverride !== null
+               ? debugTimeOverride
+               : new Date().getHours()
+         setIsDarkTime(hour >= EVENING_START_HOUR || hour < MORNING_END_HOUR)
+      }
 
-		checkTimeOfDay();
-		const interval = setInterval(checkTimeOfDay, 60000); // 1分ごとに更新
+      checkTimeOfDay()
+      const interval = setInterval(checkTimeOfDay, 60000) // 1分ごとに更新
 
-		return () => clearInterval(interval);
-	}, [debugTimeOverride]);
+      return () => clearInterval(interval)
+   }, [debugTimeOverride])
 
-	useEffect(() => {
-		const fetchLocationName = async () => {
-			if (!latitude || !longitude) {
-				setLocationName("");
-				setIsLoading(false);
-				return;
-			}
+   useEffect(() => {
+      const fetchLocationName = async () => {
+         if (!latitude || !longitude) {
+            setLocationName('')
+            setIsLoading(false)
+            return
+         }
 
-			// キャッシュキーを作成（小数点以下2桁に丸めて、より広い範囲でキャッシュ）
-			const roundedLat = Math.round(latitude * 100) / 100;
-			const roundedLon = Math.round(longitude * 100) / 100;
-			const cacheKey = `${roundedLat},${roundedLon}`;
+         // キャッシュキーを作成（小数点以下2桁に丸めて、より広い範囲でキャッシュ）
+         const roundedLat = Math.round(latitude * 100) / 100
+         const roundedLon = Math.round(longitude * 100) / 100
+         const cacheKey = `${roundedLat},${roundedLon}`
 
-			// キャッシュをチェック
-			const cached = locationCache.get(cacheKey);
-			if (cached) {
-				setLocationName(cached);
-				setIsLoading(false);
-				return;
-			}
+         // キャッシュをチェック
+         const cached = locationCache.get(cacheKey)
+         if (cached) {
+            setLocationName(cached)
+            setIsLoading(false)
+            return
+         }
 
-			// 既にフェッチ中の場合はスキップ
-			if (fetchedRef.current) return;
-			fetchedRef.current = true;
+         // 既にフェッチ中の場合はスキップ
+         if (fetchedRef.current) return
+         fetchedRef.current = true
 
-			try {
-				setIsLoading(true);
-				setHasError(false);
+         try {
+            setIsLoading(true)
+            setHasError(false)
 
-				// 自前のAPI Routeを使用して逆ジオコーディング（CORSエラー回避）
-				const response = await fetch(
-					`/api/geocoding/reverse?lat=${latitude}&lon=${longitude}&lang=en`,
-				);
+            // 自前のAPI Routeを使用して逆ジオコーディング（CORSエラー回避）
+            const response = await fetch(
+               `/api/geocoding/reverse?lat=${latitude}&lon=${longitude}&lang=en`,
+            )
 
-				if (!response.ok) {
-					throw new Error(`API error: ${response.status}`);
-				}
+            if (!response.ok) {
+               throw new Error(`API error: ${response.status}`)
+            }
 
-				const data = await response.json();
+            const data = await response.json()
 
-				// エラーレスポンスの場合
-				if (data.error) {
-					throw new Error(data.error);
-				}
+            // エラーレスポンスの場合
+            if (data.error) {
+               throw new Error(data.error)
+            }
 
-				const location = data.locationName || "";
+            const location = data.locationName || ''
 
-				setLocationName(location);
+            setLocationName(location)
 
-				// キャッシュに保存（元の座標と丸めた座標の両方でキャッシュ）
-				if (location) {
-					locationCache.set(cacheKey, location);
-					// 元の精度でもキャッシュ
-					const originalKey = `${latitude.toFixed(4)},${longitude.toFixed(4)}`;
-					locationCache.set(originalKey, location);
+            // キャッシュに保存（元の座標と丸めた座標の両方でキャッシュ）
+            if (location) {
+               locationCache.set(cacheKey, location)
+               // 元の精度でもキャッシュ
+               const originalKey = `${latitude.toFixed(4)},${longitude.toFixed(4)}`
+               locationCache.set(originalKey, location)
 
-					// 前回の位置情報として保存
-					prevLocationRef.current = {
-						lat: latitude,
-						lon: longitude,
-						name: location,
-					};
-				}
-			} catch (error) {
-				console.error("Failed to fetch location name:", error);
-				setHasError(true);
-				// エラー時は座標表示をフォールバックとして使用
-				setLocationName(`${latitude.toFixed(3)}°N, ${longitude.toFixed(3)}°E`);
-			} finally {
-				setIsLoading(false);
-				fetchedRef.current = false;
-			}
-		};
+               // 前回の位置情報として保存
+               prevLocationRef.current = {
+                  lat: latitude,
+                  lon: longitude,
+                  name: location,
+               }
+            }
+         } catch (error) {
+            console.error('Failed to fetch location name:', error)
+            setHasError(true)
+            // エラー時は座標表示をフォールバックとして使用
+            setLocationName(
+               `${latitude.toFixed(3)}°N, ${longitude.toFixed(3)}°E`,
+            )
+         } finally {
+            setIsLoading(false)
+            fetchedRef.current = false
+         }
+      }
 
-		// 少し遅延を入れて、頻繁な更新を防ぐ
-		const timer = setTimeout(() => {
-			fetchLocationName();
-		}, 300);
+      // 少し遅延を入れて、頻繁な更新を防ぐ
+      const timer = setTimeout(() => {
+         fetchLocationName()
+      }, 300)
 
-		return () => clearTimeout(timer);
-	}, [latitude, longitude]);
+      return () => clearTimeout(timer)
+   }, [latitude, longitude])
 
-	// 位置情報がない場合は何も表示しない
-	if (!latitude || !longitude || (!locationName && !isLoading)) {
-		return null;
-	}
+   // 位置情報がない場合は何も表示しない
+   if (!latitude || !longitude || (!locationName && !isLoading)) {
+      return null
+   }
 
-	// 時間帯に応じたスタイル
-	const textColorClass = isDarkTime ? "text-white" : "text-gray-900";
-	const borderColorClass = isDarkTime ? "border-white" : "border-gray-900";
+   // 時間帯に応じたスタイル
+   const textColorClass = isDarkTime ? 'text-white' : 'text-gray-900'
+   const borderColorClass = isDarkTime ? 'border-white' : 'border-gray-900'
 
-	return (
-		<div className={`relative ${className}`}>
-			<div
-				className={`transition-all duration-500 ${isLoading ? "opacity-50" : "opacity-100"}`}
-			>
-				{isLoading ? (
-					<div className="flex items-center gap-3">
-						<div
-							className={`w-3 h-3 rounded-full animate-pulse ${isDarkTime ? "bg-white/50" : "bg-gray-400"}`}
-						/>
-						<span
-							className={`text-5xl font-bold tracking-tight font-arial-rounded-mt-pro ${isDarkTime ? "text-white/50" : "text-gray-400"}`}
-						>
-							Loading
-						</span>
-					</div>
-				) : (
-					<div className="inline-block">
-						<h2
-							className={`text-6xl font-bold tracking-tight font-arial-rounded-mt-pro ${textColorClass} pb-2 leading-none ${hasError ? "text-yellow-500" : ""}`}
-						>
-							{locationName}
-						</h2>
-						<div className={`h-0.5 w-full ${borderColorClass} border-b-2`} />
-						<p
-							className={`text-sm mt-3 font-bold tracking-wide font-arial-rounded-mt-pro ${isDarkTime ? "text-white/50" : "text-gray-500"}`}
-						>
-							{latitude.toFixed(4)}° N, {longitude.toFixed(4)}° E
-							{hasError && (
-								<span className="ml-2 text-yellow-500 text-xs">
-									(位置情報取得エラー)
-								</span>
-							)}
-						</p>
-					</div>
-				)}
-			</div>
-		</div>
-	);
-});
+   return (
+      <div className={`relative ${className}`}>
+         <div
+            className={`transition-all duration-500 ${isLoading ? 'opacity-50' : 'opacity-100'}`}
+         >
+            {isLoading ? (
+               <div className="flex items-center gap-3">
+                  <div
+                     className={`w-3 h-3 rounded-full animate-pulse ${isDarkTime ? 'bg-white/50' : 'bg-gray-400'}`}
+                  />
+                  <span
+                     className={`text-5xl font-bold tracking-tight font-arial-rounded-mt-pro ${isDarkTime ? 'text-white/50' : 'text-gray-400'}`}
+                  >
+                     Loading
+                  </span>
+               </div>
+            ) : (
+               <div className="inline-block">
+                  <h2
+                     className={`text-6xl font-bold tracking-tight font-arial-rounded-mt-pro ${textColorClass} pb-2 leading-none ${hasError ? 'text-yellow-500' : ''}`}
+                  >
+                     {locationName}
+                  </h2>
+                  <div
+                     className={`h-0.5 w-full ${borderColorClass} border-b-2`}
+                  />
+                  <p
+                     className={`text-sm mt-3 font-bold tracking-wide font-arial-rounded-mt-pro ${isDarkTime ? 'text-white/50' : 'text-gray-500'}`}
+                  >
+                     {latitude.toFixed(4)}° N, {longitude.toFixed(4)}° E
+                     {hasError && (
+                        <span className="ml-2 text-yellow-500 text-xs">
+                           (位置情報取得エラー)
+                        </span>
+                     )}
+                  </p>
+               </div>
+            )}
+         </div>
+      </div>
+   )
+})

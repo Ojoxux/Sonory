@@ -64,10 +64,31 @@ const CUSTOM_STYLE = {
          type: 'line',
          source: 'mapbox',
          'source-layer': 'road',
-         filter: ['all', ['!in', 'class', 'street', 'street_limited', 'service', 'track', 'path']],
+         filter: [
+            'all',
+            [
+               '!in',
+               'class',
+               'street',
+               'street_limited',
+               'service',
+               'track',
+               'path',
+            ],
+         ],
          paint: {
             'line-color': '#ffffff',
-            'line-width': ['interpolate', ['linear'], ['zoom'], 10, 1, 15, 3, 20, 8],
+            'line-width': [
+               'interpolate',
+               ['linear'],
+               ['zoom'],
+               10,
+               1,
+               15,
+               3,
+               20,
+               8,
+            ],
             'line-opacity': 0.8,
          },
       },
@@ -80,7 +101,17 @@ const CUSTOM_STYLE = {
          filter: ['in', 'class', 'street', 'street_limited'],
          paint: {
             'line-color': '#ffffff',
-            'line-width': ['interpolate', ['linear'], ['zoom'], 12, 0.5, 15, 2, 20, 6],
+            'line-width': [
+               'interpolate',
+               ['linear'],
+               ['zoom'],
+               12,
+               0.5,
+               15,
+               2,
+               20,
+               6,
+            ],
             'line-opacity': 0.6,
          },
       },
@@ -103,7 +134,15 @@ const CUSTOM_STYLE = {
          source: 'mapbox',
          'source-layer': 'building',
          paint: {
-            'fill-color': ['interpolate', ['linear'], ['zoom'], 15, '#e1e9ed', 18, '#f5f5f5'],
+            'fill-color': [
+               'interpolate',
+               ['linear'],
+               ['zoom'],
+               15,
+               '#e1e9ed',
+               18,
+               '#f5f5f5',
+            ],
             'fill-outline-color': '#dce3e8',
          },
       },
@@ -199,7 +238,7 @@ export function useMapboxInitialization() {
          new mapboxgl.NavigationControl({
             visualizePitch: true, // ピッチコントロールを表示
          }),
-         'bottom-right'
+         'bottom-right',
       )
 
       // 現在地コントロールを追加
@@ -211,14 +250,14 @@ export function useMapboxInitialization() {
             trackUserLocation: true,
             showUserHeading: true,
          }),
-         'bottom-right'
+         'bottom-right',
       )
 
       // 著作権表示を追加
       map.addControl(
          new mapboxgl.AttributionControl({
             compact: true,
-         })
+         }),
       )
 
       return map

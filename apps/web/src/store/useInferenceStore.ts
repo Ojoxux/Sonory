@@ -41,18 +41,24 @@ const FALLBACK_CLASSIFICATIONS: readonly InferenceResult[] = [
  */
 function generateClassificationResults(): InferenceResult[] {
    // ランダムに1つの主要分類を選択
-   const primaryIndex = Math.floor(Math.random() * FALLBACK_CLASSIFICATIONS.length)
+   const primaryIndex = Math.floor(
+      Math.random() * FALLBACK_CLASSIFICATIONS.length,
+   )
    const primaryResult = FALLBACK_CLASSIFICATIONS[primaryIndex]
 
    // 他の分類結果をランダムな低い信頼度で追加
-   const otherResults = FALLBACK_CLASSIFICATIONS.filter((_, index) => index !== primaryIndex)
+   const otherResults = FALLBACK_CLASSIFICATIONS.filter(
+      (_, index) => index !== primaryIndex,
+   )
       .slice(0, Math.floor(Math.random() * 3) + 1) // 1-3つの追加結果
-      .map(result => ({
+      .map((result) => ({
          ...result,
          confidence: Math.random() * 0.4 + 0.1, // 0.1-0.5の範囲
       }))
 
-   return [primaryResult, ...otherResults].sort((a, b) => b.confidence - a.confidence)
+   return [primaryResult, ...otherResults].sort(
+      (a, b) => b.confidence - a.confidence,
+   )
 }
 
 /**
@@ -80,7 +86,7 @@ async function uploadAudioToStorage(audioData: AudioData): Promise<string> {
          throw new Error(
             `アップロード失敗: ${response.status} ${response.statusText} - ${
                errorData.error?.message || '不明なエラー'
-            }`
+            }`,
          )
       }
 
@@ -106,7 +112,7 @@ async function uploadAudioToStorage(audioData: AudioData): Promise<string> {
  */
 async function callBackendAnalysis(
    audioData: AudioData,
-   audioUrl: string
+   audioUrl: string,
 ): Promise<InferenceResult[]> {
    console.log('🚀 バックエンドAPI呼び出し開始:', audioData.id)
 
@@ -128,7 +134,7 @@ async function callBackendAnalysis(
          throw new Error(
             `API分析失敗: ${response.status} ${response.statusText} - ${
                errorData.error?.message || '不明なエラー'
-            }`
+            }`,
          )
       }
 
@@ -139,7 +145,9 @@ async function callBackendAnalysis(
       }
 
       // Python YAMNet分析結果を統一形式に変換
-      const classifications: InferenceResult[] = (analysisResult.data.allClassifications || [])
+      const classifications: InferenceResult[] = (
+         analysisResult.data.allClassifications || []
+      )
          .slice(0, 5) // 上位5件に制限
          .map((classification: APIClassification) => ({
             label: classification.label || '不明',
@@ -173,7 +181,7 @@ async function callBackendAnalysis(
  * Python YAMNetサービスをバックエンド経由で呼び出し、
  * 失敗時はフォールバック機能を使用します。
  */
-export const useInferenceStore = create<InferenceState>(set => ({
+export const useInferenceStore = create<InferenceState>((set) => ({
    // 初期状態
    results: [],
    isInferring: false,
@@ -203,7 +211,10 @@ export const useInferenceStore = create<InferenceState>(set => ({
             results = await callBackendAnalysis(audioData, audioUrl)
             console.log('✅ バックエンドAPI推論完了:', results)
          } catch (backendError) {
-            console.log('🔄 バックエンドAPI失敗、フォールバック実行:', backendError)
+            console.log(
+               '🔄 バックエンドAPI失敗、フォールバック実行:',
+               backendError,
+            )
             isUsingFallback = true
 
             // フォールバック分析を実行
@@ -216,13 +227,15 @@ export const useInferenceStore = create<InferenceState>(set => ({
             results,
             isInferring: false,
             error: isUsingFallback
-               ? new Error('バックエンドAPI接続失敗。フォールバック結果を表示しています。')
+               ? new Error(
+                    'バックエンドAPI接続失敗。フォールバック結果を表示しています。',
+                 )
                : null,
          })
 
          if (isUsingFallback) {
             console.warn(
-               '⚠️ フォールバック結果を使用中 - ネットワーク接続やサービス状態を確認してください'
+               '⚠️ フォールバック結果を使用中 - ネットワーク接続やサービス状態を確認してください',
             )
          }
       } catch (err) {
