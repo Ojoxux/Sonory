@@ -15,31 +15,31 @@ import type { RecordButtonTextProps } from './type'
  * ```
  */
 export function RecordButtonText({ status }: RecordButtonTextProps) {
-  const getText = (): string => {
-    switch (status) {
-      case 'recording':
-        return '停止'
-      case 'completed':
-        return '完了'
-      default:
-        return '録音'
-    }
-  }
+   const getText = (): string => {
+      switch (status) {
+         case 'recording':
+            return '停止'
+         case 'completed':
+            return '完了'
+         default:
+            return '録音'
+      }
+   }
 
-  const getTextStyle = (): string => {
-    switch (status) {
-      case 'recording':
-        return 'text-white/90 font-bold'
-      case 'completed':
-        return 'text-white/90 font-bold'
-      default:
-        return 'text-white/80 font-medium'
-    }
-  }
+   const getTextStyle = (): string => {
+      switch (status) {
+         case 'recording':
+            return 'text-white/90 font-bold'
+         case 'completed':
+            return 'text-white/90 font-bold'
+         default:
+            return 'text-white/80 font-medium'
+      }
+   }
 
-  return (
-    <span className={`text-sm tracking-wider ${getTextStyle()}`}>
-      {getText()}
-    </span>
-  )
+   return (
+      <span className={`text-sm tracking-wider ${getTextStyle()}`}>
+         {getText()}
+      </span>
+   )
 }

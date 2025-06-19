@@ -25,62 +25,62 @@ import type { RecordButtonProps } from './type'
  * ```
  */
 export function RecordButton({
-  status,
-  onClick,
-  disabled = false,
+   status,
+   onClick,
+   disabled = false,
 }: RecordButtonProps) {
-  // 状態に応じた背景グラデーションを取得
-  const getBackgroundGradient = (): string => {
-    switch (status) {
-      case 'recording':
-        return 'bg-gradient-to-br from-red-500 to-pink-500'
-      case 'processing':
-        return 'bg-gradient-to-br from-purple-500 to-indigo-500'
-      case 'completed':
-        return 'bg-gradient-to-br from-green-500 to-emerald-500'
-      default:
-        return 'bg-gradient-to-br from-purple-600 to-blue-600'
-    }
-  }
+   // 状態に応じた背景グラデーションを取得
+   const getBackgroundGradient = (): string => {
+      switch (status) {
+         case 'recording':
+            return 'bg-gradient-to-br from-red-500 to-pink-500'
+         case 'processing':
+            return 'bg-gradient-to-br from-purple-500 to-indigo-500'
+         case 'completed':
+            return 'bg-gradient-to-br from-green-500 to-emerald-500'
+         default:
+            return 'bg-gradient-to-br from-purple-600 to-blue-600'
+      }
+   }
 
-  // 状態に応じたアニメーションクラスを取得
-  const getAnimationClass = (): string => {
-    switch (status) {
-      case 'recording':
-        return 'animate-pulse-scale'
-      case 'processing':
-        return 'animate-spin-slow'
-      case 'completed':
-        return 'animate-bounce-once'
-      default:
-        return 'animate-float'
-    }
-  }
+   // 状態に応じたアニメーションクラスを取得
+   const getAnimationClass = (): string => {
+      switch (status) {
+         case 'recording':
+            return 'animate-pulse-scale'
+         case 'processing':
+            return 'animate-spin-slow'
+         case 'completed':
+            return 'animate-bounce-once'
+         default:
+            return 'animate-float'
+      }
+   }
 
-  // 状態に応じたリングエフェクトを取得
-  const getRingEffect = (): string => {
-    switch (status) {
-      case 'recording':
-        return 'ring-4 ring-red-400/30 ring-offset-4 ring-offset-transparent'
-      case 'processing':
-        return 'ring-4 ring-purple-400/30 ring-offset-4 ring-offset-transparent'
-      default:
-        return ''
-    }
-  }
+   // 状態に応じたリングエフェクトを取得
+   const getRingEffect = (): string => {
+      switch (status) {
+         case 'recording':
+            return 'ring-4 ring-red-400/30 ring-offset-4 ring-offset-transparent'
+         case 'processing':
+            return 'ring-4 ring-purple-400/30 ring-offset-4 ring-offset-transparent'
+         default:
+            return ''
+      }
+   }
 
-  return (
-    <div className="relative">
-      {/* 背景の光彩エフェクト */}
-      <div
-        className={`absolute inset-0 ${getBackgroundGradient()} rounded-full blur-2xl opacity-50 ${getAnimationClass()}`}
-      />
+   return (
+      <div className="relative">
+         {/* 背景の光彩エフェクト */}
+         <div
+            className={`absolute inset-0 ${getBackgroundGradient()} rounded-full blur-2xl opacity-50 ${getAnimationClass()}`}
+         />
 
-      {/* メインボタン */}
-      <button
-        onClick={onClick}
-        disabled={disabled}
-        className={`
+         {/* メインボタン */}
+         <button
+            onClick={onClick}
+            disabled={disabled}
+            className={`
           relative w-32 h-32 rounded-full
           ${getBackgroundGradient()}
           shadow-2xl
@@ -92,27 +92,27 @@ export function RecordButton({
           ${getAnimationClass()}
           group
         `}
-        aria-label="録音"
-      >
-        {/* グラスエフェクト */}
-        <div className="absolute inset-0 rounded-full bg-white/10 backdrop-blur-sm" />
+            aria-label="録音"
+         >
+            {/* グラスエフェクト */}
+            <div className="absolute inset-0 rounded-full bg-white/10 backdrop-blur-sm" />
 
-        {/* 内部の光沢 */}
-        <div className="absolute top-2 left-2 right-2 h-1/3 bg-gradient-to-b from-white/30 to-transparent rounded-t-full" />
+            {/* 内部の光沢 */}
+            <div className="absolute top-2 left-2 right-2 h-1/3 bg-gradient-to-b from-white/30 to-transparent rounded-t-full" />
 
-        {/* コンテンツ */}
-        <div className="relative z-10">
-          <RecordButtonContent status={status} />
-        </div>
-      </button>
+            {/* コンテンツ */}
+            <div className="relative z-10">
+               <RecordButtonContent status={status} />
+            </div>
+         </button>
 
-      {/* 波紋エフェクト（録音中） */}
-      {status === 'recording' && (
-        <>
-          <div className="absolute inset-0 rounded-full border-2 border-red-400/50 animate-ping-slow" />
-          <div className="absolute inset-0 rounded-full border-2 border-red-400/30 animate-ping-slower" />
-        </>
-      )}
-    </div>
-  )
+         {/* 波紋エフェクト（録音中） */}
+         {status === 'recording' && (
+            <>
+               <div className="absolute inset-0 rounded-full border-2 border-red-400/50 animate-ping-slow" />
+               <div className="absolute inset-0 rounded-full border-2 border-red-400/30 animate-ping-slower" />
+            </>
+         )}
+      </div>
+   )
 }

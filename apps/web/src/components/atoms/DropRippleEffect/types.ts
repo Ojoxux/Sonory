@@ -20,15 +20,15 @@ export type RippleSize = 'small' | 'medium' | 'large'
  * DropRippleEffectコンポーネントのプロパティ
  */
 export type DropRippleEffectProps = {
-  /** エフェクトの有効状態 */
-  isActive: boolean
+   /** エフェクトの有効状態 */
+   isActive: boolean
 
-  /** 波紋の色（デフォルト: blue） */
-  color?: RippleColor
+   /** 波紋の色（デフォルト: blue） */
+   color?: RippleColor
 
-  /** 波紋のサイズ（デフォルト: medium） */
-  size?: RippleSize
+   /** 波紋のサイズ（デフォルト: medium） */
+   size?: RippleSize
 
-  /** 追加のCSSクラス */
-  className?: string
+   /** 追加のCSSクラス */
+   className?: string
 }

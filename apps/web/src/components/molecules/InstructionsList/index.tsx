@@ -17,26 +17,28 @@ import { InstructionsListProps } from './types'
  */
 
 export function InstructionsList({
-  items,
-  isClosing,
-  className = '',
+   items,
+   isClosing,
+   className = '',
 }: InstructionsListProps) {
-  return (
-    <motion.div
-      className={`space-y-3 mb-6 relative z-10 ${className}`}
-      animate={
-        isClosing ? { opacity: 0, scale: 0.9 } : { opacity: 1, scale: 1 }
-      }
-      transition={isClosing ? { duration: 0.2 } : { duration: 0.3, delay: 1.2 }}
-    >
-      {items.map((item, index) => (
-        <InstructionItem
-          key={index}
-          text={item}
-          index={index}
-          isClosing={isClosing}
-        />
-      ))}
-    </motion.div>
-  )
+   return (
+      <motion.div
+         className={`space-y-3 mb-6 relative z-10 ${className}`}
+         animate={
+            isClosing ? { opacity: 0, scale: 0.9 } : { opacity: 1, scale: 1 }
+         }
+         transition={
+            isClosing ? { duration: 0.2 } : { duration: 0.3, delay: 1.2 }
+         }
+      >
+         {items.map((item, index) => (
+            <InstructionItem
+               key={index}
+               text={item}
+               index={index}
+               isClosing={isClosing}
+            />
+         ))}
+      </motion.div>
+   )
 }

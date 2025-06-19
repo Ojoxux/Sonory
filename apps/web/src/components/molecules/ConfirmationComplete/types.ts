@@ -9,6 +9,6 @@
  */
 
 export type ConfirmationCompleteProps = {
-  className?: string
-  isClosing?: boolean
+   className?: string
+   isClosing?: boolean
 }

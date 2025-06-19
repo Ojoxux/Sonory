@@ -10,7 +10,7 @@
  */
 
 export type CheckIconProps = {
-  size?: 'small' | 'medium' | 'large'
-  color?: 'green' | 'white' | 'black'
-  className?: string
+   size?: 'small' | 'medium' | 'large'
+   color?: 'green' | 'white' | 'black'
+   className?: string
 }

@@ -22,46 +22,46 @@ import type { UIOverlayProps } from './type'
  * ```
  */
 export function UIOverlay({
-  onSettingsClick,
-  onCompassClick,
-  latitude,
-  longitude,
-  debugTimeOverride,
-  mapBearing,
+   onSettingsClick,
+   onCompassClick,
+   latitude,
+   longitude,
+   debugTimeOverride,
+   mapBearing,
 }: UIOverlayProps) {
-  return (
-    <>
-      {/* ヘッダー（常に表示） */}
-      <AppHeader
-        onSettingsClick={onSettingsClick}
-        onCompassClick={onCompassClick}
-        latitude={latitude}
-        longitude={longitude}
-        debugTimeOverride={debugTimeOverride}
-        mapBearing={mapBearing}
-      />
+   return (
+      <>
+         {/* ヘッダー（常に表示） */}
+         <AppHeader
+            onSettingsClick={onSettingsClick}
+            onCompassClick={onCompassClick}
+            latitude={latitude}
+            longitude={longitude}
+            debugTimeOverride={debugTimeOverride}
+            mapBearing={mapBearing}
+         />
 
-      {/* PWAインストールプロンプト */}
-      <PWAInstallPrompt
-        onInstallSuccess={() => {
-          console.log('PWAインストール成功')
-        }}
-        onDismiss={() => {
-          console.log('PWAインストールプロンプトを閉じました')
-        }}
-      />
+         {/* PWAインストールプロンプト */}
+         <PWAInstallPrompt
+            onInstallSuccess={() => {
+               console.log('PWAインストール成功')
+            }}
+            onDismiss={() => {
+               console.log('PWAインストールプロンプトを閉じました')
+            }}
+         />
 
-      {/* 録音インターフェース */}
-      <RecordingInterface
-        onExpandedChange={() => {
-          /* no-op */
-        }}
-        currentPosition={
-          latitude !== undefined && longitude !== undefined
-            ? { latitude, longitude }
-            : null
-        }
-      />
-    </>
-  )
+         {/* 録音インターフェース */}
+         <RecordingInterface
+            onExpandedChange={() => {
+               /* no-op */
+            }}
+            currentPosition={
+               latitude !== undefined && longitude !== undefined
+                  ? { latitude, longitude }
+                  : null
+            }
+         />
+      </>
+   )
 }

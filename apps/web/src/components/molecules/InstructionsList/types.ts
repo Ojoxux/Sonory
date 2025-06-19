@@ -9,7 +9,7 @@
  * @param className 追加のCSSクラス
  */
 export type InstructionsListProps = {
-  items: string[]
-  isClosing: boolean
-  className?: string
+   items: string[]
+   isClosing: boolean
+   className?: string
 }

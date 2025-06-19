@@ -11,8 +11,8 @@
  */
 
 export type InstructionItemProps = {
-  text: string
-  index: number
-  isClosing: boolean
-  className?: string
+   text: string
+   index: number
+   isClosing: boolean
+   className?: string
 }

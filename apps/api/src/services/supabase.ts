@@ -20,9 +20,9 @@ import { APIException } from '../middleware/error'
 
 /** Supabase設定の型定義 */
 export interface SupabaseConfig {
-  readonly url: string
-  readonly anonKey: string
-  readonly serviceKey?: string | undefined
+   readonly url: string
+   readonly anonKey: string
+   readonly serviceKey?: string | undefined
 }
 
 /** クライアントキャッシュ */
@@ -37,19 +37,19 @@ let adminClient: SupabaseClient | null = null
  * @throws APIException 必須の環境変数が未設定の場合
  */
 export function getSupabaseConfig(env: Env): SupabaseConfig {
-  const url = env.SUPABASE_URL
-  const anonKey = env.SUPABASE_ANON_KEY
-  const serviceKey = env.SUPABASE_SERVICE_KEY
+   const url = env.SUPABASE_URL
+   const anonKey = env.SUPABASE_ANON_KEY
+   const serviceKey = env.SUPABASE_SERVICE_KEY
 
-  if (!url || !anonKey) {
-    throw new APIException(
-      ERROR_CODES.INTERNAL_SERVER_ERROR,
-      'Supabase configuration missing',
-      500,
-    )
-  }
+   if (!url || !anonKey) {
+      throw new APIException(
+         ERROR_CODES.INTERNAL_SERVER_ERROR,
+         'Supabase configuration missing',
+         500,
+      )
+   }
 
-  return { url, anonKey, serviceKey } as const
+   return { url, anonKey, serviceKey } as const
 }
 
 /**
@@ -59,20 +59,20 @@ export function getSupabaseConfig(env: Env): SupabaseConfig {
  * @returns Supabaseクライアントインスタンス
  */
 export function getSupabaseClient(env: Env): SupabaseClient {
-  if (!supabaseClient) {
-    const config = getSupabaseConfig(env)
-    supabaseClient = createClient(config.url, config.anonKey, {
-      auth: {
-        persistSession: false, // Workers環境ではセッション永続化不可
-        autoRefreshToken: false,
-      },
-      global: {
-        fetch: fetch.bind(globalThis), // Workers環境のfetchを使用
-      },
-    })
-  }
+   if (!supabaseClient) {
+      const config = getSupabaseConfig(env)
+      supabaseClient = createClient(config.url, config.anonKey, {
+         auth: {
+            persistSession: false, // Workers環境ではセッション永続化不可
+            autoRefreshToken: false,
+         },
+         global: {
+            fetch: fetch.bind(globalThis), // Workers環境のfetchを使用
+         },
+      })
+   }
 
-  return supabaseClient
+   return supabaseClient
 }
 
 /**
@@ -83,35 +83,35 @@ export function getSupabaseClient(env: Env): SupabaseClient {
  * @throws APIException サービスキーが未設定の場合
  */
 export function getSupabaseAdmin(env: Env): SupabaseClient {
-  if (!adminClient) {
-    const config = getSupabaseConfig(env)
+   if (!adminClient) {
+      const config = getSupabaseConfig(env)
 
-    if (!config.serviceKey) {
-      throw new APIException(
-        ERROR_CODES.INTERNAL_SERVER_ERROR,
-        'Service key not configured',
-        500,
-      )
-    }
+      if (!config.serviceKey) {
+         throw new APIException(
+            ERROR_CODES.INTERNAL_SERVER_ERROR,
+            'Service key not configured',
+            500,
+         )
+      }
 
-    adminClient = createClient(config.url, config.serviceKey, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-      },
-      global: {
-        fetch: fetch.bind(globalThis),
-      },
-    })
-  }
+      adminClient = createClient(config.url, config.serviceKey, {
+         auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+         },
+         global: {
+            fetch: fetch.bind(globalThis),
+         },
+      })
+   }
 
-  return adminClient
+   return adminClient
 }
 
 /**
  * クライアントインスタンスをリセット（テスト用）
  */
 export function resetClients(): void {
-  supabaseClient = null
-  adminClient = null
+   supabaseClient = null
+   adminClient = null
 }

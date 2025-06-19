@@ -26,16 +26,16 @@ import type { IconButtonProps } from './type'
  * ```
  */
 export function IconButton({
-  icon,
-  ariaLabel,
-  onClick,
-  className = '',
+   icon,
+   ariaLabel,
+   onClick,
+   className = '',
 }: IconButtonProps) {
-  return (
-    <button
-      aria-label={ariaLabel}
-      onClick={onClick}
-      className={`
+   return (
+      <button
+         aria-label={ariaLabel}
+         onClick={onClick}
+         className={`
         w-12 h-12 rounded-full
         transition-all duration-200 ease-in-out
         hover:-translate-y-px hover:scale-105
@@ -43,8 +43,8 @@ export function IconButton({
         flex items-center justify-center
         ${className}
       `}
-    >
-      {icon}
-    </button>
-  )
+      >
+         {icon}
+      </button>
+   )
 }

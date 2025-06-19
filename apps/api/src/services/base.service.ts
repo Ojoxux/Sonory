@@ -20,37 +20,37 @@ import { logger } from '../utils/logger'
  * ```
  */
 export abstract class BaseService {
-  protected readonly env: Env
-  protected readonly ctx: Context<{ Bindings: Env }>
-  protected readonly requestId: string
+   protected readonly env: Env
+   protected readonly ctx: Context<{ Bindings: Env }>
+   protected readonly requestId: string
 
-  constructor(ctx: Context<{ Bindings: Env }>) {
-    this.ctx = ctx
-    this.env = ctx.env
-    this.requestId = ctx.get('requestId') || crypto.randomUUID()
-  }
+   constructor(ctx: Context<{ Bindings: Env }>) {
+      this.ctx = ctx
+      this.env = ctx.env
+      this.requestId = ctx.get('requestId') || crypto.randomUUID()
+   }
 
-  /**
-   * サービス名を取得（ログ用）
-   */
-  protected abstract getServiceName(): string
+   /**
+    * サービス名を取得（ログ用）
+    */
+   protected abstract getServiceName(): string
 
-  /**
-   * ログ出力
-   *
-   * @param level - ログレベル
-   * @param message - メッセージ
-   * @param data - 追加データ
-   */
-  protected log(
-    level: 'info' | 'warn' | 'error' | 'debug',
-    message: string,
-    data?: Record<string, unknown>,
-  ): void {
-    logger[level](message, {
-      service: this.getServiceName(),
-      requestId: this.requestId,
-      ...data,
-    })
-  }
+   /**
+    * ログ出力
+    *
+    * @param level - ログレベル
+    * @param message - メッセージ
+    * @param data - 追加データ
+    */
+   protected log(
+      level: 'info' | 'warn' | 'error' | 'debug',
+      message: string,
+      data?: Record<string, unknown>,
+   ): void {
+      logger[level](message, {
+         service: this.getServiceName(),
+         requestId: this.requestId,
+         ...data,
+      })
+   }
 }

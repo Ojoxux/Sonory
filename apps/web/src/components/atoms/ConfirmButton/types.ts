@@ -11,8 +11,8 @@
  */
 
 export type ConfirmButtonProps = {
-  onClick: () => void
-  isConfirmed: boolean
-  isClosing: boolean
-  className?: string
+   onClick: () => void
+   isConfirmed: boolean
+   isClosing: boolean
+   className?: string
 }

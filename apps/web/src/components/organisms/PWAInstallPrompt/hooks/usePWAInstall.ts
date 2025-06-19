@@ -6,36 +6,36 @@ import { useCallback, useEffect, useState } from 'react'
 
 /** アニメーション遅延時間（ミリ秒） */
 const ANIMATION_DELAYS = {
-  /** デバッグモードでの展開遅延 */
-  DEBUG_EXPAND: 800,
-  /** 通常モードでの展開遅延 */
-  NORMAL_EXPAND: 1000,
-  /** 閉じるアニメーション遅延 */
-  CLOSE_ANIMATION: 500,
+   /** デバッグモードでの展開遅延 */
+   DEBUG_EXPAND: 800,
+   /** 通常モードでの展開遅延 */
+   NORMAL_EXPAND: 1000,
+   /** 閉じるアニメーション遅延 */
+   CLOSE_ANIMATION: 500,
 } as const
 
 /** イベント名 */
 const EVENT_NAMES = {
-  /** PWAデバッグ表示イベント */
-  PWA_DEBUG_SHOW: 'pwa-debug-show',
-  /** PWAデバッグ非表示イベント */
-  PWA_DEBUG_HIDE: 'pwa-debug-hide',
-  /** インストール前プロンプトイベント */
-  BEFORE_INSTALL_PROMPT: 'beforeinstallprompt',
-  /** アプリインストール完了イベント */
-  APP_INSTALLED: 'appinstalled',
+   /** PWAデバッグ表示イベント */
+   PWA_DEBUG_SHOW: 'pwa-debug-show',
+   /** PWAデバッグ非表示イベント */
+   PWA_DEBUG_HIDE: 'pwa-debug-hide',
+   /** インストール前プロンプトイベント */
+   BEFORE_INSTALL_PROMPT: 'beforeinstallprompt',
+   /** アプリインストール完了イベント */
+   APP_INSTALLED: 'appinstalled',
 } as const
 
 /** メディアクエリ */
 const MEDIA_QUERIES = {
-  /** スタンドアロンモード */
-  STANDALONE: '(display-mode: standalone)',
+   /** スタンドアロンモード */
+   STANDALONE: '(display-mode: standalone)',
 } as const
 
 /** デバッグメッセージ */
 const DEBUG_MESSAGES = {
-  /** インストールボタンクリック */
-  INSTALL_CLICKED: '[PWA Debug] インストールボタンがクリックされました',
+   /** インストールボタンクリック */
+   INSTALL_CLICKED: '[PWA Debug] インストールボタンがクリックされました',
 } as const
 
 /**
@@ -43,39 +43,39 @@ const DEBUG_MESSAGES = {
  * PWAインストールプロンプトイベントの標準的な型
  */
 export interface BeforeInstallPromptEvent extends Event {
-  /** ネイティブインストールプロンプトを表示 */
-  prompt: () => Promise<void>
-  /** ユーザーの選択結果 */
-  userChoice: Promise<{
-    outcome: 'accepted' | 'dismissed'
-    platform: string
-  }>
+   /** ネイティブインストールプロンプトを表示 */
+   prompt: () => Promise<void>
+   /** ユーザーの選択結果 */
+   userChoice: Promise<{
+      outcome: 'accepted' | 'dismissed'
+      platform: string
+   }>
 }
 
 /**
  * デバッグイベントの詳細情報
  */
 export interface DebugEventDetail {
-  /** 展開状態で表示するかどうか */
-  expanded?: boolean
+   /** 展開状態で表示するかどうか */
+   expanded?: boolean
 }
 
 /**
  * PWAインストール状態の型定義
  */
 export interface PWAInstallState {
-  /** 遅延されたインストールプロンプト */
-  deferredPrompt: BeforeInstallPromptEvent | null
-  /** プロンプトを表示するかどうか */
-  showPrompt: boolean
-  /** PWAがインストール済みかどうか */
-  isInstalled: boolean
-  /** プロンプトが展開されているかどうか */
-  isExpanded: boolean
-  /** デバッグモードが有効かどうか */
-  isDebugActive: boolean
-  /** プロンプトが表示されているかどうか */
-  isVisible: boolean
+   /** 遅延されたインストールプロンプト */
+   deferredPrompt: BeforeInstallPromptEvent | null
+   /** プロンプトを表示するかどうか */
+   showPrompt: boolean
+   /** PWAがインストール済みかどうか */
+   isInstalled: boolean
+   /** プロンプトが展開されているかどうか */
+   isExpanded: boolean
+   /** デバッグモードが有効かどうか */
+   isDebugActive: boolean
+   /** プロンプトが表示されているかどうか */
+   isVisible: boolean
 }
 
 /**
@@ -84,15 +84,15 @@ export interface PWAInstallState {
  * @returns インストール状態チェック関数
  */
 export function useCheckIfInstalled(): () => boolean {
-  return useCallback((): boolean => {
-    const isStandalone = window.matchMedia(MEDIA_QUERIES.STANDALONE).matches
-    const isWebKit =
-      'standalone' in window.navigator &&
-      (window.navigator as unknown as { standalone?: boolean }).standalone
-    const isAndroidApp = document.referrer.includes('android-app://')
+   return useCallback((): boolean => {
+      const isStandalone = window.matchMedia(MEDIA_QUERIES.STANDALONE).matches
+      const isWebKit =
+         'standalone' in window.navigator &&
+         (window.navigator as unknown as { standalone?: boolean }).standalone
+      const isAndroidApp = document.referrer.includes('android-app://')
 
-    return isStandalone || Boolean(isWebKit) || isAndroidApp
-  }, [])
+      return isStandalone || Boolean(isWebKit) || isAndroidApp
+   }, [])
 }
 
 /**
@@ -103,122 +103,122 @@ export function useCheckIfInstalled(): () => boolean {
  * @returns PWAインストール状態と操作関数
  */
 export function usePWAInstallState(
-  onInstallSuccess?: () => void,
-  onDismiss?: () => void,
+   onInstallSuccess?: () => void,
+   onDismiss?: () => void,
 ): PWAInstallState & {
-  handleInstallClick: () => Promise<void>
-  handleDismiss: () => void
-  handlePromptClick: () => void
-  setDeferredPrompt: (prompt: BeforeInstallPromptEvent | null) => void
-  setShowPrompt: (value: boolean) => void
-  setIsInstalled: (value: boolean) => void
-  setIsExpanded: (value: boolean) => void
-  setIsDebugActive: (value: boolean) => void
-  setIsVisible: (value: boolean) => void
+   handleInstallClick: () => Promise<void>
+   handleDismiss: () => void
+   handlePromptClick: () => void
+   setDeferredPrompt: (prompt: BeforeInstallPromptEvent | null) => void
+   setShowPrompt: (value: boolean) => void
+   setIsInstalled: (value: boolean) => void
+   setIsExpanded: (value: boolean) => void
+   setIsDebugActive: (value: boolean) => void
+   setIsVisible: (value: boolean) => void
 } {
-  const [deferredPrompt, setDeferredPrompt] =
-    useState<BeforeInstallPromptEvent | null>(null)
-  const [showPrompt, setShowPrompt] = useState<boolean>(false)
-  const [isInstalled, setIsInstalled] = useState<boolean>(false)
-  const [isExpanded, setIsExpanded] = useState<boolean>(false)
-  const [isDebugActive, setIsDebugActive] = useState<boolean>(false)
-  const [isVisible, setIsVisible] = useState<boolean>(false)
+   const [deferredPrompt, setDeferredPrompt] =
+      useState<BeforeInstallPromptEvent | null>(null)
+   const [showPrompt, setShowPrompt] = useState<boolean>(false)
+   const [isInstalled, setIsInstalled] = useState<boolean>(false)
+   const [isExpanded, setIsExpanded] = useState<boolean>(false)
+   const [isDebugActive, setIsDebugActive] = useState<boolean>(false)
+   const [isVisible, setIsVisible] = useState<boolean>(false)
 
-  /**
-   * プロンプト閉じる処理
-   */
-  const handleDismiss = useCallback((): void => {
-    setIsExpanded(false)
-    setIsVisible(false)
-    // 閉じるアニメーション後に非表示
-    setTimeout(() => {
-      setShowPrompt(false)
-      setIsDebugActive(false)
-      onDismiss?.()
-    }, ANIMATION_DELAYS.CLOSE_ANIMATION)
-  }, [onDismiss])
+   /**
+    * プロンプト閉じる処理
+    */
+   const handleDismiss = useCallback((): void => {
+      setIsExpanded(false)
+      setIsVisible(false)
+      // 閉じるアニメーション後に非表示
+      setTimeout(() => {
+         setShowPrompt(false)
+         setIsDebugActive(false)
+         onDismiss?.()
+      }, ANIMATION_DELAYS.CLOSE_ANIMATION)
+   }, [onDismiss])
 
-  /**
-   * インストールボタンクリック処理
-   */
-  const handleInstallClick = useCallback(async (): Promise<void> => {
-    if (!deferredPrompt && !isDebugActive) return
+   /**
+    * インストールボタンクリック処理
+    */
+   const handleInstallClick = useCallback(async (): Promise<void> => {
+      if (!deferredPrompt && !isDebugActive) return
 
-    if (isDebugActive) {
-      console.debug(DEBUG_MESSAGES.INSTALL_CLICKED)
-      handleDismiss()
-      return
-    }
-
-    if (!deferredPrompt) return
-
-    try {
-      // ネイティブインストールプロンプトを表示
-      await deferredPrompt.prompt()
-
-      // ユーザーの選択を待機
-      const { outcome } = await deferredPrompt.userChoice
-
-      if (outcome === 'accepted') {
-        setIsExpanded(false)
-        setIsVisible(false)
-        // 閉じるアニメーション後に非表示
-        setTimeout(() => {
-          setShowPrompt(false)
-          onInstallSuccess?.()
-        }, ANIMATION_DELAYS.CLOSE_ANIMATION)
+      if (isDebugActive) {
+         console.debug(DEBUG_MESSAGES.INSTALL_CLICKED)
+         handleDismiss()
+         return
       }
 
-      // プロンプトを一度だけ使用可能なのでクリア
-      setDeferredPrompt(null)
-    } catch (error) {
-      console.error('PWA install error:', error)
-    }
-  }, [deferredPrompt, isDebugActive, handleDismiss, onInstallSuccess])
+      if (!deferredPrompt) return
 
-  /**
-   * プロンプト全体のクリック/タップでトグル
-   */
-  const handlePromptClick = useCallback((): void => {
-    setIsExpanded(!isExpanded)
-  }, [isExpanded])
+      try {
+         // ネイティブインストールプロンプトを表示
+         await deferredPrompt.prompt()
 
-  // PWAインストール成功イベントの Analytics 送信
-  useEffect(() => {
-    const onAppInstalled = (): void => {
-      if (
-        typeof window !== 'undefined' &&
-        'gtag' in window &&
-        typeof window.gtag === 'function'
-      ) {
-        window.gtag('event', 'app_install', { method: 'pwa' })
+         // ユーザーの選択を待機
+         const { outcome } = await deferredPrompt.userChoice
+
+         if (outcome === 'accepted') {
+            setIsExpanded(false)
+            setIsVisible(false)
+            // 閉じるアニメーション後に非表示
+            setTimeout(() => {
+               setShowPrompt(false)
+               onInstallSuccess?.()
+            }, ANIMATION_DELAYS.CLOSE_ANIMATION)
+         }
+
+         // プロンプトを一度だけ使用可能なのでクリア
+         setDeferredPrompt(null)
+      } catch (error) {
+         console.error('PWA install error:', error)
       }
-    }
+   }, [deferredPrompt, isDebugActive, handleDismiss, onInstallSuccess])
 
-    window.addEventListener(EVENT_NAMES.APP_INSTALLED, onAppInstalled)
+   /**
+    * プロンプト全体のクリック/タップでトグル
+    */
+   const handlePromptClick = useCallback((): void => {
+      setIsExpanded(!isExpanded)
+   }, [isExpanded])
 
-    return () => {
-      window.removeEventListener(EVENT_NAMES.APP_INSTALLED, onAppInstalled)
-    }
-  }, [])
+   // PWAインストール成功イベントの Analytics 送信
+   useEffect(() => {
+      const onAppInstalled = (): void => {
+         if (
+            typeof window !== 'undefined' &&
+            'gtag' in window &&
+            typeof window.gtag === 'function'
+         ) {
+            window.gtag('event', 'app_install', { method: 'pwa' })
+         }
+      }
 
-  return {
-    deferredPrompt,
-    showPrompt,
-    isInstalled,
-    isExpanded,
-    isDebugActive,
-    isVisible,
-    handleInstallClick,
-    handleDismiss,
-    handlePromptClick,
-    setDeferredPrompt,
-    setShowPrompt,
-    setIsInstalled,
-    setIsExpanded,
-    setIsDebugActive,
-    setIsVisible,
-  }
+      window.addEventListener(EVENT_NAMES.APP_INSTALLED, onAppInstalled)
+
+      return () => {
+         window.removeEventListener(EVENT_NAMES.APP_INSTALLED, onAppInstalled)
+      }
+   }, [])
+
+   return {
+      deferredPrompt,
+      showPrompt,
+      isInstalled,
+      isExpanded,
+      isDebugActive,
+      isVisible,
+      handleInstallClick,
+      handleDismiss,
+      handlePromptClick,
+      setDeferredPrompt,
+      setShowPrompt,
+      setIsInstalled,
+      setIsExpanded,
+      setIsDebugActive,
+      setIsVisible,
+   }
 }
 
 /**
@@ -230,51 +230,51 @@ export function usePWAInstallState(
  * @param setIsExpanded - 展開状態設定関数
  */
 export function useDebugEventListeners(
-  setIsDebugActive: (value: boolean) => void,
-  setShowPrompt: (value: boolean) => void,
-  setIsVisible: (value: boolean) => void,
-  setIsExpanded: (value: boolean) => void,
+   setIsDebugActive: (value: boolean) => void,
+   setShowPrompt: (value: boolean) => void,
+   setIsVisible: (value: boolean) => void,
+   setIsExpanded: (value: boolean) => void,
 ): void {
-  useEffect(() => {
-    // デバッグメニューからの表示イベント
-    const handleDebugShow = (e: CustomEvent<DebugEventDetail>): void => {
-      setIsDebugActive(true)
-      setShowPrompt(true)
-      setIsVisible(true)
+   useEffect(() => {
+      // デバッグメニューからの表示イベント
+      const handleDebugShow = (e: CustomEvent<DebugEventDetail>): void => {
+         setIsDebugActive(true)
+         setShowPrompt(true)
+         setIsVisible(true)
 
-      // 展開状態の設定（詳細表示するかどうか）
-      if (e.detail?.expanded) {
-        setTimeout(() => {
-          setIsExpanded(true)
-        }, ANIMATION_DELAYS.DEBUG_EXPAND)
+         // 展開状態の設定（詳細表示するかどうか）
+         if (e.detail?.expanded) {
+            setTimeout(() => {
+               setIsExpanded(true)
+            }, ANIMATION_DELAYS.DEBUG_EXPAND)
+         }
       }
-    }
 
-    // デバッグメニューからの非表示イベント
-    const handleDebugHide = (): void => {
-      setIsExpanded(false)
-      setIsVisible(false)
-      setTimeout(() => {
-        setShowPrompt(false)
-        setIsDebugActive(false)
-      }, ANIMATION_DELAYS.CLOSE_ANIMATION)
-    }
+      // デバッグメニューからの非表示イベント
+      const handleDebugHide = (): void => {
+         setIsExpanded(false)
+         setIsVisible(false)
+         setTimeout(() => {
+            setShowPrompt(false)
+            setIsDebugActive(false)
+         }, ANIMATION_DELAYS.CLOSE_ANIMATION)
+      }
 
-    // イベントリスナーの登録
-    window.addEventListener(
-      EVENT_NAMES.PWA_DEBUG_SHOW,
-      handleDebugShow as EventListener,
-    )
-    window.addEventListener(EVENT_NAMES.PWA_DEBUG_HIDE, handleDebugHide)
-
-    return () => {
-      window.removeEventListener(
-        EVENT_NAMES.PWA_DEBUG_SHOW,
-        handleDebugShow as EventListener,
+      // イベントリスナーの登録
+      window.addEventListener(
+         EVENT_NAMES.PWA_DEBUG_SHOW,
+         handleDebugShow as EventListener,
       )
-      window.removeEventListener(EVENT_NAMES.PWA_DEBUG_HIDE, handleDebugHide)
-    }
-  }, [setIsDebugActive, setShowPrompt, setIsVisible, setIsExpanded])
+      window.addEventListener(EVENT_NAMES.PWA_DEBUG_HIDE, handleDebugHide)
+
+      return () => {
+         window.removeEventListener(
+            EVENT_NAMES.PWA_DEBUG_SHOW,
+            handleDebugShow as EventListener,
+         )
+         window.removeEventListener(EVENT_NAMES.PWA_DEBUG_HIDE, handleDebugHide)
+      }
+   }, [setIsDebugActive, setShowPrompt, setIsVisible, setIsExpanded])
 }
 
 /**
@@ -291,73 +291,76 @@ export function useDebugEventListeners(
  * @param checkIfInstalled - インストール状態チェック関数
  */
 export function usePWAInstallEventListeners(
-  autoShow: boolean,
-  debugMode: boolean,
-  onInstallSuccess: (() => void) | undefined,
-  setDeferredPrompt: (prompt: BeforeInstallPromptEvent | null) => void,
-  setShowPrompt: (value: boolean) => void,
-  setIsVisible: (value: boolean) => void,
-  setIsExpanded: (value: boolean) => void,
-  setIsInstalled: (value: boolean) => void,
-  checkIfInstalled: () => boolean,
+   autoShow: boolean,
+   debugMode: boolean,
+   onInstallSuccess: (() => void) | undefined,
+   setDeferredPrompt: (prompt: BeforeInstallPromptEvent | null) => void,
+   setShowPrompt: (value: boolean) => void,
+   setIsVisible: (value: boolean) => void,
+   setIsExpanded: (value: boolean) => void,
+   setIsInstalled: (value: boolean) => void,
+   checkIfInstalled: () => boolean,
 ): void {
-  useEffect(() => {
-    // PWAが既にインストール済みかチェック
-    if (checkIfInstalled()) {
-      setIsInstalled(true)
-      return
-    }
-
-    // beforeinstallprompt イベントをリッスン
-    const handleBeforeInstallPrompt = (e: Event): void => {
-      e.preventDefault()
-      setDeferredPrompt(e as BeforeInstallPromptEvent)
-
-      if (autoShow && !debugMode) {
-        // まず小さい表示で出現
-        setShowPrompt(true)
-        setIsVisible(true)
-
-        // 通常モードでは少し遅らせて展開（Dynamic Island風）
-        setTimeout(() => {
-          setIsExpanded(true)
-        }, ANIMATION_DELAYS.NORMAL_EXPAND)
+   useEffect(() => {
+      // PWAが既にインストール済みかチェック
+      if (checkIfInstalled()) {
+         setIsInstalled(true)
+         return
       }
-    }
 
-    // appinstalled イベントをリッスン
-    const handleAppInstalled = (): void => {
-      setIsExpanded(false)
-      setIsVisible(false)
-      setTimeout(() => {
-        setIsInstalled(true)
-        setShowPrompt(false)
-        onInstallSuccess?.()
-      }, ANIMATION_DELAYS.CLOSE_ANIMATION)
-    }
+      // beforeinstallprompt イベントをリッスン
+      const handleBeforeInstallPrompt = (e: Event): void => {
+         e.preventDefault()
+         setDeferredPrompt(e as BeforeInstallPromptEvent)
 
-    window.addEventListener(
-      EVENT_NAMES.BEFORE_INSTALL_PROMPT,
-      handleBeforeInstallPrompt,
-    )
-    window.addEventListener(EVENT_NAMES.APP_INSTALLED, handleAppInstalled)
+         if (autoShow && !debugMode) {
+            // まず小さい表示で出現
+            setShowPrompt(true)
+            setIsVisible(true)
 
-    return () => {
-      window.removeEventListener(
-        EVENT_NAMES.BEFORE_INSTALL_PROMPT,
-        handleBeforeInstallPrompt,
+            // 通常モードでは少し遅らせて展開（Dynamic Island風）
+            setTimeout(() => {
+               setIsExpanded(true)
+            }, ANIMATION_DELAYS.NORMAL_EXPAND)
+         }
+      }
+
+      // appinstalled イベントをリッスン
+      const handleAppInstalled = (): void => {
+         setIsExpanded(false)
+         setIsVisible(false)
+         setTimeout(() => {
+            setIsInstalled(true)
+            setShowPrompt(false)
+            onInstallSuccess?.()
+         }, ANIMATION_DELAYS.CLOSE_ANIMATION)
+      }
+
+      window.addEventListener(
+         EVENT_NAMES.BEFORE_INSTALL_PROMPT,
+         handleBeforeInstallPrompt,
       )
-      window.removeEventListener(EVENT_NAMES.APP_INSTALLED, handleAppInstalled)
-    }
-  }, [
-    autoShow,
-    debugMode,
-    onInstallSuccess,
-    setDeferredPrompt,
-    setShowPrompt,
-    setIsVisible,
-    setIsExpanded,
-    setIsInstalled,
-    checkIfInstalled,
-  ])
+      window.addEventListener(EVENT_NAMES.APP_INSTALLED, handleAppInstalled)
+
+      return () => {
+         window.removeEventListener(
+            EVENT_NAMES.BEFORE_INSTALL_PROMPT,
+            handleBeforeInstallPrompt,
+         )
+         window.removeEventListener(
+            EVENT_NAMES.APP_INSTALLED,
+            handleAppInstalled,
+         )
+      }
+   }, [
+      autoShow,
+      debugMode,
+      onInstallSuccess,
+      setDeferredPrompt,
+      setShowPrompt,
+      setIsVisible,
+      setIsExpanded,
+      setIsInstalled,
+      checkIfInstalled,
+   ])
 }

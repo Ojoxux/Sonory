@@ -9,5 +9,5 @@ import { PropsWithChildren } from 'react'
  * @returns プロバイダーでラップされた子コンポーネント
  */
 export function Providers({ children }: PropsWithChildren) {
-  return <>{children}</>
+   return <>{children}</>
 }

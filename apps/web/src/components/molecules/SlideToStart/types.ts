@@ -10,11 +10,11 @@
  * @param className 追加のCSSクラス
  */
 export type SlideToStartProps = {
-  onComplete: () => void
+   onComplete: () => void
 
-  disabled?: boolean
+   disabled?: boolean
 
-  text?: string
+   text?: string
 
-  className?: string
+   className?: string
 }
