@@ -1,0 +1,7 @@
+{
+  "name": "@sonory/config",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.js",
+  "files": ["biome.json", "tsconfig.base.json", "tailwind.config.ts"]
+}

@@ -1,0 +1,50 @@
+{
+	"$schema": "https://turbo.build/schema.json",
+	"ui": "tui",
+	"tasks": {
+		"build": {
+			"dependsOn": ["^build"],
+			"inputs": ["$TURBO_DEFAULT$", ".env*"],
+			"outputs": [".next/**", "!.next/cache/**", "dist/**", "*.tsbuildinfo"]
+		},
+		"dev": {
+			"cache": false,
+			"persistent": true
+		},
+		"lint": {
+			"dependsOn": ["^build"],
+			"inputs": ["$TURBO_DEFAULT$", ".eslintrc*", "biome.json*"]
+		},
+		"format": {
+			"inputs": ["$TURBO_DEFAULT$"],
+			"outputs": []
+		},
+		"type-check": {
+			"dependsOn": ["^build"],
+			"inputs": ["$TURBO_DEFAULT$", "tsconfig*.json"],
+			"outputs": []
+		},
+		"test": {
+			"dependsOn": ["^build"],
+			"inputs": ["$TURBO_DEFAULT$", "**/*.test.*", "**/*.spec.*"],
+			"outputs": ["coverage/**"]
+		},
+		"clean": {
+			"cache": false
+		},
+		"deploy": {
+			"dependsOn": ["build", "lint", "type-check"],
+			"inputs": ["$TURBO_DEFAULT$", ".env*"],
+			"outputs": []
+		}
+	},
+	"globalDependencies": ["**/.env*"],
+	"globalEnv": [
+		"NODE_ENV",
+		"NEXT_PUBLIC_*",
+		"SUPABASE_*",
+		"OPENAI_*",
+		"CLOUDFLARE_*",
+		"MAPBOX_*"
+	]
+}
