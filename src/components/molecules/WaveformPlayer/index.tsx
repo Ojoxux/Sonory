@@ -46,6 +46,7 @@ export function WaveformPlayer({
   const [currentTime, setCurrentTime] = useState<number>(0)
   const [error, setError] = useState<Error | null>(null)
   const [isInitialized, setIsInitialized] = useState<boolean>(false)
+  const initIdRef = useRef(0)
 
   /**
    * WaveSurferインスタンスを安全に破棄
@@ -109,6 +110,7 @@ export function WaveformPlayer({
    * WaveSurferインスタンスを初期化
    */
   const initializeWaveSurfer = useCallback(async (): Promise<void> => {
+    const myInitId = ++initIdRef.current
     console.log('initializeWaveSurfer called with:', {
       hasWindow: typeof window !== 'undefined',
       hasContainer: !!containerRef.current,
@@ -133,14 +135,24 @@ export function WaveformPlayer({
       return
     }
 
+    // BlobやURLの有効性を事前にチェック
+    if (!audioData.url && (!audioData.blob || audioData.blob.size === 0)) {
+      setError(new Error('有効な音声データが見つかりません'))
+      setIsLoading(false)
+      return
+    }
+
     try {
       console.log('Starting WaveSurfer initialization...')
       setError(null)
       setIsLoading(true)
       setIsInitialized(false)
 
-      // 既存のインスタンスを安全に破棄
+      // 既存のインスタンスを安全に破棄（Promiseの完了を必ず待つ）
       await destroyWaveSurfer()
+
+      // ここで新しい初期化が走っていないかチェック
+      if (myInitId !== initIdRef.current) return
 
       // コンテナが DOM に存在することを確認
       if (!containerRef.current.isConnected) {
@@ -403,17 +415,17 @@ export function WaveformPlayer({
 
   // 音声データが変更されたときにWaveSurferを再初期化
   useEffect(() => {
-    if (audioData) {
-      initializeWaveSurfer().catch((error) => {
-        console.error('WaveSurfer initialization failed:', error)
-        setError(
-          error instanceof Error ? error : new Error('初期化に失敗しました'),
-        )
-        setIsLoading(false)
-      })
+    let isCancelled = false
+    const safeInitialize = async () => {
+      await initializeWaveSurfer()
+      if (isCancelled) return
     }
-
+    if (audioData) {
+      safeInitialize()
+    }
     return () => {
+      isCancelled = true
+      initIdRef.current++
       wavesurferRef.current?.unAll?.()
       wavesurferRef.current?.destroy()
       destroyWaveSurfer().catch((error) => {
@@ -421,15 +433,6 @@ export function WaveformPlayer({
       })
     }
   }, [audioData, initializeWaveSurfer, destroyWaveSurfer])
-
-  // コンポーネントのアンマウント時にクリーンアップ
-  useEffect(() => {
-    return () => {
-      destroyWaveSurfer().catch((error) => {
-        console.warn('WaveSurfer unmount cleanup error:', error)
-      })
-    }
-  }, [destroyWaveSurfer])
 
   if (!audioData) {
     return (
