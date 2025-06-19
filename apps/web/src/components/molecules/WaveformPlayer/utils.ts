@@ -1,5 +1,6 @@
 /**
- * WaveformPlayerコンポーネント用のユーティリティ関数
+ * WaveformPlayerコンポーネント用のユーティリティ関数群
+ * @package
  */
 
 /**
@@ -8,10 +9,7 @@
  * @param samples - 生成する波形サンプル数
  * @returns 正規化された振幅データの配列
  */
-export function extractWaveformPeaks(
-   audioBuffer: AudioBuffer,
-   samples: number,
-): number[] {
+export function extractWaveformPeaks(audioBuffer: AudioBuffer, samples: number): number[] {
    const channelData = audioBuffer.getChannelData(0)
    const blockSize = Math.floor(channelData.length / samples)
    const peaks: number[] = []
@@ -38,20 +36,21 @@ export function extractWaveformPeaks(
    // 正規化: 最大値を1.0にスケール
    const maxPeak = Math.max(...peaks)
    if (maxPeak > 0) {
-      return peaks.map((peak) => peak / maxPeak)
+      return peaks.map(peak => peak / maxPeak)
    }
 
    return peaks
 }
 
 /**
- * 時間を MM:SS 形式でフォーマット
+ * 秒数をMM:SS形式でフォーマット
  * @param timeInSeconds - 秒単位の時間
  * @returns フォーマットされた時間文字列
  */
+const SECONDS_IN_MINUTE = 60
 export function formatTime(timeInSeconds: number): string {
-   const minutes = Math.floor(timeInSeconds / 60)
-   const seconds = Math.floor(timeInSeconds % 60)
+   const minutes = Math.floor(timeInSeconds / SECONDS_IN_MINUTE)
+   const seconds = Math.round(timeInSeconds % SECONDS_IN_MINUTE)
    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
 }
 
@@ -65,7 +64,7 @@ export function formatTime(timeInSeconds: number): string {
 export function setupHighDPICanvas(
    canvas: HTMLCanvasElement,
    width: number,
-   height: number,
+   height: number
 ): CanvasRenderingContext2D | null {
    const ctx = canvas.getContext('2d')
    if (!ctx) return null
@@ -97,7 +96,7 @@ export function drawWaveformBar(
    y: number,
    width: number,
    height: number,
-   color: string,
+   color: string
 ): void {
    ctx.fillStyle = color
    ctx.fillRect(x, y, Math.max(1, width), height)
@@ -116,7 +115,7 @@ export function drawProgressCursor(
    x: number,
    canvasHeight: number,
    color: string,
-   width = 2,
+   width = 2
 ): void {
    ctx.strokeStyle = color
    ctx.lineWidth = width
@@ -132,10 +131,7 @@ export function drawProgressCursor(
  * @param duration - 総時間
  * @returns 0-1の範囲の進捗率
  */
-export function calculateProgress(
-   currentTime: number,
-   duration: number,
-): number {
+export function calculateProgress(currentTime: number, duration: number): number {
    if (duration <= 0) return 0
    return Math.min(1, Math.max(0, currentTime / duration))
 }
@@ -146,10 +142,7 @@ export function calculateProgress(
  * @param containerWidth - コンテナの幅
  * @returns 0-1の範囲の進捗率
  */
-export function calculateProgressFromClick(
-   clickX: number,
-   containerWidth: number,
-): number {
+export function calculateProgressFromClick(clickX: number, containerWidth: number): number {
    if (containerWidth <= 0) return 0
    return Math.min(1, Math.max(0, clickX / containerWidth))
 }
@@ -160,7 +153,7 @@ export function calculateProgressFromClick(
  * @returns 対応している形式かどうか
  */
 export function validateAudioFormat(blob: Blob): boolean {
-   const supportedTypes = [
+   const SUPPORTED_TYPES = [
       'audio/mpeg',
       'audio/mp3',
       'audio/wav',
@@ -170,7 +163,7 @@ export function validateAudioFormat(blob: Blob): boolean {
       'audio/aac',
    ]
 
-   return supportedTypes.some((type) => blob.type.includes(type))
+   return SUPPORTED_TYPES.some(type => blob.type.includes(type))
 }
 
 /**
@@ -208,7 +201,7 @@ export function drawWaveformBackground(
    canvas: HTMLCanvasElement,
    peaks: number[],
    waveColor = '#1f2937',
-   barGap = 1,
+   barGap = 1
 ): void {
    const ctx = canvas.getContext('2d')
    if (!ctx || peaks.length === 0) return
@@ -225,10 +218,7 @@ export function drawWaveformBackground(
    const width = rect.width
    const height = rect.height
    const centerY = height / 2
-   const barWidth = Math.max(
-      1,
-      (width - (peaks.length - 1) * barGap) / peaks.length,
-   )
+   const barWidth = Math.max(1, (width - (peaks.length - 1) * barGap) / peaks.length)
 
    // キャンバスをクリア
    ctx.clearRect(0, 0, width, height)
@@ -266,7 +256,7 @@ export function drawHighQualityWaveform(
    progress = 0,
    waveColor = '#1f2937',
    progressColor = '#dc2626',
-   barGap = 1,
+   barGap = 1
 ): void {
    const ctx = canvas.getContext('2d')
    if (!ctx || peaks.length === 0) return
@@ -283,10 +273,7 @@ export function drawHighQualityWaveform(
    const width = rect.width
    const height = rect.height
    const centerY = height / 2
-   const barWidth = Math.max(
-      1,
-      (width - (peaks.length - 1) * barGap) / peaks.length,
-   )
+   const barWidth = Math.max(1, (width - (peaks.length - 1) * barGap) / peaks.length)
    const progressX = progress * width
 
    // キャンバスをクリア
@@ -340,10 +327,7 @@ export function drawHighQualityWaveform(
  * @param targetSamples - 目標サンプル数
  * @returns 補間された波形データ
  */
-export function smoothWaveformData(
-   peaks: number[],
-   targetSamples: number,
-): number[] {
+export function smoothWaveformData(peaks: number[], targetSamples: number): number[] {
    if (peaks.length === 0) return []
    if (peaks.length >= targetSamples) return peaks.slice(0, targetSamples)
 
@@ -357,8 +341,7 @@ export function smoothWaveformData(
       const fraction = index - lowerIndex
 
       // 線形補間
-      const interpolated =
-         peaks[lowerIndex] * (1 - fraction) + peaks[upperIndex] * fraction
+      const interpolated = peaks[lowerIndex] * (1 - fraction) + peaks[upperIndex] * fraction
       smoothed.push(interpolated)
    }
 
@@ -371,10 +354,7 @@ export function smoothWaveformData(
  * @param windowSize - スムージングウィンドウサイズ
  * @returns スムージングされた波形データ
  */
-export function applyWaveformSmoothing(
-   peaks: number[],
-   windowSize = 3,
-): number[] {
+export function applyWaveformSmoothing(peaks: number[], windowSize = 3): number[] {
    if (peaks.length === 0 || windowSize <= 1) return peaks
 
    const smoothed: number[] = []
