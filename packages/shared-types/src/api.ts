@@ -169,3 +169,65 @@ export const ERROR_CODES = {
 } as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];
+
+/**
+ * Location coordinates for API requests (Backend API用)
+ */
+export interface LocationCoordinates {
+	lat: number;
+	lng: number;
+	accuracy?: number;
+}
+
+/**
+ * Weather context for sound pins (Backend API用)
+ */
+export interface WeatherContext {
+	temperature: number;
+	condition?: string;
+	windSpeed?: number;
+	humidity?: number;
+}
+
+/**
+ * Audio metadata for sound pins (Backend API用)
+ */
+export interface AudioMetadata {
+	url: string;
+	duration: number;
+	format: "webm" | "mp3" | "wav";
+}
+
+/**
+ * AI analysis result for sound pins (Backend API用)
+ */
+export interface AIAnalysis {
+	transcription: string;
+	categories: {
+		emotion: string;
+		topic: string;
+		language: string;
+		confidence: number;
+	};
+	summary?: string;
+}
+
+/**
+ * Sound pin domain model (Backend API用)
+ */
+export interface SoundPinAPI {
+	id: string;
+	userId?: string;
+	location: LocationCoordinates;
+	audio: AudioMetadata;
+	weather?: WeatherContext;
+	timeTag?: "朝" | "昼" | "夕" | "夜";
+	aiAnalysis?: AIAnalysis;
+	status: "active" | "processing" | "deleted" | "reported";
+	title?: string;
+	metadata?: {
+		deviceInfo?: string;
+	};
+	createdAt: string;
+	updatedAt: string;
+}
