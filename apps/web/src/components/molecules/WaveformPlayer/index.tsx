@@ -259,15 +259,6 @@ export function WaveformPlayer({
             setIsPlaying(false)
          })
 
-         wavesurfer.on('finish', () => {
-            console.log('WaveSurfer finish event fired - playback completed')
-            setIsPlaying(false)
-            wavesurfer.seekTo(0) // ここが追加ポイント：終了時に先頭に戻す
-            const finalTime = wavesurfer.getDuration()
-            setCurrentTime(finalTime)
-            onFinish?.()
-         })
-
          // シーク時の再生位置更新
 
          wavesurfer.on('seeking', (time: number) => {
