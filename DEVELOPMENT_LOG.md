@@ -212,27 +212,55 @@ sonory/
    - 厳格なTypeScript設定への準拠
    - Biomeによるコード品質の保証
 
-### 🔄 次のステップ: ピン管理API実装
+### ✅ Step 2: ピン管理API実装（進行中）
 
-1. **データベース設計**
-   - Supabaseでテーブル作成
+#### 完了項目
+
+1. **データベース設計（完了）**
    - PostGIS拡張の有効化
-   - インデックス設定
+   - `sound_pins`テーブル作成
+   - 空間インデックスと時間インデックスの設定
+   - RLSポリシー設定
+   - SQLファイル作成：
+     - `001_enable_postgis.sql` - PostGIS拡張有効化
+     - `002_create_sound_pins_table.sql` - テーブル定義
+     - `003_sound_pins_rls_policies.sql` - RLSポリシー
+     - `004_create_rpc_functions.sql` - 地理空間検索RPC
 
-2. **ピンリポジトリ実装**
-   - `apps/api/src/repositories/pin.repository.ts`
-   - CRUD操作の実装
-   - 地理空間クエリ
+2. **データベース型定義（完了）**
+   - `apps/api/src/types/database.ts` - データベースレコード型
+   - PostGISPoint型定義
+   - Insert/Update用の型定義
 
-3. **ピンサービス実装**
+3. **共通型定義の拡張（完了）**
+   - `packages/shared-types/src/api.ts` に以下を追加：
+     - LocationCoordinates - 位置情報（lat/lng）
+     - WeatherContext - 天気情報
+     - AudioMetadata - 音声メタデータ
+     - AIAnalysis - AI分析結果
+     - SoundPinAPI - ピンのドメインモデル
+
+4. **ピンリポジトリ実装（完了）**
+   - `apps/api/src/repositories/pin.repository.ts` 
+   - CRUD操作の実装（create, findById, update, delete）
+   - 地理空間クエリ（findWithinBounds, findNearby）
+   - エラーハンドリング統合
+   - ログ出力対応
+
+#### 次のステップ
+
+1. **ピンサービス実装**
    - `apps/api/src/services/pin.service.ts`
    - ビジネスロジック
    - バリデーション
 
-4. **APIルート実装**
+2. **APIルート実装**
    - `apps/api/src/routes/pins.ts`
    - エンドポイント定義
    - ミドルウェア統合
+
+3. **メインアプリケーションへの統合**
+   - `apps/api/src/index.ts` にルート追加
 
 ## 🔧 技術スタック
 
