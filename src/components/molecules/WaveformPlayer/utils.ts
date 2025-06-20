@@ -1,5 +1,6 @@
 /**
- * WaveformPlayerコンポーネント用のユーティリティ関数
+ * WaveformPlayerコンポーネント用のユーティリティ関数群
+ * @package
  */
 
 /**
@@ -45,7 +46,7 @@ export function extractWaveformPeaks(
 }
 
 /**
- * 時間を MM:SS 形式でフォーマット
+ * 秒数を MM:SS 形式でフォーマット
  * @param timeInSeconds - 秒単位の時間
  * @returns フォーマットされた時間文字列
  */
@@ -61,7 +62,7 @@ export function formatTime(timeInSeconds: number): string {
  * @param canvas - Canvas要素
  * @param width - 論理幅
  * @param height - 論理高さ
- * @returns CanvasRenderingContext2D
+ * @returns CanvasRenderingContext2D | null
  */
 export function setupHighDPICanvas(
   canvas: HTMLCanvasElement,
@@ -161,7 +162,7 @@ export function calculateProgressFromClick(
  * @returns 対応している形式かどうか
  */
 export function validateAudioFormat(blob: Blob): boolean {
-  const supportedTypes = [
+  const SUPPORTED_TYPES = [
     'audio/mpeg',
     'audio/mp3',
     'audio/wav',
@@ -171,7 +172,7 @@ export function validateAudioFormat(blob: Blob): boolean {
     'audio/aac',
   ]
 
-  return supportedTypes.some((type) => blob.type.includes(type))
+  return SUPPORTED_TYPES.some((type) => blob.type.includes(type))
 }
 
 /**
