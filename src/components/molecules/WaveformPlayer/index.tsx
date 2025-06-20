@@ -224,18 +224,25 @@ export function WaveformPlayer({
         setIsPlaying(false)
       })
 
-      wavesurfer.on('finish', () => {
-        console.log('WaveSurfer finish event fired - playback completed')
-        setIsPlaying(false)
-        wavesurfer.seekTo(0) // ここが追加ポイント：終了時に先頭に戻す
-        const finalTime = wavesurfer.getDuration()
-        setCurrentTime(finalTime)
-        onFinish?.()
-      })
-
       // audioprocessイベントで現在時刻を更新（最も頻繁に発火）
       wavesurfer.on('audioprocess', (time: number) => {
         setCurrentTime(time)
+
+        // 終了間近になったら手動で終了処理をトリガーする
+        const duration = wavesurfer.getDuration()
+        if (duration > 0 && time >= duration - 0.05) {
+          // すでに再生が停止していなければ、手動で停止し、終了処理を呼び出す
+          if (wavesurfer.isPlaying()) {
+            console.log(
+              'WaveSurfer Manually triggering finish due to reaching end of audio',
+            )
+            wavesurfer.pause() // 再生を停止
+            setIsPlaying(false)
+            wavesurfer.seekTo(0) // 再生位置を先頭に
+            setCurrentTime(0) // UI上の時間もリセット
+            onFinish?.() // 親コンポーネントに終了を通知
+          }
+        }
       })
 
       // timeupdateイベントでも現在時刻を更新
