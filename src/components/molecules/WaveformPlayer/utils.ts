@@ -49,9 +49,10 @@ export function extractWaveformPeaks(
  * @param timeInSeconds - 秒単位の時間
  * @returns フォーマットされた時間文字列
  */
+const SECONDS_IN_MINUTE = 60
 export function formatTime(timeInSeconds: number): string {
-  const minutes = Math.floor(timeInSeconds / 60)
-  const seconds = Math.round(timeInSeconds % 60)
+  const minutes = Math.floor(timeInSeconds / SECONDS_IN_MINUTE)
+  const seconds = Math.round(timeInSeconds % SECONDS_IN_MINUTE)
   return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
 }
 

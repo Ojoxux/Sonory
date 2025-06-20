@@ -414,9 +414,10 @@ export function WaveformPlayer({
   /**
    * 時間をフォーマット
    */
+  const SECONDS_IN_MINUTE = 60
   const formatTime = useCallback((time: number): string => {
-    const minutes = Math.floor(time / 60)
-    const seconds = Math.round(time % 60)
+    const minutes = Math.floor(time / SECONDS_IN_MINUTE)
+    const seconds = Math.round(time % SECONDS_IN_MINUTE)
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
   }, [])
 
