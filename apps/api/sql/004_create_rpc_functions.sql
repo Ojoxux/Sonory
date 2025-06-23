@@ -57,4 +57,36 @@ $$;
 
 -- Grant execute permission to authenticated users
 GRANT EXECUTE ON FUNCTION find_nearby_pins TO authenticated;
-GRANT EXECUTE ON FUNCTION find_nearby_pins TO service_role; 
+GRANT EXECUTE ON FUNCTION find_nearby_pins TO service_role;
+
+/**
+ * Find nearby pins filtered by specific IDs
+ * Used for location-based search with pre-filtered results
+ */
+CREATE OR REPLACE FUNCTION find_nearby_pins_by_ids(
+  lat DOUBLE PRECISION,
+  lng DOUBLE PRECISION,
+  radius_meters INTEGER,
+  pin_ids UUID[]
+)
+RETURNS SETOF sound_pins AS $$
+BEGIN
+  RETURN QUERY
+  SELECT *
+  FROM sound_pins
+  WHERE id = ANY(pin_ids)
+    AND status = 'active'
+    AND ST_DWithin(
+      location::geography,
+      ST_MakePoint(lng, lat)::geography,
+      radius_meters
+    )
+  ORDER BY ST_Distance(
+    location::geography,
+    ST_MakePoint(lng, lat)::geography
+  ) ASC;
+END;
+$$ LANGUAGE plpgsql STABLE;
+
+-- Grant execute permission
+GRANT EXECUTE ON FUNCTION find_nearby_pins_by_ids TO authenticated; 
