@@ -148,9 +148,10 @@ app.get('/:audioId/metadata', rateLimits.default, async c => {
 
 /**
  * POST /api/audio/:audioId/analyze
- * @description 音声ファイルをAI分析
+ * @description 音声ファイルをAI分析（YAMNet結果受信）
  * @tags Audio
  * @param {string} audioId - 分析する音声ファイルのID
+ * @param {object} classification - フロントエンドからのYAMNet分析結果
  * @returns {AIAnalysisResult} AI分析結果
  */
 app.post('/:audioId/analyze', rateLimits.default, async c => {
@@ -161,18 +162,28 @@ app.post('/:audioId/analyze', rateLimits.default, async c => {
          throw new APIException(ERROR_CODES.INVALID_AUDIO_FORMAT, 'Audio ID is required', 400)
       }
 
-      // TODO: AI分析サービスを実装
-      // 現在は簡易的な実装
+      // フロントエンドからのYAMNet分析結果を取得
+      const body = await c.req.json().catch(() => ({}))
+      const clientClassification = body.classification
+
+      // YAMNet分析結果を保存用に整形
       const analysisResult = {
-         transcription: 'Sample transcription',
+         transcription: 'YAMNet音響分類完了',
          categories: {
-            emotion: 'neutral',
-            topic: 'general',
-            language: 'ja',
-            confidence: 0.8,
+            emotion: 'N/A',
+            topic: clientClassification?.primarySound?.label || '環境音',
+            language: 'N/A',
+            confidence: clientClassification?.primarySound?.confidence || 0.0,
          },
-         summary: 'Sample audio analysis',
+         summary: `検出された音: ${
+            clientClassification?.primarySound?.label || '不明'
+         } (信頼度: ${Math.round((clientClassification?.primarySound?.confidence || 0) * 100)}%)`,
+         environment: clientClassification?.environment || 'unknown',
+         allClassifications: clientClassification?.allClassifications || [],
       }
+
+      // TODO: データベースに分析結果を保存
+      // await saveAnalysisResult(audioId, analysisResult)
 
       return c.json({
          success: true,
