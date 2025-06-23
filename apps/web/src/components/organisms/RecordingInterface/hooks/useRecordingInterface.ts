@@ -1,6 +1,6 @@
 'use client'
 
-import { PanInfo } from 'framer-motion'
+import type { PanInfo } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
 import { useRecorderStore } from '../../../../store/useRecorderStore'
 // 実際のMediaRecorder APIを使用

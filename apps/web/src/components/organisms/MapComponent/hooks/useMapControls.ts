@@ -10,7 +10,7 @@
  * @returns キーボード制御の状態
  */
 
-import mapboxgl from 'mapbox-gl'
+import type mapboxgl from 'mapbox-gl'
 import { useEffect } from 'react'
 
 export type UseMapKeyboardShortcutsProps = {
