@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { InstructionItemProps } from './types'
+import type { InstructionItemProps } from './types'
 
 /**
  * 確認事項アイテムコンポーネント
@@ -16,12 +16,7 @@ import { InstructionItemProps } from './types'
  * @param className 追加のCSSクラス
  */
 
-export function InstructionItem({
-   text,
-   index,
-   isClosing,
-   className = '',
-}: InstructionItemProps) {
+export function InstructionItem({ text, index, isClosing, className = '' }: InstructionItemProps) {
    return (
       <motion.div
          initial={{
@@ -47,8 +42,7 @@ export function InstructionItem({
                     ease: [0.68, -0.55, 0.265, 1.55],
                  }
          }
-         className={`flex items-start gap-3 p-3 rounded-lg bg-black/20 backdrop-blur-sm border border-neutral-700/50 ${className}`}
-      >
+         className={`flex items-start gap-3 p-3 rounded-lg bg-black/20 backdrop-blur-sm border border-neutral-700/50 ${className}`}>
          <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -58,7 +52,7 @@ export function InstructionItem({
                type: 'spring',
                stiffness: 200,
             }}
-            className="w-2 h-2 bg-white rounded-full mt-2 flex-shrink-0"
+            className='w-2 h-2 bg-white rounded-full mt-2 flex-shrink-0'
          />
          <motion.span
             initial={{ opacity: 0 }}
@@ -67,8 +61,7 @@ export function InstructionItem({
                delay: 1.4 + index * 0.15,
                duration: 0.6,
             }}
-            className="text-neutral-100 text-sm leading-relaxed font-medium"
-         >
+            className='text-neutral-100 text-sm leading-relaxed font-medium'>
             {text}
          </motion.span>
       </motion.div>

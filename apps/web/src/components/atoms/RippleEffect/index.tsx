@@ -35,10 +35,9 @@ export function RippleEffect({
          }, delay)
 
          return () => clearTimeout(timer)
-      } else {
-         // 非アクティブ時は即座に停止
-         setIsAnimating(false)
       }
+      // 非アクティブ時は即座に停止
+      setIsAnimating(false)
    }, [isActive, delay])
 
    if (!isAnimating) return null
@@ -53,7 +52,7 @@ export function RippleEffect({
          }}
          transition={{
             duration: duration / 1000, // ミリ秒を秒に変換
-            repeat: Infinity,
+            repeat: Number.POSITIVE_INFINITY,
             ease: 'easeOut',
             repeatType: 'loop',
          }}

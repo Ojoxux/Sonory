@@ -67,7 +67,7 @@ export function SoundWaveEffect({
             animate={{ scale: [0, 1.5, 2.5], opacity: [0.8, 0.4, 0] }}
             transition={{
                duration: 2,
-               repeat: Infinity,
+               repeat: Number.POSITIVE_INFINITY,
                ease: 'easeOut',
             }}
          />
@@ -79,7 +79,7 @@ export function SoundWaveEffect({
             animate={{ scale: [0, 1.5, 2.5], opacity: [0.8, 0.4, 0] }}
             transition={{
                duration: 2,
-               repeat: Infinity,
+               repeat: Number.POSITIVE_INFINITY,
                ease: 'easeOut',
                delay: 0.5,
             }}
@@ -92,7 +92,7 @@ export function SoundWaveEffect({
             animate={{ scale: [0, 1.5, 2.5], opacity: [0.8, 0.4, 0] }}
             transition={{
                duration: 2,
-               repeat: Infinity,
+               repeat: Number.POSITIVE_INFINITY,
                ease: 'easeOut',
                delay: 1,
             }}

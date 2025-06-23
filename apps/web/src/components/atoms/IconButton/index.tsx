@@ -25,14 +25,10 @@ import type { IconButtonProps } from './type'
  * />
  * ```
  */
-export function IconButton({
-   icon,
-   ariaLabel,
-   onClick,
-   className = '',
-}: IconButtonProps) {
+export function IconButton({ icon, ariaLabel, onClick, className = '' }: IconButtonProps) {
    return (
       <button
+         type='button'
          aria-label={ariaLabel}
          onClick={onClick}
          className={`
@@ -42,8 +38,7 @@ export function IconButton({
         active:translate-y-0 active:scale-[1.02]
         flex items-center justify-center
         ${className}
-      `}
-      >
+      `}>
          {icon}
       </button>
    )

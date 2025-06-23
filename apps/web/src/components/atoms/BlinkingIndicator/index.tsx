@@ -35,9 +35,6 @@ export function BlinkingIndicator({
          }, delay)
 
          return () => clearTimeout(timer)
-      } else {
-         // 非アクティブ時は即座に停止
-         setIsAnimating(false)
       }
    }, [isActive, delay])
 
@@ -47,7 +44,7 @@ export function BlinkingIndicator({
          animate={isAnimating ? { opacity: [1, 0.3, 1] } : { opacity: 1 }}
          transition={{
             duration: duration / 1000, // ミリ秒を秒に変換
-            repeat: isAnimating ? Infinity : 0,
+            repeat: isAnimating ? Number.POSITIVE_INFINITY : 0,
             ease: 'easeInOut',
          }}
       />

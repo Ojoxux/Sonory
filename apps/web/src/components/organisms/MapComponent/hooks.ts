@@ -34,14 +34,7 @@ import { type SoundPin, useSoundPinStore } from '@/store/useSoundPinStore'
 import * as O from 'fp-ts/Option'
 import { pipe } from 'fp-ts/function'
 import mapboxgl from 'mapbox-gl'
-import {
-   type RefObject,
-   useCallback,
-   useEffect,
-   useMemo,
-   useRef,
-   useState,
-} from 'react'
+import { type RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useBrowserGeolocation } from './hooks/useBrowserGeolocation'
 import { useLocationIntegration } from './hooks/useLocationIntegration'
 import { useLocationStorage } from './hooks/useLocationStorage'
@@ -54,11 +47,7 @@ import type {
    MapboxMapOptions,
    MapboxNonStandardMethods,
 } from './type'
-import {
-   fromNullable,
-   isValidPosition,
-   selectBestPosition,
-} from './utils/functional'
+import { fromNullable, isValidPosition, selectBestPosition } from './utils/functional'
 import type { LightingConfig } from './utils/sunCalculations'
 
 export type UseMapComponentProps = {
@@ -109,15 +98,14 @@ export type UseMapComponentReturn = {
  * Mapboxの非標準メソッド用の型安全な検証（純粋関数）
  */
 const supportsMethod = <T extends object>(obj: T, method: string): boolean =>
-   method in obj &&
-   typeof (obj as Record<string, unknown>)[method] === 'function'
+   method in obj && typeof (obj as Record<string, unknown>)[method] === 'function'
 
 /**
  * Mapboxの非標準メソッドを安全に呼び出すためのヘルパー関数群（fpで安全に呼び出す）
  */
 const createMapboxHelpers = (): MapboxNonStandardMethods => ({
    setConfigProperty: (map, namespace, property, value) =>
-      pipe(supportsMethod(map, 'setConfigProperty'), (isSupported) => {
+      pipe(supportsMethod(map, 'setConfigProperty'), isSupported => {
          if (isSupported && map.isStyleLoaded()) {
             try {
                const extendedMap = map as MapboxExtendedMap
@@ -130,14 +118,12 @@ const createMapboxHelpers = (): MapboxNonStandardMethods => ({
                }
             }
          } else if (process.env.NODE_ENV === 'development') {
-            console.warn(
-               '⚠️ setConfigProperty: スタイル未読み込みまたは非サポート',
-            )
+            console.warn('⚠️ setConfigProperty: スタイル未読み込みまたは非サポート')
          }
       }),
 
    setTerrain: (map, config) =>
-      pipe(supportsMethod(map, 'setTerrain'), (isSupported) => {
+      pipe(supportsMethod(map, 'setTerrain'), isSupported => {
          if (isSupported && map.isStyleLoaded()) {
             try {
                const extendedMap = map as MapboxExtendedMap
@@ -156,7 +142,7 @@ const createMapboxHelpers = (): MapboxNonStandardMethods => ({
       }),
 
    setLight: (map, config) =>
-      pipe(supportsMethod(map, 'setLight'), (isSupported) => {
+      pipe(supportsMethod(map, 'setLight'), isSupported => {
          if (isSupported && map.isStyleLoaded()) {
             try {
                const extendedMap = map as MapboxExtendedMap
@@ -174,7 +160,7 @@ const createMapboxHelpers = (): MapboxNonStandardMethods => ({
       }),
 
    setFog: (map, config) =>
-      pipe(supportsMethod(map, 'setFog'), (isSupported) => {
+      pipe(supportsMethod(map, 'setFog'), isSupported => {
          if (isSupported && map.isStyleLoaded()) {
             try {
                const extendedMap = map as MapboxExtendedMap
@@ -215,23 +201,15 @@ export function useMapComponent({
    // 状態管理
    const [map, setMap] = useState<mapboxgl.Map | null>(null)
    const [mapStyleLoaded, setMapStyleLoaded] = useState<boolean>(false)
-   const [geolocateInitialized, setGeolocateInitialized] =
-      useState<boolean>(false)
+   const [geolocateInitialized, setGeolocateInitialized] = useState<boolean>(false)
 
    // ストア
-   const {
-      debugMode,
-      toggleDebugMode,
-      debugTimeOverride,
-      setDebugTimeOverride,
-   } = useDebugStore()
+   const { debugMode, toggleDebugMode, debugTimeOverride, setDebugTimeOverride } = useDebugStore()
    const { pins, selectedPinId, selectPin } = useSoundPinStore()
 
    // カスタムフック
-   const { position: customPosition, permissionStatus } =
-      useBrowserGeolocation()
-   const { savedPosition, savePosition, clearSavedPosition } =
-      useLocationStorage()
+   const { position: customPosition, permissionStatus } = useBrowserGeolocation()
+   const { savedPosition, savePosition, clearSavedPosition } = useLocationStorage()
 
    // 通知関数
    const createNotification = useCallback(
@@ -240,8 +218,8 @@ export function useMapComponent({
             message,
             type,
             timestamp: Date.now(),
-         }) as const,
-      [],
+         } as const),
+      []
    )
 
    // 副作用を実行する関数（分離された副作用）
@@ -250,7 +228,7 @@ export function useMapComponent({
          console.log(`[${notification.type}] ${notification.message}`)
          // HACK: 将来的にはtoast通知などに拡張可能
       },
-      [],
+      []
    )
 
    // 通知の実行
@@ -259,24 +237,20 @@ export function useMapComponent({
          const notification = createNotification(message, type)
          executeNotification(notification)
       },
-      [createNotification, executeNotification],
+      [createNotification, executeNotification]
    )
 
-   const {
-      mapboxPosition,
-      geolocateAttempted,
-      attemptGeolocation,
-      resetGeolocation,
-   } = useLocationIntegration({
-      geolocateControl: geolocateControlRef.current,
-      geolocateInitialized,
-      debugMode,
-      showNotification,
-      onPositionUpdate: (position) => {
-         savePosition(position)
-      },
-      map,
-   })
+   const { mapboxPosition, geolocateAttempted, attemptGeolocation, resetGeolocation } =
+      useLocationIntegration({
+         geolocateControl: geolocateControlRef.current,
+         geolocateInitialized,
+         debugMode,
+         showNotification,
+         onPositionUpdate: position => {
+            savePosition(position)
+         },
+         map,
+      })
 
    // 実際に使用する位置情報（fpで優先順位付き選択）
    const position = useMemo((): LocationData | null => {
@@ -287,7 +261,7 @@ export function useMapComponent({
       return pipe(
          selectBestPosition(mapboxOpt, customOpt, savedOpt),
          O.filter(isValidPosition),
-         O.getOrElse(() => null as LocationData | null),
+         O.getOrElse(() => null as LocationData | null)
       )
    }, [mapboxPosition, customPosition, savedPosition])
 
@@ -299,12 +273,12 @@ export function useMapComponent({
          positionSource: mapboxPosition
             ? ('mapbox' as const)
             : customPosition
-              ? ('browser' as const)
-              : savedPosition
-                ? ('saved' as const)
-                : ('none' as const),
+            ? ('browser' as const)
+            : savedPosition
+            ? ('saved' as const)
+            : ('none' as const),
       }),
-      [mapboxPosition, customPosition, savedPosition, position],
+      [mapboxPosition, customPosition, savedPosition, position]
    )
 
    const { currentLighting, updateLightingAndShadows } = useMapEnvironment({
@@ -329,7 +303,8 @@ export function useMapComponent({
       onUpdateLighting: () => updateLightingAndShadows(),
    })
 
-   // マップ初期化
+   // マップ初期化（一度だけ実行、依存関係は意図的に除外）
+   // biome-ignore lint/correctness/useExhaustiveDependencies: Map should only initialize once
    useEffect(() => {
       if (!mapContainerRef.current || mapInitializedRef.current) return
 
@@ -343,10 +318,7 @@ export function useMapComponent({
 
       try {
          // 現在時刻に基づいて初期lightPresetを決定（正常マッピング）
-         const currentHour =
-            debugTimeOverride !== null
-               ? debugTimeOverride
-               : new Date().getHours()
+         const currentHour = debugTimeOverride !== null ? debugTimeOverride : new Date().getHours()
          let initialLightPreset: 'day' | 'dawn' | 'dusk' | 'night' = 'dawn'
 
          // 昼の時間帯（8時から17時）→ 明るい空が必要 → 'day'を使用
@@ -366,12 +338,7 @@ export function useMapComponent({
          }
 
          if (process.env.NODE_ENV === 'development') {
-            console.log(
-               '🌅 マップ初期化時のlightPreset:',
-               initialLightPreset,
-               'hour:',
-               currentHour,
-            )
+            console.log('🌅 マップ初期化時のlightPreset:', initialLightPreset, 'hour:', currentHour)
          }
 
          const mapOptions: MapboxMapOptions = {
@@ -429,9 +396,9 @@ export function useMapComponent({
             'pitchstart',
             'touchstart',
          ] as const
-         eventTypes.forEach((eventType) => {
+         for (const eventType of eventTypes) {
             mapInstance.on(eventType, handleUserInteraction)
-         })
+         }
 
          // イベントリスナー設定
          mapInstance.on('load', () => {
@@ -491,9 +458,7 @@ export function useMapComponent({
             // スタイルは読み込まれているがマップ全体の初期化が完了していない場合の補完的チェック
             if (mapInstance.isStyleLoaded() && !mapInitializedRef.current) {
                if (process.env.NODE_ENV === 'development') {
-                  console.log(
-                     '🔄 マップアイドル状態でスタイル読み込み完了を検知',
-                  )
+                  console.log('🔄 マップアイドル状態でスタイル読み込み完了を検知')
                }
                setMapStyleLoaded(true)
             }
@@ -505,7 +470,7 @@ export function useMapComponent({
          })
 
          // Geolocationコントロールのイベント
-         geolocateControl.on('geolocate', (e) => {
+         geolocateControl.on('geolocate', e => {
             const newPosition = {
                latitude: e.coords.latitude,
                longitude: e.coords.longitude,
@@ -523,7 +488,7 @@ export function useMapComponent({
             // 位置追跡終了
          })
 
-         geolocateControl.on('error', (error) => {
+         geolocateControl.on('error', error => {
             if (process.env.NODE_ENV === 'development') {
                console.error('Geolocation エラー:', error)
             }
@@ -544,8 +509,8 @@ export function useMapComponent({
                customPosition && isValidPosition(customPosition)
                   ? customPosition
                   : savedPosition && isValidPosition(savedPosition)
-                    ? savedPosition
-                    : null
+                  ? savedPosition
+                  : null
 
             if (currentPosition) {
                // 位置情報がある場合は即座に移動
@@ -577,11 +542,11 @@ export function useMapComponent({
                   'pitchstart',
                   'touchstart',
                ] as const
-               eventTypes.forEach((eventType) => {
+               for (const eventType of eventTypes) {
                   if (userInteractionHandlerRef.current) {
                      map.off(eventType, userInteractionHandlerRef.current)
                   }
-               })
+               }
             }
 
             map.remove()
@@ -598,8 +563,7 @@ export function useMapComponent({
 
       const now = Date.now()
       const timeSinceLastInteraction = now - lastInteractionTimeRef.current
-      const shouldAutoCenter =
-         !userInteractionRef.current || timeSinceLastInteraction > 30000 // 30秒以上操作がない場合
+      const shouldAutoCenter = !userInteractionRef.current || timeSinceLastInteraction > 30000 // 30秒以上操作がない場合
 
       if (process.env.NODE_ENV === 'development') {
          console.log('マップ更新:', {
@@ -636,21 +600,12 @@ export function useMapComponent({
       if (map.getSource('user-path')) {
          const source = map.getSource('user-path') as mapboxgl.GeoJSONSource
 
-         const updatePath = (
-            currentCoordinates: Array<[number, number]>,
-         ): void => {
-            const newCoord: [number, number] = [
-               position.longitude,
-               position.latitude,
-            ]
+         const updatePath = (currentCoordinates: Array<[number, number]>): void => {
+            const newCoord: [number, number] = [position.longitude, position.latitude]
 
             // 最後の座標と異なる場合のみ追加
             const lastCoord = currentCoordinates[currentCoordinates.length - 1]
-            if (
-               !lastCoord ||
-               lastCoord[0] !== newCoord[0] ||
-               lastCoord[1] !== newCoord[1]
-            ) {
+            if (!lastCoord || lastCoord[0] !== newCoord[0] || lastCoord[1] !== newCoord[1]) {
                const updatedCoordinates = [...currentCoordinates, newCoord]
 
                // 最大100ポイントまで保持
@@ -668,11 +623,7 @@ export function useMapComponent({
                }
 
                source.setData(pathData)
-               console.log(
-                  'ユーザーパスを更新しました:',
-                  updatedCoordinates.length,
-                  'ポイント',
-               )
+               console.log('ユーザーパスを更新しました:', updatedCoordinates.length, 'ポイント')
             }
          }
 

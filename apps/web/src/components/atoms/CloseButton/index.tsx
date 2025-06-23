@@ -26,11 +26,11 @@ export const CloseButton = memo(function CloseButton({
 }: CloseButtonProps): ReactElement {
    return (
       <button
+         type='button'
          onClick={onClick}
-         className="flex-shrink-0 text-gray-400 hover:text-white transition-colors p-2"
-         aria-label={ariaLabel}
-      >
-         <MdClose className="w-4 h-4" />
+         className='flex-shrink-0 text-gray-400 hover:text-white transition-colors p-2'
+         aria-label={ariaLabel}>
+         <MdClose className='w-4 h-4' />
       </button>
    )
 })

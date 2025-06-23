@@ -3,6 +3,11 @@
 import { useCallback, useEffect, useRef } from 'react'
 import type { WaveformDisplayProps } from './type'
 
+// 固定のバー設定（定数）
+const FIXED_BAR_WIDTH = 4
+const FIXED_BAR_GAP = 2
+const TOTAL_BAR_WIDTH = FIXED_BAR_WIDTH + FIXED_BAR_GAP
+
 /**
  * 波形表示コンポーネント
  *
@@ -45,11 +50,6 @@ export function WaveformDisplay({
    const canvasRef = useRef<HTMLCanvasElement>(null)
    const containerRef = useRef<HTMLDivElement>(null)
 
-   // 固定のバー設定
-   const FIXED_BAR_WIDTH = 4
-   const FIXED_BAR_GAP = 2
-   const TOTAL_BAR_WIDTH = FIXED_BAR_WIDTH + FIXED_BAR_GAP
-
    /**
     * Canvas のサイズを更新
     */
@@ -59,8 +59,7 @@ export function WaveformDisplay({
       if (!canvas || !container) return
 
       const width = container.offsetWidth
-      const dpr =
-         typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1
+      const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1
 
       canvas.width = width * dpr
       canvas.height = height * dpr
@@ -83,8 +82,7 @@ export function WaveformDisplay({
       const ctx = canvas.getContext('2d')
       if (!ctx) return
 
-      const dpr =
-         typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1
+      const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1
       const width = canvas.width / dpr
       const canvasHeight = canvas.height / dpr
 
@@ -99,8 +97,7 @@ export function WaveformDisplay({
       const progress = Math.min(recordingTime / maxDuration, 1)
 
       // 録音完了の判定
-      const isRecordingComplete =
-         isCompleted || (!isRecording && recordingTime > 0)
+      const isRecordingComplete = isCompleted || (!isRecording && recordingTime > 0)
 
       // バーを描画
       for (let i = 0; i < maxBars; i++) {
@@ -153,8 +150,6 @@ export function WaveformDisplay({
       maxDuration,
       isRecording,
       isCompleted,
-      TOTAL_BAR_WIDTH,
-      FIXED_BAR_WIDTH,
    ])
 
    // 初期化とリサイズ処理
@@ -180,11 +175,7 @@ export function WaveformDisplay({
 
    return (
       <div ref={containerRef} className={`relative w-full ${className}`}>
-         <canvas
-            ref={canvasRef}
-            className="w-full block"
-            style={{ height: `${height}px` }}
-         />
+         <canvas ref={canvasRef} className='w-full block' style={{ height: `${height}px` }} />
       </div>
    )
 }

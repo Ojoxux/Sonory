@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { InstructionItem } from '../../atoms/InstructionItem'
-import { InstructionsListProps } from './types'
+import type { InstructionsListProps } from './types'
 
 /**
  * 確認事項リストコンポーネント
@@ -16,28 +16,14 @@ import { InstructionsListProps } from './types'
  * @param className 追加のCSSクラス
  */
 
-export function InstructionsList({
-   items,
-   isClosing,
-   className = '',
-}: InstructionsListProps) {
+export function InstructionsList({ items, isClosing, className = '' }: InstructionsListProps) {
    return (
       <motion.div
          className={`space-y-3 mb-6 relative z-10 ${className}`}
-         animate={
-            isClosing ? { opacity: 0, scale: 0.9 } : { opacity: 1, scale: 1 }
-         }
-         transition={
-            isClosing ? { duration: 0.2 } : { duration: 0.3, delay: 1.2 }
-         }
-      >
+         animate={isClosing ? { opacity: 0, scale: 0.9 } : { opacity: 1, scale: 1 }}
+         transition={isClosing ? { duration: 0.2 } : { duration: 0.3, delay: 1.2 }}>
          {items.map((item, index) => (
-            <InstructionItem
-               key={index}
-               text={item}
-               index={index}
-               isClosing={isClosing}
-            />
+            <InstructionItem key={item} text={item} index={index} isClosing={isClosing} />
          ))}
       </motion.div>
    )

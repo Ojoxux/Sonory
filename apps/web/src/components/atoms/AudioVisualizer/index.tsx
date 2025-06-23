@@ -37,9 +37,7 @@ export function AudioVisualizer({
       }
 
       const interval = setInterval(() => {
-         setBars(
-            new Array(barCount).fill(0).map(() => Math.random() * 0.8 + 0.2),
-         )
+         setBars(new Array(barCount).fill(0).map(() => Math.random() * 0.8 + 0.2))
       }, 150)
 
       return () => clearInterval(interval)
@@ -64,25 +62,28 @@ export function AudioVisualizer({
 
    return (
       <div className={`flex items-end justify-center gap-1 h-12 ${className}`}>
-         {bars.map((height, index) => (
-            <motion.div
-               key={index}
-               className={`w-1 rounded-full ${getColorClass()}`}
-               animate={{
-                  height: `${height * 100}%`,
-                  opacity: isActive ? [0.3, 1, 0.3] : 0.3,
-               }}
-               transition={{
-                  duration: 0.3,
-                  ease: 'easeInOut',
-                  opacity: {
-                     duration: 1,
-                     repeat: Infinity,
-                     delay: index * 0.1,
-                  },
-               }}
-            />
-         ))}
+         {bars.map((height, index) => {
+            const barPosition = index * 12 // 12px間隔でのバーの位置
+            return (
+               <motion.div
+                  key={`bar-pos-${barPosition}`}
+                  className={`w-1 rounded-full ${getColorClass()}`}
+                  animate={{
+                     height: `${height * 100}%`,
+                     opacity: isActive ? [0.3, 1, 0.3] : 0.3,
+                  }}
+                  transition={{
+                     duration: 0.3,
+                     ease: 'easeInOut',
+                     opacity: {
+                        duration: 1,
+                        repeat: Number.POSITIVE_INFINITY,
+                        delay: index * 0.1,
+                     },
+                  }}
+               />
+            )
+         })}
       </div>
    )
 }

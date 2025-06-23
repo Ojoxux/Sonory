@@ -1,11 +1,11 @@
-'use client'
+"use client";
 
-import { CompassButton } from '@/components/atoms/CompassButton'
-import { IconButton } from '@/components/atoms/IconButton'
-import { LocationDisplay } from '@/components/atoms/LocationDisplay'
-import { useEffect, useState } from 'react'
-import { MdInfo, MdSettings } from 'react-icons/md'
-import type { AppHeaderProps } from './type'
+import { CompassButton } from "@/components/atoms/CompassButton";
+import { IconButton } from "@/components/atoms/IconButton";
+import { LocationDisplay } from "@/components/atoms/LocationDisplay";
+import { useEffect, useState } from "react";
+import { MdInfo, MdSettings } from "react-icons/md";
+import type { AppHeaderProps } from "./type";
 
 /**
  * アプリケーションヘッダーコンポーネント
@@ -32,72 +32,72 @@ import type { AppHeaderProps } from './type'
  * ```
  */
 export function AppHeader({
-   onSettingsClick,
-   onCompassClick,
-   latitude,
-   longitude,
-   debugTimeOverride,
-   mapBearing,
+	onSettingsClick,
+	onCompassClick,
+	latitude,
+	longitude,
+	debugTimeOverride,
+	mapBearing,
 }: AppHeaderProps) {
-   const [isDarkTime, setIsDarkTime] = useState(false)
+	const [isDarkTime, setIsDarkTime] = useState(false);
 
-   // 時間帯をチェック（6時〜18時を明るい時間帯とする）
-   useEffect(() => {
-      const checkTimeOfDay = () => {
-         const hour = new Date().getHours()
-         setIsDarkTime(hour < 6 || hour >= 18)
-      }
+	// 時間帯をチェック（6時〜18時を明るい時間帯とする）
+	useEffect(() => {
+		const checkTimeOfDay = () => {
+			const hour = new Date().getHours();
+			setIsDarkTime(hour < 6 || hour >= 18);
+		};
 
-      checkTimeOfDay()
-      const interval = setInterval(checkTimeOfDay, 60000) // 1分ごとに更新
+		checkTimeOfDay();
+		const interval = setInterval(checkTimeOfDay, 60000); // 1分ごとに更新
 
-      return () => clearInterval(interval)
-   }, [])
+		return () => clearInterval(interval);
+	}, []);
 
-   // 時間帯に応じたアイコンカラー
-   const iconColorClass = isDarkTime ? 'text-white' : 'text-gray-900'
-   const iconBgClass = isDarkTime
-      ? 'bg-white/10 hover:bg-white/20'
-      : 'bg-black/10 hover:bg-black/20'
+	// 時間帯に応じたアイコンカラー
+	const iconColorClass = isDarkTime ? "text-white" : "text-gray-900";
+	const iconBgClass = isDarkTime
+		? "bg-white/10 hover:bg-white/20"
+		: "bg-black/10 hover:bg-black/20";
 
-   return (
-      <header className="fixed top-0 left-0 right-0 z-[50] pointer-events-none">
-         <div className="flex items-start justify-between p-6">
-            {/* 地域名表示とコンパスボタン */}
-            <div className="flex flex-col items-start gap-2 pointer-events-auto animate-fade-in-down">
-               <LocationDisplay
-                  latitude={latitude}
-                  longitude={longitude}
-                  debugTimeOverride={debugTimeOverride}
-               />
+	return (
+		<header className="fixed top-0 left-0 right-0 z-[50] pointer-events-none">
+			<div className="flex items-start justify-between p-6">
+				{/* 地域名表示とコンパスボタン */}
+				<div className="flex flex-col items-start gap-2 pointer-events-auto animate-fade-in-down">
+					<LocationDisplay
+						latitude={latitude}
+						longitude={longitude}
+						debugTimeOverride={debugTimeOverride}
+					/>
 
-               {/* コンパスボタン */}
-               <CompassButton
-                  onClick={onCompassClick}
-                  mapBearing={mapBearing}
-                  isDarkMode={isDarkTime}
-               />
-            </div>
+					{/* コンパスボタン */}
+					<CompassButton
+						onClick={onCompassClick}
+						mapBearing={mapBearing}
+						isDarkMode={isDarkTime}
+					/>
+				</div>
 
-            {/* アクションボタン群 */}
-            <div className="flex items-center gap-3 pointer-events-auto animate-fade-in-down">
-               {/* 情報ボタン */}
-               <IconButton
-                  icon={<MdInfo className="w-5 h-5" />}
-                  ariaLabel="アプリ情報"
-                  onClick={() => console.log('情報')}
-                  className={`${iconBgClass} ${iconColorClass} backdrop-blur-sm`}
-               />
+				{/* アクションボタン群 */}
+				<div className="flex items-center gap-3 pointer-events-auto animate-fade-in-down">
+					{/* 情報ボタン */}
+					<IconButton
+						icon={<MdInfo className="w-5 h-5" />}
+						ariaLabel="アプリ情報"
+						onClick={() => console.log("情報")}
+						className={`${iconBgClass} ${iconColorClass} backdrop-blur-sm`}
+					/>
 
-               {/* 設定ボタン */}
-               <IconButton
-                  icon={<MdSettings className="w-5 h-5" />}
-                  ariaLabel="設定"
-                  onClick={onSettingsClick}
-                  className={`${iconBgClass} ${iconColorClass} backdrop-blur-sm`}
-               />
-            </div>
-         </div>
-      </header>
-   )
+					{/* 設定ボタン */}
+					<IconButton
+						icon={<MdSettings className="w-5 h-5" />}
+						ariaLabel="設定"
+						onClick={onSettingsClick}
+						className={`${iconBgClass} ${iconColorClass} backdrop-blur-sm`}
+					/>
+				</div>
+			</div>
+		</header>
+	);
 }

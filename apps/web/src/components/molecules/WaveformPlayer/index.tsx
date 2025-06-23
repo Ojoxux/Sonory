@@ -51,7 +51,7 @@ export function WaveformPlayer({
     * WaveSurferインスタンスを安全に破棄
     */
    const destroyWaveSurfer = useCallback((): Promise<void> => {
-      return new Promise((resolve) => {
+      return new Promise(resolve => {
          if (!wavesurferRef.current || isDestroyingRef.current) {
             resolve()
             return
@@ -61,15 +61,9 @@ export function WaveformPlayer({
             isDestroyingRef.current = true
             setIsInitialized(false)
 
-            if (
-               wavesurferRef.current &&
-               typeof wavesurferRef.current.destroy === 'function'
-            ) {
+            if (wavesurferRef.current && typeof wavesurferRef.current.destroy === 'function') {
                try {
-                  if (
-                     wavesurferRef.current.isPlaying &&
-                     wavesurferRef.current.isPlaying()
-                  ) {
+                  if (wavesurferRef.current?.isPlaying?.()) {
                      console.log('Stopping playback before destroy')
                      wavesurferRef.current.pause()
                   }
@@ -124,11 +118,7 @@ export function WaveformPlayer({
             : null,
       })
 
-      if (
-         typeof window === 'undefined' ||
-         !containerRef.current ||
-         !audioData
-      ) {
+      if (typeof window === 'undefined' || !containerRef.current || !audioData) {
          console.log('WaveSurfer initialization skipped:', {
             hasWindow: typeof window !== 'undefined',
             hasContainer: !!containerRef.current,
@@ -189,11 +179,7 @@ export function WaveformPlayer({
             setIsInitialized(true)
             const duration = wavesurfer.getDuration()
             setDuration(duration)
-            console.log(
-               'Audio duration:',
-               duration,
-               'WaveSurfer ready for playback',
-            )
+            console.log('Audio duration:', duration, 'WaveSurfer ready for playback')
             onReady?.()
             wavesurfer.play() // 再生を ready イベント内で確実に実行
          })
@@ -262,11 +248,7 @@ export function WaveformPlayer({
                wavesurfer.load(audioData.url)
                console.log('Audio URL loaded successfully')
             } else if (audioData.blob) {
-               console.log(
-                  'Loading audio from blob:',
-                  audioData.blob.size,
-                  'bytes',
-               )
+               console.log('Loading audio from blob:', audioData.blob.size, 'bytes')
                wavesurfer.on('ready', () => {
                   console.log('WaveSurfer ready (from blob)')
                   setIsLoading(false)
@@ -294,28 +276,17 @@ export function WaveformPlayer({
             setError(
                loadError instanceof Error
                   ? loadError
-                  : new Error('音声データの読み込みに失敗しました'),
+                  : new Error('音声データの読み込みに失敗しました')
             )
             setIsLoading(false)
          }
       } catch (err) {
          console.error('WaveSurfer initialization error:', err)
-         const error =
-            err instanceof Error
-               ? err
-               : new Error('WaveSurferの初期化に失敗しました')
+         const error = err instanceof Error ? err : new Error('WaveSurferの初期化に失敗しました')
          setError(error)
          setIsLoading(false)
       }
-   }, [
-      audioData,
-      height,
-      waveColor,
-      progressColor,
-      onReady,
-      onFinish,
-      destroyWaveSurfer,
-   ])
+   }, [audioData, height, waveColor, progressColor, onReady, onFinish, destroyWaveSurfer])
 
    /**
     * 再生/一時停止を切り替え
@@ -355,10 +326,10 @@ export function WaveformPlayer({
 
       if (!wavesurferRef.current || !isInitialized) {
          console.warn(
-            'WaveSurfer instance not available or not initialized - attempting to reinitialize',
+            'WaveSurfer instance not available or not initialized - attempting to reinitialize'
          )
          if (audioData) {
-            initializeWaveSurfer().catch((error) => {
+            initializeWaveSurfer().catch(error => {
                console.error('Failed to reinitialize WaveSurfer:', error)
             })
          }
@@ -383,22 +354,12 @@ export function WaveformPlayer({
          }
       } catch (error) {
          console.error('Toggle play/pause error:', error)
-         console.log(
-            'Attempting to reinitialize WaveSurfer due to play/pause error',
-         )
-         initializeWaveSurfer().catch((initError) => {
+         console.log('Attempting to reinitialize WaveSurfer due to play/pause error')
+         initializeWaveSurfer().catch(initError => {
             console.error('Reinitialize failed:', initError)
          })
       }
-   }, [
-      isPlaying,
-      isLoading,
-      currentTime,
-      duration,
-      initializeWaveSurfer,
-      audioData,
-      isInitialized,
-   ])
+   }, [isPlaying, isLoading, currentTime, duration, initializeWaveSurfer, audioData, isInitialized])
 
    /**
     * 時間をフォーマット
@@ -412,13 +373,9 @@ export function WaveformPlayer({
    // 音声データが変更されたときにWaveSurferを再初期化
    useEffect(() => {
       if (audioData) {
-         initializeWaveSurfer().catch((error) => {
+         initializeWaveSurfer().catch(error => {
             console.error('WaveSurfer initialization failed:', error)
-            setError(
-               error instanceof Error
-                  ? error
-                  : new Error('初期化に失敗しました'),
-            )
+            setError(error instanceof Error ? error : new Error('初期化に失敗しました'))
             setIsLoading(false)
          })
       }
@@ -426,7 +383,7 @@ export function WaveformPlayer({
       return () => {
          wavesurferRef.current?.unAll?.()
          wavesurferRef.current?.destroy()
-         destroyWaveSurfer().catch((error) => {
+         destroyWaveSurfer().catch(error => {
             console.warn('WaveSurfer cleanup error:', error)
          })
       }
@@ -435,7 +392,7 @@ export function WaveformPlayer({
    // コンポーネントのアンマウント時にクリーンアップ
    useEffect(() => {
       return () => {
-         destroyWaveSurfer().catch((error) => {
+         destroyWaveSurfer().catch(error => {
             console.warn('WaveSurfer unmount cleanup error:', error)
          })
       }
@@ -444,19 +401,16 @@ export function WaveformPlayer({
    if (!audioData) {
       return (
          <div
-            className={`flex items-center justify-center h-32 bg-gray-100 rounded-lg ${className}`}
-         >
-            <p className="text-gray-500">音声データがありません</p>
+            className={`flex items-center justify-center h-32 bg-gray-100 rounded-lg ${className}`}>
+            <p className='text-gray-500'>音声データがありません</p>
          </div>
       )
    }
 
    if (error) {
       return (
-         <div
-            className={`flex items-center justify-center h-32 bg-red-50 rounded-lg ${className}`}
-         >
-            <p className="text-red-600">エラー: {error.message}</p>
+         <div className={`flex items-center justify-center h-32 bg-red-50 rounded-lg ${className}`}>
+            <p className='text-red-600'>エラー: {error.message}</p>
          </div>
       )
    }
@@ -465,40 +419,36 @@ export function WaveformPlayer({
       <div className={`w-full ${className}`}>
          {/* 波形表示エリア */}
          <div
-            className="relative w-full bg-gray-50 rounded-lg overflow-hidden"
-            style={{ height: `${height}px` }}
-         >
+            className='relative w-full bg-gray-50 rounded-lg overflow-hidden'
+            style={{ height: `${height}px` }}>
             {/* WaveSurfer コンテナ */}
-            <div
-               ref={containerRef}
-               className="absolute inset-0 w-full h-full"
-            />
+            <div ref={containerRef} className='absolute inset-0 w-full h-full' />
          </div>
 
          {/* コントロールパネル */}
-         <div className="flex items-center justify-between mt-4 px-2">
+         <div className='flex items-center justify-between mt-4 px-2'>
             <button
+               type='button'
                onClick={togglePlayPause}
                disabled={isLoading || !isInitialized}
-               className="flex items-center justify-center w-12 h-12 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-400 text-white rounded-full transition-colors touch-manipulation"
-               aria-label={isPlaying ? '一時停止' : '再生'}
-            >
+               className='flex items-center justify-center w-12 h-12 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-400 text-white rounded-full transition-colors touch-manipulation'
+               aria-label={isPlaying ? '一時停止' : '再生'}>
                {isLoading ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className='w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin' />
                ) : isPlaying ? (
-                  <MdPause className="w-6 h-6" />
+                  <MdPause className='w-6 h-6' />
                ) : (
-                  <MdPlayArrow className="w-6 h-6" />
+                  <MdPlayArrow className='w-6 h-6' />
                )}
             </button>
 
-            <div className="flex items-center gap-2 text-sm font-mono text-gray-600">
+            <div className='flex items-center gap-2 text-sm font-mono text-gray-600'>
                <span>{formatTime(currentTime)}</span>
                <span>/</span>
                <span>{formatTime(duration)}</span>
             </div>
 
-            <div className="w-12" />
+            <div className='w-12' />
          </div>
       </div>
    )

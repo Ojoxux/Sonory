@@ -34,12 +34,7 @@ const WATCH_OPTIONS: PositionOptions = {
  * 2点間の距離を計算（メートル単位）
  * ハーバーサイン公式を使用
  */
-function getDistanceMeters(
-   lat1: number,
-   lon1: number,
-   lat2: number,
-   lon2: number,
-): number {
+function getDistanceMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
    const R = 6371e3 // 地球半径(m)
    const toRad = (deg: number) => (deg * Math.PI) / 180
    const φ1 = toRad(lat1)
@@ -58,24 +53,20 @@ function getDistanceMeters(
 /**
  * 位置情報の更新が必要かどうかを判定
  */
-function shouldUpdatePosition(
-   lastPosition: Position | null,
-   newPosition: Position,
-): boolean {
+function shouldUpdatePosition(lastPosition: Position | null, newPosition: Position): boolean {
    if (!lastPosition) return true
 
    const distance = getDistanceMeters(
       lastPosition.latitude,
       lastPosition.longitude,
       newPosition.latitude,
-      newPosition.longitude,
+      newPosition.longitude
    )
 
    const timeDiff = Math.abs(newPosition.timestamp - lastPosition.timestamp)
 
    return (
-      distance > UPDATE_CONDITIONS.DISTANCE_THRESHOLD ||
-      timeDiff > UPDATE_CONDITIONS.TIME_THRESHOLD
+      distance > UPDATE_CONDITIONS.DISTANCE_THRESHOLD || timeDiff > UPDATE_CONDITIONS.TIME_THRESHOLD
    )
 }
 
@@ -117,20 +108,20 @@ export function useBrowserGeolocation() {
                lastPositionRef.current = newPos
                geolocationInstance.position = newPos
                geolocationInstance.error = null
-               geolocationInstance.subscribers.forEach((subscriber) => {
+               for (const subscriber of geolocationInstance.subscribers) {
                   subscriber(newPos)
-               })
+               }
                console.log('位置情報を更新:', {
                   ...newPos,
                   distance: lastPositionRef.current
-                     ? Math.round(
+                     ? `${Math.round(
                           getDistanceMeters(
                              lastPositionRef.current.latitude,
                              lastPositionRef.current.longitude,
                              newPos.latitude,
-                             newPos.longitude,
-                          ),
-                       ) + 'm'
+                             newPos.longitude
+                          )
+                       )}m`
                      : '初回',
                })
             }
@@ -149,12 +140,10 @@ export function useBrowserGeolocation() {
             if (error.code === error.PERMISSION_DENIED) {
                setPermissionStatus('denied')
                console.warn(
-                  '位置情報へのアクセスが拒否されました。ブラウザの設定で許可してください。',
+                  '位置情報へのアクセスが拒否されました。ブラウザの設定で許可してください。'
                )
             } else if (error.code === error.POSITION_UNAVAILABLE) {
-               console.warn(
-                  '現在位置を取得できませんでした。GPS信号が弱い可能性があります。',
-               )
+               console.warn('現在位置を取得できませんでした。GPS信号が弱い可能性があります。')
             }
          }
 
@@ -162,7 +151,7 @@ export function useBrowserGeolocation() {
          geolocationInstance.watchId = navigator.geolocation.watchPosition(
             handleSuccess,
             handleError,
-            WATCH_OPTIONS,
+            WATCH_OPTIONS
          )
       }
 
@@ -184,10 +173,7 @@ export function useBrowserGeolocation() {
             geolocationInstance.subscribers.delete(subscriber)
 
             // 最後のサブスクライバーが削除された場合、監視を停止
-            if (
-               geolocationInstance.subscribers.size === 0 &&
-               geolocationInstance.watchId
-            ) {
+            if (geolocationInstance.subscribers.size === 0 && geolocationInstance.watchId) {
                navigator.geolocation.clearWatch(geolocationInstance.watchId)
                geolocationInstance = null
             }
