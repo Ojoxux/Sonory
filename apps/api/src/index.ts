@@ -1,6 +1,8 @@
 import { getCorsMiddleware } from '@/middleware/cors'
 import { errorHandler } from '@/middleware/error'
+import audioRoutes from '@/routes/audio'
 import { healthRoutes } from '@/routes/health'
+import pinsRoutes from '@/routes/pins'
 import { logger } from '@/utils/logger'
 import { Hono } from 'hono'
 import { logger as honoLogger } from 'hono/logger'
@@ -81,7 +83,7 @@ app.use('*', async (c, next) => {
 /**
  * ルートハンドラー
  */
-app.get('/', (c) => {
+app.get('/', c => {
    return c.json({
       success: true,
       data: {
@@ -95,9 +97,11 @@ app.get('/', (c) => {
 
 // APIルート
 app.route('/api/health', healthRoutes)
+app.route('/api/audio', audioRoutes)
+app.route('/api/pins', pinsRoutes)
 
 // 404ハンドラー
-app.notFound((c) => {
+app.notFound(c => {
    return c.json(
       {
          success: false,
@@ -108,7 +112,7 @@ app.notFound((c) => {
             requestId: c.get('requestId'),
          },
       },
-      404,
+      404
    )
 })
 
