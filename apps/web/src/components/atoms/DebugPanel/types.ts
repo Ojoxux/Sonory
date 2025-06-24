@@ -21,3 +21,16 @@ export type DebugPanelProps = {
    /** ライティング更新のコールバック */
    onUpdateLighting: () => void
 }
+
+export type DebugLog = {
+   id: string
+   level: 'info' | 'warn' | 'error'
+   message: string
+   timestamp: string
+}
+
+export type PerformanceData = {
+   memoryUsage: number
+   lastAIProcessingTime: number
+   frameRate: number
+}

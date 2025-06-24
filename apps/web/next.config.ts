@@ -25,8 +25,7 @@ const nextConfig: NextConfig = {
    reactStrictMode: true,
    // 👇 Mapbox 環境変数（任意）
    env: {
-      NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN:
-         process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN,
+      NEXT_PUBLIC_MAPBOX_TOKEN: process.env.NEXT_PUBLIC_MAPBOX_TOKEN,
    },
 }
 
