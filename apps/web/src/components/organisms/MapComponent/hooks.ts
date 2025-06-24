@@ -309,6 +309,7 @@ export function useMapComponent({
       if (!mapContainerRef.current || mapInitializedRef.current) return
 
       const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
+
       if (!mapboxToken) {
          console.error('Mapbox access token is not set')
          return
