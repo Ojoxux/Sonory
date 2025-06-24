@@ -1,0 +1,24 @@
+{
+	"name": "@sonory/python-types",
+	"version": "0.1.0",
+	"description": "Generate Python type definitions from TypeScript shared types",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"scripts": {
+		"build": "tsc",
+		"dev": "tsc --watch",
+		"generate": "node dist/generate-python-types.js",
+		"clean": "rm -rf dist/ && rm -rf ../python-audio-analyzer/src/types/generated/",
+		"lint": "biome check .",
+		"format": "biome format . --write",
+		"type-check": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@sonory/shared-types": "file:../shared-types",
+		"typescript": "^5"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "1.9.4",
+		"@types/node": "^20"
+	}
+}

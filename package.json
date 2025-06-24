@@ -22,14 +22,20 @@
 		"deploy:api": "turbo deploy --filter=@sonory/api",
 		"deploy:web": "turbo deploy --filter=@sonory/web",
 
+		"generate-types": "turbo generate-types --filter=@sonory/python-types",
+		"python:install": "turbo python:install --filter=@sonory/python-audio-analyzer",
+		"python:dev": "turbo python:dev --filter=@sonory/python-audio-analyzer",
+		"python:lint": "turbo python:lint --filter=@sonory/python-audio-analyzer",
+		"python:format": "turbo python:format --filter=@sonory/python-audio-analyzer",
+		"python:test": "turbo python:test --filter=@sonory/python-audio-analyzer",
+		"python:build": "turbo python:build --filter=@sonory/python-audio-analyzer",
+
 		"prepare": "husky"
 	},
 	"dependencies": {
 		"@ducanh2912/next-pwa": "^10.2.9",
 		"@mapbox/mapbox-gl-geocoder": "^5.0.3",
 		"@supabase/supabase-js": "^2.49.8",
-		"@tensorflow-models/speech-commands": "^0.5.4",
-		"@tensorflow/tfjs": "^3.21.0",
 		"fp-ts": "^2.16.10",
 		"framer-motion": "^12.15.0",
 		"idb": "^8.0.3",
@@ -55,7 +61,7 @@
 	},
 	"lint-staged": {
 		"*.{js,jsx,ts,tsx}": ["biome check --apply", "biome format --write"],
-		"**/*.ts?(x)": ["bash -c 'tsc --noEmit'"]
+		"**/*.ts?(x)": ["tsc --noEmit"]
 	},
 	"packageManager": "npm@10.0.0"
 }
