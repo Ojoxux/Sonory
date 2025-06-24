@@ -2,6 +2,14 @@ import { create } from 'zustand'
 import type { AudioData, InferenceResult, InferenceState } from './types'
 
 /**
+ * Python YAMNet API response classification type
+ */
+interface APIClassification {
+   label: string
+   confidence: number
+}
+
+/**
  * 道路音分類の結果候補（フォールバック用）
  *
  * @description
@@ -87,7 +95,7 @@ async function callBackendAnalysis(audioData: AudioData): Promise<InferenceResul
       // Python YAMNet分析結果を統一形式に変換
       const classifications: InferenceResult[] = (analysisResult.data.allClassifications || [])
          .slice(0, 5) // 上位5件に制限
-         .map((classification: any) => ({
+         .map((classification: APIClassification) => ({
             label: classification.label || '不明',
             confidence: classification.confidence || 0,
          }))
