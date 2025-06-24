@@ -1,0 +1,338 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: Sonory 用のバックエンドアプリケーション構築要件
+alwaysApply: true
+---
+
+## 🚀 バックエンド要件定義 (Cloudflare Workers + Hono + モノレポ)
+
+### 📡 API エンドポイント設計
+
+**音声関連:**
+```typescript
+POST   /api/audio/upload     # 音声ファイルアップロード
+GET    /api/audio/:id        # 音声ファイル取得
+DELETE /api/audio/:id        # 音声削除
+POST   /api/audio/:id/analyze # AI分析実行
+```
+
+**地理空間関連:**
+```typescript
+GET    /api/pins/nearby      # 範囲内ピン取得
+POST   /api/pins             # ピン作成
+POST   /api/pins/batch       # 複数ピン一括作成
+GET    /api/pins/:id         # ピン詳細取得
+PUT    /api/pins/:id         # ピン更新
+DELETE /api/pins/:id         # ピン削除
+GET    /api/pins/search      # 条件検索（カテゴリ、時間範囲等）
+GET    /api/user/pins        # ユーザー専用ピン取得
+POST   /api/pins/:id/report  # 不適切コンテンツ報告
+```
+
+**システム関連:**
+```typescript
+GET    /api/health           # サービス状態
+GET    /api/metrics          # パフォーマンス指標（管理者用）
+```
+
+### 🎵 音声処理要件
+
+**ファイル処理:**
+- **対応フォーマット**: webm, mp3, wav
+- **最大ファイルサイズ**: 10MB
+- **録音時間**: 10秒固定
+- **圧縮処理**: 音質保持での軽量化
+- **メタデータ抽出**: 長さ、サンプルレート等
+
+**バリデーション:**
+```typescript
+interface AudioUploadRequest {
+  file: File;                    // 音声ファイル
+  location: {
+    lat: number;                 // 緯度 (-90 ~ 90)
+    lng: number;                 // 経度 (-180 ~ 180)
+    accuracy?: number;           // GPS精度（メートル）
+  };
+  metadata?: {
+    duration?: number;           // 長さ（秒）
+    title?: string;              // タイトル（任意）
+  };
+}
+
+interface SoundPinCreateRequest {
+  location: {
+    lat: number;                 // -90 ~ 90
+    lng: number;                 // -180 ~ 180
+    accuracy?: number;           // GPS精度（メートル）
+  };
+  audio: {
+    file: File;
+    duration: number;            // 必須（10秒固定）
+    format: 'webm' | 'mp3' | 'wav'; // 限定
+  };
+  context?: {
+    weather?: WeatherData;       // Open-Meteo API結果
+    timeTag: '朝' | '昼' | '夕' | '夜'; // 6時間区切り
+    deviceInfo?: string;         // デバッグ用
+  };
+}
+
+interface WeatherData {
+  temperature: number;
+  condition: string;            // 'sunny' | 'cloudy' | 'rainy' etc
+  windSpeed?: number;
+  humidity?: number;
+}
+```
+
+### 🤖 AI分析要件
+
+**OpenAI統合:**
+- **Whisper API**: 音声→テキスト変換
+- **GPT API**: テキスト分析・分類
+- **非同期処理**: Queue使用
+
+**分析結果:**
+```typescript
+interface AIAnalysisResult {
+  transcription: string;         // 音声テキスト
+  categories: {
+    emotion: string;             // 感情分析
+    topic: string;               // トピック分類
+    language: string;            // 言語判定
+    confidence: number;          // 信頼度
+  };
+  summary?: string;              // 要約（任意）
+}
+```
+
+### 🗺️ 地理空間処理要件
+
+**空間クエリ:**
+```typescript
+interface NearbyPinsQuery {
+  bounds: {
+    north: number;
+    south: number; 
+    east: number;
+    west: number;
+  };
+  limit?: number;                // デフォルト50
+  categories?: string[];         // フィルタ
+}
+
+interface SearchPinsQuery {
+  location?: {
+    lat: number;
+    lng: number;
+    radius: number;              // km
+  };
+  timeRange?: {
+    start: string;               // ISO 8601
+    end: string;                 // ISO 8601
+  };
+  categories?: string[];
+  weather?: string[];
+  limit?: number;
+  offset?: number;
+}
+```
+
+**PostGIS活用:**
+- 空間インデックス使用
+- 距離計算最適化
+- ビューポート内検索
+
+### ⚡ パフォーマンス要件
+
+**レスポンス時間:**
+- ピン取得: **100ms以内**
+- 音声アップロード: **ストリーミング対応**
+- AI分析: **3-10秒** (非同期)
+
+**並列処理:**
+```typescript
+// 音声アップロード → AI分析の流れ
+async function processAudio(file: File, location: GeoPoint) {
+  // 1. 即座にSupabase Storageへアップロード
+  const audioUrl = await uploadToStorage(file);
+  
+  // 2. ピンをDBに即座に作成（分析前）
+  const pin = await createPin({ audioUrl, location });
+  
+  // 3. AI分析を非同期で実行
+  await queueAIAnalysis(pin.id, audioUrl);
+  
+  return pin;
+}
+```
+
+### 🔄 リアルタイム要件
+
+**Supabase Realtime連携:**
+- 新ピン作成時の通知
+- AI分析完了時の更新
+- 特定エリア購読者への配信
+
+### 🛡️ セキュリティ要件
+
+**ファイルセキュリティ:**
+- MIME type チェック
+- ファイルサイズ制限
+- 悪意あるファイル検証
+
+**レート制限:**
+```typescript
+// エンドポイント別制限
+{
+  '/api/audio/upload': '5 requests/minute',
+  '/api/pins/nearby': '100 requests/minute',
+  '/api/audio/analyze': '10 requests/hour',
+  '/api/pins': '20 requests/minute',
+  '/api/pins/search': '50 requests/minute'
+}
+```
+
+### 🚨 エラーハンドリング標準化
+
+**エラーレスポンス形式:**
+```typescript
+interface APIError {
+  code: string;                 // 'INVALID_AUDIO_FORMAT' 等
+  message: string;              // ユーザー向けメッセージ
+  details?: any;                // デバッグ情報
+  timestamp: string;
+  requestId: string;            // トレーシング用
+}
+
+// 標準エラーコード
+const ERROR_CODES = {
+  // 音声関連
+  AUDIO_TOO_LARGE: 'AUDIO_TOO_LARGE',
+  INVALID_AUDIO_FORMAT: 'INVALID_AUDIO_FORMAT',
+  AUDIO_DURATION_INVALID: 'AUDIO_DURATION_INVALID',
+  
+  // 位置関連
+  INVALID_LOCATION: 'INVALID_LOCATION',
+  LOCATION_OUT_OF_BOUNDS: 'LOCATION_OUT_OF_BOUNDS',
+  
+  // AI分析関連
+  AI_ANALYSIS_FAILED: 'AI_ANALYSIS_FAILED',
+  AI_SERVICE_UNAVAILABLE: 'AI_SERVICE_UNAVAILABLE',
+  
+  // システム関連
+  RATE_LIMIT_EXCEEDED: 'RATE_LIMIT_EXCEEDED',
+  INTERNAL_SERVER_ERROR: 'INTERNAL_SERVER_ERROR',
+  DATABASE_ERROR: 'DATABASE_ERROR',
+  STORAGE_ERROR: 'STORAGE_ERROR',
+} as const;
+```
+
+### 📊 ログ・監視要件
+
+**ログ出力:**
+- API リクエスト/レスポンス
+- エラー詳細 (音声処理失敗等)
+- パフォーマンス指標
+- セキュリティイベント
+
+**メトリクス:**
+- アップロード成功率
+- AI分析処理時間
+- 地理空間クエリ実行時間
+- エラー率・種別統計
+
+### 🏗️ モノレポ構成
+
+**ディレクトリ構造:**
+```
+sonory/
+├── apps/
+│   ├── web/                  # Next.js フロントエンド（既存）
+│   └── api/                  # Cloudflare Workers + Hono バックエンド（新規）
+│       ├── src/
+│       │   ├── routes/
+│       │   │   ├── audio.ts         # 音声関連API
+│       │   │   ├── pins.ts          # ピン関連API
+│       │   │   └── health.ts        # ヘルスチェック
+│       │   ├── services/
+│       │   │   ├── audio.service.ts # 音声処理ロジック
+│       │   │   ├── ai.service.ts    # AI分析ロジック
+│       │   │   ├── geo.service.ts   # 地理空間処理
+│       │   │   └── weather.service.ts # 天気情報処理
+│       │   ├── middleware/
+│       │   │   ├── auth.ts          # 認証
+│       │   │   ├── rateLimit.ts     # レート制限
+│       │   │   └── validation.ts    # バリデーション
+│       │   ├── utils/
+│       │   │   ├── supabase.ts      # DB接続
+│       │   │   ├── storage.ts       # ファイル処理
+│       │   │   └── logger.ts        # ログ処理
+│       │   ├── types/
+│       │   │   └── api.ts           # API型定義
+│       │   └── index.ts
+│       ├── package.json
+│       ├── tsconfig.json
+│       ├── wrangler.toml
+│       └── vitest.config.ts
+├── packages/
+│   ├── shared-types/         # フロント・バック共通型定義
+│   │   ├── src/
+│   │   │   ├── api.ts
+│   │   │   ├── soundPin.ts
+│   │   │   └── index.ts
+│   │   └── package.json
+│   ├── config/               # 共通設定
+│   │   ├── biome.json
+│   │   ├── tsconfig.base.json
+│   │   └── tailwind.config.ts
+│   └── utils/                # 共通ユーティリティ
+│       ├── src/
+│       │   ├── validation.ts
+│       │   ├── geo.ts
+│       │   └── audio.ts
+│       └── package.json
+├── package.json              # ワークスペース設定
+├── turbo.json               # Turborepo設定
+└── docker-compose.yml       # 開発環境
+```
+
+### 🔧 開発環境要件
+
+**必要ツール:**
+- Node.js 20+
+- Wrangler CLI (Cloudflare Workers)
+- Turborepo (モノレポ管理)
+- Docker (開発環境用)
+
+**環境変数:**
+```bash
+# Supabase
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_KEY=
+
+# OpenAI
+OPENAI_API_KEY=
+
+# Cloudflare Workers
+CLOUDFLARE_ACCOUNT_ID=
+CLOUDFLARE_API_TOKEN=
+
+# その他
+NODE_ENV=development
+CORS_ORIGIN=http://localhost:3000
+```
+
+### 🚀 実装優先順位
+
+1. **Phase 1**: モノレポ構造セットアップ + 共通型定義
+2. **Phase 2**: 基本API（pins CRUD + エラーハンドリング）
+3. **Phase 3**: 音声アップロード・ストレージ + バリデーション
+4. **Phase 4**: AI分析統合 + 非同期処理
+5. **Phase 5**: リアルタイム機能 + 通知
+6. **Phase 6**: パフォーマンス最適化 + 監視
