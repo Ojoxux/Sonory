@@ -87,7 +87,6 @@
 		"NODE_ENV",
 		"NEXT_PUBLIC_*",
 		"SUPABASE_*",
-		"OPENAI_*",
 		"CLOUDFLARE_*",
 		"MAPBOX_*",
 		"PYTHON_*"
