@@ -48,19 +48,67 @@ function generateClassificationResults(): InferenceResult[] {
 }
 
 /**
- * バックエンドAPI呼び出し（未実装）
+ * バックエンドAPI呼び出し（実装完了）
  *
  * @description
- * 将来的にPython YAMNetサービスへのAPI呼び出しを実装予定
+ * Python YAMNetサービスへのAPI呼び出しを実行
  */
 async function callBackendAnalysis(audioData: AudioData): Promise<InferenceResult[]> {
-   // TODO: バックエンドのPython YAMNetサービスを呼び出し
-   console.log('🔜 バックエンドAPI呼び出し（未実装）:', audioData.id)
+   console.log('🚀 バックエンドAPI呼び出し開始:', audioData.id)
 
-   // 現在は擬似的な遅延とフォールバック結果を返す
-   await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000))
+   try {
+      // API Gateway経由でPython YAMNet分析を実行
+      const response = await fetch(`/api/audio/${audioData.id}/analyze`, {
+         method: 'POST',
+         headers: {
+            'Content-Type': 'application/json',
+         },
+         body: JSON.stringify({
+            audioUrl: audioData.url,
+            topK: 5,
+         }),
+      })
 
-   throw new Error('バックエンドAPI未実装 - フォールバック結果を使用')
+      if (!response.ok) {
+         const errorData = await response.json().catch(() => ({}))
+         throw new Error(
+            `API分析失敗: ${response.status} ${response.statusText} - ${
+               errorData.error?.message || '不明なエラー'
+            }`
+         )
+      }
+
+      const analysisResult = await response.json()
+
+      if (!analysisResult.success || !analysisResult.data) {
+         throw new Error('分析結果の形式が正しくありません')
+      }
+
+      // Python YAMNet分析結果を統一形式に変換
+      const classifications: InferenceResult[] = (analysisResult.data.allClassifications || [])
+         .slice(0, 5) // 上位5件に制限
+         .map((classification: any) => ({
+            label: classification.label || '不明',
+            confidence: classification.confidence || 0,
+         }))
+
+      // 結果が空の場合はフォールバックを使用
+      if (classifications.length === 0) {
+         throw new Error('分析結果が空でした - フォールバックを使用')
+      }
+
+      console.log('✅ バックエンドAPI分析完了:', {
+         classificationsCount: classifications.length,
+         primarySound: classifications[0],
+         environment: analysisResult.data.environment,
+         processingTime: analysisResult.data.performanceMetrics?.total_time,
+      })
+
+      return classifications
+   } catch (error) {
+      console.warn('⚠️ バックエンドAPI呼び出し失敗:', error)
+      throw error // エラーを上位に伝播してフォールバック処理を実行
+   }
 }
 
 /**
@@ -68,7 +116,8 @@ async function callBackendAnalysis(audioData: AudioData): Promise<InferenceResul
  *
  * @description
  * 音声データからAI推論を行い、結果を管理します。
- * 現在はフォールバック実装。将来的にバックエンドのPython YAMNetサービスと統合予定。
+ * Python YAMNetサービスをバックエンド経由で呼び出し、
+ * 失敗時はフォールバック機能を使用します。
  */
 export const useInferenceStore = create<InferenceState>(set => ({
    // 初期状態
@@ -81,7 +130,8 @@ export const useInferenceStore = create<InferenceState>(set => ({
     *
     * @param audioData - 推論対象の音声データ
     * @description
-    * 現在はフォールバック実装。将来的にバックエンドのPython YAMNetサービスと統合予定。
+    * Python YAMNetサービスをバックエンド経由で呼び出し、
+    * 失敗時はフォールバック機能でリカバリします。
     */
    startInference: async (audioData: AudioData): Promise<void> => {
       try {
@@ -89,28 +139,35 @@ export const useInferenceStore = create<InferenceState>(set => ({
          set({ isInferring: true, error: null })
 
          let results: InferenceResult[]
+         let isUsingFallback = false
 
          try {
-            // バックエンドAPI呼び出しを試行（現在は未実装）
+            // バックエンドAPI呼び出しを実行
             results = await callBackendAnalysis(audioData)
             console.log('✅ バックエンドAPI推論完了:', results)
          } catch (backendError) {
             console.log('🔄 バックエンドAPI失敗、フォールバック実行:', backendError)
+            isUsingFallback = true
 
             // フォールバック分析を実行
             results = generateClassificationResults()
             console.log('✅ フォールバック推論完了:', results)
-
-            // フォールバック使用の旨をユーザーに通知
-            set({
-               results,
-               isInferring: false,
-               error: new Error('バックエンドAPI未実装。フォールバック結果を表示しています。'),
-            })
-            return
          }
 
-         set({ results, isInferring: false })
+         // 結果を設定
+         set({
+            results,
+            isInferring: false,
+            error: isUsingFallback
+               ? new Error('バックエンドAPI接続失敗。フォールバック結果を表示しています。')
+               : null,
+         })
+
+         if (isUsingFallback) {
+            console.warn(
+               '⚠️ フォールバック結果を使用中 - ネットワーク接続やサービス状態を確認してください'
+            )
+         }
       } catch (err) {
          console.error('❌ 推論エラー:', err)
 
