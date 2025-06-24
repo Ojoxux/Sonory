@@ -22,10 +22,7 @@ export interface Env {
    SUPABASE_ANON_KEY: string
    SUPABASE_SERVICE_KEY: string
 
-   // OpenAI
-   OPENAI_API_KEY: string
-
-   // Python Audio Analyzer
+   // Python Audio Analyzer（YAMNet使用）
    PYTHON_AUDIO_ANALYZER_URL: string
    PYTHON_AUDIO_ANALYZER_TIMEOUT: string
 
