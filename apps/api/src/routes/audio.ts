@@ -1,5 +1,6 @@
 import { ERROR_CODES } from '@sonory/shared-types'
 import { Hono } from 'hono'
+import type { Context } from 'hono'
 import type { Env } from '../index'
 import { APIException } from '../middleware/error'
 import { rateLimits } from '../middleware/rateLimit'
@@ -16,7 +17,7 @@ const app = new Hono<{ Bindings: Env }>()
  * @returns {AudioUploadResult} アップロード結果
  */
 app.post('/upload', rateLimits.audioUpload, async c => {
-   const audioService = new AudioService(c)
+   const audioService = new AudioService(c as unknown as Context<{ Bindings: Env }>)
 
    try {
       // FormDataからファイルを取得
@@ -70,7 +71,7 @@ app.post('/upload', rateLimits.audioUpload, async c => {
  * @returns {boolean} 削除成功可否
  */
 app.delete('/:audioId', rateLimits.default, async c => {
-   const audioService = new AudioService(c)
+   const audioService = new AudioService(c as unknown as Context<{ Bindings: Env }>)
    const audioId = c.req.param('audioId')
 
    try {
@@ -148,13 +149,14 @@ app.get('/:audioId/metadata', rateLimits.default, async c => {
 
 /**
  * POST /api/audio/:audioId/analyze
- * @description 音声ファイルをAI分析（YAMNet結果受信）
+ * @description 音声ファイルをPython YAMNetで分析
  * @tags Audio
  * @param {string} audioId - 分析する音声ファイルのID
- * @param {object} classification - フロントエンドからのYAMNet分析結果
+ * @param {object} [options] - 分析オプション
  * @returns {AIAnalysisResult} AI分析結果
  */
 app.post('/:audioId/analyze', rateLimits.default, async c => {
+   const audioService = new AudioService(c as unknown as Context<{ Bindings: Env }>)
    const audioId = c.req.param('audioId')
 
    try {
@@ -162,24 +164,40 @@ app.post('/:audioId/analyze', rateLimits.default, async c => {
          throw new APIException(ERROR_CODES.INVALID_AUDIO_FORMAT, 'Audio ID is required', 400)
       }
 
-      // フロントエンドからのYAMNet分析結果を取得
+      // リクエストボディから分析オプションを取得
       const body = await c.req.json().catch(() => ({}))
-      const clientClassification = body.classification
+      const topK = body.topK || 5
+      const audioUrl = body.audioUrl
 
-      // YAMNet分析結果を保存用に整形
+      if (!audioUrl) {
+         throw new APIException(
+            ERROR_CODES.INVALID_AUDIO_FORMAT,
+            'Audio URL is required for analysis',
+            400
+         )
+      }
+
+      // Python YAMNetサービスで音声分析を実行
+      const pythonAnalysisResult = await audioService.analyzeAudioWithPython(audioUrl, topK)
+
+      // 分析結果を統一形式に変換
       const analysisResult = {
          transcription: 'YAMNet音響分類完了',
          categories: {
             emotion: 'N/A',
-            topic: clientClassification?.primarySound?.label || '環境音',
+            topic: pythonAnalysisResult.classifications[0]?.label || '環境音',
             language: 'N/A',
-            confidence: clientClassification?.primarySound?.confidence || 0.0,
+            confidence: pythonAnalysisResult.classifications[0]?.confidence || 0.0,
          },
          summary: `検出された音: ${
-            clientClassification?.primarySound?.label || '不明'
-         } (信頼度: ${Math.round((clientClassification?.primarySound?.confidence || 0) * 100)}%)`,
-         environment: clientClassification?.environment || 'unknown',
-         allClassifications: clientClassification?.allClassifications || [],
+            pythonAnalysisResult.classifications[0]?.label || '不明'
+         } (信頼度: ${Math.round(
+            (pythonAnalysisResult.classifications[0]?.confidence || 0) * 100
+         )}%)`,
+         environment: pythonAnalysisResult.environment?.primary_type || 'unknown',
+         allClassifications: pythonAnalysisResult.classifications || [],
+         environmentDetails: pythonAnalysisResult.environment || {},
+         performanceMetrics: pythonAnalysisResult.performance_metrics || {},
       }
 
       // TODO: データベースに分析結果を保存

@@ -25,6 +25,10 @@ export interface Env {
    // OpenAI
    OPENAI_API_KEY: string
 
+   // Python Audio Analyzer
+   PYTHON_AUDIO_ANALYZER_URL: string
+   PYTHON_AUDIO_ANALYZER_TIMEOUT: string
+
    // KVネームスペース（将来使用）
    // CACHE: KVNamespace
 

@@ -4,121 +4,131 @@ import type { Context } from 'hono'
 import { APIException } from '../middleware/error'
 import { BaseService } from './base.service'
 import { getSupabaseAdmin } from './supabase'
+import type { AudioMetadata, AudioUploadResult } from '@sonory/shared-types'
+import { logger } from '../utils/logger'
 
 /**
- * 音声アップロード結果の型定義
+ * Python YAMNet分析結果の型定義
  */
-export interface AudioUploadResult {
-   /** アップロードされたファイルのURL */
-   url: string
-   /** ファイルサイズ（バイト） */
-   size: number
-   /** ファイル形式 */
-   format: 'webm' | 'mp3' | 'wav'
-   /** 音声の長さ（秒） */
-   duration: number
-   /** アップロード日時 */
-   uploadedAt: string
+interface PythonAnalysisResult {
+   classifications: Array<{
+      label: string
+      confidence: number
+   }>
+   environment: {
+      primary_type: string
+      type_scores: Record<string, number>
+      description: string
+   }
+   performance_metrics: {
+      yamnet_inference_time: number
+      total_time: number
+      processing_ratio: number
+   }
 }
 
 /**
- * 音声ファイルのメタデータ
+ * Python YAMNet分析リクエスト
  */
-export interface AudioMetadata {
-   filename: string
-   size: number
-   type: string
-   duration?: number
+interface PythonAnalysisRequest {
+   audio_url: string
+   top_k?: number
+   max_retries?: number
 }
 
 /**
- * Audio service for handling audio file operations
+ * 音声ファイル処理サービス
  *
  * @description
- * Handles audio file upload, validation, and metadata management using Supabase Storage.
- * Provides secure file upload with validation and automatic file organization.
+ * Supabase Storageへの音声アップロード、削除、
+ * Python YAMNetサービスとの統合分析機能を提供。
  */
 export class AudioService extends BaseService {
-   private supabase: SupabaseClient
    private readonly bucketName = 'sonory-audio'
    private readonly maxFileSize = 10 * 1024 * 1024 // 10MB
    private readonly maxDuration = 600 // 10 minutes
    private readonly allowedFormats = ['webm', 'mp3', 'wav'] as const
 
-   constructor(ctx: Context) {
-      super(ctx)
-      this.supabase = getSupabaseAdmin(this.env)
-   }
-
-   /**
-    * Gets the service name for logging
-    * @returns Service name
-    */
    protected getServiceName(): string {
       return 'AudioService'
    }
 
+   private get supabaseClient() {
+      return getSupabaseAdmin(this.env)
+   }
+
    /**
-    * Uploads an audio file to Supabase Storage
+    * 音声ファイルをSupabase Storageにアップロード
     *
-    * @param file - Audio file to upload
-    * @param userId - User ID for file organization (optional)
-    * @returns Upload result with file URL and metadata
-    * @throws APIException on validation or upload error
+    * @param file - アップロードする音声ファイル
+    * @param userId - ユーザーID（オプション）
+    * @returns アップロード結果
     */
    async uploadAudio(file: File, userId?: string): Promise<AudioUploadResult> {
-      this.log('info', 'Starting audio upload', {
-         filename: file.name,
-         size: file.size,
-         type: file.type,
-         userId,
-      })
-
       try {
-         // Validate file
-         await this.validateAudioFile(file)
+         // ファイルバリデーション
+         this.validateAudioFile(file)
 
-         // Generate file path
-         const filePath = this.generateFilePath(file, userId)
+         // ファイルパス生成
+         const fileName = this.generateFileName(file, userId)
+         const filePath = this.generateFilePath(fileName, userId)
 
-         // Upload to Supabase Storage
-         const { data, error } = await this.supabase.storage
+         this.log('info', 'Starting audio upload', {
+            fileName,
+            filePath,
+            fileSize: file.size,
+            fileType: file.type,
+         })
+
+         // Supabase Storageにアップロード
+         const { data, error } = await this.supabaseClient.storage
             .from(this.bucketName)
             .upload(filePath, file, {
                contentType: file.type,
-               upsert: false, // Prevent overwriting
+               upsert: false,
             })
 
          if (error) {
-            throw error
+            this.log('error', 'Supabase upload error', {
+               error: error.message,
+               filePath,
+            })
+            throw new APIException(
+               ERROR_CODES.STORAGE_ERROR,
+               `Upload failed: ${error.message}`,
+               500
+            )
          }
 
-         // Get public URL
-         const { data: urlData } = this.supabase.storage
+         // 公開URLを取得
+         const { data: urlData } = this.supabaseClient.storage
             .from(this.bucketName)
-            .getPublicUrl(data.path)
+            .getPublicUrl(filePath)
 
-         // Extract metadata
-         const metadata = await this.extractMetadata(file)
-
-         const result: AudioUploadResult = {
-            url: urlData.publicUrl,
+         // メタデータを構築
+         const metadata: AudioMetadata = {
+            id: data.id || filePath,
+            filename: fileName,
             size: file.size,
-            format: this.detectAudioFormat(file),
-            duration: metadata.duration || 0,
+            format: this.extractFormat(file),
+            duration: 0, // 実際の長さは後で更新
             uploadedAt: new Date().toISOString(),
          }
 
+         const result: AudioUploadResult = {
+            audioId: data.id || filePath,
+            audioUrl: urlData.publicUrl,
+            metadata,
+         }
+
          this.log('info', 'Audio upload completed', {
-            url: result.url,
-            size: result.size,
-            duration: result.duration,
+            audioId: result.audioId,
+            audioUrl: result.audioUrl,
          })
 
          return result
       } catch (error) {
          this.log('error', 'Audio upload failed', {
-            filename: file.name,
             error: error instanceof Error ? error.message : String(error),
          })
 
@@ -143,22 +153,41 @@ export class AudioService extends BaseService {
     * @throws APIException on deletion error
     */
    async deleteAudio(filePath: string): Promise<boolean> {
-      this.log('info', 'Deleting audio file', { filePath })
-
       try {
-         const { error } = await this.supabase.storage.from(this.bucketName).remove([filePath])
+         this.log('info', 'Starting audio deletion', {
+            filePath,
+         })
+
+         const { error } = await this.supabaseClient.storage
+            .from(this.bucketName)
+            .remove([filePath])
 
          if (error) {
-            throw error
+            this.log('error', 'Supabase deletion error', {
+               error: error.message,
+               filePath,
+            })
+            throw new APIException(
+               ERROR_CODES.STORAGE_ERROR,
+               `Deletion failed: ${error.message}`,
+               500
+            )
          }
 
-         this.log('info', 'Audio file deleted', { filePath })
+         this.log('info', 'Audio deletion completed', {
+            filePath,
+         })
+
          return true
       } catch (error) {
          this.log('error', 'Audio deletion failed', {
             filePath,
             error: error instanceof Error ? error.message : String(error),
          })
+
+         if (error instanceof APIException) {
+            throw error
+         }
 
          throw new APIException(
             ERROR_CODES.STORAGE_ERROR,
@@ -175,7 +204,7 @@ export class AudioService extends BaseService {
     * @param file - File to validate
     * @throws APIException if validation fails
     */
-   private async validateAudioFile(file: File): Promise<void> {
+   private validateAudioFile(file: File): void {
       // Check file size
       if (file.size > this.maxFileSize) {
          throw new APIException(
@@ -231,20 +260,32 @@ export class AudioService extends BaseService {
    /**
     * Generates organized file path
     *
-    * @param file - File being uploaded
+    * @param fileName - File name
     * @param userId - User ID for organization
     * @returns Generated file path
     */
-   private generateFilePath(file: File, userId?: string): string {
+   private generateFilePath(fileName: string, userId?: string): string {
+      const date = new Date()
+      const dateFolder = date.toISOString().split('T')[0] // YYYY-MM-DD
+      const userFolder = userId || 'anonymous'
+
+      return `${userFolder}/${dateFolder}/${fileName}`
+   }
+
+   /**
+    * Generates file name
+    *
+    * @param file - File being uploaded
+    * @param userId - User ID for organization
+    * @returns Generated file name
+    */
+   private generateFileName(file: File, userId?: string): string {
       const timestamp = Date.now()
-      const randomId = crypto.randomUUID().substring(0, 8)
-      const format = this.detectAudioFormat(file)
+      const randomId = Math.random().toString(36).substring(2, 8)
+      const extension = this.detectAudioFormat(file)
+      const prefix = userId ? `user-${userId}` : 'anonymous'
 
-      // Organize files by user and date
-      const datePath = new Date().toISOString().substring(0, 10) // YYYY-MM-DD
-      const userPath = userId || 'anonymous'
-
-      return `${userPath}/${datePath}/${timestamp}-${randomId}.${format}`
+      return `${prefix}-${timestamp}-${randomId}.${extension}`
    }
 
    /**
@@ -259,10 +300,125 @@ export class AudioService extends BaseService {
       // Consider implementing advanced metadata extraction as needed
 
       return {
+         id: file.name,
          filename: file.name,
          size: file.size,
-         type: file.type,
-         // duration property omitted - implement audio duration detection when needed
+         format: this.extractFormat(file),
+         duration: 0, // implement audio duration detection when needed
+         uploadedAt: new Date().toISOString(),
+      }
+   }
+
+   /**
+    * Extracts audio format from file
+    *
+    * @param file - File to analyze
+    * @returns Extracted audio format
+    */
+   private extractFormat(file: File): 'webm' | 'mp3' | 'wav' | 'mp4' | 'm4a' | 'flac' | 'ogg' {
+      const extension = this.detectAudioFormat(file)
+
+      const formatMap: Record<string, 'webm' | 'mp3' | 'wav' | 'mp4' | 'm4a' | 'flac' | 'ogg'> = {
+         webm: 'webm',
+         wav: 'wav',
+         mp3: 'mp3',
+         mp4: 'mp4',
+         m4a: 'm4a',
+         flac: 'flac',
+         ogg: 'ogg',
+      }
+
+      return formatMap[extension] || 'webm'
+   }
+
+   /**
+    * Python YAMNetサービスで音声分析を実行
+    *
+    * @param audioUrl - 分析対象の音声URL
+    * @param topK - 返却する上位結果数（デフォルト: 5）
+    * @returns YAMNet分析結果
+    */
+   async analyzeAudioWithPython(audioUrl: string, topK = 5): Promise<PythonAnalysisResult> {
+      const pythonServiceUrl = this.env.PYTHON_AUDIO_ANALYZER_URL
+      const timeout = Number.parseInt(this.env.PYTHON_AUDIO_ANALYZER_TIMEOUT, 10) || 30000
+
+      try {
+         this.log('info', 'Starting Python YAMNet analysis', {
+            audioUrl,
+            pythonServiceUrl,
+            topK,
+         })
+
+         // Python YAMNetサービスにリクエスト
+         const analysisRequest: PythonAnalysisRequest = {
+            audio_url: audioUrl,
+            top_k: topK,
+            max_retries: 3,
+         }
+
+         const response = await fetch(`${pythonServiceUrl}/api/v1/analyze/audio`, {
+            method: 'POST',
+            headers: {
+               'Content-Type': 'application/json',
+               'User-Agent': 'Sonory-API-Gateway/1.0',
+            },
+            body: JSON.stringify(analysisRequest),
+            signal: AbortSignal.timeout(timeout),
+         })
+
+         if (!response.ok) {
+            const errorText = await response.text().catch(() => 'Unknown error')
+            this.log('error', 'Python analysis HTTP error', {
+               status: response.status,
+               statusText: response.statusText,
+               errorText,
+            })
+
+            throw new APIException(
+               ERROR_CODES.AI_ANALYSIS_FAILED,
+               `Python analysis failed: ${response.status} ${response.statusText}`,
+               response.status
+            )
+         }
+
+         const analysisResult: PythonAnalysisResult = await response.json()
+
+         this.log('info', 'Python YAMNet analysis completed', {
+            classificationsCount: analysisResult.classifications?.length || 0,
+            primaryType: analysisResult.environment?.primary_type,
+            processingTime: analysisResult.performance_metrics?.total_time,
+         })
+
+         return analysisResult
+      } catch (error) {
+         this.log('error', 'Python YAMNet analysis failed', {
+            audioUrl,
+            error: error instanceof Error ? error.message : String(error),
+         })
+
+         if (error instanceof APIException) {
+            throw error
+         }
+
+         // タイムアウトエラーの場合
+         if (error instanceof Error && error.name === 'TimeoutError') {
+            throw new APIException(ERROR_CODES.AI_ANALYSIS_FAILED, 'Python analysis timeout', 504)
+         }
+
+         // ネットワークエラーの場合
+         if (error instanceof Error && error.message.includes('fetch')) {
+            throw new APIException(
+               ERROR_CODES.AI_SERVICE_UNAVAILABLE,
+               'Python analysis service unavailable',
+               503
+            )
+         }
+
+         throw new APIException(
+            ERROR_CODES.AI_ANALYSIS_FAILED,
+            `Python analysis failed: ${error instanceof Error ? error.message : String(error)}`,
+            500
+         )
       }
    }
 }
