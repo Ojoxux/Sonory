@@ -36,6 +36,50 @@
 			"dependsOn": ["build", "lint", "type-check"],
 			"inputs": ["$TURBO_DEFAULT$", ".env*"],
 			"outputs": []
+		},
+		"generate-types": {
+			"dependsOn": ["^build"],
+			"inputs": ["$TURBO_DEFAULT$", "../shared-types/src/**"],
+			"outputs": ["../python-audio-analyzer/src/types/generated/**"]
+		},
+		"python:install": {
+			"cache": false,
+			"inputs": ["pyproject.toml", "requirements*.txt"]
+		},
+		"python:dev": {
+			"dependsOn": ["python:install", "generate-types"],
+			"cache": false,
+			"persistent": true
+		},
+		"python:lint": {
+			"dependsOn": ["python:install"],
+			"inputs": [
+				"$TURBO_DEFAULT$",
+				"pyproject.toml",
+				"ruff.toml",
+				".ruff.toml"
+			],
+			"outputs": []
+		},
+		"python:format": {
+			"dependsOn": ["python:install"],
+			"inputs": ["$TURBO_DEFAULT$"],
+			"outputs": []
+		},
+		"python:test": {
+			"dependsOn": ["python:install", "generate-types"],
+			"inputs": ["$TURBO_DEFAULT$", "**/*.py", "tests/**"],
+			"outputs": ["coverage/**", ".coverage", "htmlcov/**"]
+		},
+		"python:build": {
+			"dependsOn": [
+				"python:install",
+				"generate-types",
+				"python:lint",
+				"python:test"
+			],
+			"inputs": ["$TURBO_DEFAULT$", "Dockerfile*"],
+			"outputs": ["dist/**", "build/**"]
 		}
 	},
 	"globalDependencies": ["**/.env*"],
@@ -45,6 +89,7 @@
 		"SUPABASE_*",
 		"OPENAI_*",
 		"CLOUDFLARE_*",
-		"MAPBOX_*"
+		"MAPBOX_*",
+		"PYTHON_*"
 	]
 }
