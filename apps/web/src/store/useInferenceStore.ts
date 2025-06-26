@@ -56,12 +56,58 @@ function generateClassificationResults(): InferenceResult[] {
 }
 
 /**
+ * 音声ファイルをSupabase Storageにアップロード
+ *
+ * @param audioData - アップロードする音声データ
+ * @returns アップロード後のURL
+ */
+async function uploadAudioToStorage(audioData: AudioData): Promise<string> {
+   console.log('📤 音声ファイルをアップロード中...')
+
+   try {
+      // FormDataを作成
+      const formData = new FormData()
+      formData.append('audio', audioData.blob, `audio-${audioData.id}.webm`)
+
+      // 音声ファイルをアップロード
+      const response = await fetch('/api/audio/upload', {
+         method: 'POST',
+         body: formData,
+      })
+
+      if (!response.ok) {
+         const errorData = await response.json().catch(() => ({}))
+         throw new Error(
+            `アップロード失敗: ${response.status} ${response.statusText} - ${
+               errorData.error?.message || '不明なエラー'
+            }`
+         )
+      }
+
+      const result = await response.json()
+
+      if (!result.success || !result.data?.audioUrl) {
+         throw new Error('アップロード結果が不正です')
+      }
+
+      console.log('✅ 音声アップロード完了:', result.data.audioUrl)
+      return result.data.audioUrl
+   } catch (error) {
+      console.error('❌ 音声アップロードエラー:', error)
+      throw error
+   }
+}
+
+/**
  * バックエンドAPI呼び出し（実装完了）
  *
  * @description
  * Python YAMNetサービスへのAPI呼び出しを実行
  */
-async function callBackendAnalysis(audioData: AudioData): Promise<InferenceResult[]> {
+async function callBackendAnalysis(
+   audioData: AudioData,
+   audioUrl: string
+): Promise<InferenceResult[]> {
    console.log('🚀 バックエンドAPI呼び出し開始:', audioData.id)
 
    try {
@@ -72,7 +118,7 @@ async function callBackendAnalysis(audioData: AudioData): Promise<InferenceResul
             'Content-Type': 'application/json',
          },
          body: JSON.stringify({
-            audioUrl: audioData.url,
+            audioUrl: audioUrl, // アップロード後のURLを使用
             topK: 5,
          }),
       })
@@ -150,8 +196,11 @@ export const useInferenceStore = create<InferenceState>(set => ({
          let isUsingFallback = false
 
          try {
-            // バックエンドAPI呼び出しを実行
-            results = await callBackendAnalysis(audioData)
+            // 1. 音声ファイルをSupabase Storageにアップロード
+            const audioUrl = await uploadAudioToStorage(audioData)
+
+            // 2. アップロードされたURLを使ってバックエンドAPI呼び出しを実行
+            results = await callBackendAnalysis(audioData, audioUrl)
             console.log('✅ バックエンドAPI推論完了:', results)
          } catch (backendError) {
             console.log('🔄 バックエンドAPI失敗、フォールバック実行:', backendError)
