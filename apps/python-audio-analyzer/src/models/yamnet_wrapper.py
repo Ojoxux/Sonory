@@ -34,33 +34,71 @@ class YAMNetClassifier:
         "Motorcycle": "バイクの音",
         "Bus": "バスの音",
         "Traffic noise, roadway noise": "交通音",
+        "Engine": "エンジン音",
+        "Accelerating, revving, vroom": "車の音",
+        "Car alarm": "車の音",
+        "Tire squeal": "車の音",
         
         # 鉄道関連
         "Train": "電車の音",
         "Rail transport": "電車の音",
         "Train horn": "電車の音",
+        "Railroad car, train wagon": "電車の音",
+        
+        # 航空機
+        "Aircraft": "飛行機の音",
+        "Airplane": "飛行機の音",
+        "Helicopter": "ヘリコプターの音",
         
         # 自然音
         "Bird": "鳥の鳴き声",
         "Bird vocalization, bird call, bird song": "鳥の鳴き声",
+        "Chirp, tweet": "鳥の鳴き声",
         "Rain": "雨音",
         "Rainfall": "雨音",
         "Rain on surface": "雨音",
         "Wind": "風の音",
         "Wind noise (microphone)": "風の音",
+        "Thunder": "雷の音",
+        "Thunderstorm": "雷の音",
+        "Water": "水の音",
+        "Stream": "水の音",
+        "Ocean": "海の音",
+        "Waves, surf": "海の音",
         
-        # 人間の声
+        # 動物
+        "Animal": "動物の声",
+        "Dog": "犬の鳴き声",
+        "Cat": "猫の鳴き声",
+        "Bark": "犬の鳴き声",
+        "Meow": "猫の鳴き声",
+        "Roar": "動物の声",
+        
+        # 人間の声・活動
         "Speech": "人の声",
         "Human voice": "人の声",
         "Conversation": "人の声",
         "Child speech, kid speaking": "人の声",
         "Male speech, man speaking": "人の声",
         "Female speech, woman speaking": "人の声",
+        "Laughter": "笑い声",
+        "Crying, sobbing": "泣き声",
+        "Shout": "叫び声",
+        "Whispering": "ささやき声",
+        "Sneeze": "くしゃみ",
+        "Cough": "咳",
         
-        # 音楽
+        # 音楽・楽器
         "Music": "音楽",
         "Musical instrument": "音楽",
         "Singing": "音楽",
+        "Piano": "音楽",
+        "Guitar": "音楽",
+        "Drum": "音楽",
+        "Bass drum": "音楽",
+        "Electronic music": "音楽",
+        "Rock music": "音楽",
+        "Pop music": "音楽",
         
         # 工事・作業音
         "Construction noise": "工事の音",
@@ -68,6 +106,46 @@ class YAMNetClassifier:
         "Tools": "工事の音",
         "Power tool": "工事の音",
         "Drilling": "工事の音",
+        "Hammer": "工事の音",
+        "Saw": "工事の音",
+        
+        # 家庭・屋内音
+        "Door": "ドアの音",
+        "Doorbell": "ベルの音",
+        "Footsteps": "足音",
+        "Typing": "タイピング音",
+        "Clapping": "拍手",
+        "Microwave oven": "電子機器音",
+        "Vacuum cleaner": "掃除機の音",
+        "Air conditioning": "エアコンの音",
+        "Television": "テレビの音",
+        "Radio": "ラジオの音",
+        
+        # 警報・サイレン
+        "Siren": "サイレン",
+        "Emergency vehicle": "緊急車両",
+        "Fire alarm": "火災警報",
+        "Smoke detector": "煙感知器",
+        "Alarm": "警報音",
+        
+        # 電子音・機械音
+        "Beep, bleep": "電子音",
+        "Click": "クリック音",
+        "Tick": "時計の音",
+        "Buzz": "ブザー音",
+        "Dial tone": "電話音",
+        "Phone": "電話音",
+        "Ringtone": "着信音",
+        
+        # その他の環境音
+        "Silence": "静寂",
+        "White noise": "ホワイトノイズ",
+        "Static": "雑音",
+        "Hum": "うなり音",
+        "Rumble": "低音の響き",
+        "Explosion": "爆発音",
+        "Gunshot, gunfire": "銃声",
+        "Fireworks": "花火の音",
     }
     
     # 環境タイプ分類のためのキーワード
@@ -146,10 +224,43 @@ class YAMNetClassifier:
             class_map_path: クラスマップファイルのパス
             
         Returns:
-            クラス名のリスト
+            クラス名のリスト（display_nameのみ）
         """
+        class_names = []
+        
         with tf.io.gfile.GFile(class_map_path) as f:
-            class_names = [line.strip() for line in f.readlines()]
+            for line_num, line in enumerate(f.readlines()):
+                line = line.strip()
+                if not line:
+                    continue
+                    
+                # CSVファイルの場合、index,mid,display_name の形式
+                # display_name（最後の列）のみを抽出
+                parts = line.split(',', 2)  # 最大3つに分割（index, mid, display_name）
+                
+                if len(parts) >= 3:
+                    # display_nameの部分を取得（引用符を除去）
+                    display_name = parts[2].strip().strip('"')
+                    class_names.append(display_name)
+                elif len(parts) == 1:
+                    # 単一の名前の場合はそのまま使用
+                    class_names.append(parts[0])
+                else:
+                    # 想定外の形式の場合はログ出力
+                    logger.warning(
+                        "Unexpected class map format",
+                        line_num=line_num,
+                        line=line,
+                        parts_count=len(parts)
+                    )
+                    class_names.append(line)  # フォールバック
+        
+        logger.info(
+            "YAMNet class names loaded",
+            total_classes=len(class_names),
+            sample_classes=class_names[:5] if class_names else []
+        )
+        
         return class_names
     
     def classify_audio(
@@ -186,33 +297,91 @@ class YAMNetClassifier:
             )
         
         try:
+            # 音声データの詳細解析（デバッグ用）
+            audio_stats = {
+                "length_samples": len(audio_waveform),
+                "duration_seconds": len(audio_waveform) / sample_rate,
+                "max_amplitude": float(np.max(np.abs(audio_waveform))),
+                "rms_energy": float(np.sqrt(np.mean(audio_waveform**2))),
+                "mean_amplitude": float(np.mean(np.abs(audio_waveform))),
+                "zero_crossings": int(np.sum(np.diff(np.sign(audio_waveform)) != 0)),
+            }
+            
+            logger.info(
+                "Audio waveform analysis",
+                audio_stats=audio_stats
+            )
+            
+            # 音声が静寂すぎる場合の警告
+            if audio_stats["max_amplitude"] < 0.001:
+                logger.warning(
+                    "Audio amplitude is very low - may affect classification accuracy",
+                    max_amplitude=audio_stats["max_amplitude"]
+                )
+            
             # YAMNet推論実行
             scores, _, _ = self.model(audio_waveform)
             
-            # 平均スコアを計算（複数のフレームから）
+            # 推論結果の詳細解析
             mean_scores = np.mean(scores, axis=0)
             
-            # 上位結果を取得
-            top_indices = np.argsort(mean_scores)[-top_k:][::-1]
+            # 生スコアの統計情報
+            score_stats = {
+                "total_frames": scores.shape[0],
+                "total_classes": scores.shape[1],
+                "max_score": float(np.max(mean_scores)),
+                "min_score": float(np.min(mean_scores)),
+                "mean_score": float(np.mean(mean_scores)),
+                "std_score": float(np.std(mean_scores)),
+                "scores_above_1percent": int(np.sum(mean_scores > 0.01)),
+                "scores_above_5percent": int(np.sum(mean_scores > 0.05)),
+            }
+            
+            logger.info(
+                "YAMNet inference statistics",
+                score_stats=score_stats
+            )
+            
+            # 上位結果を取得（より多くの候補を確認）
+            extended_top_k = min(20, len(mean_scores))  # 最大20件
+            top_indices = np.argsort(mean_scores)[-extended_top_k:][::-1]
             top_scores = mean_scores[top_indices]
             
             # AudioSetクラス名を取得
             top_classes = [self.class_names[i] for i in top_indices]
             
+            # 生の上位結果をログ出力
+            raw_results = [
+                {"class": class_name, "score": float(score)}
+                for class_name, score in zip(top_classes, top_scores)
+            ]
+            
+            logger.info(
+                "Raw YAMNet top results",
+                raw_results=raw_results[:10]  # 上位10件のみ表示
+            )
+            
+            # 実際のtop_k分だけを返却用に調整
+            final_top_indices = top_indices[:top_k]
+            final_top_scores = top_scores[:top_k]
+            final_top_classes = [self.class_names[i] for i in final_top_indices]
+            
             # 日本語カテゴリに変換
             japanese_results = self._convert_to_japanese(
-                top_classes, top_scores
+                final_top_classes, final_top_scores
             )
             
             # 環境タイプを推定
             env_scores, primary_env = self._estimate_environment_type(
-                top_classes, top_scores
+                final_top_classes, final_top_scores
             )
             
             logger.info(
                 "Audio classification completed",
                 japanese_results=japanese_results,
-                primary_environment=primary_env
+                primary_environment=primary_env,
+                audio_quality=audio_stats,
+                inference_quality=score_stats
             )
             
             return japanese_results, env_scores, primary_env
@@ -237,9 +406,24 @@ class YAMNetClassifier:
             日本語カテゴリと信頼度のリスト
         """
         japanese_categories: Dict[str, float] = {}
+        unmapped_classes = []
+        
+        # デバッグ: 検出されたAudioSetクラスをログ出力
+        logger.info(
+            "Detected AudioSet classes",
+            detected_classes=[
+                {"class": class_name, "score": float(score)}
+                for class_name, score in zip(class_names, scores)
+                if score > 0.01  # 1%以上の信頼度のみ
+            ]
+        )
         
         # AudioSetクラスを日本語カテゴリにマッピング
         for class_name, score in zip(class_names, scores):
+            # 最低閾値を設定（0.1%以上に緩和）
+            if score < 0.001:  # 0.005から0.001に変更
+                continue
+                
             japanese_category = self._find_japanese_category(class_name)
             
             if japanese_category:
@@ -247,6 +431,25 @@ class YAMNetClassifier:
                 if (japanese_category not in japanese_categories or
                     score > japanese_categories[japanese_category]):
                     japanese_categories[japanese_category] = float(score)
+            else:
+                # マッピングされないクラスも記録
+                unmapped_classes.append({
+                    "class": class_name,
+                    "score": float(score)
+                })
+        
+        # マッピングされないクラスをログ出力
+        if unmapped_classes:
+            logger.info(
+                "Unmapped AudioSet classes found",
+                unmapped_classes=unmapped_classes[:5]  # 上位5件のみ
+            )
+        
+        # デバッグ用: マッピングされないクラスも含める（オプション）
+        # for unmapped in unmapped_classes[:3]:  # 上位3件のみ
+        #     if unmapped["score"] > 0.02:  # 2%以上の信頼度
+        #         category_name = f"その他: {unmapped['class']}"
+        #         japanese_categories[category_name] = unmapped["score"]
         
         # 信頼度順にソート
         sorted_results = sorted(
@@ -255,10 +458,18 @@ class YAMNetClassifier:
             reverse=True
         )
         
-        return [
+        result = [
             {"label": category, "confidence": confidence}
             for category, confidence in sorted_results
         ]
+        
+        logger.info(
+            "Japanese classification results",
+            results=result,
+            total_mapped=len([r for r in result if not r["label"].startswith("その他")])
+        )
+        
+        return result
     
     def _find_japanese_category(self, audioset_class: str) -> Optional[str]:
         """
@@ -274,11 +485,95 @@ class YAMNetClassifier:
         if audioset_class in self.AUDIOSET_TO_JAPANESE:
             return self.AUDIOSET_TO_JAPANESE[audioset_class]
         
-        # 部分一致で検索
+        # 部分一致で検索（双方向）
         audioset_lower = audioset_class.lower()
+        
+        # AudioSetキーがクラス名に含まれる場合
         for audioset_key, japanese_category in self.AUDIOSET_TO_JAPANESE.items():
-            if audioset_key.lower() in audioset_lower:
+            audioset_key_lower = audioset_key.lower()
+            
+            # 双方向の部分一致チェック
+            if (audioset_key_lower in audioset_lower or 
+                audioset_lower in audioset_key_lower):
                 return japanese_category
+        
+        # キーワードベースの追加マッピング
+        keyword_mappings = {
+            # 交通・車両
+            ("car", "vehicle", "motor", "auto"): "車の音",
+            ("truck", "lorry"): "トラックの音", 
+            ("bike", "motorcycle", "motorbike"): "バイクの音",
+            ("bus",): "バスの音",
+            ("train", "rail", "locomotive"): "電車の音",
+            ("traffic", "road"): "交通音",
+            ("aircraft", "plane", "airplane", "jet"): "飛行機の音",
+            ("helicopter", "chopper"): "ヘリコプターの音",
+            
+            # 自然・動物
+            ("bird", "chirp", "tweet", "song"): "鳥の鳴き声",
+            ("rain", "rainfall", "drizzle"): "雨音",
+            ("wind", "breeze", "gust"): "風の音",
+            ("water", "stream", "river", "ocean", "wave", "surf"): "水の音",
+            ("thunder", "storm"): "雷の音",
+            ("dog", "bark", "woof"): "犬の鳴き声",
+            ("cat", "meow", "purr"): "猫の鳴き声",
+            ("animal", "creature"): "動物の声",
+            
+            # 人の声・活動
+            ("speech", "voice", "speak", "talk", "conversation"): "人の声",
+            ("laugh", "giggle", "chuckle"): "笑い声",
+            ("cry", "weep", "sob"): "泣き声",
+            ("shout", "yell", "scream"): "叫び声",
+            ("whisper",): "ささやき声",
+            ("sneeze",): "くしゃみ",
+            ("cough",): "咳",
+            
+            # 音楽・楽器
+            ("music", "musical", "song", "melody"): "音楽",
+            ("sing", "vocal", "choir"): "音楽",
+            ("piano", "keyboard"): "音楽",
+            ("guitar", "bass"): "音楽",
+            ("drum", "percussion"): "音楽",
+            
+            # 工事・作業
+            ("construction", "building", "work"): "工事の音",
+            ("drill", "drilling"): "工事の音",
+            ("hammer", "hammering"): "工事の音",
+            ("saw", "sawing", "cutting"): "工事の音",
+            ("tool", "power tool"): "工事の音",
+            
+            # 家庭・電子機器
+            ("door", "gate"): "ドアの音",
+            ("bell", "doorbell", "chime"): "ベルの音",
+            ("foot", "step", "walk"): "足音",
+            ("type", "typing", "keyboard"): "タイピング音",
+            ("clap", "applause"): "拍手",
+            ("microwave", "oven"): "電子機器音",
+            ("vacuum", "cleaner"): "掃除機の音",
+            ("air conditioning", "ac", "hvac"): "エアコンの音",
+            ("tv", "television"): "テレビの音",
+            ("radio",): "ラジオの音",
+            
+            # 警報・緊急
+            ("siren", "alarm", "warning"): "警報音",
+            ("emergency", "ambulance", "fire truck"): "緊急車両",
+            ("beep", "bleep", "buzz", "buzzer"): "電子音",
+            ("phone", "telephone", "ring", "ringtone"): "電話音",
+            
+            # その他
+            ("silence", "quiet"): "静寂",
+            ("noise", "static", "hiss"): "雑音",
+            ("tick", "clock"): "時計の音",
+            ("explosion", "blast", "bang"): "爆発音",
+            ("gunshot", "gun", "shot"): "銃声",
+            ("firework", "firecracker"): "花火の音",
+        }
+        
+        # キーワードマッチング
+        for keywords, category in keyword_mappings.items():
+            for keyword in keywords:
+                if keyword in audioset_lower:
+                    return category
         
         return None
     
