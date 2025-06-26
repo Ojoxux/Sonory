@@ -139,6 +139,9 @@ function setMapboxLightPreset(
     // Method 2: setStyle の config オプションを使用（フォールバック）
     const currentStyle = map.getStyle()
     if (currentStyle) {
+      // 録音データを保存
+      const recordingData = localStorage.getItem('recording_data')
+
       const setStyleOptions: MapboxSetStyleOptions = {
         config: {
           basemap: {
@@ -160,6 +163,11 @@ function setMapboxLightPreset(
         setStyleOptions,
       )
 
+      // 録音データを復元
+      if (recordingData) {
+        localStorage.setItem('recording_data', recordingData)
+      }
+
       if (process.env.NODE_ENV === 'development') {
         console.log('✅ lightPreset設定成功 (setStyle方式):', lightPreset)
       }
@@ -176,6 +184,9 @@ function setMapboxLightPreset(
 
     // 最後の手段: スタイル全体をリロード（遅延実行）
     try {
+      // 録音データを保存
+      const recordingData = localStorage.getItem('recording_data')
+
       setTimeout(() => {
         if (map.isStyleLoaded()) {
           const extendedMap = map as MapboxExtendedMap
@@ -184,6 +195,11 @@ function setMapboxLightPreset(
             typeof extendedMap.setConfigProperty === 'function'
           ) {
             extendedMap.setConfigProperty('basemap', 'lightPreset', lightPreset)
+
+            // 録音データを復元
+            if (recordingData) {
+              localStorage.setItem('recording_data', recordingData)
+            }
           }
         }
       }, 1000)
@@ -249,169 +265,111 @@ export function useMapEnvironment({
           })
         }
 
-        // Mapbox Standard Style の lightPreset を設定
+        // 録音データを保存
+        const recordingData = localStorage.getItem('recording_data')
+
+        // 1. Mapbox Standard Styleのlightプリセットを設定
         setMapboxLightPreset(targetMap, lightPreset)
 
-        // 時間ベースでの夜間判定（太陽高度ではなく時間で判定）
-        const isNightTime = currentHour >= 22 || currentHour < 4
-        const isDayTime = currentHour >= 8 && currentHour < 17
-        const isEveningTime = currentHour >= 17 && currentHour < 22 // 夕方
-        const isEarlyMorningTime = currentHour >= 4 && currentHour < 6 // 早朝（暗め）
-        const isMorningTime = currentHour >= 6 && currentHour < 8 // 朝（明るめ）
+        // 位置情報がある場合は太陽位置を計算してライティングを調整
+        let lightingConfig: LightingConfig | null = null
 
-        // 太陽の位置を計算（ライティング設定用のみ）
-        let sunAltitude: number
-        if (isDayTime) {
-          sunAltitude = 45 // 昼間: 高い太陽
-        } else if (isNightTime) {
-          sunAltitude = -20 // 夜間: 地平線下
-        } else if (isEveningTime) {
-          // 夕方: 時間に応じて太陽高度を調整（17時=5度、22時=-5度）
-          const eveningProgress = (currentHour - 17) / 5 // 0-1の範囲
-          sunAltitude = 5 - eveningProgress * 10 // 5度から-5度へ
-        } else if (isEarlyMorningTime) {
-          // 早朝: 時間に応じて太陽高度を調整（4時=-10度、6時=-5度）
-          const earlyMorningProgress = (currentHour - 4) / 2 // 0-1の範囲
-          sunAltitude = -10 + earlyMorningProgress * 5 // -10度から-5度へ（暗め維持）
-        } else if (isMorningTime) {
-          // 朝: 時間に応じて太陽高度を調整（6時=-5度、8時=10度）
-          const morningProgress = (currentHour - 6) / 2 // 0-1の範囲
-          sunAltitude = -5 + morningProgress * 15 // -5度から10度へ（柔らかい朝の光）
-        } else {
-          sunAltitude = 0 // デフォルト
-        }
-
-        if (position && process.env.NODE_ENV === 'development') {
+        if (position) {
+          // 太陽の位置を計算
           const sunPosition = calculateSunPosition(
             now,
             position.latitude,
             position.longitude,
           )
-          // 実際の太陽高度は参考程度に使用
-          console.log(
-            '📍 実際の太陽高度 (参考):',
-            sunPosition.altitude,
-            '使用値:',
-            sunAltitude,
-          )
-        }
 
-        // 時間帯に応じたライティング設定を取得
-        const lighting = getLightingConfig(sunAltitude)
+          // 時間ベースでの夜間判定
+          const isNightTime = currentHour >= 22 || currentHour < 4
 
-        // 天候効果を適用
-        const weatherAdjustedLighting = applyWeatherEffects(
-          lighting,
-          currentWeather,
-        )
-        setCurrentLighting(weatherAdjustedLighting)
+          // 太陽位置に基づくライティング設定を取得
+          lightingConfig = getLightingConfig(sunPosition.altitude)
 
-        // 3D地形を設定（エラーハンドリング強化）
-        try {
-          const terrainConfig = get3DTerrainConfig()
-          if (!targetMap.getSource('mapbox-dem')) {
-            targetMap.addSource('mapbox-dem', terrainSource)
-          }
-          mapboxHelpers.setTerrain(targetMap, terrainConfig)
-        } catch (terrainError) {
-          if (process.env.NODE_ENV === 'development') {
-            console.warn('⚠️ 地形設定をスキップ:', terrainError)
-          }
-        }
+          // ライティング設定を適用
+          if (lightingConfig) {
+            // 夜間はカスタムライティングを適用
+            if (isNightTime) {
+              applyNightLighting(targetMap, -20) // 夜間の値
+            } else {
+              // 昼間はMapbox標準のライティングを使用
+              // 特に追加設定は不要
+            }
 
-        // 環境光を設定（Standard Style と併用）
-        try {
-          const atmosphereConfig = getAtmosphereConfig(weatherAdjustedLighting)
-          const fogConfig = {
-            ...atmosphereConfig,
-            range: [0.5, 10],
-            color: weatherAdjustedLighting.fogColor,
-            'horizon-blend': weatherAdjustedLighting.fogDensity * 0.5,
-          }
-          mapboxHelpers.setFog(targetMap, fogConfig)
-        } catch (fogError) {
-          if (process.env.NODE_ENV === 'development') {
-            console.warn('⚠️ フォグ設定をスキップ:', fogError)
-          }
-        }
+            // 天候効果を適用
+            const weatherAdjustedLighting = applyWeatherEffects(
+              lightingConfig,
+              currentWeather,
+            )
 
-        // 時間ベースで夜間の照明効果を適用
-        try {
-          applyNightLighting(targetMap, isNightTime ? -20 : 45) // 時間ベースの値を渡す
-        } catch (lightingError) {
-          if (process.env.NODE_ENV === 'development') {
-            console.warn('⚠️ 夜間照明設定をスキップ:', lightingError)
+            // 霧効果を適用
+            mapboxHelpers.setFog(targetMap, {
+              color: weatherAdjustedLighting.fogColor,
+              'horizon-blend': weatherAdjustedLighting.fogDensity,
+            })
+
+            // 3Dテレインを設定
+            // テレインソースを追加
+            if (!targetMap.getSource('mapbox-dem')) {
+              targetMap.addSource('mapbox-dem', terrainSource)
+            }
+
+            // テレインを設定
+            mapboxHelpers.setTerrain(targetMap, get3DTerrainConfig())
+
+            // 大気効果を設定
+            mapboxHelpers.setFog(
+              targetMap,
+              getAtmosphereConfig(weatherAdjustedLighting),
+            )
+
+            // 現在のライティング設定を状態に保存
+            setCurrentLighting(weatherAdjustedLighting)
           }
         }
 
-        if (process.env.NODE_ENV === 'development') {
-          console.log('ライティング更新完了:', {
-            lightPreset,
-            hour: currentHour,
-            isNightTime,
-            isDayTime,
-          })
+        // 録音データを復元
+        if (recordingData) {
+          localStorage.setItem('recording_data', recordingData)
         }
       } catch (error) {
-        console.error('光と影の更新エラー:', error)
+        console.error('ライティング更新エラー:', error)
       }
     },
     [
       map,
       mapStyleLoaded,
       position,
-      currentWeather,
       debugTimeOverride,
       mapboxHelpers,
+      currentWeather,
     ],
   )
 
-  // 定期的に光と影を更新
+  // 位置情報、時間、マップスタイルが変更されたときにライティングを更新
   useEffect(() => {
-    if (!map || !mapStyleLoaded) return
-
-    // スタイルが完全に読み込まれるまで待機
-    const checkStyleAndUpdate = () => {
-      if (map.isStyleLoaded()) {
-        updateLightingAndShadows(map)
-      } else {
-        // スタイルがまだ読み込み中の場合、少し待ってから再試行
-        setTimeout(checkStyleAndUpdate, 100)
+    // マップと位置情報が揃ったらライティングを更新
+    if (map && mapStyleLoaded) {
+      const checkStyleAndUpdate = () => {
+        if (map.isStyleLoaded()) {
+          updateLightingAndShadows(map)
+        } else {
+          // スタイルがまだ読み込まれていない場合は少し待ってから再試行
+          setTimeout(checkStyleAndUpdate, 200)
+        }
       }
+
+      checkStyleAndUpdate()
     }
-
-    // 初回更新（遅延実行）
-    setTimeout(checkStyleAndUpdate, 300)
-
-    // 1分ごとに更新
-    const interval = setInterval(() => {
-      if (map.isStyleLoaded()) {
-        updateLightingAndShadows(map)
-      }
-    }, 60000)
-
-    return () => clearInterval(interval)
-  }, [map, mapStyleLoaded, updateLightingAndShadows])
-
-  // デバッグ時間が変更された時に即座に更新
-  useEffect(() => {
-    if (!map || !mapStyleLoaded) return
-
-    if (process.env.NODE_ENV === 'development') {
-      console.log('デバッグ時間が変更されました:', debugTimeOverride)
-    }
-
-    // スタイル更新の競合を避けるため、スタイルが読み込まれてから実行
-    const updateWithStyleCheck = () => {
-      if (map.isStyleLoaded()) {
-        updateLightingAndShadows(map)
-      } else {
-        setTimeout(updateWithStyleCheck, 100)
-      }
-    }
-
-    setTimeout(updateWithStyleCheck, 500)
-  }, [debugTimeOverride, map, mapStyleLoaded, updateLightingAndShadows])
+  }, [
+    map,
+    mapStyleLoaded,
+    position,
+    debugTimeOverride,
+    updateLightingAndShadows,
+  ])
 
   return {
     currentLighting,

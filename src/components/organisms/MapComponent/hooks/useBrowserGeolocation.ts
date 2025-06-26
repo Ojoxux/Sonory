@@ -189,7 +189,7 @@ export function useBrowserGeolocation() {
           geolocationInstance.watchId
         ) {
           navigator.geolocation.clearWatch(geolocationInstance.watchId)
-          geolocationInstance = null
+          geolocationInstance.watchId = null
         }
       }
     }

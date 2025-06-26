@@ -74,6 +74,7 @@ export function WaveformPlayer({
           try {
             if (
               wavesurferRef.current.isPlaying &&
+              typeof wavesurferRef.current.isPlaying === 'function' &&
               wavesurferRef.current.isPlaying()
             ) {
               console.log('Stopping playback before destroy')
@@ -82,10 +83,19 @@ export function WaveformPlayer({
           } catch (pauseError) {
             console.warn('Error pausing before destroy:', pauseError)
           }
+
+          // 即座に破棄せず、少し遅延させる
           setTimeout(() => {
             try {
               if (wavesurferRef.current) {
                 console.log('Destroying WaveSurfer instance')
+
+                // すべてのイベントリスナーを先に解除
+                if (typeof wavesurferRef.current.unAll === 'function') {
+                  wavesurferRef.current.unAll()
+                }
+
+                // 破棄処理を実行
                 wavesurferRef.current.destroy()
               }
             } catch (error) {
@@ -95,7 +105,7 @@ export function WaveformPlayer({
               isDestroyingRef.current = false
               resolve()
             }
-          }, 100)
+          }, 200) // 遅延時間を増やす
         } else {
           wavesurferRef.current = null
           isDestroyingRef.current = false
