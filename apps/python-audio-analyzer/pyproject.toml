@@ -5,7 +5,7 @@ description = "YAMNet-based audio analysis service for Sonory"
 authors = [
     {name = "Sonory Team", email = "team@sonory.app"}
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.9"
 dependencies = [
     "fastapi[all]>=0.104.1",
     "uvicorn[standard]>=0.24.0",
@@ -44,18 +44,18 @@ packages = ["src"]
 
 [tool.black]
 line-length = 88
-target-version = ['py311']
+target-version = ['py39']
 
 [tool.isort]
 profile = "black"
 line_length = 88
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.9"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
 
 [tool.ruff]
 line-length = 88
-target-version = "py311" 
+target-version = "py39" 
