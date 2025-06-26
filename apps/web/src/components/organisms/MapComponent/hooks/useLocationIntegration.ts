@@ -97,7 +97,17 @@ export function useLocationIntegration({
                   timestamp: Date.now(),
                }
                setMapboxPosition(newPosition)
+
+               // 位置情報を更新する前に録音データを保存
+               const recordingData = localStorage.getItem('recording_data')
+
+               // 位置情報を更新
                onPositionUpdate(newPosition)
+
+               // 録音データを復元
+               if (recordingData) {
+                  localStorage.setItem('recording_data', recordingData)
+               }
 
                // デバッグモード時のみ成功通知
                if (debugMode) {
@@ -140,7 +150,17 @@ export function useLocationIntegration({
                         const parsed = JSON.parse(savedPosition) as LocationData
                         console.log('保存された位置情報を使用します')
                         setMapboxPosition(parsed)
+
+                        // 位置情報を更新する前に録音データを保存
+                        const recordingData = localStorage.getItem('recording_data')
+
+                        // 位置情報を更新
                         onPositionUpdate(parsed)
+
+                        // 録音データを復元
+                        if (recordingData) {
+                           localStorage.setItem('recording_data', recordingData)
+                        }
 
                         if (debugMode) {
                            showNotification('保存された位置情報を使用しました', 'warning')
@@ -198,7 +218,18 @@ export function useLocationIntegration({
     */
    const resetGeolocation = useCallback((): void => {
       console.log('位置情報キャッシュをクリアして再取得します...')
+
+      // 録音データを保存
+      const recordingData = localStorage.getItem('recording_data')
+
+      // 位置情報のみクリア
       localStorage.removeItem('sonory_last_position')
+
+      // 録音データを復元
+      if (recordingData) {
+         localStorage.setItem('recording_data', recordingData)
+      }
+
       setMapboxPosition(null)
       setGeolocateAttempted(false)
 
