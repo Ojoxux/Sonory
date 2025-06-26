@@ -7,6 +7,7 @@ Audio preprocessing pipeline for YAMNet inference.
 
 import io
 import tempfile
+import subprocess
 from typing import Optional, Tuple, Union
 from pathlib import Path
 import numpy as np
@@ -15,6 +16,7 @@ import soundfile as sf
 import httpx
 import structlog
 from pydantic import BaseModel, Field
+import ffmpeg
 
 logger = structlog.get_logger(__name__)
 
@@ -216,6 +218,10 @@ class AudioProcessor:
         logger.info("Processing audio from file", file_path=str(file_path))
         
         try:
+            # WebM形式の場合はffmpegで変換
+            if file_path.suffix.lower() == '.webm':
+                file_path = await self._convert_webm_to_wav(file_path)
+            
             # 音声ファイルを読み込み
             waveform, original_sr = librosa.load(
                 str(file_path),
@@ -261,6 +267,47 @@ class AudioProcessor:
         except Exception as e:
             logger.error("Audio file processing failed", error=str(e))
             raise RuntimeError(f"Audio processing failed: {e}")
+    
+    async def _convert_webm_to_wav(self, webm_path: Path) -> Path:
+        """
+        WebMファイルをWAV形式に変換
+        
+        Args:
+            webm_path: WebMファイルのパス
+            
+        Returns:
+            変換後のWAVファイルのパス
+            
+        Raises:
+            RuntimeError: 変換に失敗した場合
+        """
+        try:
+            # 一時WAVファイルを作成
+            wav_path = webm_path.with_suffix('.wav')
+            
+            logger.info("Converting WebM to WAV", webm_path=str(webm_path), wav_path=str(wav_path))
+            
+            # ffmpegで変換
+            (
+                ffmpeg
+                .input(str(webm_path))
+                .output(str(wav_path), acodec='pcm_s16le', ac=1, ar=16000)
+                .overwrite_output()
+                .run(quiet=True)
+            )
+            
+            if not wav_path.exists():
+                raise RuntimeError("WAV conversion failed - output file not created")
+            
+            logger.info("WebM to WAV conversion completed", wav_path=str(wav_path))
+            return wav_path
+            
+        except ffmpeg.Error as e:
+            logger.error("FFmpeg conversion failed", error=str(e))
+            raise RuntimeError(f"WebM to WAV conversion failed: {e}")
+        except Exception as e:
+            logger.error("Unexpected error in WebM conversion", error=str(e))
+            raise RuntimeError(f"WebM conversion failed: {e}")
     
     def _validate_audio_data(
         self,
