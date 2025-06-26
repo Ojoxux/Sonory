@@ -27,6 +27,15 @@ const nextConfig: NextConfig = {
    env: {
       NEXT_PUBLIC_MAPBOX_TOKEN: process.env.NEXT_PUBLIC_MAPBOX_TOKEN,
    },
+   // 👇 開発環境でのAPI プロキシ設定
+   async rewrites() {
+      return [
+         {
+            source: '/api/:path*',
+            destination: 'http://localhost:8787/api/:path*',
+         },
+      ]
+   },
 }
 
 export default withPWA(nextConfig)
