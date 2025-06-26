@@ -71,4 +71,4 @@ src/
 - **Hono** - 軽量Webフレームワーク
 - **TypeScript** - 型安全な開発
 - **Supabase** - データベース・ストレージ
-- **OpenAI API** - AI音声分析 
+- **Python Audio Analyzer (YAMNet)** - AI音声分類 
