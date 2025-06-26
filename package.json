@@ -11,26 +11,19 @@
 		"test": "turbo test",
 		"clean": "turbo clean",
 		"type-check": "turbo type-check",
-
 		"dev:web": "turbo dev --filter=@sonory/web",
 		"dev:api": "turbo dev --filter=@sonory/api",
-		"dev:full": "turbo dev --filter=@sonory/web --filter=@sonory/api",
-
 		"build:web": "turbo build --filter=@sonory/web",
 		"build:api": "turbo build --filter=@sonory/api",
-
 		"deploy:api": "turbo deploy --filter=@sonory/api",
 		"deploy:web": "turbo deploy --filter=@sonory/web",
-
-		"generate-types": "turbo generate-types --filter=@sonory/python-types",
-		"python:install": "turbo python:install --filter=@sonory/python-audio-analyzer",
-		"python:dev": "turbo python:dev --filter=@sonory/python-audio-analyzer",
-		"python:lint": "turbo python:lint --filter=@sonory/python-audio-analyzer",
-		"python:format": "turbo python:format --filter=@sonory/python-audio-analyzer",
-		"python:test": "turbo python:test --filter=@sonory/python-audio-analyzer",
-		"python:build": "turbo python:build --filter=@sonory/python-audio-analyzer",
-
-		"prepare": "husky"
+		"prepare": "husky",
+		"start:all": "concurrently \"npm run start:python\" \"npm run start:api\" \"npm run start:frontend\" --names \"🐍Python,🔗API,📱Frontend\" --prefix-colors \"yellow,blue,green\"",
+		"start:backend": "concurrently \"npm run start:python\" \"npm run start:api\" --names \"🐍Python,🔗API\" --prefix-colors \"yellow,blue\"",
+		"start:frontend": "cd apps/web && npm run dev",
+		"start:api": "cd apps/api && npm run dev",
+		"start:python": "cd apps/python-audio-analyzer && python3 -m uvicorn src.main:app --reload --host 0.0.0.0 --port 8000",
+		"stop:all": "pkill -f 'next|wrangler|uvicorn' || echo 'All services stopped'"
 	},
 	"dependencies": {
 		"@ducanh2912/next-pwa": "^10.2.9",
@@ -54,6 +47,7 @@
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
 		"@types/node": "^20",
+		"concurrently": "^9.2.0",
 		"husky": "^9.0.11",
 		"lint-staged": "^15.2.2",
 		"turbo": "^2.0.0",
