@@ -403,7 +403,7 @@ class YAMNetClassifier:
             scores: 各クラスの信頼度
             
         Returns:
-            日本語カテゴリと信頼度のリスト
+            日本語カテゴリと信頼度のリスト（100%ベースに正規化）
         """
         japanese_categories: Dict[str, float] = {}
         unmapped_classes = []
@@ -445,15 +445,31 @@ class YAMNetClassifier:
                 unmapped_classes=unmapped_classes[:5]  # 上位5件のみ
             )
         
-        # デバッグ用: マッピングされないクラスも含める（オプション）
-        # for unmapped in unmapped_classes[:3]:  # 上位3件のみ
-        #     if unmapped["score"] > 0.02:  # 2%以上の信頼度
-        #         category_name = f"その他: {unmapped['class']}"
-        #         japanese_categories[category_name] = unmapped["score"]
+        # 結果が空の場合のフォールバック
+        if not japanese_categories:
+            logger.warning("No Japanese categories mapped, using default")
+            japanese_categories["不明な音"] = 1.0
+        
+        # 信頼度の合計を計算
+        total_confidence = sum(japanese_categories.values())
+        
+        # 100%ベースに正規化
+        if total_confidence > 0:
+            normalized_categories = {
+                category: (confidence / total_confidence)
+                for category, confidence in japanese_categories.items()
+            }
+        else:
+            # 合計が0の場合は均等に分配
+            num_categories = len(japanese_categories)
+            normalized_categories = {
+                category: 1.0 / num_categories
+                for category in japanese_categories.keys()
+            }
         
         # 信頼度順にソート
         sorted_results = sorted(
-            japanese_categories.items(),
+            normalized_categories.items(),
             key=lambda x: x[1],
             reverse=True
         )
@@ -463,10 +479,15 @@ class YAMNetClassifier:
             for category, confidence in sorted_results
         ]
         
+        # 正規化後の合計を確認（デバッグ用）
+        normalized_total = sum(r["confidence"] for r in result)
+        
         logger.info(
             "Japanese classification results",
             results=result,
-            total_mapped=len([r for r in result if not r["label"].startswith("その他")])
+            total_mapped=len(result),
+            original_total=total_confidence,
+            normalized_total=normalized_total
         )
         
         return result
@@ -590,7 +611,7 @@ class YAMNetClassifier:
             scores: 各クラスの信頼度
             
         Returns:
-            タプル：(環境タイプ別信頼度, 主要環境タイプ)
+            タプル：(環境タイプ別信頼度（100%ベースに正規化）, 主要環境タイプ)
         """
         env_scores = {"urban": 0.0, "natural": 0.0, "indoor": 0.0, "outdoor": 0.0}
         
@@ -603,13 +624,27 @@ class YAMNetClassifier:
                         env_scores[env_type] += float(score)
                         break
         
-        # 正規化
+        # 正規化（100%ベース）
         total_score = sum(env_scores.values())
         if total_score > 0:
             env_scores = {k: v / total_score for k, v in env_scores.items()}
+        else:
+            # スコアがすべて0の場合は均等に分配
+            num_env_types = len(env_scores)
+            env_scores = {k: 1.0 / num_env_types for k in env_scores.keys()}
         
         # 主要環境タイプを決定
         primary_env = max(env_scores.items(), key=lambda x: x[1])[0]
+        
+        # 正規化後の合計を確認（デバッグ用）
+        normalized_total = sum(env_scores.values())
+        logger.info(
+            "Environment type estimation",
+            env_scores=env_scores,
+            primary_env=primary_env,
+            original_total=total_score,
+            normalized_total=normalized_total
+        )
         
         return env_scores, primary_env
     
