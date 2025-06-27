@@ -198,6 +198,7 @@ export interface AudioMetadata {
    size: number
    format: 'webm' | 'mp3' | 'wav' | 'mp4' | 'm4a' | 'flac' | 'ogg'
    duration: number
+   url: string
    uploadedAt: string
 }
 
@@ -225,13 +226,22 @@ export interface AIAnalysis {
 }
 
 /**
+ * Audio data for sound pins (simplified for API responses)
+ */
+export interface SoundPinAudio {
+   url: string
+   duration: number
+   format: 'webm' | 'mp3' | 'wav' | 'mp4' | 'm4a' | 'flac' | 'ogg'
+}
+
+/**
  * Sound pin domain model (Backend API用)
  */
 export interface SoundPinAPI {
    id: string
    userId?: string
    location: LocationCoordinates
-   audio: AudioMetadata
+   audio: SoundPinAudio
    weather?: WeatherContext
    timeTag?: '朝' | '昼' | '夕' | '夜'
    aiAnalysis?: AIAnalysis

@@ -112,6 +112,7 @@ export class AudioService extends BaseService {
             size: file.size,
             format: this.extractFormat(file),
             duration: 0, // 実際の長さは後で更新
+            url: urlData.publicUrl,
             uploadedAt: new Date().toISOString(),
          }
 
@@ -305,6 +306,7 @@ export class AudioService extends BaseService {
          size: file.size,
          format: this.extractFormat(file),
          duration: 0, // implement audio duration detection when needed
+         url: '', // URL should be provided by caller
          uploadedAt: new Date().toISOString(),
       }
    }
