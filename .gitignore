@@ -97,3 +97,8 @@ Thumbs.db
 # 一時ファイル
 *.tmp
 *.temp
+
+# 削除された古いモノレポ移行前のファイル (GitHubコンフリクト表示対策)
+src/components/molecules/WaveformPlayer/
+src/components/organisms/MapComponent/hooks/
+
