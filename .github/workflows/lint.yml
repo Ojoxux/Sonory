@@ -38,8 +38,8 @@ jobs:
 
       # 5. Biome (Lint + import 整理 + フォーマット検出)を実行
       - name: Run Biome
-        run: npm run lint:biome
+        run: npm run lint
 
       # 6. TS の型チェックを実行
       - name: Run tsc
-        run: npm run lint:typecheck
+        run: npm run type-check
