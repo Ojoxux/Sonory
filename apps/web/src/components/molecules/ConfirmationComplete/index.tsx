@@ -27,7 +27,7 @@ export function ConfirmationComplete({
             duration: isClosing ? 0.3 : 0.4,
             ease: [0.25, 0.46, 0.45, 0.94],
          }}
-         className={`flex flex-col items-center justify-center py-4 px-4 ${className}`}
+         className={`flex flex-col items-center justify-center px-4 py-4 ${className}`}
       >
          {/* 大きなチェックマーク - Appleスタイル */}
          <motion.div
@@ -55,10 +55,10 @@ export function ConfirmationComplete({
                      delay: isClosing ? 0 : 0.2,
                      duration: isClosing ? 0.15 : 0.3,
                   }}
-                  className="absolute inset-0 w-20 h-20 bg-green-500/10 rounded-full"
+                  className="absolute inset-0 h-20 w-20 rounded-full bg-green-500/10"
                />
                {/* チェックマーク */}
-               <div className="relative z-10 w-20 h-20 flex items-center justify-center">
+               <div className="relative z-10 flex h-20 w-20 items-center justify-center">
                   <motion.svg
                      aria-label="確認完了マーク"
                      initial={{ scale: 0 }}
@@ -71,7 +71,7 @@ export function ConfirmationComplete({
                         delay: isClosing ? 0 : 0.3,
                         duration: isClosing ? 0.2 : 0.4,
                      }}
-                     className="w-10 h-10 text-green-500"
+                     className="h-10 w-10 text-green-500"
                      fill="none"
                      viewBox="0 0 24 24"
                      stroke="currentColor"
@@ -107,10 +107,10 @@ export function ConfirmationComplete({
                delay: isClosing ? 0 : 0.7,
                duration: isClosing ? 0.2 : 0.4,
             }}
-            className="text-center max-w-sm"
+            className="max-w-sm text-center"
          >
             <motion.h2
-               className="text-white text-xl font-semibold mb-2 tracking-tight leading-tight"
+               className="mb-2 font-semibold text-white text-xl leading-tight tracking-tight"
                style={{
                   fontFamily:
                      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
@@ -126,7 +126,7 @@ export function ConfirmationComplete({
                   delay: isClosing ? 0 : 0.9,
                   duration: isClosing ? 0.1 : 0.4,
                }}
-               className="text-neutral-300 text-sm font-normal leading-relaxed"
+               className="font-normal text-neutral-300 text-sm leading-relaxed"
                style={{
                   fontFamily:
                      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',

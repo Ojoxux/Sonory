@@ -51,7 +51,6 @@ export function UserMarker({ map, position }: UserMarkerProps): null {
                .addTo(map)
 
             userMarkerRef.current = marker
-            console.log('ユーザーマーカーを作成しました:', { lng, lat })
          } catch (error) {
             console.error('マーカー作成エラー:', error)
          }

@@ -7,7 +7,7 @@
 
 import * as E from 'fp-ts/Either'
 import * as O from 'fp-ts/Option'
-import * as TE from 'fp-ts/TaskEither'
+import * as te from 'fp-ts/TaskEither'
 import { pipe } from 'fp-ts/function'
 
 // =============================================================================
@@ -23,7 +23,7 @@ export const fromNullable = <T>(value: T | null | undefined): O.Option<T> =>
 /**
  * 複数のOptionから最初の有効な値を取得
  */
-export const firstSome = <T>(...options: Array<O.Option<T>>): O.Option<T> =>
+export const firstSome = <T>(...options: O.Option<T>[]): O.Option<T> =>
    options.reduce((acc, curr) => (O.isSome(acc) ? acc : curr), O.none)
 
 // =============================================================================
@@ -78,8 +78,8 @@ export const tryCatch = <T>(fn: () => T): E.Either<AppError, T> => {
  */
 export const tryCatchTask = <T>(
    task: () => Promise<T>,
-): TE.TaskEither<AppError, T> =>
-   TE.tryCatch(task, (error) =>
+): te.TaskEither<AppError, T> =>
+   te.tryCatch(task, (error) =>
       createError(
          'NetworkError',
          error instanceof Error ? error.message : 'Network error occurred',
@@ -92,8 +92,8 @@ export const tryCatchTask = <T>(
  */
 export const getGeolocationTE = (
    options?: PositionOptions,
-): TE.TaskEither<AppError, GeolocationPosition> =>
-   TE.tryCatch(
+): te.TaskEither<AppError, GeolocationPosition> =>
+   te.tryCatch(
       () =>
          new Promise<GeolocationPosition>((resolve, reject) => {
             if (!('geolocation' in navigator)) {

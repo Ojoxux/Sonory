@@ -15,9 +15,9 @@
 
 'use client'
 
-import type { ReactElement } from 'react'
-import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import type { ReactElement } from 'react'
+import { useState } from 'react'
 import { FaBug, FaChevronDown, FaChevronUp } from 'react-icons/fa'
 import { useInferenceStore } from '../../../store/useInferenceStore'
 import { useRecorderStore } from '../../../store/useRecorderStore'
@@ -68,10 +68,10 @@ export function DebugPanel({
          initial={{ opacity: 0, y: 20 }}
          animate={{ opacity: 1, y: 0 }}
          exit={{ opacity: 0, y: 20 }}
-         className="absolute bottom-4 right-4 bg-black/70 text-white p-3 rounded-md text-xs max-w-sm z-[1000]"
+         className="absolute right-4 bottom-4 z-[1000] max-w-sm rounded-md bg-black/70 p-3 text-white text-xs"
       >
          {/* ヘッダー */}
-         <div className="flex items-center justify-between mb-3">
+         <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
                <FaBug className="text-yellow-400" />
                <span className="font-bold">Debug Panel</span>
@@ -79,7 +79,7 @@ export function DebugPanel({
             <button
                type="button"
                onClick={() => setIsExpanded(!isExpanded)}
-               className="p-1 hover:bg-white/10 rounded transition-colors"
+               className="rounded p-1 transition-colors hover:bg-white/10"
             >
                {isExpanded ? <FaChevronDown /> : <FaChevronUp />}
             </button>
@@ -87,17 +87,16 @@ export function DebugPanel({
 
          {/* タブ選択（展開時のみ） */}
          {isExpanded && (
-            <div className="flex gap-1 mb-3 pointer-events-auto">
+            <div className="pointer-events-auto mb-3 flex gap-1">
                <button
                   type="button"
                   onClick={() => {
-                     console.log('🔧 Mainタブがクリックされました')
                      setSelectedTab('main')
                   }}
-                  className={`px-2 py-1 rounded text-xs transition-colors ${
+                  className={`rounded px-2 py-1 text-xs transition-colors ${
                      selectedTab === 'main'
                         ? 'bg-blue-500/50 text-white'
-                        : 'hover:bg-white/10 text-gray-300'
+                        : 'text-gray-300 hover:bg-white/10'
                   }`}
                >
                   Main
@@ -105,13 +104,12 @@ export function DebugPanel({
                <button
                   type="button"
                   onClick={() => {
-                     console.log('🔧 YAMNetタブがクリックされました')
                      setSelectedTab('yamnet')
                   }}
-                  className={`px-2 py-1 rounded text-xs transition-colors ${
+                  className={`rounded px-2 py-1 text-xs transition-colors ${
                      selectedTab === 'yamnet'
                         ? 'bg-blue-500/50 text-white'
-                        : 'hover:bg-white/10 text-gray-300'
+                        : 'text-gray-300 hover:bg-white/10'
                   }`}
                >
                   YAMNet
@@ -182,17 +180,17 @@ ${
                {selectedTab === 'main' && (
                   <div className="pointer-events-auto">
                      {/* 時間帯変更ボタン */}
-                     <div className="text-white text-xs mb-2 font-semibold">
+                     <div className="mb-2 font-semibold text-white text-xs">
                         時間帯変更:
                      </div>
-                     <div className="grid grid-cols-2 gap-1 mb-2">
+                     <div className="mb-2 grid grid-cols-2 gap-1">
                         <button
                            type="button"
                            onClick={() => handleTimeChange(5)}
-                           className={`px-2 py-1 rounded text-xs transition-colors ${
+                           className={`rounded px-2 py-1 text-xs transition-colors ${
                               debugTimeOverride === 5
                                  ? 'bg-indigo-600 text-white'
-                                 : 'bg-gray-600 hover:bg-gray-500 text-gray-200'
+                                 : 'bg-gray-600 text-gray-200 hover:bg-gray-500'
                            }`}
                         >
                            早朝暗め (5時)
@@ -200,10 +198,10 @@ ${
                         <button
                            type="button"
                            onClick={() => handleTimeChange(7)}
-                           className={`px-2 py-1 rounded text-xs transition-colors ${
+                           className={`rounded px-2 py-1 text-xs transition-colors ${
                               debugTimeOverride === 7
                                  ? 'bg-blue-400 text-white'
-                                 : 'bg-gray-600 hover:bg-gray-500 text-gray-200'
+                                 : 'bg-gray-600 text-gray-200 hover:bg-gray-500'
                            }`}
                         >
                            朝自然 (7時)
@@ -211,10 +209,10 @@ ${
                         <button
                            type="button"
                            onClick={() => handleTimeChange(12)}
-                           className={`px-2 py-1 rounded text-xs transition-colors ${
+                           className={`rounded px-2 py-1 text-xs transition-colors ${
                               debugTimeOverride === 12
                                  ? 'bg-yellow-500 text-white'
-                                 : 'bg-gray-600 hover:bg-gray-500 text-gray-200'
+                                 : 'bg-gray-600 text-gray-200 hover:bg-gray-500'
                            }`}
                         >
                            昼 (12時)
@@ -222,10 +220,10 @@ ${
                         <button
                            type="button"
                            onClick={() => handleTimeChange(17)}
-                           className={`px-2 py-1 rounded text-xs transition-colors ${
+                           className={`rounded px-2 py-1 text-xs transition-colors ${
                               debugTimeOverride === 17
                                  ? 'bg-orange-600 text-white'
-                                 : 'bg-gray-600 hover:bg-gray-500 text-gray-200'
+                                 : 'bg-gray-600 text-gray-200 hover:bg-gray-500'
                            }`}
                         >
                            夕方初期 (17時)
@@ -233,23 +231,23 @@ ${
                         <button
                            type="button"
                            onClick={() => handleTimeChange(20)}
-                           className={`px-2 py-1 rounded text-xs transition-colors ${
+                           className={`rounded px-2 py-1 text-xs transition-colors ${
                               debugTimeOverride === 20
                                  ? 'bg-red-600 text-white'
-                                 : 'bg-gray-600 hover:bg-gray-500 text-gray-200'
+                                 : 'bg-gray-600 text-gray-200 hover:bg-gray-500'
                            }`}
                         >
                            夕方後期 (20時)
                         </button>
                      </div>
-                     <div className="grid grid-cols-2 gap-1 mb-2">
+                     <div className="mb-2 grid grid-cols-2 gap-1">
                         <button
                            type="button"
                            onClick={() => handleTimeChange(22)}
-                           className={`px-2 py-1 rounded text-xs transition-colors ${
+                           className={`rounded px-2 py-1 text-xs transition-colors ${
                               debugTimeOverride === 22
                                  ? 'bg-blue-900 text-white'
-                                 : 'bg-gray-600 hover:bg-gray-500 text-gray-200'
+                                 : 'bg-gray-600 text-gray-200 hover:bg-gray-500'
                            }`}
                         >
                            夜 (22時)
@@ -257,10 +255,10 @@ ${
                         <button
                            type="button"
                            onClick={() => handleTimeChange(2)}
-                           className={`px-2 py-1 rounded text-xs transition-colors ${
+                           className={`rounded px-2 py-1 text-xs transition-colors ${
                               debugTimeOverride === 2
                                  ? 'bg-indigo-900 text-white'
-                                 : 'bg-gray-600 hover:bg-gray-500 text-gray-200'
+                                 : 'bg-gray-600 text-gray-200 hover:bg-gray-500'
                            }`}
                         >
                            深夜 (2時)
@@ -269,10 +267,10 @@ ${
                      <button
                         type="button"
                         onClick={() => handleTimeChange(null)}
-                        className={`w-full px-2 py-1 rounded text-xs transition-colors ${
+                        className={`w-full rounded px-2 py-1 text-xs transition-colors ${
                            debugTimeOverride === null
                               ? 'bg-green-600 text-white'
-                              : 'bg-gray-600 hover:bg-gray-500 text-gray-200'
+                              : 'bg-gray-600 text-gray-200 hover:bg-gray-500'
                         }`}
                      >
                         実時間に戻す
@@ -280,35 +278,35 @@ ${
 
                      {/* PWAインストールプロンプト操作 */}
                      <div className="mt-4">
-                        <div className="text-white text-xs mb-2 font-semibold">
+                        <div className="mb-2 font-semibold text-white text-xs">
                            PWAインストールプロンプト:
                         </div>
                         <div className="grid grid-cols-2 gap-1">
                            <button
                               type="button"
                               onClick={() => handlePWADebugShow(false)}
-                              className="px-2 py-1 rounded text-xs transition-colors bg-gray-600 hover:bg-gray-500 text-gray-200"
+                              className="rounded bg-gray-600 px-2 py-1 text-gray-200 text-xs transition-colors hover:bg-gray-500"
                            >
                               表示（縮小）
                            </button>
                            <button
                               type="button"
                               onClick={() => handlePWADebugShow(true)}
-                              className="px-2 py-1 rounded text-xs transition-colors bg-gray-600 hover:bg-gray-500 text-gray-200"
+                              className="rounded bg-gray-600 px-2 py-1 text-gray-200 text-xs transition-colors hover:bg-gray-500"
                            >
                               表示（展開）
                            </button>
                            <button
                               type="button"
                               onClick={handlePWADebugHide}
-                              className="col-span-2 px-2 py-1 rounded text-xs transition-colors bg-gray-600 hover:bg-gray-500 text-gray-200"
+                              className="col-span-2 rounded bg-gray-600 px-2 py-1 text-gray-200 text-xs transition-colors hover:bg-gray-500"
                            >
                               非表示
                            </button>
                         </div>
                      </div>
 
-                     <div className="pointer-events-none mt-3 text-xs text-gray-300">
+                     <div className="pointer-events-none mt-3 text-gray-300 text-xs">
                         <div>キーボードショートカット:</div>
                         <div>Shift+D: デバッグモード切替</div>
                         <div>Shift+G: 位置情報再取得</div>
@@ -319,13 +317,13 @@ ${
 
                {/* YAMNetタブ */}
                {selectedTab === 'yamnet' && (
-                  <div className="space-y-2 max-h-80 overflow-y-auto pointer-events-auto">
+                  <div className="pointer-events-auto max-h-80 space-y-2 overflow-y-auto">
                      {/* 現在の状態デバッグ */}
-                     <div className="bg-yellow-500/20 p-2 rounded border border-yellow-500/30">
-                        <div className="text-yellow-300 text-xs font-bold">
+                     <div className="rounded border border-yellow-500/30 bg-yellow-500/20 p-2">
+                        <div className="font-bold text-xs text-yellow-300">
                            Debug Info
                         </div>
-                        <div className="text-yellow-200 text-xs">
+                        <div className="text-xs text-yellow-200">
                            Selected Tab: {selectedTab} | Expanded:{' '}
                            {isExpanded ? 'Yes' : 'No'}
                         </div>
@@ -333,7 +331,7 @@ ${
 
                      {/* 録音・AI状態 */}
                      <div className="grid grid-cols-2 gap-2">
-                        <div className="bg-white/5 p-2 rounded">
+                        <div className="rounded bg-white/5 p-2">
                            <div className="text-gray-400">AI Analysis</div>
                            <div
                               className={
@@ -345,13 +343,13 @@ ${
                               {isInferring ? 'Running' : 'Idle'}
                            </div>
                         </div>
-                        <div className="bg-white/5 p-2 rounded">
+                        <div className="rounded bg-white/5 p-2">
                            <div className="text-gray-400">Results Count</div>
                            <div>{results.length}</div>
                         </div>
                      </div>
 
-                     <div className="bg-white/5 p-2 rounded">
+                     <div className="rounded bg-white/5 p-2">
                         <div className="text-gray-400">Audio Data</div>
                         <div>
                            {audioData
@@ -363,18 +361,18 @@ ${
                      </div>
 
                      {/* パフォーマンス */}
-                     <div className="bg-white/5 p-2 rounded">
+                     <div className="rounded bg-white/5 p-2">
                         <div className="text-gray-400">Memory Usage</div>
                         <div>{performanceData.memoryUsage}MB</div>
                      </div>
-                     <div className="bg-white/5 p-2 rounded">
+                     <div className="rounded bg-white/5 p-2">
                         <div className="text-gray-400">Last AI Processing</div>
                         <div>{performanceData.lastAIProcessingTime}ms</div>
                      </div>
 
                      {/* エラー表示 */}
                      {error && (
-                        <div className="bg-red-500/20 p-2 rounded border border-red-500/30">
+                        <div className="rounded border border-red-500/30 bg-red-500/20 p-2">
                            <div className="text-red-400">Error</div>
                            <div className="text-red-300 text-xs">
                               {error.message}
@@ -384,8 +382,8 @@ ${
 
                      {/* 結果表示 */}
                      {results.length > 0 && (
-                        <div className="bg-white/5 p-2 rounded">
-                           <div className="text-gray-400 mb-1">
+                        <div className="rounded bg-white/5 p-2">
+                           <div className="mb-1 text-gray-400">
                               Latest Results
                            </div>
                            {results.slice(0, 3).map((result, index) => (
@@ -401,18 +399,18 @@ ${
                      )}
 
                      {/* ログ */}
-                     <div className="bg-white/5 p-2 rounded">
-                        <div className="flex justify-between items-center mb-1">
+                     <div className="rounded bg-white/5 p-2">
+                        <div className="mb-1 flex items-center justify-between">
                            <span className="text-gray-400">Recent Logs</span>
                            <button
                               type="button"
                               onClick={clearLogs}
-                              className="text-xs px-1 py-0.5 bg-red-500/20 text-red-300 rounded hover:bg-red-500/30 transition-colors"
+                              className="rounded bg-red-500/20 px-1 py-0.5 text-red-300 text-xs transition-colors hover:bg-red-500/30"
                            >
                               Clear
                            </button>
                         </div>
-                        <div className="space-y-1 max-h-32 overflow-y-auto">
+                        <div className="max-h-32 space-y-1 overflow-y-auto">
                            {logs.slice(0, 5).map((log) => (
                               <div key={log.id} className="text-xs">
                                  <span className="text-gray-500">
@@ -428,12 +426,9 @@ ${
                      <button
                         type="button"
                         onClick={() => {
-                           console.log(
-                              '🧪 YAMNetテストボタンがクリックされました',
-                           )
                            alert('YAMNet Test Button Clicked!')
                         }}
-                        className="w-full bg-blue-500/20 text-blue-300 p-2 rounded hover:bg-blue-500/30 transition-colors"
+                        className="w-full rounded bg-blue-500/20 p-2 text-blue-300 transition-colors hover:bg-blue-500/30"
                      >
                         Test YAMNet Button
                      </button>

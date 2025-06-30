@@ -10,7 +10,7 @@
  * @returns 環境効果の状態と制御関数
  */
 
-import mapboxgl from 'mapbox-gl'
+import type mapboxgl from 'mapbox-gl'
 import { useCallback, useEffect, useState } from 'react'
 import {
    applyNightLighting,
@@ -131,7 +131,7 @@ function setMapboxLightPreset(
          extendedMap.setConfigProperty('basemap', 'lightPreset', lightPreset)
 
          if (process.env.NODE_ENV === 'development') {
-            console.log('✅ lightPreset設定成功:', lightPreset)
+            // TODO: lightPreset設定成功のログ出力を実装
          }
          return
       }
@@ -172,7 +172,7 @@ function setMapboxLightPreset(
          }
 
          if (process.env.NODE_ENV === 'development') {
-            console.log('✅ lightPreset設定成功 (setStyle方式):', lightPreset)
+            // TODO: lightPreset設定成功 (setStyle方式)のログ出力を実装
          }
          return
       }
@@ -264,11 +264,7 @@ export function useMapEnvironment({
             const lightPreset = getLightPresetFromTime(debugTimeOverride)
 
             if (process.env.NODE_ENV === 'development') {
-               console.log('🌅 時間ベースのライティング設定:', {
-                  currentHour,
-                  lightPreset,
-                  isDebugMode: debugTimeOverride !== null,
-               })
+               // TODO: 時間ベースのライティング設定のログ出力を実装
             }
 
             // Mapbox Standard Style の lightPreset を設定
@@ -304,18 +300,12 @@ export function useMapEnvironment({
             }
 
             if (position && process.env.NODE_ENV === 'development') {
-               const sunPosition = calculateSunPosition(
+               const SUN_POSITION = calculateSunPosition(
                   now,
                   position.latitude,
                   position.longitude,
                )
-               // 実際の太陽高度は参考程度に使用
-               console.log(
-                  '📍 実際の太陽高度 (参考):',
-                  sunPosition.altitude,
-                  '使用値:',
-                  sunAltitude,
-               )
+               // TODO: 実際の太陽高度のログ出力を実装
             }
 
             // 時間帯に応じたライティング設定を取得
@@ -369,12 +359,7 @@ export function useMapEnvironment({
             }
 
             if (process.env.NODE_ENV === 'development') {
-               console.log('ライティング更新完了:', {
-                  lightPreset,
-                  hour: currentHour,
-                  isNightTime,
-                  isDayTime,
-               })
+               // TODO: ライティング更新完了のログ出力を実装
             }
          } catch (error) {
             console.error('光と影の更新エラー:', error)
@@ -422,7 +407,7 @@ export function useMapEnvironment({
       if (!map || !mapStyleLoaded) return
 
       if (process.env.NODE_ENV === 'development') {
-         console.log('デバッグ時間が変更されました:', debugTimeOverride)
+         // TODO: デバッグ時間変更のログ出力を実装
       }
 
       // スタイル更新の競合を避けるため、スタイルが読み込まれてから実行
@@ -435,7 +420,7 @@ export function useMapEnvironment({
       }
 
       setTimeout(updateWithStyleCheck, 500)
-   }, [debugTimeOverride, map, mapStyleLoaded, updateLightingAndShadows])
+   }, [map, mapStyleLoaded, updateLightingAndShadows])
 
    return {
       currentLighting,

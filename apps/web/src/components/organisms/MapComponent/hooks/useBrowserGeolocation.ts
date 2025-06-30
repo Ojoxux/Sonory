@@ -120,19 +120,6 @@ export function useBrowserGeolocation() {
                for (const subscriber of geolocationInstance.subscribers) {
                   subscriber(newPos)
                }
-               console.log('位置情報を更新:', {
-                  ...newPos,
-                  distance: lastPositionRef.current
-                     ? `${Math.round(
-                          getDistanceMeters(
-                             lastPositionRef.current.latitude,
-                             lastPositionRef.current.longitude,
-                             newPos.latitude,
-                             newPos.longitude,
-                          ),
-                       )}m`
-                     : '初回',
-               })
             }
          }
 

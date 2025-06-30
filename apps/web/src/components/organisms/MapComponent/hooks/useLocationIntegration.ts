@@ -64,14 +64,7 @@ export function useLocationIntegration({
     * 段階的フォールバック戦略による位置情報取得
     */
    const attemptGeolocation = useCallback((): void => {
-      console.log('attemptGeolocation呼び出し:', {
-         control: !!geolocateControl,
-         initialized: geolocateInitialized,
-         attempted: geolocateAttempted,
-      })
-
       setGeolocateAttempted(true)
-      console.log('位置情報の取得を試みます...')
 
       if (!('geolocation' in navigator)) {
          console.warn('Geolocation APIがサポートされていません')
@@ -80,7 +73,6 @@ export function useLocationIntegration({
          if (savedPosition) {
             try {
                const parsed = JSON.parse(savedPosition) as LocationData
-               console.log('保存された位置情報を使用します')
                setMapboxPosition(parsed)
                onPositionUpdate(parsed)
             } catch (error) {
@@ -97,10 +89,6 @@ export function useLocationIntegration({
       ): void => {
          navigator.geolocation.getCurrentPosition(
             (position) => {
-               console.log(
-                  `位置情報取得成功 (レベル${fallbackLevel}):`,
-                  position.coords,
-               )
                const newPosition = {
                   latitude: position.coords.latitude,
                   longitude: position.coords.longitude,
@@ -138,16 +126,8 @@ export function useLocationIntegration({
                }
             },
             (error) => {
-               console.log(
-                  `位置情報取得失敗 (レベル${fallbackLevel}):`,
-                  error.code,
-                  error.message,
-               )
-
                // 段階的フォールバック
                if (fallbackLevel === 1 && error.code === 3) {
-                  // レベル1: 高精度モード、短いタイムアウト → レベル2: 低精度モード、長いタイムアウト
-                  console.log('レベル2フォールバック: 低精度モードで再試行')
                   tryGeolocation(
                      {
                         enableHighAccuracy: false,
@@ -157,15 +137,12 @@ export function useLocationIntegration({
                      2,
                   )
                } else if (fallbackLevel === 2) {
-                  // レベル2失敗 → レベル3: 保存された位置情報を使用
-                  console.log('レベル3フォールバック: 保存された位置情報を使用')
                   const savedPosition = localStorage.getItem(
                      'sonory_last_position',
                   )
                   if (savedPosition) {
                      try {
                         const parsed = JSON.parse(savedPosition) as LocationData
-                        console.log('保存された位置情報を使用します')
                         setMapboxPosition(parsed)
 
                         // 位置情報を更新する前に録音データを保存
@@ -197,23 +174,16 @@ export function useLocationIntegration({
 
                   // レベル4: Mapboxのgeolocationコントロールを試行
                   if (geolocateControl && geolocateInitialized) {
-                     console.log(
-                        'レベル4フォールバック: Mapboxコントロールを使用',
-                     )
                      try {
                         geolocateControl.trigger()
                      } catch (triggerError) {
                         console.error('Mapbox trigger失敗:', triggerError)
-                        // 最終的に失敗した場合は静かに処理（ユーザーには通知しない）
-                        console.log('すべてのフォールバックが失敗しました')
                      }
                   } else {
-                     // 最終的に失敗した場合は静かに処理
-                     console.log('すべてのフォールバックが失敗しました')
+                     // TODO: Mapboxの位置情報取得が利用できない場合の処理を実装
                   }
                } else {
-                  // その他のエラー（権限拒否など）は即座に処理
-                  console.log('位置情報の取得に失敗しました:', error.message)
+                  // TODO: 最終的なフォールバック処理を実装
                }
             },
             options,
@@ -232,7 +202,6 @@ export function useLocationIntegration({
    }, [
       geolocateControl,
       geolocateInitialized,
-      geolocateAttempted,
       debugMode,
       showNotification,
       onPositionUpdate,
@@ -243,8 +212,6 @@ export function useLocationIntegration({
     * 位置情報をリセットする関数
     */
    const resetGeolocation = useCallback((): void => {
-      console.log('位置情報キャッシュをクリアして再取得します...')
-
       // 録音データを保存
       const recordingData = localStorage.getItem('recording_data')
 

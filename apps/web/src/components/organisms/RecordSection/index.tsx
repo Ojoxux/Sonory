@@ -26,10 +26,10 @@ export function RecordSection({ className = '' }: RecordSectionProps) {
          {/* 録音時間インジケーター */}
          {status === 'recording' && (
             <div className="animate-fade-in">
-               <div className="bg-white/80 backdrop-blur-xl px-4 py-2 rounded-full shadow-lg border border-white/20">
-                  <p className="text-sm font-medium text-gray-700">
+               <div className="rounded-full border border-white/20 bg-white/80 px-4 py-2 shadow-lg backdrop-blur-xl">
+                  <p className="font-medium text-gray-700 text-sm">
                      録音中...{' '}
-                     <span className="text-red-500 font-bold">
+                     <span className="font-bold text-red-500">
                         {remainingTime}秒
                      </span>
                   </p>
@@ -54,8 +54,8 @@ export function RecordSection({ className = '' }: RecordSectionProps) {
          {/* ステータステキスト */}
          {status === 'processing' && (
             <div className="animate-fade-in">
-               <div className="bg-white/80 backdrop-blur-xl px-4 py-2 rounded-full shadow-lg border border-white/20">
-                  <p className="text-sm font-medium text-purple-700">
+               <div className="rounded-full border border-white/20 bg-white/80 px-4 py-2 shadow-lg backdrop-blur-xl">
+                  <p className="font-medium text-purple-700 text-sm">
                      音を分析中...
                   </p>
                </div>
@@ -64,8 +64,8 @@ export function RecordSection({ className = '' }: RecordSectionProps) {
 
          {status === 'completed' && (
             <div className="animate-fade-in">
-               <div className="bg-white/80 backdrop-blur-xl px-4 py-2 rounded-full shadow-lg border border-white/20">
-                  <p className="text-sm font-medium text-green-700">
+               <div className="rounded-full border border-white/20 bg-white/80 px-4 py-2 shadow-lg backdrop-blur-xl">
+                  <p className="font-medium text-green-700 text-sm">
                      ✓ 録音完了
                   </p>
                </div>

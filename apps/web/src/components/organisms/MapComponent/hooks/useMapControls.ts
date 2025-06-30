@@ -44,24 +44,19 @@ export function useMapControls({
 }: UseMapKeyboardShortcutsProps): void {
    useEffect(() => {
       const handleKeyDown = (e: KeyboardEvent): void => {
-         console.log('キーイベント:', { shift: e.shiftKey, key: e.key })
-
          // Shift + D でデバッグモード切り替え
          if (e.shiftKey && e.key === 'D') {
-            console.log('デバッグモード切り替え')
             onToggleDebugMode()
          }
 
          // Shift + G で位置情報を再取得
          if (e.shiftKey && e.key === 'G') {
-            console.log('位置情報再取得を実行')
             e.preventDefault()
             onGeolocationRetry()
          }
 
          // Shift + R で位置情報キャッシュをクリアして再取得
          if (e.shiftKey && e.key === 'R') {
-            console.log('位置情報キャッシュをクリアして再取得します...')
             e.preventDefault()
             onGeolocationReset()
          }
@@ -80,7 +75,6 @@ export function useMapControls({
                const newTime = timeMap[e.key]
                if (newTime !== undefined) {
                   onDebugTimeChange(newTime)
-                  console.log(`デバッグ時間を${newTime}時に設定しました`)
                   onUpdateLighting()
                }
             }
@@ -89,7 +83,6 @@ export function useMapControls({
             if (e.shiftKey && e.key === '0') {
                e.preventDefault()
                onDebugTimeChange(null)
-               console.log('デバッグ時間をリセットしました')
                onUpdateLighting()
             }
          }
@@ -101,7 +94,6 @@ export function useMapControls({
          window.removeEventListener('keydown', handleKeyDown)
       }
    }, [
-      map,
       debugMode,
       onToggleDebugMode,
       onGeolocationRetry,

@@ -68,13 +68,11 @@ export function SlideToStart({
       <div className={`mb-4 ${className}`}>
          <div
             ref={containerRef}
-            className={`
-          relative isolate h-14 w-full rounded-full p-1 transition-all duration-300
-          ${
-             !disabled
-                ? 'bg-white shadow-[0_8px_24px_rgba(255,255,255,0.4)]'
-                : 'bg-neutral-700 cursor-not-allowed'
-          }
+            className={`relative isolate h-14 w-full rounded-full p-1 transition-all duration-300 ${
+               !disabled
+                  ? 'bg-white shadow-[0_8px_24px_rgba(255,255,255,0.4)]'
+                  : 'cursor-not-allowed bg-neutral-700'
+            }
         `}
          >
             {/* 雫の波紋エフェクト */}
@@ -108,27 +106,21 @@ export function SlideToStart({
                }}
                whileTap={!disabled ? { scale: 1.05 } : {}}
                style={{ x }}
-               className={`
-            relative z-10 grid h-full w-16 place-items-center rounded-full
-            ${
-               !disabled
-                  ? 'bg-black cursor-grab active:cursor-grabbing'
-                  : 'bg-neutral-600 cursor-not-allowed'
-            }
+               className={`relative z-10 grid h-full w-16 place-items-center rounded-full ${
+                  !disabled
+                     ? 'cursor-grab bg-black active:cursor-grabbing'
+                     : 'cursor-not-allowed bg-neutral-600'
+               }
           `}
             >
                <MdArrowForward
-                  className={`
-              w-5 h-5 transition-colors duration-300
-              ${!disabled ? 'text-white' : 'text-neutral-400'}
+                  className={`h-5 w-5 transition-colors duration-300 ${!disabled ? 'text-white' : 'text-neutral-400'}
             `}
                />
             </motion.div>
             <motion.p
                style={{ opacity }}
-               className={`
-            absolute right-5 top-1/2 -translate-y-1/2 text-sm font-semibold tracking-tight transition-colors duration-300
-            ${!disabled ? 'text-black' : 'text-neutral-400'}
+               className={`-translate-y-1/2 absolute top-1/2 right-5 font-semibold text-sm tracking-tight transition-colors duration-300 ${!disabled ? 'text-black' : 'text-neutral-400'}
           `}
             >
                {text}

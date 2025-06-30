@@ -93,7 +93,7 @@ export type GeoJSONLineStringFeature = {
    properties: Record<string, unknown>
    geometry: {
       type: 'LineString'
-      coordinates: Array<[number, number]>
+      coordinates: [number, number][]
    }
 }
 

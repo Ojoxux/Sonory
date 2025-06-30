@@ -94,11 +94,7 @@ export function CompassButton({
          <motion.button
             aria-label="現在位置に戻る"
             onClick={onClick}
-            className={`
-          w-14 h-14 rounded-full
-          flex items-center justify-center
-          backdrop-blur-md
-          ${bgBase}
+            className={`flex h-14 w-14 items-center justify-center rounded-full backdrop-blur-md ${bgBase}
           ${borderColor}
           ${baseColor}
           ${shadowColor}
@@ -126,7 +122,7 @@ export function CompassButton({
          >
             {/* コンパスアイコン - より大きく */}
             <CompassIcon
-               className={`w-10 h-10 ${hasRotation ? 'opacity-90' : 'opacity-80'}`}
+               className={`h-10 w-10 ${hasRotation ? 'opacity-90' : 'opacity-80'}`}
                mapBearing={mapBearing}
             />
          </motion.button>

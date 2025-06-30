@@ -23,7 +23,7 @@ export function InstructionsList({
 }: InstructionsListProps) {
    return (
       <motion.div
-         className={`space-y-3 mb-6 relative z-10 ${className}`}
+         className={`relative z-10 mb-6 space-y-3 ${className}`}
          animate={
             isClosing ? { opacity: 0, scale: 0.9 } : { opacity: 1, scale: 1 }
          }

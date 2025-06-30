@@ -68,8 +68,6 @@ function generateClassificationResults(): InferenceResult[] {
  * @returns アップロード後のURL
  */
 async function uploadAudioToStorage(audioData: AudioData): Promise<string> {
-   console.log('📤 音声ファイルをアップロード中...')
-
    try {
       // FormDataを作成
       const formData = new FormData()
@@ -95,8 +93,6 @@ async function uploadAudioToStorage(audioData: AudioData): Promise<string> {
       if (!result.success || !result.data?.audioUrl) {
          throw new Error('アップロード結果が不正です')
       }
-
-      console.log('✅ 音声アップロード完了:', result.data.audioUrl)
       return result.data.audioUrl
    } catch (error) {
       console.error('❌ 音声アップロードエラー:', error)
@@ -114,8 +110,6 @@ async function callBackendAnalysis(
    audioData: AudioData,
    audioUrl: string,
 ): Promise<InferenceResult[]> {
-   console.log('🚀 バックエンドAPI呼び出し開始:', audioData.id)
-
    try {
       // API Gateway経由でPython YAMNet分析を実行
       const response = await fetch(`/api/audio/${audioData.id}/analyze`, {
@@ -159,13 +153,6 @@ async function callBackendAnalysis(
          throw new Error('分析結果が空でした - フォールバックを使用')
       }
 
-      console.log('✅ バックエンドAPI分析完了:', {
-         classificationsCount: classifications.length,
-         primarySound: classifications[0],
-         environment: analysisResult.data.environment,
-         processingTime: analysisResult.data.performanceMetrics?.total_time,
-      })
-
       return classifications
    } catch (error) {
       console.warn('⚠️ バックエンドAPI呼び出し失敗:', error)
@@ -197,7 +184,6 @@ export const useInferenceStore = create<InferenceState>((set) => ({
     */
    startInference: async (audioData: AudioData): Promise<void> => {
       try {
-         console.log('🚀 音響推論開始')
          set({ isInferring: true, error: null })
 
          let results: InferenceResult[]
@@ -209,17 +195,11 @@ export const useInferenceStore = create<InferenceState>((set) => ({
 
             // 2. アップロードされたURLを使ってバックエンドAPI呼び出しを実行
             results = await callBackendAnalysis(audioData, audioUrl)
-            console.log('✅ バックエンドAPI推論完了:', results)
-         } catch (backendError) {
-            console.log(
-               '🔄 バックエンドAPI失敗、フォールバック実行:',
-               backendError,
-            )
+         } catch (_backendError) {
             isUsingFallback = true
 
             // フォールバック分析を実行
             results = generateClassificationResults()
-            console.log('✅ フォールバック推論完了:', results)
          }
 
          // 結果を設定
@@ -253,7 +233,6 @@ export const useInferenceStore = create<InferenceState>((set) => ({
             isInferring: false,
             error: new Error(errorMessage),
          })
-         console.log('✅ 最終フォールバック推論結果:', fallbackResults)
       }
    },
 

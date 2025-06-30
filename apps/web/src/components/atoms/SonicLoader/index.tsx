@@ -25,9 +25,6 @@ export function SonicLoader({
    text = 'AIが音を分析しています',
    className = '',
 }: SonicLoaderProps) {
-   console.log('🔄 SonicLoader レンダリング:', { isLoading, text, className })
-   console.log('🔄 SonicLoader CPUアイコン確認:', { CpuIcon: !!CpuIcon })
-
    // 中央の光のコアの呼吸アニメーションバリアント
    const coreGlowVariants = {
       animate: {
@@ -72,15 +69,12 @@ export function SonicLoader({
    }
 
    if (!isLoading) {
-      console.log('🔄 SonicLoader: isLoadingがfalseのため非表示')
       return null
    }
 
-   console.log('🔄 SonicLoader: レンダリング開始')
-
    return (
       <div
-         className={`flex flex-col items-center justify-center h-full w-full text-white p-4 rounded-xl shadow-2xl overflow-hidden relative ${className}`}
+         className={`relative flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-xl p-4 text-white shadow-2xl ${className}`}
          style={{
             background:
                'radial-gradient(circle at center, #0A192F 0%, #000000 100%)', // 深い青みがかった放射状グラデーション
@@ -103,7 +97,7 @@ export function SonicLoader({
             style={{ filter: 'blur(10px)' }} // 強くぼかす
          />
 
-         <div className="relative flex items-center justify-center w-56 h-56">
+         <div className="relative flex h-56 w-56 items-center justify-center">
             {/* コンテナをさらに大きく */}
             {/* 拡張する光の波紋 */}
             {[0, 1, 2, 3, 4].map((i) => (
@@ -121,7 +115,7 @@ export function SonicLoader({
             ))}
             {/* 中央の光のコア（CPUアイコンの背後で脈動） */}
             <motion.div
-               className="absolute z-10 w-36 h-36 rounded-full bg-transparent" // 背景を透明に
+               className="absolute z-10 h-36 w-36 rounded-full bg-transparent" // 背景を透明に
                variants={coreGlowVariants}
                initial="initial"
                animate="animate"
@@ -133,21 +127,21 @@ export function SonicLoader({
             />
             {/* 内側の脈動するリング */}
             <motion.div
-               className="absolute z-15 w-20 h-20 rounded-full border-2 border-cyan-500/70" // シアンのリング
+               className="absolute z-15 h-20 w-20 rounded-full border-2 border-cyan-500/70" // シアンのリング
                variants={innerRingVariants}
                initial="initial"
                animate="animate"
             />
             {/* CPUアイコン（最前面に配置） */}
             <div className="relative z-20 flex items-center justify-center">
-               <CpuIcon className="w-14 h-14 text-white" />
+               <CpuIcon className="h-14 w-14 text-white" />
                {/* デバッグ用：アイコンが表示されない場合の代替表示 */}
                <div className="absolute inset-0 flex items-center justify-center text-white text-xs opacity-20">
                   CPU
                </div>
             </div>
          </div>
-         <p className="mt-8 text-lg font-medium text-gray-100 text-center tracking-wide">
+         <p className="mt-8 text-center font-medium text-gray-100 text-lg tracking-wide">
             <span className="sr-only">AIが音を分析中...</span>
             {text}
          </p>

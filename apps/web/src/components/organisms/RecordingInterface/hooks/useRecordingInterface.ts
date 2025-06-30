@@ -109,13 +109,7 @@ export function useRecordingInterface(
 
    // 録音完了後、audioDataが設定されたら再生画面を表示
    useEffect(() => {
-      console.log('useEffect triggered:', {
-         status,
-         hasAudioData: !!audioData,
-         audioData,
-      })
       if (status === 'completed' && audioData) {
-         console.log('AudioData detected, showing playback screen')
          setShowPlayback(true)
          setStatus('idle')
          setRecordingTime(0)
@@ -134,7 +128,6 @@ export function useRecordingInterface(
 
    const handleStartRecording = async () => {
       try {
-         console.log('録音を開始します...')
          setStatus('recording')
          setRecordingTime(0)
          setShowInstructions(false)
@@ -142,7 +135,6 @@ export function useRecordingInterface(
          setIsAgreed(false)
          setShowConfirmationComplete(false)
          await startRecording()
-         console.log('録音が開始されました')
       } catch (error) {
          console.error('録音の開始に失敗しました:', error)
          setStatus('idle')
@@ -164,10 +156,8 @@ export function useRecordingInterface(
 
    const handleStop = async () => {
       try {
-         console.log('録音を停止します...', { currentStatus: status })
          setStatus('completed')
          await stopRecording()
-         console.log('録音が停止されました', { newStatus: 'completed' })
       } catch (error) {
          console.error('録音の停止に失敗しました:', error)
          setStatus('idle')

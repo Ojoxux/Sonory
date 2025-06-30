@@ -86,7 +86,6 @@ export function WaveformPlayer({
                      typeof wavesurferRef.current.isPlaying === 'function' &&
                      wavesurferRef.current.isPlaying()
                   ) {
-                     console.log('Stopping playback before destroy')
                      wavesurferRef.current.pause()
                   }
                } catch (pauseError) {
@@ -97,8 +96,6 @@ export function WaveformPlayer({
                setTimeout(() => {
                   try {
                      if (wavesurferRef.current) {
-                        console.log('Destroying WaveSurfer instance')
-
                         // すべてのイベントリスナーを先に解除
                         if (typeof wavesurferRef.current.unAll === 'function') {
                            wavesurferRef.current.unAll()
@@ -137,31 +134,12 @@ export function WaveformPlayer({
     */
    const initializeWaveSurfer = useCallback(async (): Promise<void> => {
       const myInitId = ++initIdRef.current
-      console.log('initializeWaveSurfer called with:', {
-         hasWindow: typeof window !== 'undefined',
-         hasContainer: !!containerRef.current,
-         hasAudioData: !!audioData,
-         audioDataDetails: audioData
-            ? {
-                 hasBlob: !!audioData.blob,
-                 hasUrl: !!audioData.url,
-                 blobSize: audioData.blob?.size,
-                 blobType: audioData.blob?.type,
-                 url: audioData.url,
-              }
-            : null,
-      })
 
       if (
          typeof window === 'undefined' ||
          !containerRef.current ||
          !audioData
       ) {
-         console.log('WaveSurfer initialization skipped:', {
-            hasWindow: typeof window !== 'undefined',
-            hasContainer: !!containerRef.current,
-            hasAudioData: !!audioData,
-         })
          return
       }
 
@@ -173,7 +151,6 @@ export function WaveformPlayer({
       }
 
       try {
-         console.log('Starting WaveSurfer initialization...')
          setError(null)
          setIsLoading(true)
          setIsInitialized(false)
@@ -218,20 +195,13 @@ export function WaveformPlayer({
          })
 
          wavesurferRef.current = wavesurfer
-         console.log('WaveSurfer instance created')
 
          // イベントリスナーを設定
          wavesurfer.on('ready', () => {
-            console.log('WaveSurfer ready event fired')
             setIsLoading(false)
             setIsInitialized(true)
             const duration = wavesurfer.getDuration()
             setDuration(duration)
-            console.log(
-               'Audio duration:',
-               duration,
-               'WaveSurfer ready for playback',
-            )
             onReady?.()
             wavesurfer.play() // 再生を ready イベント内で確実に実行
          })
@@ -244,9 +214,6 @@ export function WaveformPlayer({
             if (duration > 0 && time >= duration - 0.05) {
                // すでに再生が停止していなければ、手動で停止し、終了処理を呼び出す
                if (wavesurfer.isPlaying()) {
-                  console.log(
-                     'WaveSurfer Manually triggering finish due to reaching end of audio',
-                  )
                   wavesurfer.pause() // 再生を停止
                   setIsPlaying(false)
                   wavesurfer.seekTo(0) // 再生位置を先頭に
@@ -263,12 +230,10 @@ export function WaveformPlayer({
 
          // 再生・一時停止状態の管理
          wavesurfer.on('play', () => {
-            console.log('WaveSurfer play event fired - playback started')
             setIsPlaying(true)
          })
 
          wavesurfer.on('pause', () => {
-            console.log('WaveSurfer pause event fired - playback paused')
             setIsPlaying(false)
          })
 
@@ -290,9 +255,7 @@ export function WaveformPlayer({
          // 音声データを読み込み
          try {
             if (audioData.url) {
-               console.log('Loading audio from URL:', audioData.url)
                wavesurfer.on('ready', () => {
-                  console.log('WaveSurfer ready (from URL) - auto-playing')
                   setIsLoading(false)
                   setIsInitialized(true)
                   setDuration(wavesurfer.getDuration())
@@ -300,15 +263,8 @@ export function WaveformPlayer({
                   wavesurfer.play()
                })
                wavesurfer.load(audioData.url)
-               console.log('Audio URL loaded successfully')
             } else if (audioData.blob) {
-               console.log(
-                  'Loading audio from blob:',
-                  audioData.blob.size,
-                  'bytes',
-               )
                wavesurfer.on('ready', () => {
-                  console.log('WaveSurfer ready (from blob)')
                   setIsLoading(false)
                   setIsInitialized(true)
                   setDuration(wavesurfer.getDuration())
@@ -316,19 +272,12 @@ export function WaveformPlayer({
                   wavesurfer.play()
                })
                wavesurfer.loadBlob(audioData.blob)
-               console.log('Audio blob loaded successfully')
             } else {
                console.error('No valid audio data found')
                setError(new Error('有効な音声データが見つかりません'))
                setIsLoading(false)
                return
             }
-
-            console.log('Post-load WaveSurfer state:', {
-               duration: wavesurfer.getDuration(),
-               isReady: 'loaded',
-               hasContainer: !!containerRef.current,
-            })
          } catch (loadError) {
             console.error('Audio loading error:', loadError)
             setError(
@@ -361,24 +310,6 @@ export function WaveformPlayer({
     * 再生/一時停止を切り替え
     */
    const togglePlayPause = useCallback((): void => {
-      console.log('togglePlayPause called:', {
-         hasWaveSurfer: !!wavesurferRef.current,
-         isInitialized,
-         isPlaying,
-         isLoading,
-         currentTime,
-         duration,
-         isDestroying: isDestroyingRef.current,
-         hasAudioData: !!audioData,
-         audioDataDetails: audioData
-            ? {
-                 hasBlob: !!audioData.blob,
-                 hasUrl: !!audioData.url,
-                 blobSize: audioData.blob?.size,
-                 blobType: audioData.blob?.type,
-              }
-            : null,
-      })
       const wavesurfer = wavesurferRef.current
 
       if (wavesurfer && isInitialized) {
@@ -406,39 +337,18 @@ export function WaveformPlayer({
       }
 
       try {
-         console.log('WaveSurfer instance state:', {
-            isPlaying: wavesurferRef.current.isPlaying?.() || 'unknown',
-            duration: wavesurferRef.current.getDuration?.() || 'unknown',
-            currentTime: wavesurferRef.current.getCurrentTime?.() || 'unknown',
-         })
-
          if (isPlaying) {
-            console.log('Attempting to pause playback...')
             wavesurferRef.current.pause()
-            console.log('Pause command sent')
          } else {
-            console.log('Attempting to start playback...')
             wavesurferRef.current.play()
-            console.log('Play command sent')
          }
       } catch (error) {
          console.error('Toggle play/pause error:', error)
-         console.log(
-            'Attempting to reinitialize WaveSurfer due to play/pause error',
-         )
          initializeWaveSurfer().catch((initError) => {
             console.error('Reinitialize failed:', initError)
          })
       }
-   }, [
-      isPlaying,
-      isLoading,
-      currentTime,
-      duration,
-      initializeWaveSurfer,
-      audioData,
-      isInitialized,
-   ])
+   }, [isPlaying, initializeWaveSurfer, audioData, isInitialized])
 
    /**
     * 秒数をMM:SS形式でフォーマット
@@ -483,7 +393,7 @@ export function WaveformPlayer({
    if (!audioData) {
       return (
          <div
-            className={`flex items-center justify-center h-32 bg-gray-100 rounded-lg ${className}`}
+            className={`flex h-32 items-center justify-center rounded-lg bg-gray-100 ${className}`}
          >
             <p className="text-gray-500">音声データがありません</p>
          </div>
@@ -493,7 +403,7 @@ export function WaveformPlayer({
    if (error) {
       return (
          <div
-            className={`flex items-center justify-center h-32 bg-red-50 rounded-lg ${className}`}
+            className={`flex h-32 items-center justify-center rounded-lg bg-red-50 ${className}`}
          >
             <p className="text-red-600">エラー: {error.message}</p>
          </div>
@@ -504,35 +414,35 @@ export function WaveformPlayer({
       <div className={`w-full ${className}`}>
          {/* 波形表示エリア */}
          <div
-            className="relative w-full bg-gray-50 rounded-lg overflow-hidden"
+            className="relative w-full overflow-hidden rounded-lg bg-gray-50"
             style={{ height: `${height}px` }}
          >
             {/* WaveSurfer コンテナ */}
             <div
                ref={containerRef}
-               className="absolute inset-0 w-full h-full"
+               className="absolute inset-0 h-full w-full"
             />
          </div>
 
          {/* コントロールパネル */}
-         <div className="flex items-center justify-between mt-4 px-2">
+         <div className="mt-4 flex items-center justify-between px-2">
             <button
                type="button"
                onClick={togglePlayPause}
                disabled={isLoading || !isInitialized}
-               className="flex items-center justify-center w-12 h-12 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-400 text-white rounded-full transition-colors touch-manipulation"
+               className="flex h-12 w-12 touch-manipulation items-center justify-center rounded-full bg-gray-900 text-white transition-colors hover:bg-gray-800 disabled:bg-gray-400"
                aria-label={isPlaying ? '一時停止' : '再生'}
             >
                {isLoading ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
                ) : isPlaying ? (
-                  <MdPause className="w-6 h-6" />
+                  <MdPause className="h-6 w-6" />
                ) : (
-                  <MdPlayArrow className="w-6 h-6" />
+                  <MdPlayArrow className="h-6 w-6" />
                )}
             </button>
 
-            <div className="flex items-center gap-2 text-sm font-mono text-gray-600">
+            <div className="flex items-center gap-2 font-mono text-gray-600 text-sm">
                <span>{formatTime(currentTime)}</span>
                <span>/</span>
                <span>{formatTime(duration)}</span>

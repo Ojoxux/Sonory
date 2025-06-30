@@ -45,7 +45,7 @@ export function CheckIcon({
          }}
          className={`${sizeClasses[size]} ${colorClasses[color]} ${className}`}
       >
-         <svg fill="currentColor" viewBox="0 0 24 24" className="w-full h-full">
+         <svg fill="currentColor" viewBox="0 0 24 24" className="h-full w-full">
             <title>チェック完了</title>
             <circle
                cx="12"

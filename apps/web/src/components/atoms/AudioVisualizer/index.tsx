@@ -63,7 +63,7 @@ export function AudioVisualizer({
    }
 
    return (
-      <div className={`flex items-end justify-center gap-1 h-12 ${className}`}>
+      <div className={`flex h-12 items-end justify-center gap-1 ${className}`}>
          {bars.map((height, index) => {
             const barPosition = index * 12 // 12px間隔でのバーの位置
             return (

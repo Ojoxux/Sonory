@@ -24,7 +24,7 @@ export function ConfirmButton({
 }: ConfirmButtonProps) {
    return (
       <motion.div
-         className={`mb-4 relative z-50 ${className}`}
+         className={`relative z-50 mb-4 ${className}`}
          initial={{ opacity: 0, y: 30 }}
          animate={isClosing ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
          transition={
@@ -34,13 +34,11 @@ export function ConfirmButton({
          <motion.button
             onClick={onClick}
             disabled={isConfirmed}
-            className={`
-          w-full py-3 px-6 rounded-xl font-semibold text-sm transition-all duration-300 pointer-events-auto
-          ${
-             isConfirmed
-                ? 'bg-green-500 text-white shadow-[0_4px_20px_rgba(34,197,94,0.4)]'
-                : 'bg-white/90 text-black hover:bg-white hover:shadow-[0_4px_20px_rgba(255,255,255,0.3)]'
-          }
+            className={`pointer-events-auto w-full rounded-xl px-6 py-3 font-semibold text-sm transition-all duration-300 ${
+               isConfirmed
+                  ? 'bg-green-500 text-white shadow-[0_4px_20px_rgba(34,197,94,0.4)]'
+                  : 'bg-white/90 text-black hover:bg-white hover:shadow-[0_4px_20px_rgba(255,255,255,0.3)]'
+            }
         `}
             whileTap={{ scale: 0.98 }}
             whileHover={!isConfirmed ? { scale: 1.02 } : {}}
@@ -56,7 +54,7 @@ export function ConfirmButton({
                      initial={{ scale: 0, rotate: -180 }}
                      animate={{ scale: 1, rotate: 0 }}
                      transition={{ delay: 0.1, duration: 0.5 }}
-                     className="w-5 h-5"
+                     className="h-5 w-5"
                      fill="currentColor"
                      viewBox="0 0 20 20"
                   >

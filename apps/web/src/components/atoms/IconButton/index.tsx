@@ -36,13 +36,7 @@ export function IconButton({
          type="button"
          aria-label={ariaLabel}
          onClick={onClick}
-         className={`
-        w-12 h-12 rounded-full
-        transition-all duration-200 ease-in-out
-        hover:-translate-y-px hover:scale-105
-        active:translate-y-0 active:scale-[1.02]
-        flex items-center justify-center
-        ${className}
+         className={`hover:-translate-y-px flex h-12 w-12 items-center justify-center rounded-full transition-all duration-200 ease-in-out hover:scale-105 active:translate-y-0 active:scale-[1.02] ${className}
       `}
       >
          {icon}

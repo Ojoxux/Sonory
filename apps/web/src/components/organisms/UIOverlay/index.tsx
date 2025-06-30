@@ -44,10 +44,10 @@ export function UIOverlay({
          {/* PWAインストールプロンプト */}
          <PWAInstallPrompt
             onInstallSuccess={() => {
-               console.log('PWAインストール成功')
+               // TODO: インストール成功時の処理を実装
             }}
             onDismiss={() => {
-               console.log('PWAインストールプロンプトを閉じました')
+               // TODO: インストール拒否時の処理を実装
             }}
          />
 

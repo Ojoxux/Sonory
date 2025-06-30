@@ -56,7 +56,7 @@ export function RecordingInterface({
 
    return (
       <div
-         className={`fixed bottom-0 left-0 right-0 pointer-events-auto ${className}`}
+         className={`pointer-events-auto fixed right-0 bottom-0 left-0 ${className}`}
          style={{ zIndex: status !== 'idle' && isExpanded ? 110 : 50 }}
       >
          {/* 初期状態の録音ボタン（録音していない時のみ表示） */}
@@ -66,16 +66,16 @@ export function RecordingInterface({
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 20 }}
-                  className="absolute bottom-6 left-1/2 transform -translate-x-1/2 safe-bottom"
+                  className="-translate-x-1/2 safe-bottom absolute bottom-6 left-1/2 transform"
                >
                   {!showInstructions ? (
                      <motion.button
                         onClick={handleRecord}
-                        className="w-48 h-16 sm:w-20 sm:h-20 mb-5 rounded-full bg-black hover:bg-gray-800 flex items-center justify-center shadow-2xl transition-all duration-300 touch-manipulation"
+                        className="mb-5 flex h-16 w-48 touch-manipulation items-center justify-center rounded-full bg-black shadow-2xl transition-all duration-300 hover:bg-gray-800 sm:h-20 sm:w-20"
                         whileTap={{ scale: 0.95 }}
                         whileHover={{ scale: 1.05 }}
                      >
-                        <MdMic className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+                        <MdMic className="h-7 w-7 text-white sm:h-8 sm:w-8" />
                      </motion.button>
                   ) : (
                      <motion.div
@@ -180,7 +180,7 @@ export function RecordingInterface({
                                    },
                                 }
                         }
-                        className="shadow-[0_20px_60px_rgba(0,0,0,0.5)] backdrop-blur-xl border border-neutral-600/30 p-4 sm:p-6 mb-5 overflow-hidden flex flex-col relative max-w-sm mx-auto"
+                        className="relative mx-auto mb-5 flex max-w-sm flex-col overflow-hidden border border-neutral-600/30 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.5)] backdrop-blur-xl sm:p-6"
                         style={{
                            backdropFilter: 'blur(20px)',
                            WebkitBackdropFilter: 'blur(20px)',
@@ -208,7 +208,7 @@ export function RecordingInterface({
                               delay: isClosing ? 0 : 0.1,
                               ease: [0.4, 0, 0.2, 1],
                            }}
-                           className="absolute inset-0 bg-gradient-to-br from-neutral-400/10 to-neutral-600/10 rounded-[2rem] blur-xl"
+                           className="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-neutral-400/10 to-neutral-600/10 blur-xl"
                            style={{
                               willChange: 'transform, opacity',
                               transform: 'translate3d(0, 0, 0)',
@@ -237,7 +237,7 @@ export function RecordingInterface({
                                          ease: [0.68, -0.55, 0.265, 1.55],
                                       }
                               }
-                              className="text-center mb-4 relative z-10"
+                              className="relative z-10 mb-4 text-center"
                            >
                               <motion.h3
                                  initial={{ letterSpacing: '0.1em' }}
@@ -245,7 +245,7 @@ export function RecordingInterface({
                                     letterSpacing: ['0.1em', '0.2em', '0.05em'],
                                  }}
                                  transition={{ duration: 1, delay: 1 }}
-                                 className="text-white text-lg font-bold mb-2 tracking-tight"
+                                 className="mb-2 font-bold text-lg text-white tracking-tight"
                               >
                                  録音前の確認
                               </motion.h3>
@@ -253,7 +253,7 @@ export function RecordingInterface({
                                  initial={{ opacity: 0 }}
                                  animate={{ opacity: [0, 1] }}
                                  transition={{ delay: 1.2, duration: 0.6 }}
-                                 className="text-neutral-200 text-base font-normal leading-relaxed"
+                                 className="font-normal text-base text-neutral-200 leading-relaxed"
                               >
                                  以下の項目をご確認ください
                               </motion.p>
@@ -326,51 +326,43 @@ export function RecordingInterface({
                      dragConstraints={constraintsRef}
                      dragElastic={0.2}
                      onDragEnd={handleDragEnd}
-                     className="h-full bg-white/98 backdrop-blur-xl rounded-t-3xl sm:rounded-t-[2rem] shadow-2xl overflow-hidden"
+                     className="h-full overflow-hidden rounded-t-3xl bg-white/98 shadow-2xl backdrop-blur-xl sm:rounded-t-[2rem]"
                   >
                      {/* ドラッグハンドル */}
                      <button
+                        type="button"
                         onClick={(e) => {
+                           e.preventDefault()
                            e.stopPropagation()
                            setIsExpanded(!isExpanded)
                         }}
-                        className="w-full flex justify-center py-3 hover:bg-gray-50/50 transition-colors cursor-grab active:cursor-grabbing touch-manipulation"
+                        className="flex w-full cursor-grab touch-manipulation justify-center py-3 transition-colors hover:bg-gray-50/50 active:cursor-grabbing"
                         aria-label={isExpanded ? '収縮' : '展開'}
                      >
-                        <div className="w-10 h-1 bg-gray-300 rounded-full" />
+                        <div className="h-1 w-10 rounded-full bg-gray-300" />
                      </button>
 
                      {/* メインコンテンツ */}
                      <div
-                        className={`${isExpanded ? 'h-full flex flex-col' : 'px-4 sm:px-6 pb-6'}`}
+                        className={`${isExpanded ? 'flex h-full flex-col' : 'px-4 pb-6 sm:px-6'}`}
                      >
                         {/* ミニマム表示（非展開時のみ表示） */}
                         {!isExpanded && (
-                           <div className="flex items-center justify-between h-16">
+                           <div className="flex h-16 items-center justify-between">
                               {/* 録音ボタン */}
                               <motion.button
                                  onClick={() => {
-                                    console.log(
-                                       '録音ボタンがクリックされました',
-                                       {
-                                          status,
-                                       },
-                                    )
                                     if (status === 'recording') {
                                        handleStop()
                                     }
                                  }}
-                                 className={`
-                      relative rounded-full flex items-center justify-center
-                      transition-all duration-300 shadow-lg touch-manipulation
-                      w-14 h-14 sm:w-16 sm:h-16
-                      ${
-                         status === 'recording'
-                            ? 'bg-red-600 hover:bg-red-700'
-                            : status === 'completed'
-                              ? 'bg-gray-400 cursor-not-allowed'
-                              : 'bg-gray-600 hover:bg-gray-700'
-                      }
+                                 className={`relative flex h-14 w-14 touch-manipulation items-center justify-center rounded-full shadow-lg transition-all duration-300 sm:h-16 sm:w-16 ${
+                                    status === 'recording'
+                                       ? 'bg-red-600 hover:bg-red-700'
+                                       : status === 'completed'
+                                         ? 'cursor-not-allowed bg-gray-400'
+                                         : 'bg-gray-600 hover:bg-gray-700'
+                                 }
                     `}
                                  style={{
                                     cursor:
@@ -391,14 +383,14 @@ export function RecordingInterface({
                                  disabled={status === 'completed'}
                               >
                                  {status === 'recording' ? (
-                                    <MdStop className="text-white w-6 h-6 sm:w-8 sm:h-8" />
+                                    <MdStop className="h-6 w-6 text-white sm:h-8 sm:w-8" />
                                  ) : status === 'completed' ? (
                                     <motion.div
-                                       className="w-6 h-6 sm:w-8 sm:h-8 border-3 border-white border-t-transparent rounded-full"
+                                       className="h-6 w-6 rounded-full border-3 border-white border-t-transparent sm:h-8 sm:w-8"
                                        animate={{ rotate: 360 }}
                                        transition={{
                                           duration: 1,
-                                          repeat: Infinity,
+                                          repeat: Number.POSITIVE_INFINITY,
                                           ease: 'linear',
                                        }}
                                     />
@@ -406,7 +398,7 @@ export function RecordingInterface({
                                     <motion.div
                                        initial={{ scale: 0 }}
                                        animate={{ scale: 1 }}
-                                       className="bg-white rounded-full w-5 h-5 sm:w-6 sm:h-6"
+                                       className="h-5 w-5 rounded-full bg-white sm:h-6 sm:w-6"
                                     />
                                  )}
 
@@ -418,7 +410,7 @@ export function RecordingInterface({
                               </motion.button>
 
                               {/* 波形表示 */}
-                              <div className="flex-1 mx-3 sm:mx-6">
+                              <div className="mx-3 flex-1 sm:mx-6">
                                  <WaveformDisplay
                                     isRecording={status === 'recording'}
                                     isCompleted={status === 'completed'}
@@ -436,9 +428,9 @@ export function RecordingInterface({
                               <motion.div
                                  initial={{ opacity: 0, scale: 0.8 }}
                                  animate={{ opacity: 1, scale: 1 }}
-                                 className="text-right min-w-[90px] sm:min-w-[100px]"
+                                 className="min-w-[90px] text-right sm:min-w-[100px]"
                               >
-                                 <div className="font-mono font-medium text-gray-900 text-xl sm:text-2xl">
+                                 <div className="font-medium font-mono text-gray-900 text-xl sm:text-2xl">
                                     {formatTime(recordingTime)}
                                  </div>
                                  <div className="text-gray-500 text-xs">
@@ -456,51 +448,53 @@ export function RecordingInterface({
                                  animate={{ opacity: 1 }}
                                  exit={{ opacity: 0 }}
                                  transition={{ duration: 0.3 }}
-                                 className="flex-1 flex flex-col"
+                                 className="flex flex-1 flex-col"
                               >
                                  {/* ヘッダー部分 - 下部のpadding調整 */}
-                                 <div className="flex justify-between items-center px-6 sm:px-8 py-4 pb-2 sm:pb-3 relative">
+                                 <div className="relative flex items-center justify-between px-6 py-4 pb-2 sm:px-8 sm:pb-3">
                                     <button
+                                       type="button"
                                        onClick={() => {
                                           handleStop()
                                           setIsExpanded(false)
                                        }}
-                                       className="text-gray-600 hover:text-gray-900 font-medium text-base sm:text-lg transition-colors touch-manipulation"
+                                       className="touch-manipulation font-medium text-base text-gray-600 transition-colors hover:text-gray-900 sm:text-lg"
                                     >
                                        キャンセル
                                     </button>
 
-                                    <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-2">
+                                    <div className="-translate-x-1/2 absolute left-1/2 flex transform items-center gap-2">
                                        <BlinkingIndicator
                                           isActive={status === 'recording'}
                                           size="w-2 h-2"
                                           color="bg-red-500"
                                        />
-                                       <span className="text-gray-900 font-medium text-base sm:text-lg">
+                                       <span className="font-medium text-base text-gray-900 sm:text-lg">
                                           録音中
                                        </span>
                                     </div>
 
                                     <button
+                                       type="button"
                                        onClick={() => {
                                           handleStop()
                                        }}
-                                       className="text-gray-900 hover:text-gray-700 font-medium text-base sm:text-lg transition-colors touch-manipulation"
+                                       className="touch-manipulation font-medium text-base text-gray-900 transition-colors hover:text-gray-700 sm:text-lg"
                                     >
                                        次へ
                                     </button>
                                  </div>
 
                                  {/* メインコンテンツエリア - コンテンツを上部寄りに配置 */}
-                                 <div className="flex-1 flex flex-col items-center justify-start pt-4 px-6 sm:px-8">
+                                 <div className="flex flex-1 flex-col items-center justify-start px-6 pt-4 sm:px-8">
                                     {/* タイマー表示 - 上部マージンを削除 */}
                                     <motion.div
                                        initial={{ scale: 0.8, opacity: 0 }}
                                        animate={{ scale: 1, opacity: 1 }}
                                        transition={{ delay: 0.1 }}
-                                       className="mt-8 sm:mt-10 mb-8 sm:mb-10"
+                                       className="mt-8 mb-8 sm:mt-10 sm:mb-10"
                                     >
-                                       <div className="font-mono text-6xl sm:text-7xl lg:text-8xl font-light text-gray-900 tracking-wider">
+                                       <div className="font-light font-mono text-6xl text-gray-900 tracking-wider sm:text-7xl lg:text-8xl">
                                           {formatTime(recordingTime)}
                                        </div>
                                     </motion.div>
@@ -510,7 +504,7 @@ export function RecordingInterface({
                                        initial={{ scale: 0.9, opacity: 0 }}
                                        animate={{ scale: 1, opacity: 1 }}
                                        transition={{ delay: 0.2 }}
-                                       className="w-full max-w-2xl px-4 mb-4"
+                                       className="mb-4 w-full max-w-2xl px-4"
                                     >
                                        <WaveformDisplay
                                           isRecording={status === 'recording'}
@@ -528,7 +522,7 @@ export function RecordingInterface({
 
                                  {/* 一時停止ボタン - 画面下部に固定配置 */}
                                  <motion.div
-                                    className="fixed left-0 right-0 bottom-20 sm:bottom-10 md:bottom-12 flex justify-center"
+                                    className="fixed right-0 bottom-20 left-0 flex justify-center sm:bottom-10 md:bottom-12"
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
                                     transition={{
@@ -543,13 +537,13 @@ export function RecordingInterface({
                                              handleStop()
                                           }
                                        }}
-                                       className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all duration-300 shadow-lg touch-manipulation z-50"
+                                       className="relative z-50 flex h-20 w-20 touch-manipulation items-center justify-center rounded-full bg-gray-100 shadow-lg transition-all duration-300 hover:bg-gray-200 sm:h-24 sm:w-24"
                                        whileTap={{ scale: 0.95 }}
                                     >
                                        {/* 一時停止アイコン */}
                                        <div className="flex items-center gap-1.5">
-                                          <div className="w-1 h-8 sm:h-10 bg-gray-900 rounded-full" />
-                                          <div className="w-1 h-8 sm:h-10 bg-gray-900 rounded-full" />
+                                          <div className="h-8 w-1 rounded-full bg-gray-900 sm:h-10" />
+                                          <div className="h-8 w-1 rounded-full bg-gray-900 sm:h-10" />
                                        </div>
 
                                        {/* リップルエフェクト */}

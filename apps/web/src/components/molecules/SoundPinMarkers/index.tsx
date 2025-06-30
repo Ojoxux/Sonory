@@ -116,7 +116,6 @@ export function SoundPinMarkers({
             pin.latitude,
             pin.longitude,
             () => {
-               console.log('音声ピンがクリックされました:', pin.primaryLabel)
                onPinSelect(selectedPinId === pin.id ? null : pin.id)
             },
          )

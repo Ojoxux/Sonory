@@ -46,19 +46,15 @@ export const useHomePage = (): {
    const [mapBearing, setMapBearing] = useState<number>(0)
 
    const handleSettingsClick = (): void => {
-      console.log('設定ボタンがクリックされました')
       // TODO: 設定画面の表示処理を実装
    }
 
    const handleCompassClick = (): void => {
-      console.log('コンパスボタンがクリックされました - 現在位置に戻ります')
       if (returnToLocation) {
          returnToLocation()
       } else if (triggerGeolocation) {
          // フォールバックとして位置情報取得を実行
          triggerGeolocation()
-      } else {
-         console.warn('位置情報機能がまだ準備できていません')
       }
    }
 

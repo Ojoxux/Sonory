@@ -48,22 +48,7 @@ export function CarIcon({
          type="button"
          onClick={onClick}
          className={`
-        ${containerSizeClasses[size]}
-        bg-white
-        rounded-full
-        shadow-lg
-        border-2
-        border-gray-200
-        hover:border-blue-300
-        hover:shadow-xl
-        transition-all
-        duration-200
-        flex
-        items-center
-        justify-center
-        cursor-pointer
-        touch-manipulation
-        ${className}
+        ${containerSizeClasses[size]}bg-white flex cursor-pointer touch-manipulation items-center justify-center rounded-full border-2 border-gray-200 shadow-lg transition-all duration-200 hover:border-blue-300 hover:shadow-xl ${className}
       `}
          aria-label="道路音の録音地点"
       >

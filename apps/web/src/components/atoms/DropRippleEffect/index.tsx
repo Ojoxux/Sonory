@@ -85,7 +85,7 @@ export function DropRippleEffect({
       colorConfig[color as keyof typeof colorConfig] || colorConfig.blue
 
    return (
-      <div className={`absolute inset-0 pointer-events-none ${className}`}>
+      <div className={`pointer-events-none absolute inset-0 ${className}`}>
          <AnimatePresence>
             {/* 最内層: 最初の衝撃（塗りつぶし、すぐに消える） */}
             <motion.div

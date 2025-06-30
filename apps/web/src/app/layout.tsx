@@ -151,7 +151,7 @@ export default function RootLayout({
             <link rel="preconnect" href="https://api.open-meteo.com" />
          </head>
          <body
-            className={`${arialRoundedMTPro.variable} antialiased touch-manipulation`}
+            className={`${arialRoundedMTPro.variable} touch-manipulation antialiased`}
          >
             <Providers>{children}</Providers>
          </body>

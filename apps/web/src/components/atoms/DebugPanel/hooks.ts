@@ -1,5 +1,5 @@
+import { useEffect, useState } from 'react'
 import type { DebugPanelProps } from './types'
-import { useState, useEffect } from 'react'
 import type { DebugLog, PerformanceData } from './types'
 
 export function useDebugPanel({

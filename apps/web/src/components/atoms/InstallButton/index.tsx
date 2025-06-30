@@ -32,7 +32,7 @@ export const InstallButton = memo(function InstallButton({
          type="button"
          onClick={onClick}
          disabled={disabled}
-         className="flex-1 bg-white text-black text-xs font-medium px-3 py-2 rounded-full hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+         className="flex-1 rounded-full bg-white px-3 py-2 font-medium text-black text-xs transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
       >
          {children}
       </button>

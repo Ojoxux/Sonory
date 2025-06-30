@@ -32,8 +32,7 @@ const TEXT_CONTENT = {
 /** CSS クラス名 */
 const CSS_CLASSES = {
    /** コンテナのベースクラス */
-   CONTAINER_BASE:
-      'fixed top-6 left-0 right-0 z-[200] pointer-events-auto flex justify-center',
+   CONTAINER_BASE: 'fixed top-6 left-0 right-0 z-[200] pointer-events-auto flex justify-center',
    /** プロンプトのベースクラス */
    PROMPT_BASE:
       'bg-black text-white shadow-lg backdrop-blur-lg cursor-pointer transition-all duration-300 ease-out',
@@ -55,13 +54,11 @@ const CSS_CLASSES = {
 function getPromptContainerClassName(
    isDebugActive: boolean,
    isVisible: boolean,
-   isExpanded: boolean,
+   isExpanded: boolean
 ): string {
    const baseClasses = CSS_CLASSES.PROMPT_BASE
    const debugClasses = isDebugActive ? CSS_CLASSES.DEBUG_BORDER : ''
-   const visibilityClasses = !isVisible
-      ? CSS_CLASSES.HIDDEN
-      : CSS_CLASSES.VISIBLE
+   const visibilityClasses = !isVisible ? CSS_CLASSES.HIDDEN : CSS_CLASSES.VISIBLE
    const sizeClasses = isExpanded ? CSS_CLASSES.EXPANDED : CSS_CLASSES.COLLAPSED
 
    return `${baseClasses} ${debugClasses} ${visibilityClasses} ${sizeClasses}`.trim()
@@ -80,23 +77,25 @@ const ExpandedContent = memo(function ExpandedContent({
    onDismiss: () => void
 }) {
    return (
-      <div className="flex-1 min-w-0 overflow-hidden">
-         <h3 className="text-sm font-semibold text-white mb-1">
+      <div className='min-w-0 flex-1 overflow-hidden'>
+         <h3 className='mb-1 font-semibold text-sm text-white'>
             {isDebugActive ? TEXT_CONTENT.DEBUG_PREFIX : ''}
             {TEXT_CONTENT.INSTALL_TITLE}
          </h3>
-         <p className="text-xs text-gray-300 mb-3 leading-relaxed">
+         <p className='mb-3 text-gray-300 text-xs leading-relaxed'>
             {TEXT_CONTENT.INSTALL_DESCRIPTION}
          </p>
 
-         <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-            <InstallButton onClick={onInstallClick}>
-               {TEXT_CONTENT.INSTALL_BUTTON}
-            </InstallButton>
-            <CloseButton
-               onClick={onDismiss}
-               ariaLabel={TEXT_CONTENT.CLOSE_ARIA_LABEL}
-            />
+         <div
+            className='flex gap-2'
+            onClick={e => e.stopPropagation()}
+            onKeyDown={e => {
+               if (e.key === 'Enter' || e.key === ' ') {
+                  e.stopPropagation()
+               }
+            }}>
+            <InstallButton onClick={onInstallClick}>{TEXT_CONTENT.INSTALL_BUTTON}</InstallButton>
+            <CloseButton onClick={onDismiss} ariaLabel={TEXT_CONTENT.CLOSE_ARIA_LABEL} />
          </div>
       </div>
    )
@@ -111,7 +110,7 @@ const CollapsedContent = memo(function CollapsedContent({
    isDebugActive: boolean
 }) {
    return (
-      <span className="text-xs font-medium whitespace-nowrap">
+      <span className='whitespace-nowrap font-medium text-xs'>
          {isDebugActive ? TEXT_CONTENT.DEBUG_PREFIX : ''}
          {TEXT_CONTENT.COLLAPSED_TEXT}
       </span>
@@ -187,12 +186,7 @@ export const PWAInstallPrompt = memo(function PWAInstallPrompt({
    } = usePWAInstallState(onInstallSuccess, onDismiss)
 
    // デバッグイベントリスナーを設定
-   useDebugEventListeners(
-      setIsDebugActive,
-      setShowPrompt,
-      setIsVisible,
-      setIsExpanded,
-   )
+   useDebugEventListeners(setIsDebugActive, setShowPrompt, setIsVisible, setIsExpanded)
 
    // PWAインストールイベントリスナーを設定
    usePWAInstallEventListeners(
@@ -204,7 +198,7 @@ export const PWAInstallPrompt = memo(function PWAInstallPrompt({
       setIsVisible,
       setIsExpanded,
       setIsInstalled,
-      checkIfInstalled,
+      checkIfInstalled
    )
 
    // デバッグモードが有効になったらプロンプトを表示
@@ -214,14 +208,7 @@ export const PWAInstallPrompt = memo(function PWAInstallPrompt({
          setShowPrompt(true)
          setIsVisible(true)
       }
-   }, [
-      debugMode,
-      showPrompt,
-      isInstalled,
-      setIsDebugActive,
-      setShowPrompt,
-      setIsVisible,
-   ])
+   }, [debugMode, showPrompt, isInstalled, setIsDebugActive, setShowPrompt, setIsVisible])
 
    // インストール済みまたは表示しない場合は何も表示しない
    if (isInstalled || !showPrompt || (!deferredPrompt && !isDebugActive)) {
@@ -233,16 +220,18 @@ export const PWAInstallPrompt = memo(function PWAInstallPrompt({
          <div
             ref={promptRef}
             onClick={handlePromptClick}
-            className={getPromptContainerClassName(
-               isDebugActive,
-               isVisible,
-               isExpanded,
-            )}
+            onKeyDown={e => {
+               if (e.key === 'Enter' || e.key === ' ') {
+                  handlePromptClick()
+               }
+            }}
+            className={getPromptContainerClassName(isDebugActive, isVisible, isExpanded)}
             style={{
                boxShadow: '0 4px 30px rgba(0, 0, 0, 0.2)',
             }}
-         >
-            <div className="flex items-center gap-3 relative">
+            role='button'
+            tabIndex={0}>
+            <div className='relative flex items-center gap-3'>
                <InstallIcon isExpanded={isExpanded} />
 
                {isExpanded ? (

@@ -180,7 +180,7 @@ export function WaveformDisplay({
       <div ref={containerRef} className={`relative w-full ${className}`}>
          <canvas
             ref={canvasRef}
-            className="w-full block"
+            className="block w-full"
             style={{ height: `${height}px` }}
          />
       </div>

@@ -22,9 +22,9 @@ export function RecordButtonIcon({ status }: RecordButtonIconProps) {
       case 'recording':
          return (
             <div className="relative">
-               <MdStop className="w-10 h-10 text-white" />
+               <MdStop className="h-10 w-10 text-white" />
                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-3 h-3 bg-white rounded-full animate-pulse" />
+                  <div className="h-3 w-3 animate-pulse rounded-full bg-white" />
                </div>
             </div>
          )
@@ -32,17 +32,17 @@ export function RecordButtonIcon({ status }: RecordButtonIconProps) {
          return (
             <div className="relative">
                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-12 h-12 bg-white/20 rounded-full animate-ping" />
+                  <div className="h-12 w-12 animate-ping rounded-full bg-white/20" />
                </div>
-               <MdCheck className="w-10 h-10 text-white relative z-10" />
+               <MdCheck className="relative z-10 h-10 w-10 text-white" />
             </div>
          )
       default:
          return (
             <div className="relative">
-               <MdFiberManualRecord className="w-10 h-10 text-white" />
+               <MdFiberManualRecord className="h-10 w-10 text-white" />
                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-6 h-6 border-2 border-white/30 rounded-full" />
+                  <div className="h-6 w-6 rounded-full border-2 border-white/30" />
                </div>
             </div>
          )

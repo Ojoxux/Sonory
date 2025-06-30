@@ -181,10 +181,10 @@ export const LocationDisplay = memo(function LocationDisplay({
             {isLoading ? (
                <div className="flex items-center gap-3">
                   <div
-                     className={`w-3 h-3 rounded-full animate-pulse ${isDarkTime ? 'bg-white/50' : 'bg-gray-400'}`}
+                     className={`h-3 w-3 animate-pulse rounded-full ${isDarkTime ? 'bg-white/50' : 'bg-gray-400'}`}
                   />
                   <span
-                     className={`text-5xl font-bold tracking-tight font-arial-rounded-mt-pro ${isDarkTime ? 'text-white/50' : 'text-gray-400'}`}
+                     className={`font-arial-rounded-mt-pro font-bold text-5xl tracking-tight ${isDarkTime ? 'text-white/50' : 'text-gray-400'}`}
                   >
                      Loading
                   </span>
@@ -192,7 +192,7 @@ export const LocationDisplay = memo(function LocationDisplay({
             ) : (
                <div className="inline-block">
                   <h2
-                     className={`text-6xl font-bold tracking-tight font-arial-rounded-mt-pro ${textColorClass} pb-2 leading-none ${hasError ? 'text-yellow-500' : ''}`}
+                     className={`font-arial-rounded-mt-pro font-bold text-6xl tracking-tight ${textColorClass} pb-2 leading-none ${hasError ? 'text-yellow-500' : ''}`}
                   >
                      {locationName}
                   </h2>
@@ -200,11 +200,11 @@ export const LocationDisplay = memo(function LocationDisplay({
                      className={`h-0.5 w-full ${borderColorClass} border-b-2`}
                   />
                   <p
-                     className={`text-sm mt-3 font-bold tracking-wide font-arial-rounded-mt-pro ${isDarkTime ? 'text-white/50' : 'text-gray-500'}`}
+                     className={`mt-3 font-arial-rounded-mt-pro font-bold text-sm tracking-wide ${isDarkTime ? 'text-white/50' : 'text-gray-500'}`}
                   >
                      {latitude.toFixed(4)}° N, {longitude.toFixed(4)}° E
                      {hasError && (
-                        <span className="ml-2 text-yellow-500 text-xs">
+                        <span className="ml-2 text-xs text-yellow-500">
                            (位置情報取得エラー)
                         </span>
                      )}

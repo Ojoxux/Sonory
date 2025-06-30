@@ -61,10 +61,10 @@ export function AppHeader({
       : 'bg-black/10 hover:bg-black/20'
 
    return (
-      <header className="fixed top-0 left-0 right-0 z-[50] pointer-events-none">
+      <header className="pointer-events-none fixed top-0 right-0 left-0 z-[50]">
          <div className="flex items-start justify-between p-6">
             {/* 地域名表示とコンパスボタン */}
-            <div className="flex flex-col items-start gap-2 pointer-events-auto animate-fade-in-down">
+            <div className="pointer-events-auto flex animate-fade-in-down flex-col items-start gap-2">
                <LocationDisplay
                   latitude={latitude}
                   longitude={longitude}
@@ -80,18 +80,20 @@ export function AppHeader({
             </div>
 
             {/* アクションボタン群 */}
-            <div className="flex items-center gap-3 pointer-events-auto animate-fade-in-down">
+            <div className="pointer-events-auto flex animate-fade-in-down items-center gap-3">
                {/* 情報ボタン */}
                <IconButton
-                  icon={<MdInfo className="w-5 h-5" />}
+                  icon={<MdInfo className="h-5 w-5" />}
                   ariaLabel="アプリ情報"
-                  onClick={() => console.log('情報')}
+                  onClick={() => {
+                     // TODO: アプリ情報の表示処理を実装
+                  }}
                   className={`${iconBgClass} ${iconColorClass} backdrop-blur-sm`}
                />
 
                {/* 設定ボタン */}
                <IconButton
-                  icon={<MdSettings className="w-5 h-5" />}
+                  icon={<MdSettings className="h-5 w-5" />}
                   ariaLabel="設定"
                   onClick={onSettingsClick}
                   className={`${iconBgClass} ${iconColorClass} backdrop-blur-sm`}

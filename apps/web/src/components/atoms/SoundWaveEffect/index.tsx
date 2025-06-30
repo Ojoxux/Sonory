@@ -59,10 +59,10 @@ export function SoundWaveEffect({
    if (!isActive) return null
 
    return (
-      <div className={`absolute inset-0 pointer-events-none ${className}`}>
+      <div className={`pointer-events-none absolute inset-0 ${className}`}>
          {/* 第1波 */}
          <motion.div
-            className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 ${getColorClass()} ${getSizeClass()}`}
+            className={`-translate-x-1/2 -translate-y-1/2 absolute top-1/2 left-1/2 rounded-full border-2 ${getColorClass()} ${getSizeClass()}`}
             initial={{ scale: 0, opacity: 0.8 }}
             animate={{ scale: [0, 1.5, 2.5], opacity: [0.8, 0.4, 0] }}
             transition={{
@@ -74,7 +74,7 @@ export function SoundWaveEffect({
 
          {/* 第2波 */}
          <motion.div
-            className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 ${getColorClass()} ${getSizeClass()}`}
+            className={`-translate-x-1/2 -translate-y-1/2 absolute top-1/2 left-1/2 rounded-full border-2 ${getColorClass()} ${getSizeClass()}`}
             initial={{ scale: 0, opacity: 0.8 }}
             animate={{ scale: [0, 1.5, 2.5], opacity: [0.8, 0.4, 0] }}
             transition={{
@@ -87,7 +87,7 @@ export function SoundWaveEffect({
 
          {/* 第3波 */}
          <motion.div
-            className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 ${getColorClass()} ${getSizeClass()}`}
+            className={`-translate-x-1/2 -translate-y-1/2 absolute top-1/2 left-1/2 rounded-full border-2 ${getColorClass()} ${getSizeClass()}`}
             initial={{ scale: 0, opacity: 0.8 }}
             animate={{ scale: [0, 1.5, 2.5], opacity: [0.8, 0.4, 0] }}
             transition={{

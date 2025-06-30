@@ -101,9 +101,9 @@ export function useMediaRecorder() {
 
             // ストリームを停止
             if (streamRef.current) {
-               streamRef.current.getTracks().forEach((track) => {
+               for (const track of streamRef.current.getTracks()) {
                   track.stop()
-               })
+               }
                streamRef.current = null
             }
          }
@@ -174,9 +174,9 @@ export function useMediaRecorder() {
     */
    const cleanup = useCallback((): void => {
       if (streamRef.current) {
-         streamRef.current.getTracks().forEach((track) => {
+         for (const track of streamRef.current.getTracks()) {
             track.stop()
-         })
+         }
          streamRef.current = null
       }
 

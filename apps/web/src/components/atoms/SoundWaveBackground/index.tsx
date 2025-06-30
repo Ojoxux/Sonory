@@ -28,14 +28,14 @@ export function SoundWaveBackground({
 
    return (
       <div
-         className={`absolute inset-0 overflow-hidden pointer-events-none ${className}`}
+         className={`pointer-events-none absolute inset-0 overflow-hidden ${className}`}
       >
          {Array.from({ length: waveCount }).map((_, index) => {
             const topPosition = 15 + index * 12
             return (
                <motion.div
                   key={`wave-top-${topPosition}`}
-                  className="absolute w-full h-px bg-gradient-to-r from-transparent via-white to-transparent"
+                  className="absolute h-px w-full bg-gradient-to-r from-transparent via-white to-transparent"
                   style={{
                      opacity,
                      top: `${topPosition}%`,

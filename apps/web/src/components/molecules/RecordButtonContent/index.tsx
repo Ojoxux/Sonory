@@ -24,7 +24,7 @@ export function RecordButtonContent({ status }: RecordButtonContentProps) {
       return (
          <div className="flex flex-col items-center justify-center gap-2">
             <LoadingSpinner />
-            <span className="text-xs font-medium text-white/90">分析中...</span>
+            <span className="font-medium text-white/90 text-xs">分析中...</span>
          </div>
       )
    }

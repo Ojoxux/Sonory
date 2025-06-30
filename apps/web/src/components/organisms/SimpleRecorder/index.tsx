@@ -12,11 +12,12 @@ export function SimpleRecorder() {
    const { isRecording, error, handleClick } = useSimpleRecorder()
 
    return (
-      <div className="fixed top-20 left-4 bg-white p-4 rounded-lg shadow-lg z-50">
-         <h3 className="text-sm font-bold mb-2">録音テスト</h3>
+      <div className="fixed top-20 left-4 z-50 rounded-lg bg-white p-4 shadow-lg">
+         <h3 className="mb-2 font-bold text-sm">録音テスト</h3>
          <button
+            type="button"
             onClick={handleClick}
-            className={`px-4 py-2 rounded ${
+            className={`rounded px-4 py-2 ${
                isRecording ? 'bg-red-500 text-white' : 'bg-gray-800 text-white'
             }`}
          >
@@ -45,19 +46,18 @@ export default function useSimpleRecorder() {
    const handleClick = async () => {
       if (!isRecording) {
          try {
-            console.log('マイクアクセスを要求します...')
             const stream = await navigator.mediaDevices.getUserMedia({
                audio: true,
             })
-            console.log('マイクアクセスが許可されました:', stream)
             setIsRecording(true)
             setError('')
 
             // 5秒後に停止
             setTimeout(() => {
-               stream.getTracks().forEach((track) => track.stop())
+               for (const track of stream.getTracks()) {
+                  track.stop()
+               }
                setIsRecording(false)
-               console.log('録音を停止しました')
             }, 5000)
          } catch (err) {
             console.error('マイクアクセスエラー:', err)

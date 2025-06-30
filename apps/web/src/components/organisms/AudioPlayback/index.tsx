@@ -44,19 +44,12 @@ export function AudioPlayback({
    className = '',
    currentPosition,
 }: AudioPlaybackProps) {
-   console.log('🎭 AudioPlayback コンポーネントがレンダリングされました:', {
-      audioData: !!audioData,
-   })
-
    const { startInference, results, error, clearResults } = useInferenceStore()
    const { addPin } = useSoundPinStore()
    const [viewState, setViewState] = useState<ViewState>('audio-review')
    const [analysisMessage, setAnalysisMessage] = useState('音声を分析中...')
 
-   // viewState変更時のログ
-   useEffect(() => {
-      console.log('🎬 AudioPlayback viewState変更:', viewState)
-   }, [viewState])
+   // TODO: viewState変更時のログ処理を実装（必要に応じて）
 
    /**
     * 録音時間をフォーマット
@@ -84,32 +77,25 @@ export function AudioPlayback({
     */
    const handleContinue = async (): Promise<void> => {
       if (!audioData) return
-
-      console.log('🎵 AI分析を開始します...')
       setViewState('ai-analyzing')
 
       // 段階的にメッセージを変更（15秒間）
       setAnalysisMessage('音声データを読み込み中...')
-      console.log('📝 メッセージ変更: 音声データを読み込み中...')
 
       setTimeout(() => {
          setAnalysisMessage('AIモデルで分析中...')
-         console.log('📝 メッセージ変更 (5秒): AIモデルで分析中...')
       }, 5000)
 
       setTimeout(() => {
          setAnalysisMessage('パターンマッチングを実行中...')
-         console.log('📝 メッセージ変更 (10秒): パターンマッチングを実行中...')
       }, 10000)
 
       setTimeout(() => {
          setAnalysisMessage('結果を生成中...')
-         console.log('📝 メッセージ変更 (13秒): 結果を生成中...')
       }, 13000)
 
       try {
          await startInference(audioData)
-         console.log('🎯 AI分析完了 - 結果画面に遷移します')
          setViewState('results')
       } catch (err) {
          console.error('💥 AI分析に失敗しました:', err)
@@ -123,16 +109,12 @@ export function AudioPlayback({
     */
    const handlePlacePin = (): void => {
       if (results.length > 0 && currentPosition && audioData) {
-         console.log('マップピンを配置します:', results)
-
          addPin({
             latitude: currentPosition.latitude,
             longitude: currentPosition.longitude,
             audioData,
             classificationResults: results,
          })
-
-         console.log('マップピンが配置されました')
          onClose()
       }
    }
@@ -160,22 +142,22 @@ export function AudioPlayback({
          initial={{ opacity: 0, y: 20 }}
          animate={{ opacity: 1, y: 0 }}
          exit={{ opacity: 0, y: 20 }}
-         className={`fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 ${className}`}
+         className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm ${className}`}
       >
          <motion.div
             initial={{ scale: 0.9 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0.9 }}
-            className="relative bg-black/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden"
+            className="relative max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-2xl border border-white/10 bg-black/95 shadow-2xl backdrop-blur-xl"
          >
             {/* 音波背景パターン */}
             <SoundWaveBackground opacity={0.01} animated={true} />
 
             {/* ヘッダー */}
-            <div className="relative flex items-center justify-between p-6 border-b border-white/10">
+            <div className="relative flex items-center justify-between border-white/10 border-b p-6">
                <div>
                   <motion.h2
-                     className="text-xl font-bold text-white"
+                     className="font-bold text-white text-xl"
                      initial={{ opacity: 0, x: -20 }}
                      animate={{ opacity: 1, x: 0 }}
                      transition={{ delay: 0.2 }}
@@ -185,7 +167,7 @@ export function AudioPlayback({
                      {viewState === 'results' && 'AI分析結果'}
                   </motion.h2>
                   <motion.p
-                     className="text-sm text-neutral-300 mt-1"
+                     className="mt-1 text-neutral-300 text-sm"
                      initial={{ opacity: 0, x: -20 }}
                      animate={{ opacity: 1, x: 0 }}
                      transition={{ delay: 0.3 }}
@@ -195,12 +177,12 @@ export function AudioPlayback({
                </div>
                <motion.button
                   onClick={handleClose}
-                  className="p-2 hover:bg-white/10 rounded-full transition-colors touch-manipulation"
+                  className="touch-manipulation rounded-full p-2 transition-colors hover:bg-white/10"
                   aria-label="閉じる"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                >
-                  <MdClose className="w-6 h-6 text-white" />
+                  <MdClose className="h-6 w-6 text-white" />
                </motion.button>
             </div>
 
@@ -214,7 +196,7 @@ export function AudioPlayback({
                      transition={{ delay: 0.1 }}
                   >
                      <div className="mb-6">
-                        <h3 className="text-lg font-semibold text-white mb-3">
+                        <h3 className="mb-3 font-semibold text-lg text-white">
                            録音音声
                         </h3>
                         <WaveformPlayer
@@ -223,17 +205,19 @@ export function AudioPlayback({
                            waveColor="#9ca3af"
                            progressColor="#dc2626"
                            className="w-full"
-                           onReady={() =>
-                              console.log('音声プレイヤーが準備完了')
-                           }
-                           onFinish={() => console.log('再生完了')}
+                           onReady={() => {
+                              // TODO: 音声準備完了時の処理を実装
+                           }}
+                           onFinish={() => {
+                              // TODO: 音声再生完了時の処理を実装
+                           }}
                         />
                      </div>
 
                      <div className="flex gap-3">
                         <motion.button
                            onClick={handleClose}
-                           className="flex-1 bg-white/10 hover:bg-white/20 text-white py-3 px-4 rounded-xl font-semibold transition-all duration-300 touch-manipulation backdrop-blur-sm border border-white/10 shadow-[0_4px_20px_rgba(255,255,255,0.1)] hover:shadow-[0_8px_32px_rgba(255,255,255,0.2)]"
+                           className="flex-1 touch-manipulation rounded-xl border border-white/10 bg-white/10 px-4 py-3 font-semibold text-white shadow-[0_4px_20px_rgba(255,255,255,0.1)] backdrop-blur-sm transition-all duration-300 hover:bg-white/20 hover:shadow-[0_8px_32px_rgba(255,255,255,0.2)]"
                            whileHover={{ scale: 1.02 }}
                            whileTap={{ scale: 0.98 }}
                         >
@@ -241,7 +225,7 @@ export function AudioPlayback({
                         </motion.button>
                         <motion.button
                            onClick={handleContinue}
-                           className="flex-1 bg-blue-600/80 hover:bg-blue-600 text-white py-3 px-4 rounded-xl font-semibold transition-all duration-300 touch-manipulation backdrop-blur-sm border border-blue-500/30 shadow-[0_4px_20px_rgba(59,130,246,0.4)] hover:shadow-[0_8px_32px_rgba(59,130,246,0.6)]"
+                           className="flex-1 touch-manipulation rounded-xl border border-blue-500/30 bg-blue-600/80 px-4 py-3 font-semibold text-white shadow-[0_4px_20px_rgba(59,130,246,0.4)] backdrop-blur-sm transition-all duration-300 hover:bg-blue-600 hover:shadow-[0_8px_32px_rgba(59,130,246,0.6)]"
                            whileHover={{ scale: 1.02 }}
                            whileTap={{ scale: 0.98 }}
                         >
@@ -264,34 +248,34 @@ export function AudioPlayback({
                      transition={{ delay: 0.1 }}
                   >
                      <div className="mb-6">
-                        <h3 className="text-lg font-semibold text-white mb-3">
+                        <h3 className="mb-3 font-semibold text-lg text-white">
                            AI音分類結果
                         </h3>
 
                         {error && (
                            <motion.div
-                              className="p-4 bg-red-500/20 border border-red-500/30 rounded-lg mb-4 backdrop-blur-sm"
+                              className="mb-4 rounded-lg border border-red-500/30 bg-red-500/20 p-4 backdrop-blur-sm"
                               initial={{ opacity: 0, scale: 0.9 }}
                               animate={{ opacity: 1, scale: 1 }}
                            >
-                              <span className="text-red-300 font-medium">
+                              <span className="font-medium text-red-300">
                                  分析エラー: {error.message}
                               </span>
                            </motion.div>
                         )}
 
                         {results.length > 0 && (
-                           <div className="space-y-2 mb-6">
+                           <div className="mb-6 space-y-2">
                               {results.map((result, index) => (
                                  <motion.div
                                     key={`${result.label}-${index}`}
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: index * 0.1 }}
-                                    className={`flex items-center justify-between p-3 rounded-lg backdrop-blur-sm border ${
+                                    className={`flex items-center justify-between rounded-lg border p-3 backdrop-blur-sm ${
                                        index === 0
-                                          ? 'bg-green-500/20 border-green-500/30'
-                                          : 'bg-white/5 border-white/10'
+                                          ? 'border-green-500/30 bg-green-500/20'
+                                          : 'border-white/10 bg-white/5'
                                     }`}
                                  >
                                     <span
@@ -320,7 +304,7 @@ export function AudioPlayback({
 
                      {/* 録音音声プレイヤー（結果画面でも表示） */}
                      <div className="mb-6">
-                        <h3 className="text-lg font-semibold text-white mb-3">
+                        <h3 className="mb-3 font-semibold text-lg text-white">
                            録音音声
                         </h3>
                         <WaveformPlayer
@@ -329,10 +313,12 @@ export function AudioPlayback({
                            waveColor="#9ca3af"
                            progressColor="#dc2626"
                            className="w-full"
-                           onReady={() =>
-                              console.log('音声プレイヤーが準備完了')
-                           }
-                           onFinish={() => console.log('再生完了')}
+                           onReady={() => {
+                              // TODO: 音声準備完了時の処理を実装
+                           }}
+                           onFinish={() => {
+                              // TODO: 音声再生完了時の処理を実装
+                           }}
                         />
                      </div>
 
@@ -341,7 +327,7 @@ export function AudioPlayback({
                         {results.length > 0 && currentPosition ? (
                            <motion.button
                               onClick={handlePlacePin}
-                              className="w-full bg-green-600/80 hover:bg-green-600 text-white py-3 px-4 rounded-xl font-semibold transition-all duration-300 touch-manipulation backdrop-blur-sm border border-green-500/30 shadow-[0_4px_20px_rgba(34,197,94,0.4)] hover:shadow-[0_8px_32px_rgba(34,197,94,0.6)]"
+                              className="w-full touch-manipulation rounded-xl border border-green-500/30 bg-green-600/80 px-4 py-3 font-semibold text-white shadow-[0_4px_20px_rgba(34,197,94,0.4)] backdrop-blur-sm transition-all duration-300 hover:bg-green-600 hover:shadow-[0_8px_32px_rgba(34,197,94,0.6)]"
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
                            >
@@ -350,7 +336,7 @@ export function AudioPlayback({
                         ) : (
                            <motion.button
                               onClick={handleClose}
-                              className="w-full bg-blue-600/80 hover:bg-blue-600 text-white py-3 px-4 rounded-xl font-semibold transition-all duration-300 touch-manipulation backdrop-blur-sm border border-blue-500/30 shadow-[0_4px_20px_rgba(59,130,246,0.4)] hover:shadow-[0_8px_32px_rgba(59,130,246,0.6)]"
+                              className="w-full touch-manipulation rounded-xl border border-blue-500/30 bg-blue-600/80 px-4 py-3 font-semibold text-white shadow-[0_4px_20px_rgba(59,130,246,0.4)] backdrop-blur-sm transition-all duration-300 hover:bg-blue-600 hover:shadow-[0_8px_32px_rgba(59,130,246,0.6)]"
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
                            >
