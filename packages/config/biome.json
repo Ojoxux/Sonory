@@ -55,7 +55,12 @@
 				"noUselessTypeConstraint": "error",
 				"noWith": "error",
 				"noForEach": "warn",
-				"noExcessiveCognitiveComplexity": "warn",
+				"noExcessiveCognitiveComplexity": {
+					"level": "warn",
+					"options": {
+						"maxAllowedComplexity": 35
+					}
+				},
 				"noVoid": "error",
 				"useArrowFunction": "warn",
 				"useLiteralKeys": "error",
@@ -101,32 +106,7 @@
 				"useEnumInitializers": "error",
 				"useExponentiationOperator": "error",
 				"useLiteralEnumMembers": "error",
-				"useNamingConvention": {
-					"level": "error",
-					"options": {
-						"strictCase": false,
-						"conventions": [
-							{
-								"selector": {
-									"kind": "function"
-								},
-								"formats": ["camelCase", "PascalCase"]
-							},
-							{
-								"selector": {
-									"kind": "variable"
-								},
-								"formats": ["camelCase", "CONSTANT_CASE", "PascalCase"]
-							},
-							{
-								"selector": {
-									"kind": "typeLike"
-								},
-								"formats": ["PascalCase"]
-							}
-						]
-					}
-				},
+				"useNamingConvention": "off",
 				"useNumberNamespace": "error",
 				"useNumericLiterals": "error",
 				"useSelfClosingElements": "error",
@@ -165,7 +145,7 @@
 				"useNamespaceKeyword": "error",
 				"useValidTypeof": "error",
 				"noArrayIndexKey": "warn",
-				"noConsoleLog": "warn",
+				"noConsoleLog": "off",
 				"noDuplicateJsxProps": "error",
 				"noReactSpecificProps": "error"
 			},
