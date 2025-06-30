@@ -35,7 +35,8 @@
          "correctness": {
             "noUnusedVariables": {
                "level": "warn"
-            }
+            },
+            "useExhaustiveDependencies": "off"
          }
       }
    },

@@ -62,7 +62,7 @@
 		"typescript": "^5"
 	},
 	"lint-staged": {
-		"*.{js,jsx,ts,tsx}": ["biome check --apply", "biome format --write"],
+		"*.{js,jsx,ts,tsx}": ["biome check --write", "biome format --write"],
 		"apps/web/**/*.ts?(x)": ["cd apps/web && npx tsc --noEmit"],
 		"apps/api/**/*.ts?(x)": ["cd apps/api && npx tsc --noEmit"],
 		"packages/shared-types/**/*.ts?(x)": [
