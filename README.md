@@ -40,6 +40,8 @@
 
 ## 🚀 Getting Started
 
+詳しいセットアップ手順は[SETUP.md](./SETUP.md)をご覧ください。
+
 ### 必要条件
 
 - Node.js 20.0.0以上
@@ -67,49 +69,72 @@ pnpm install
 bun install
 ```
 
-3. 環境変数の設定
-
-`.env.example`ファイルをコピーして`.env.local`を作成し、必要な環境変数を設定してください。
+3. 共有パッケージのビルド
 
 ```bash
-cp .env.example .env.local
+# Turborepoで全パッケージをビルド（推奨）
+npm run build
 ```
 
-4. 開発サーバーの起動
+> **重要**: このプロジェクトはモノレポ構成のため、初回セットアップ時は必ずビルドを実行してください。これにより`@sonory/shared-types`などの内部パッケージが正しく解決されます。
+
+4. 環境変数の設定
+
+各アプリケーションごとに環境変数の設定が必要です。詳細は[SETUP.md](./SETUP.md)をご確認ください。
+
+**最低限必要な環境変数：**
+- **apps/web**: `NEXT_PUBLIC_MAPBOX_TOKEN`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- **apps/api**: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_KEY`
+- **apps/python-audio-analyzer**: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`
+
+5. 開発サーバーの起動
 
 ```bash
+# フロントエンドのみ起動
+npm run dev:web
+
+# APIサーバーのみ起動  
+npm run dev:api
+
+# すべてのサービスを起動（推奨）
+npm run start:all
+
+# または全パッケージを同時に起動
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-[http://localhost:3000](http://localhost:3000)をブラウザで開いて開発を始めましょう！！
+開発サーバーが起動したら、以下のURLでアクセスできます：
+- **フロントエンド**: [http://localhost:3000](http://localhost:3000)
+- **API**: [http://localhost:8787](http://localhost:8787)  
+- **Python音声分析**: [http://localhost:8000](http://localhost:8000)
 
 ## 🗂 Project Structure
 
 ```
-sonory/
-├── app/            # Next.js App Router
-├── components/     # UIコンポーネント
-│   ├── atoms/      # 最小単位のコンポーネント
-│   ├── molecules/  # atomsの組み合わせ
-│   ├── organisms/  # 複雑な機能を持つコンポーネント
-│   └── templates/  # ページレイアウト
-├── hooks/          # カスタムReactフック
-├── lib/            # ユーティリティ関数
-│   ├── ai/         # TensorFlow.js関連コード
-│   ├── audio/      # 音声処理関連
-│   ├── map/        # Mapbox関連
-│   └── api/        # APIクライアント
-├── public/         # 静的ファイル（PWA用アイコンなど）
-│   ├── images/     # 画像ファイル
-│   └── models/     # AI推論モデル
-├── store/          # 状態管理関連のファイル
-└── styles/         # グローバルスタイル
+sonory/                               # プロジェクトルート（モノレポ）
+├── apps/                            # アプリケーション
+│   ├── web/                         # Next.js フロントエンド
+│   │   ├── src/
+│   │   │   ├── app/                 # Next.js App Router
+│   │   │   ├── components/          # UIコンポーネント
+│   │   │   │   ├── atoms/           # 最小単位のコンポーネント
+│   │   │   │   ├── molecules/       # atomsの組み合わせ
+│   │   │   │   └── organisms/       # 複雑な機能を持つコンポーネント
+│   │   │   └── store/               # 状態管理（Zustand）
+│   │   └── public/                  # 静的ファイル（PWA用アイコンなど）
+│   ├── api/                         # Cloudflare Workers API
+│   │   ├── src/
+│   │   │   ├── routes/              # APIルート
+│   │   │   ├── services/            # ビジネスロジック
+│   │   │   └── middleware/          # ミドルウェア
+│   │   └── sql/                     # データベーススキーマ
+│   └── python-audio-analyzer/       # Python音声分析サービス
+│       └── src/                     # FastAPI + YAMNet
+├── packages/                        # 共有パッケージ
+│   ├── shared-types/                # 共有型定義
+│   ├── utils/                       # 共有ユーティリティ
+│   └── config/                      # 共有設定
+└── turbo.json                       # Turborepo設定
 ```
 
 ## 💻 Technical Stack
@@ -138,7 +163,7 @@ npm run format
 npm run ci
 
 # 型チェック
-npm run lint:typecheck
+npm run type-check
 ```
 
 Huskyとlint-stagedを使用して、コミット前に自動的にリントとフォーマットが実行されます。
@@ -160,13 +185,11 @@ bun build
 ビルド結果を確認:
 
 ```bash
-npm run start
-# or
-yarn start
-# or
-pnpm start
-# or
-bun start
+# フロントエンドの本番環境起動
+cd apps/web && npm run start
+
+# または開発環境で確認
+npm run dev:web
 ```
 
 ## 📝 Development Guidelines
@@ -277,7 +300,27 @@ style(scope)/#[issues番号]: ほげほげ
    npm install xxx
    ```
 
-2. **プルリクエスト作成時のコンフリクト**
+2. **@sonory/shared-types が解決できないエラー**
+   ```bash
+   # Could not resolve "@sonory/shared-types" エラーの場合
+   
+   # モノレポの内部パッケージがビルドされていない可能性があります
+   # プロジェクトルートで以下を実行
+   npm install
+   npm run build
+   
+   # または個別にshared-typesをビルド
+   cd packages/shared-types
+   npm run build
+   cd ../..
+   
+   # それでも解決しない場合は、node_modulesをクリーンアップ
+   rm -rf node_modules packages/*/node_modules apps/*/node_modules
+   npm install
+   npm run build
+   ```
+
+3. **プルリクエスト作成時のコンフリクト**
    ```bash
    # mainブランチの最新変更を取り込み、自分の変更を上に乗せる
    git pull --rebase origin main
