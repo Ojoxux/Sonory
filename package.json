@@ -11,6 +11,7 @@
 		"test": "turbo test",
 		"clean": "turbo clean",
 		"type-check": "turbo type-check",
+		"lint-staged": "lint-staged",
 		"dev:web": "turbo dev --filter=@sonory/web",
 		"dev:api": "turbo dev --filter=@sonory/api",
 		"build:web": "turbo build --filter=@sonory/web",
@@ -62,7 +63,9 @@
 	},
 	"lint-staged": {
 		"*.{js,jsx,ts,tsx}": ["biome check --apply", "biome format --write"],
-		"**/*.ts?(x)": ["npm run type-check"]
+		"apps/web/**/*.ts?(x)": ["cd apps/web && npx tsc --noEmit"],
+		"apps/api/**/*.ts?(x)": ["cd apps/api && npx tsc --noEmit"],
+		"packages/**/*.ts?(x)": ["npm run type-check"]
 	},
 	"packageManager": "npm@10.0.0"
 }
