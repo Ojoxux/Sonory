@@ -10,95 +10,95 @@
  * @returns キーボード制御の状態
  */
 
-import type mapboxgl from "mapbox-gl";
-import { useEffect } from "react";
+import type mapboxgl from 'mapbox-gl'
+import { useEffect } from 'react'
 
 export type UseMapKeyboardShortcutsProps = {
-	/** Mapboxマップインスタンス */
-	map: mapboxgl.Map | null;
-	/** デバッグモードの状態 */
-	debugMode: boolean;
-	/** デバッグモード切り替えのコールバック */
-	onToggleDebugMode: () => void;
-	/** 位置情報再取得のコールバック */
-	onGeolocationRetry: () => void;
-	/** 位置情報キャッシュクリア＆再取得のコールバック */
-	onGeolocationReset: () => void;
-	/** デバッグ時間変更のコールバック */
-	onDebugTimeChange: (time: number | null) => void;
-	/** ライティング更新のコールバック */
-	onUpdateLighting: () => void;
-};
+   /** Mapboxマップインスタンス */
+   map: mapboxgl.Map | null
+   /** デバッグモードの状態 */
+   debugMode: boolean
+   /** デバッグモード切り替えのコールバック */
+   onToggleDebugMode: () => void
+   /** 位置情報再取得のコールバック */
+   onGeolocationRetry: () => void
+   /** 位置情報キャッシュクリア＆再取得のコールバック */
+   onGeolocationReset: () => void
+   /** デバッグ時間変更のコールバック */
+   onDebugTimeChange: (time: number | null) => void
+   /** ライティング更新のコールバック */
+   onUpdateLighting: () => void
+}
 
 /**
  * マップ用キーボードショートカットフック
  */
 export function useMapControls({
-	map: _map,
-	debugMode,
-	onToggleDebugMode,
-	onGeolocationRetry,
-	onGeolocationReset,
-	onDebugTimeChange,
-	onUpdateLighting,
+   map: _map,
+   debugMode,
+   onToggleDebugMode,
+   onGeolocationRetry,
+   onGeolocationReset,
+   onDebugTimeChange,
+   onUpdateLighting,
 }: UseMapKeyboardShortcutsProps): void {
-	useEffect(() => {
-		const handleKeyDown = (e: KeyboardEvent): void => {
-			// Shift + D でデバッグモード切り替え
-			if (e.shiftKey && e.key === "D") {
-				onToggleDebugMode();
-			}
+   useEffect(() => {
+      const handleKeyDown = (e: KeyboardEvent): void => {
+         // Shift + D でデバッグモード切り替え
+         if (e.shiftKey && e.key === 'D') {
+            onToggleDebugMode()
+         }
 
-			// Shift + G で位置情報を再取得
-			if (e.shiftKey && e.key === "G") {
-				e.preventDefault();
-				onGeolocationRetry();
-			}
+         // Shift + G で位置情報を再取得
+         if (e.shiftKey && e.key === 'G') {
+            e.preventDefault()
+            onGeolocationRetry()
+         }
 
-			// Shift + R で位置情報キャッシュをクリアして再取得
-			if (e.shiftKey && e.key === "R") {
-				e.preventDefault();
-				onGeolocationReset();
-			}
+         // Shift + R で位置情報キャッシュをクリアして再取得
+         if (e.shiftKey && e.key === 'R') {
+            e.preventDefault()
+            onGeolocationReset()
+         }
 
-			// デバッグモード時の時間帯変更ショートカット
-			if (debugMode) {
-				// Shift + 1-4 で時間帯を変更
-				if (e.shiftKey && ["1", "2", "3", "4"].includes(e.key)) {
-					e.preventDefault();
-					const timeMap: Record<string, number> = {
-						"1": 6, // 朝 (dawn)
-						"2": 12, // 昼 (day)
-						"3": 18, // 夕方 (dusk)
-						"4": 22, // 夜 (night)
-					};
-					const newTime = timeMap[e.key];
-					if (newTime !== undefined) {
-						onDebugTimeChange(newTime);
-						onUpdateLighting();
-					}
-				}
+         // デバッグモード時の時間帯変更ショートカット
+         if (debugMode) {
+            // Shift + 1-4 で時間帯を変更
+            if (e.shiftKey && ['1', '2', '3', '4'].includes(e.key)) {
+               e.preventDefault()
+               const timeMap: Record<string, number> = {
+                  '1': 6, // 朝 (dawn)
+                  '2': 12, // 昼 (day)
+                  '3': 18, // 夕方 (dusk)
+                  '4': 22, // 夜 (night)
+               }
+               const newTime = timeMap[e.key]
+               if (newTime !== undefined) {
+                  onDebugTimeChange(newTime)
+                  onUpdateLighting()
+               }
+            }
 
-				// Shift + 0 でデバッグ時間をリセット
-				if (e.shiftKey && e.key === "0") {
-					e.preventDefault();
-					onDebugTimeChange(null);
-					onUpdateLighting();
-				}
-			}
-		};
+            // Shift + 0 でデバッグ時間をリセット
+            if (e.shiftKey && e.key === '0') {
+               e.preventDefault()
+               onDebugTimeChange(null)
+               onUpdateLighting()
+            }
+         }
+      }
 
-		window.addEventListener("keydown", handleKeyDown);
+      window.addEventListener('keydown', handleKeyDown)
 
-		return () => {
-			window.removeEventListener("keydown", handleKeyDown);
-		};
-	}, [
-		debugMode,
-		onToggleDebugMode,
-		onGeolocationRetry,
-		onGeolocationReset,
-		onDebugTimeChange,
-		onUpdateLighting,
-	]);
+      return () => {
+         window.removeEventListener('keydown', handleKeyDown)
+      }
+   }, [
+      debugMode,
+      onToggleDebugMode,
+      onGeolocationRetry,
+      onGeolocationReset,
+      onDebugTimeChange,
+      onUpdateLighting,
+   ])
 }

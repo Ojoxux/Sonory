@@ -46,10 +46,9 @@ export function useAsyncWaveform(isRecording: boolean) {
             clearTimeout(initialTimer)
             if (timeoutId) clearTimeout(timeoutId)
          }
-      } else {
-         // 録音停止時はデータをクリア
-         setWaveformData([])
       }
+      // 録音停止時はデータをクリア
+      setWaveformData([])
    }, [isRecording, initialDelay, baseInterval])
 
    return waveformData

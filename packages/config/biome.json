@@ -272,7 +272,9 @@
 			"coverage/**",
 			"**/*.min.js",
 			"**/*.min.css",
-			".wrangler/**"
+			".wrangler/**",
+			"**/public/sw.js",
+			"**/public/workbox-*.js"
 		]
 	}
 }
