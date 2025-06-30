@@ -1,9 +1,6 @@
 import { ERROR_CODES } from "@sonory/shared-types";
 import type { AudioMetadata, AudioUploadResult } from "@sonory/shared-types";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Context } from "hono";
 import { APIException } from "../middleware/error";
-import { logger } from "../utils/logger";
 import { BaseService } from "./base.service";
 import { getSupabaseAdmin } from "./supabase";
 

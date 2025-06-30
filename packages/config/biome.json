@@ -170,7 +170,8 @@
 			"**/dist/**",
 			"**/.next/**",
 			"**/node_modules/**",
-			"**/coverage/**"
+			"**/coverage/**",
+			"**/.wrangler/**"
 		]
 	},
 	"overrides": [
@@ -270,7 +271,8 @@
 			"node_modules/**",
 			"coverage/**",
 			"**/*.min.js",
-			"**/*.min.css"
+			"**/*.min.css",
+			".wrangler/**"
 		]
 	}
 }
