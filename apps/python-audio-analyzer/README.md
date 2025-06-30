@@ -55,6 +55,44 @@ cd apps/python-audio-analyzer
 docker-compose -f docker-compose.dev.yml up
 ```
 
+### 2.1. Windows-specific Setup
+
+**PowerShell/Command Prompt:**
+```powershell
+# Navigate to Python analyzer directory
+cd apps\python-audio-analyzer
+
+# Create virtual environment
+python -m venv .venv
+
+# Activate virtual environment
+.venv\Scripts\activate
+
+# Install dependencies
+pip install -e .
+
+# Start development server
+uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+**Git Bash (推奨):**
+```bash
+# Navigate to Python analyzer directory
+cd apps/python-audio-analyzer
+
+# Create virtual environment
+python -m venv .venv
+
+# Activate virtual environment
+source .venv/Scripts/activate
+
+# Install dependencies
+pip install -e .
+
+# Start development server
+uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+```
+
 ### 3. Environment Variables
 
 Create a `.env` file in the `apps/python-audio-analyzer/` directory:
@@ -66,6 +104,11 @@ SUPABASE_URL=your_supabase_url
 SUPABASE_SERVICE_KEY=your_service_key
 REDIS_URL=redis://localhost:6379
 ```
+
+**Windows環境での注意事項:**
+- パスの区切り文字は自動的に処理されますが、環境変数でパスを指定する場合は `\\` を使用
+- PowerShellとCommand Promptでは環境変数の設定方法が異なります
+- Git Bashを使用することでUnix系コマンドが利用可能
 
 ## 📊 API Endpoints
 
@@ -181,12 +224,115 @@ Audio classifications are mapped from English AudioSet classes to Japanese label
    - Increase Docker memory allocation
    - Consider model quantization for resource-constrained environments
 
+### Windows-specific Issues
+
+4. **Python Service "internal error" on Windows**
+   ```
+   Error: internal error; reference = 0t0kgpo5g5veed5r26i3luhv
+   ```
+   
+   **原因と解決策:**
+   - **仮想環境が未アクティブ:** `.venv\Scripts\activate` でPython仮想環境をアクティブ化
+   - **依存関係の不足:** `pip install -e .` で全ての依存関係を再インストール
+   - **ffmpeg不足:** `choco install ffmpeg` またはWindows用ffmpegをインストール
+   - **Visual C++ Runtime不足:** Microsoft Visual C++ Redistributableをインストール
+   
+   **診断コマンド:**
+   ```powershell
+   # サービスの起動確認
+   curl http://localhost:8000/health
+   
+   # Python環境の確認
+   python -c "import tensorflow as tf; print(tf.__version__)"
+   python -c "import librosa; print('librosa OK')"
+   python -c "import numpy; print('numpy OK')"
+   ```
+
+5. **Path Separator Issues**
+   - Windows: `\` vs Unix: `/`
+   - 環境変数でパスを指定する場合は `\\` を使用
+   - Python内では `pathlib.Path` を使用して自動処理
+
+6. **Permission Errors**
+   - 管理者権限でターミナルを起動
+   - WSL2使用を検討（Linux互換環境）
+
+7. **Port Conflicts**
+   ```powershell
+   # ポート8000の使用状況確認
+   netstat -ano | findstr :8000
+   
+   # プロセス終了
+   taskkill /PID <process_id> /F
+   ```
+
+8. **Environment Variables**
+   ```powershell
+   # PowerShellでの環境変数設定
+   $env:PYTHON_AUDIO_ANALYZER_URL="http://localhost:8000"
+   $env:LOG_LEVEL="debug"
+   
+   # 確認
+   echo $env:PYTHON_AUDIO_ANALYZER_URL
+   ```
+
+### WSL2 Setup (推奨)
+
+Windows環境でLinux互換性を高めるため、WSL2の使用を推奨します：
+
+```bash
+# WSL2でのセットアップ
+wsl --install -d Ubuntu-22.04
+
+# WSL2内での作業
+cd /mnt/c/path/to/sonory/apps/python-audio-analyzer
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+```
+
 ### Debug Mode
 
 Enable debug logging:
 ```env
 LOG_LEVEL=debug
 ENVIRONMENT=development
+```
+
+**Windows用デバッグスクリプト:**
+```powershell
+# debug-windows.ps1
+Write-Host "=== Sonory Python Audio Analyzer Debug ==="
+Write-Host "Python Version:" (python --version)
+Write-Host "Pip Version:" (pip --version)
+Write-Host "Virtual Environment:" $env:VIRTUAL_ENV
+Write-Host "Current Directory:" (Get-Location)
+
+# 依存関係チェック
+python -c "
+try:
+    import tensorflow as tf
+    print(f'TensorFlow: {tf.__version__}')
+except ImportError as e:
+    print(f'TensorFlow Error: {e}')
+
+try:
+    import librosa
+    print('librosa: OK')
+except ImportError as e:
+    print(f'librosa Error: {e}')
+
+try:
+    import uvicorn
+    print('uvicorn: OK')
+except ImportError as e:
+    print(f'uvicorn Error: {e}')
+"
+
+# サービス起動テスト
+Write-Host "Testing service startup..."
+Start-Process -NoNewWindow -FilePath "python" -ArgumentList "-c", "from src.main import create_app; app = create_app(); print('App created successfully')"
 ```
 
 ## 📚 Additional Resources
