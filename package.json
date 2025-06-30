@@ -18,12 +18,19 @@
 		"deploy:api": "turbo deploy --filter=@sonory/api",
 		"deploy:web": "turbo deploy --filter=@sonory/web",
 		"prepare": "husky",
+		"postinstall": "turbo build --filter=@sonory/shared-types --filter=@sonory/utils",
+		"setup": "npm install && npm run build",
+		"setup:env": "bash scripts/setup-env.sh",
 		"start:all": "concurrently \"npm run start:python\" \"npm run start:api\" \"npm run start:frontend\" --names \"🐍Python,🔗API,📱Frontend\" --prefix-colors \"yellow,blue,green\"",
 		"start:backend": "concurrently \"npm run start:python\" \"npm run start:api\" --names \"🐍Python,🔗API\" --prefix-colors \"yellow,blue\"",
 		"start:frontend": "cd apps/web && npm run dev",
 		"start:api": "cd apps/api && npm run dev",
 		"start:python": "cd apps/python-audio-analyzer && python3 -m uvicorn src.main:app --reload --host 0.0.0.0 --port 8000",
-		"stop:all": "pkill -f 'next|wrangler|uvicorn' || echo 'All services stopped'"
+		"stop:all": "pkill -f 'next|wrangler|uvicorn' || echo 'All services stopped'",
+		"win:setup": "cd apps/python-audio-analyzer && setup-windows.bat",
+		"win:debug": "cd apps/python-audio-analyzer && powershell -ExecutionPolicy Bypass -File debug-windows.ps1",
+		"win:start:python": "cd apps/python-audio-analyzer && python -m uvicorn src.main:app --reload --host 0.0.0.0 --port 8000",
+		"win:start:all": "concurrently \"npm run win:start:python\" \"npm run start:api\" \"npm run start:frontend\" --names \"🐍Python,🔗API,📱Frontend\" --prefix-colors \"yellow,blue,green\""
 	},
 	"dependencies": {
 		"@ducanh2912/next-pwa": "^10.2.9",
@@ -55,7 +62,7 @@
 	},
 	"lint-staged": {
 		"*.{js,jsx,ts,tsx}": ["biome check --apply", "biome format --write"],
-		"**/*.ts?(x)": ["tsc --noEmit"]
+		"**/*.ts?(x)": ["npm run type-check"]
 	},
 	"packageManager": "npm@10.0.0"
 }
