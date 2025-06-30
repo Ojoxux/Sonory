@@ -65,7 +65,13 @@
 		"*.{js,jsx,ts,tsx}": ["biome check --apply", "biome format --write"],
 		"apps/web/**/*.ts?(x)": ["cd apps/web && npx tsc --noEmit"],
 		"apps/api/**/*.ts?(x)": ["cd apps/api && npx tsc --noEmit"],
-		"packages/**/*.ts?(x)": ["npm run type-check"]
+		"packages/shared-types/**/*.ts?(x)": [
+			"cd packages/shared-types && npx tsc --noEmit"
+		],
+		"packages/utils/**/*.ts?(x)": ["cd packages/utils && npx tsc --noEmit"],
+		"packages/python-types/**/*.ts?(x)": [
+			"cd packages/python-types && npx tsc --noEmit"
+		]
 	},
 	"packageManager": "npm@10.0.0"
 }
