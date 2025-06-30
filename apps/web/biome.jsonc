@@ -1,90 +1,90 @@
 {
-	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
-	"extends": ["../../packages/config/biome.json"],
-	"files": {
-		"ignore": [
-			".next/**",
-			"public/sw.js",
-			"public/workbox-*.js",
-			"public/worker-*.js",
-			"public/fallback-*.js",
-			"public/*.map"
-		]
-	},
-	"linter": {
-		"rules": {
-			"suspicious": {
-				"noReactSpecificProps": "off",
-				"noConsoleLog": "warn"
-			},
-			"style": {
-				"useNamingConvention": {
-					"level": "warn",
-					"options": {
-						"strictCase": false,
-						"conventions": [
-							{
-								"selector": {
-									"kind": "function"
-								},
-								"formats": ["camelCase", "PascalCase"]
-							}
-						]
-					}
-				}
-			},
-			"complexity": {
-				"noExcessiveCognitiveComplexity": {
-					"level": "warn",
-					"options": {
-						"maxAllowedComplexity": 25
-					}
-				}
-			},
-			"a11y": {
-				"useKeyWithClickEvents": "warn",
-				"useButtonType": "warn"
-			},
-			"correctness": {
-				"noUnusedVariables": {
-					"level": "warn"
-				}
-			}
-		}
-	},
-	"overrides": [
-		{
-			"include": ["next.config.ts"],
-			"linter": {
-				"rules": {
-					"style": {
-						"useNamingConvention": "off"
-					}
-				}
-			}
-		},
-		{
-			"include": ["src/app/api/**/*.ts"],
-			"linter": {
-				"rules": {
-					"style": {
-						"useNamingConvention": {
-							"level": "error",
-							"options": {
-								"strictCase": false,
-								"conventions": [
-									{
-										"selector": {
-											"kind": "function"
-										},
-										"formats": ["CONSTANT_CASE", "PascalCase"]
-									}
-								]
-							}
-						}
-					}
-				}
-			}
-		}
-	]
+   "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+   "extends": ["../../packages/config/biome.json"],
+   "files": {
+      "ignore": [
+         ".next/**",
+         "public/sw.js",
+         "public/workbox-*.js",
+         "public/worker-*.js",
+         "public/fallback-*.js",
+         "public/*.map"
+      ]
+   },
+   "linter": {
+      "rules": {
+         "suspicious": {
+            "noReactSpecificProps": "off",
+            "noConsoleLog": "warn"
+         },
+         "style": {
+            "useNamingConvention": {
+               "level": "warn",
+               "options": {
+                  "strictCase": false,
+                  "conventions": [
+                     {
+                        "selector": {
+                           "kind": "function"
+                        },
+                        "formats": ["camelCase", "PascalCase"]
+                     }
+                  ]
+               }
+            }
+         },
+         "complexity": {
+            "noExcessiveCognitiveComplexity": {
+               "level": "warn",
+               "options": {
+                  "maxAllowedComplexity": 25
+               }
+            }
+         },
+         "a11y": {
+            "useKeyWithClickEvents": "warn",
+            "useButtonType": "warn"
+         },
+         "correctness": {
+            "noUnusedVariables": {
+               "level": "warn"
+            }
+         }
+      }
+   },
+   "overrides": [
+      {
+         "include": ["next.config.ts"],
+         "linter": {
+            "rules": {
+               "style": {
+                  "useNamingConvention": "off"
+               }
+            }
+         }
+      },
+      {
+         "include": ["src/app/api/**/*.ts"],
+         "linter": {
+            "rules": {
+               "style": {
+                  "useNamingConvention": {
+                     "level": "error",
+                     "options": {
+                        "strictCase": false,
+                        "conventions": [
+                           {
+                              "selector": {
+                                 "kind": "function"
+                              },
+                              "formats": ["CONSTANT_CASE", "PascalCase"]
+                           }
+                        ]
+                     }
+                  }
+               }
+            }
+         }
+      }
+   ]
 }
