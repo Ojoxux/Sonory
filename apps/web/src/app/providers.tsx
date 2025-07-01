@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import type { PropsWithChildren } from "react";
+import type { PropsWithChildren } from "react"
 
 /**
  * アプリケーション全体のプロバイダー
@@ -9,5 +9,5 @@ import type { PropsWithChildren } from "react";
  * @returns プロバイダーでラップされた子コンポーネント
  */
 export function Providers({ children }: PropsWithChildren) {
-	return <>{children}</>;
+   return <>{children}</>
 }

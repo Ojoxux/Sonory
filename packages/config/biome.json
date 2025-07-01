@@ -92,7 +92,8 @@
 				"useIsNan": "error",
 				"useValidForDirection": "error",
 				"useYield": "error",
-				"useHookAtTopLevel": "error"
+				"useHookAtTopLevel": "error",
+				"useExhaustiveDependencies": "off"
 			},
 			"style": {
 				"noInferrableTypes": "error",

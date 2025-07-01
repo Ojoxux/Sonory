@@ -2,15 +2,15 @@
  * 閉じるボタンコンポーネント
  */
 
-import { memo } from "react";
-import type { ReactElement } from "react";
-import { MdClose } from "react-icons/md";
+import { memo } from "react"
+import type { ReactElement } from "react"
+import { MdClose } from "react-icons/md"
 
 export interface CloseButtonProps {
-	/** クリック時の処理 */
-	onClick: () => void;
-	/** アクセシビリティラベル */
-	ariaLabel?: string;
+   /** クリック時の処理 */
+   onClick: () => void
+   /** アクセシビリティラベル */
+   ariaLabel?: string
 }
 
 /**
@@ -21,17 +21,17 @@ export interface CloseButtonProps {
  * @returns 閉じるボタン
  */
 export const CloseButton = memo(function CloseButton({
-	onClick,
-	ariaLabel = "閉じる",
+   onClick,
+   ariaLabel = "閉じる",
 }: CloseButtonProps): ReactElement {
-	return (
-		<button
-			type="button"
-			onClick={onClick}
-			className="flex-shrink-0 p-2 text-gray-400 transition-colors hover:text-white"
-			aria-label={ariaLabel}
-		>
-			<MdClose className="h-4 w-4" />
-		</button>
-	);
-});
+   return (
+      <button
+         type="button"
+         onClick={onClick}
+         className="flex-shrink-0 p-2 text-gray-400 transition-colors hover:text-white"
+         aria-label={ariaLabel}
+      >
+         <MdClose className="h-4 w-4" />
+      </button>
+   )
+})

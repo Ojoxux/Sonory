@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import type { FloatingIndicatorProps } from "./type";
+import type { FloatingIndicatorProps } from "./type"
 
 /**
  * フローティングインジケーターコンポーネント
@@ -17,16 +17,16 @@ import type { FloatingIndicatorProps } from "./type";
  * ```
  */
 export function FloatingIndicator({ className = "" }: FloatingIndicatorProps) {
-	return (
-		<div className={`flex items-center justify-center gap-1 ${className}`}>
-			{/* 音波バー */}
-			<div className="flex items-center gap-1">
-				<div className="h-4 w-1 animate-wave-1 rounded-full bg-gradient-to-t from-purple-400/60 to-purple-600/60" />
-				<div className="h-6 w-1 animate-wave-2 rounded-full bg-gradient-to-t from-blue-400/60 to-blue-600/60" />
-				<div className="h-5 w-1 animate-wave-3 rounded-full bg-gradient-to-t from-purple-400/60 to-purple-600/60" />
-				<div className="h-7 w-1 animate-wave-4 rounded-full bg-gradient-to-t from-blue-400/60 to-blue-600/60" />
-				<div className="h-4 w-1 animate-wave-5 rounded-full bg-gradient-to-t from-purple-400/60 to-purple-600/60" />
-			</div>
-		</div>
-	);
+   return (
+      <div className={`flex items-center justify-center gap-1 ${className}`}>
+         {/* 音波バー */}
+         <div className="flex items-center gap-1">
+            <div className="h-4 w-1 animate-wave-1 rounded-full bg-gradient-to-t from-purple-400/60 to-purple-600/60" />
+            <div className="h-6 w-1 animate-wave-2 rounded-full bg-gradient-to-t from-blue-400/60 to-blue-600/60" />
+            <div className="h-5 w-1 animate-wave-3 rounded-full bg-gradient-to-t from-purple-400/60 to-purple-600/60" />
+            <div className="h-7 w-1 animate-wave-4 rounded-full bg-gradient-to-t from-blue-400/60 to-blue-600/60" />
+            <div className="h-4 w-1 animate-wave-5 rounded-full bg-gradient-to-t from-purple-400/60 to-purple-600/60" />
+         </div>
+      </div>
+   )
 }
