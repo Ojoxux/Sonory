@@ -13,13 +13,13 @@
 	},
 	"javascript": {
 		"formatter": {
-			"jsxQuoteStyle": "single",
+			"jsxQuoteStyle": "double",
 			"quoteProperties": "asNeeded",
 			"trailingCommas": "all",
 			"semicolons": "asNeeded",
 			"arrowParentheses": "always",
 			"bracketSameLine": false,
-			"quoteStyle": "single",
+			"quoteStyle": "double",
 			"attributePosition": "auto",
 			"bracketSpacing": true
 		}
@@ -39,7 +39,7 @@
 			"indentStyle": "space",
 			"indentWidth": 3,
 			"lineWidth": 80,
-			"quoteStyle": "single"
+			"quoteStyle": "double"
 		}
 	},
 	"linter": {
