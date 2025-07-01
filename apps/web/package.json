@@ -6,7 +6,8 @@
       "dev": "next dev --turbopack --port 3000",
       "build": "next build",
       "start": "next start",
-      "lint": "biome check .",
+      "lint": "biome check --write .",
+      "lint:check": "biome check .",
       "format": "biome format . --write",
       "type-check": "tsc --noEmit",
       "clean": "rm -rf .next"

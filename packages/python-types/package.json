@@ -9,7 +9,8 @@
       "dev": "tsc --watch",
       "generate": "node dist/generate-python-types.js",
       "clean": "rm -rf dist/ && rm -rf ../python-audio-analyzer/src/types/generated/",
-      "lint": "biome check .",
+      "lint": "biome check --write .",
+      "lint:check": "biome check .",
       "format": "biome format . --write",
       "type-check": "tsc --noEmit"
    },
