@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import { useCallback, useState } from 'react'
+import { useCallback, useState } from "react";
 
 /**
  * メディアレコーダーのモック実装
@@ -10,21 +10,21 @@ import { useCallback, useState } from 'react'
  * UIの動作確認用にダミーの録音状態を提供する
  */
 export function useMediaRecorderMock() {
-   const [isRecording, setIsRecording] = useState(false)
+	const [isRecording, setIsRecording] = useState(false);
 
-   const startRecording = useCallback(async (): Promise<void> => {
-      setIsRecording(true)
-      // 実際の録音は行わない
-   }, [])
+	const startRecording = useCallback(async (): Promise<void> => {
+		setIsRecording(true);
+		// 実際の録音は行わない
+	}, []);
 
-   const stopRecording = useCallback(async (): Promise<void> => {
-      setIsRecording(false)
-      // 実際の録音データは生成しない
-   }, [])
+	const stopRecording = useCallback(async (): Promise<void> => {
+		setIsRecording(false);
+		// 実際の録音データは生成しない
+	}, []);
 
-   return {
-      startRecording,
-      stopRecording,
-      isRecording,
-   }
+	return {
+		startRecording,
+		stopRecording,
+		isRecording,
+	};
 }

@@ -1,12 +1,12 @@
-import { ERROR_CODES } from '@sonory/shared-types'
-import { Hono } from 'hono'
-import type { Context } from 'hono'
-import type { Env } from '../index'
-import { APIException } from '../middleware/error'
-import { rateLimits } from '../middleware/rateLimit'
-import { AudioService } from '../services/audio.service'
+import { ERROR_CODES } from "@sonory/shared-types";
+import { Hono } from "hono";
+import type { Context } from "hono";
+import type { Env } from "../index";
+import { APIException } from "../middleware/error";
+import { rateLimits } from "../middleware/rateLimit";
+import { AudioService } from "../services/audio.service";
 
-const app = new Hono<{ Bindings: Env }>()
+const app = new Hono<{ Bindings: Env }>();
 
 /**
  * POST /api/audio/upload
@@ -16,62 +16,62 @@ const app = new Hono<{ Bindings: Env }>()
  * @param {string} [userId] - ユーザーID（オプション）
  * @returns {AudioUploadResult} アップロード結果
  */
-app.post('/upload', rateLimits.audioUpload, async (c) => {
-   const audioService = new AudioService(
-      c as unknown as Context<{ Bindings: Env }>,
-   )
+app.post("/upload", rateLimits.audioUpload, async (c) => {
+	const audioService = new AudioService(
+		c as unknown as Context<{ Bindings: Env }>,
+	);
 
-   try {
-      // FormDataからファイルを取得
-      const formData = await c.req.formData()
-      const fileEntry = formData.get('audio')
-      const userIdEntry = formData.get('userId')
+	try {
+		// FormDataからファイルを取得
+		const formData = await c.req.formData();
+		const fileEntry = formData.get("audio");
+		const userIdEntry = formData.get("userId");
 
-      // ファイルの型チェック
-      const file =
-         fileEntry && typeof fileEntry === 'object' && 'name' in fileEntry
-            ? (fileEntry as File)
-            : null
-      const userId = typeof userIdEntry === 'string' ? userIdEntry : null
+		// ファイルの型チェック
+		const file =
+			fileEntry && typeof fileEntry === "object" && "name" in fileEntry
+				? (fileEntry as File)
+				: null;
+		const userId = typeof userIdEntry === "string" ? userIdEntry : null;
 
-      // ファイルの存在確認
-      if (!file) {
-         throw new APIException(
-            ERROR_CODES.INVALID_AUDIO_FORMAT,
-            'Audio file is required',
-            400,
-         )
-      }
+		// ファイルの存在確認
+		if (!file) {
+			throw new APIException(
+				ERROR_CODES.INVALID_AUDIO_FORMAT,
+				"Audio file is required",
+				400,
+			);
+		}
 
-      // ファイルサイズの基本チェック
-      if (file.size === 0) {
-         throw new APIException(
-            ERROR_CODES.INVALID_AUDIO_FORMAT,
-            'Audio file cannot be empty',
-            400,
-         )
-      }
+		// ファイルサイズの基本チェック
+		if (file.size === 0) {
+			throw new APIException(
+				ERROR_CODES.INVALID_AUDIO_FORMAT,
+				"Audio file cannot be empty",
+				400,
+			);
+		}
 
-      // 音声ファイルをアップロード
-      const result = await audioService.uploadAudio(file, userId || undefined)
+		// 音声ファイルをアップロード
+		const result = await audioService.uploadAudio(file, userId || undefined);
 
-      return c.json({
-         success: true,
-         data: result,
-      })
-   } catch (error) {
-      if (error instanceof APIException) {
-         throw error
-      }
+		return c.json({
+			success: true,
+			data: result,
+		});
+	} catch (error) {
+		if (error instanceof APIException) {
+			throw error;
+		}
 
-      throw new APIException(
-         ERROR_CODES.STORAGE_ERROR,
-         'Failed to upload audio file',
-         500,
-         error instanceof Error ? { message: error.message } : undefined,
-      )
-   }
-})
+		throw new APIException(
+			ERROR_CODES.STORAGE_ERROR,
+			"Failed to upload audio file",
+			500,
+			error instanceof Error ? { message: error.message } : undefined,
+		);
+	}
+});
 
 /**
  * DELETE /api/audio/:audioId
@@ -80,44 +80,44 @@ app.post('/upload', rateLimits.audioUpload, async (c) => {
  * @param {string} audioId - 削除する音声ファイルのID
  * @returns {boolean} 削除成功可否
  */
-app.delete('/:audioId', rateLimits.default, async (c) => {
-   const audioService = new AudioService(
-      c as unknown as Context<{ Bindings: Env }>,
-   )
-   const audioId = c.req.param('audioId')
+app.delete("/:audioId", rateLimits.default, async (c) => {
+	const audioService = new AudioService(
+		c as unknown as Context<{ Bindings: Env }>,
+	);
+	const audioId = c.req.param("audioId");
 
-   try {
-      if (!audioId) {
-         throw new APIException(
-            ERROR_CODES.INVALID_AUDIO_FORMAT,
-            'Audio ID is required',
-            400,
-         )
-      }
+	try {
+		if (!audioId) {
+			throw new APIException(
+				ERROR_CODES.INVALID_AUDIO_FORMAT,
+				"Audio ID is required",
+				400,
+			);
+		}
 
-      // TODO: 実際のファイルパス取得ロジックを実装
-      // 現在は簡易的な実装
-      const filePath = audioId
+		// TODO: 実際のファイルパス取得ロジックを実装
+		// 現在は簡易的な実装
+		const filePath = audioId;
 
-      const success = await audioService.deleteAudio(filePath)
+		const success = await audioService.deleteAudio(filePath);
 
-      return c.json({
-         success: true,
-         data: { deleted: success },
-      })
-   } catch (error) {
-      if (error instanceof APIException) {
-         throw error
-      }
+		return c.json({
+			success: true,
+			data: { deleted: success },
+		});
+	} catch (error) {
+		if (error instanceof APIException) {
+			throw error;
+		}
 
-      throw new APIException(
-         ERROR_CODES.STORAGE_ERROR,
-         'Failed to delete audio file',
-         500,
-         error instanceof Error ? { message: error.message } : undefined,
-      )
-   }
-})
+		throw new APIException(
+			ERROR_CODES.STORAGE_ERROR,
+			"Failed to delete audio file",
+			500,
+			error instanceof Error ? { message: error.message } : undefined,
+		);
+	}
+});
 
 /**
  * GET /api/audio/:audioId/metadata
@@ -126,46 +126,46 @@ app.delete('/:audioId', rateLimits.default, async (c) => {
  * @param {string} audioId - 音声ファイルのID
  * @returns {AudioMetadata} メタデータ
  */
-app.get('/:audioId/metadata', rateLimits.default, async (c) => {
-   const audioId = c.req.param('audioId')
+app.get("/:audioId/metadata", rateLimits.default, async (c) => {
+	const audioId = c.req.param("audioId");
 
-   try {
-      if (!audioId) {
-         throw new APIException(
-            ERROR_CODES.INVALID_AUDIO_FORMAT,
-            'Audio ID is required',
-            400,
-         )
-      }
+	try {
+		if (!audioId) {
+			throw new APIException(
+				ERROR_CODES.INVALID_AUDIO_FORMAT,
+				"Audio ID is required",
+				400,
+			);
+		}
 
-      // TODO: データベースからメタデータを取得するロジックを実装
-      // 現在は簡易的な実装
-      const metadata = {
-         id: audioId,
-         filename: `audio-${audioId}`,
-         size: 0,
-         format: 'webm' as const,
-         duration: 0,
-         uploadedAt: new Date().toISOString(),
-      }
+		// TODO: データベースからメタデータを取得するロジックを実装
+		// 現在は簡易的な実装
+		const metadata = {
+			id: audioId,
+			filename: `audio-${audioId}`,
+			size: 0,
+			format: "webm" as const,
+			duration: 0,
+			uploadedAt: new Date().toISOString(),
+		};
 
-      return c.json({
-         success: true,
-         data: metadata,
-      })
-   } catch (error) {
-      if (error instanceof APIException) {
-         throw error
-      }
+		return c.json({
+			success: true,
+			data: metadata,
+		});
+	} catch (error) {
+		if (error instanceof APIException) {
+			throw error;
+		}
 
-      throw new APIException(
-         ERROR_CODES.DATABASE_ERROR,
-         'Failed to get audio metadata',
-         500,
-         error instanceof Error ? { message: error.message } : undefined,
-      )
-   }
-})
+		throw new APIException(
+			ERROR_CODES.DATABASE_ERROR,
+			"Failed to get audio metadata",
+			500,
+			error instanceof Error ? { message: error.message } : undefined,
+		);
+	}
+});
 
 /**
  * POST /api/audio/:audioId/analyze
@@ -175,81 +175,79 @@ app.get('/:audioId/metadata', rateLimits.default, async (c) => {
  * @param {object} [options] - 分析オプション
  * @returns {AIAnalysisResult} AI分析結果
  */
-app.post('/:audioId/analyze', rateLimits.default, async (c) => {
-   const audioService = new AudioService(
-      c as unknown as Context<{ Bindings: Env }>,
-   )
-   const audioId = c.req.param('audioId')
+app.post("/:audioId/analyze", rateLimits.default, async (c) => {
+	const audioService = new AudioService(
+		c as unknown as Context<{ Bindings: Env }>,
+	);
+	const audioId = c.req.param("audioId");
 
-   try {
-      if (!audioId) {
-         throw new APIException(
-            ERROR_CODES.INVALID_AUDIO_FORMAT,
-            'Audio ID is required',
-            400,
-         )
-      }
+	try {
+		if (!audioId) {
+			throw new APIException(
+				ERROR_CODES.INVALID_AUDIO_FORMAT,
+				"Audio ID is required",
+				400,
+			);
+		}
 
-      // リクエストボディから分析オプションを取得
-      const body = await c.req.json().catch(() => ({}))
-      const topK = body.topK || 5
-      const audioUrl = body.audioUrl
+		// リクエストボディから分析オプションを取得
+		const body = await c.req.json().catch(() => ({}));
+		const topK = body.topK || 5;
+		const audioUrl = body.audioUrl;
 
-      if (!audioUrl) {
-         throw new APIException(
-            ERROR_CODES.INVALID_AUDIO_FORMAT,
-            'Audio URL is required for analysis',
-            400,
-         )
-      }
+		if (!audioUrl) {
+			throw new APIException(
+				ERROR_CODES.INVALID_AUDIO_FORMAT,
+				"Audio URL is required for analysis",
+				400,
+			);
+		}
 
-      // Python YAMNetサービスで音声分析を実行
-      const pythonAnalysisResult = await audioService.analyzeAudioWithPython(
-         audioUrl,
-         topK,
-      )
+		// Python YAMNetサービスで音声分析を実行
+		const pythonAnalysisResult = await audioService.analyzeAudioWithPython(
+			audioUrl,
+			topK,
+		);
 
-      // 分析結果を統一形式に変換
-      const analysisResult = {
-         transcription: 'YAMNet音響分類完了',
-         categories: {
-            emotion: 'N/A',
-            topic: pythonAnalysisResult.classifications[0]?.label || '環境音',
-            language: 'N/A',
-            confidence:
-               pythonAnalysisResult.classifications[0]?.confidence || 0.0,
-         },
-         summary: `検出された音: ${
-            pythonAnalysisResult.classifications[0]?.label || '不明'
-         } (信頼度: ${Math.round(
-            (pythonAnalysisResult.classifications[0]?.confidence || 0) * 100,
-         )}%)`,
-         environment:
-            pythonAnalysisResult.environment?.primary_type || 'unknown',
-         allClassifications: pythonAnalysisResult.classifications || [],
-         environmentDetails: pythonAnalysisResult.environment || {},
-         performanceMetrics: pythonAnalysisResult.performance_metrics || {},
-      }
+		// 分析結果を統一形式に変換
+		const analysisResult = {
+			transcription: "YAMNet音響分類完了",
+			categories: {
+				emotion: "N/A",
+				topic: pythonAnalysisResult.classifications[0]?.label || "環境音",
+				language: "N/A",
+				confidence: pythonAnalysisResult.classifications[0]?.confidence || 0.0,
+			},
+			summary: `検出された音: ${
+				pythonAnalysisResult.classifications[0]?.label || "不明"
+			} (信頼度: ${Math.round(
+				(pythonAnalysisResult.classifications[0]?.confidence || 0) * 100,
+			)}%)`,
+			environment: pythonAnalysisResult.environment?.primary_type || "unknown",
+			allClassifications: pythonAnalysisResult.classifications || [],
+			environmentDetails: pythonAnalysisResult.environment || {},
+			performanceMetrics: pythonAnalysisResult.performance_metrics || {},
+		};
 
-      // TODO: データベースに分析結果を保存
-      // await saveAnalysisResult(audioId, analysisResult)
+		// TODO: データベースに分析結果を保存
+		// await saveAnalysisResult(audioId, analysisResult)
 
-      return c.json({
-         success: true,
-         data: analysisResult,
-      })
-   } catch (error) {
-      if (error instanceof APIException) {
-         throw error
-      }
+		return c.json({
+			success: true,
+			data: analysisResult,
+		});
+	} catch (error) {
+		if (error instanceof APIException) {
+			throw error;
+		}
 
-      throw new APIException(
-         ERROR_CODES.AI_ANALYSIS_FAILED,
-         'Failed to analyze audio',
-         500,
-         error instanceof Error ? { message: error.message } : undefined,
-      )
-   }
-})
+		throw new APIException(
+			ERROR_CODES.AI_ANALYSIS_FAILED,
+			"Failed to analyze audio",
+			500,
+			error instanceof Error ? { message: error.message } : undefined,
+		);
+	}
+});
 
-export default app
+export default app;
