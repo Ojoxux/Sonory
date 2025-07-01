@@ -331,6 +331,7 @@ export function useMapComponent({
    // マップ初期化（一度だけ実行、依存関係は意図的に除外）
    // 注意: この useEffect は意図的に依存関係を空にしています
    // 依存関係を追加するとマップが何度も再初期化されて問題を起こすためです
+   // biome-ignore lint/correctness/useExhaustiveDependencies: マップ初期化時の依存関係は意図的に制限しています
    useEffect(() => {
       if (!mapContainerRef.current || mapInitializedRef.current) return
 
