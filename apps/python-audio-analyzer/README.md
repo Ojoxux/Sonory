@@ -226,16 +226,49 @@ Audio classifications are mapped from English AudioSet classes to Japanese label
 
 ### Windows-specific Issues
 
-4. **Python Service "internal error" on Windows**
+4. **Python Service "internal error" on Windows (500エラー)**
    ```
    Error: internal error; reference = 0t0kgpo5g5veed5r26i3luhv
    ```
    
    **原因と解決策:**
-   - **仮想環境が未アクティブ:** `.venv\Scripts\activate` でPython仮想環境をアクティブ化
-   - **依存関係の不足:** `pip install -e .` で全ての依存関係を再インストール
-   - **ffmpeg不足:** `choco install ffmpeg` またはWindows用ffmpegをインストール
-   - **Visual C++ Runtime不足:** Microsoft Visual C++ Redistributableをインストール
+   
+   **1. ffmpeg-pythonの依存関係不足:**
+   ```powershell
+   # pyproject.tomlに追加済み、再インストール必要
+   pip install -e . --force-reinstall
+   ```
+   
+   **2. FFmpegバイナリの不足:**
+   ```powershell
+   # 方法1: Chocolatey使用（推奨）
+   choco install ffmpeg
+   
+   # 方法2: 手動インストール
+   # https://ffmpeg.org/download.html から Windows用をダウンロード
+   # システム環境変数PATHに追加
+   ```
+   
+   **3. Python仮想環境が未アクティブ:**
+   ```powershell
+   # PowerShell
+   .venv\Scripts\activate
+   
+   # Git Bash
+   source .venv/Scripts/activate
+   ```
+   
+   **4. Visual C++ Runtime不足:**
+   ```powershell
+   # Microsoft Visual C++ Redistributableをインストール
+   # https://aka.ms/vs/17/release/vc_redist.x64.exe
+   ```
+   
+   **自動修正スクリプト:**
+   ```powershell
+   # Windows環境の問題を自動診断・修正
+   .\fix-windows-issues.ps1
+   ```
    
    **診断コマンド:**
    ```powershell
