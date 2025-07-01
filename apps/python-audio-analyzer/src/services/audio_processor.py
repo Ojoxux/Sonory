@@ -287,8 +287,9 @@ class AudioProcessor:
             
             logger.info("Converting WebM to WAV", webm_path=str(webm_path), wav_path=str(wav_path))
             
-            # Windows環境でのffmpegパス問題を回避
+            # クロスプラットフォーム対応のffmpeg変換
             import platform
+            
             if platform.system() == 'Windows':
                 # Windowsではパスを適切にエスケープ
                 input_path = str(webm_path).replace('\\', '/')
@@ -301,7 +302,7 @@ class AudioProcessor:
                     logger.error("FFmpeg not found on Windows. Please install FFmpeg and add to PATH")
                     raise RuntimeError("FFmpeg binary not found. Install ffmpeg from https://ffmpeg.org/download.html")
                 
-            # ffmpegで変換
+                # Windows用ffmpeg変換
                 (
                     ffmpeg
                     .input(input_path)
@@ -310,15 +311,16 @@ class AudioProcessor:
                     .run(quiet=True)
                 )
             else:
-                # Unix系OSでは通常の処理
-            (
-                ffmpeg
-                .input(str(webm_path))
-                .output(str(wav_path), acodec='pcm_s16le', ac=1, ar=16000)
-                .overwrite_output()
-                .run(quiet=True)
-            )
+                # Unix系OS用ffmpeg変換
+                (
+                    ffmpeg
+                    .input(str(webm_path))
+                    .output(str(wav_path), acodec='pcm_s16le', ac=1, ar=16000)
+                    .overwrite_output()
+                    .run(quiet=True)
+                )
             
+            # 変換結果の確認
             if not wav_path.exists():
                 raise RuntimeError("WAV conversion failed - output file not created")
             
