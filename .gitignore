@@ -56,8 +56,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# vscode settings
-.vscode
+# vscode settings (プロジェクト設定は共有、個人設定のみ除外)
+# .vscode
+.vscode/settings-personal.json
 
 # Turborepo
 .turbo
