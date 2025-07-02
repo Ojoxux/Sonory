@@ -73,7 +73,7 @@ export function RecordButton({
 		<div className="relative">
 			{/* 背景の光彩エフェクト */}
 			<div
-				className={`absolute inset-0 ${getBackgroundGradient()} rounded-full opacity-50 blur-2xl ${getAnimationClass()}`}
+				className={`absolute inset-0 ${getBackgroundGradient()} rounded-full blur-2xl opacity-50 ${getAnimationClass()}`}
 			/>
 
 			{/* メインボタン */}
@@ -81,15 +81,25 @@ export function RecordButton({
 				type="button"
 				onClick={onClick}
 				disabled={disabled}
-				className={`relative h-32 w-32 rounded-full ${getBackgroundGradient()}shadow-2xl transition-all duration-300 ease-out hover:scale-105 hover:shadow-3xl active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${getRingEffect()}
-          ${getAnimationClass()}group`}
+				className={`
+          relative w-32 h-32 rounded-full
+          ${getBackgroundGradient()}
+          shadow-2xl
+          transition-all duration-300 ease-out
+          hover:scale-105 hover:shadow-3xl
+          active:scale-95
+          disabled:opacity-50 disabled:cursor-not-allowed
+          ${getRingEffect()}
+          ${getAnimationClass()}
+          group
+        `}
 				aria-label="録音"
 			>
 				{/* グラスエフェクト */}
 				<div className="absolute inset-0 rounded-full bg-white/10 backdrop-blur-sm" />
 
 				{/* 内部の光沢 */}
-				<div className="absolute top-2 right-2 left-2 h-1/3 rounded-t-full bg-gradient-to-b from-white/30 to-transparent" />
+				<div className="absolute top-2 left-2 right-2 h-1/3 bg-gradient-to-b from-white/30 to-transparent rounded-t-full" />
 
 				{/* コンテンツ */}
 				<div className="relative z-10">
@@ -100,8 +110,8 @@ export function RecordButton({
 			{/* 波紋エフェクト（録音中） */}
 			{status === "recording" && (
 				<>
-					<div className="absolute inset-0 animate-ping-slow rounded-full border-2 border-red-400/50" />
-					<div className="absolute inset-0 animate-ping-slower rounded-full border-2 border-red-400/30" />
+					<div className="absolute inset-0 rounded-full border-2 border-red-400/50 animate-ping-slow" />
+					<div className="absolute inset-0 rounded-full border-2 border-red-400/30 animate-ping-slower" />
 				</>
 			)}
 		</div>
