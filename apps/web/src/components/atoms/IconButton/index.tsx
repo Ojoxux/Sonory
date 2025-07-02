@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import type { IconButtonProps } from './type'
+import type { IconButtonProps } from "./type";
 
 /**
  * アイコンボタンコンポーネント
@@ -26,20 +26,20 @@ import type { IconButtonProps } from './type'
  * ```
  */
 export function IconButton({
-   icon,
-   ariaLabel,
-   onClick,
-   className = '',
+	icon,
+	ariaLabel,
+	onClick,
+	className = "",
 }: IconButtonProps) {
-   return (
-      <button
-         type="button"
-         aria-label={ariaLabel}
-         onClick={onClick}
-         className={`hover:-translate-y-px flex h-12 w-12 items-center justify-center rounded-full transition-all duration-200 ease-in-out hover:scale-105 active:translate-y-0 active:scale-[1.02] ${className}
+	return (
+		<button
+			type="button"
+			aria-label={ariaLabel}
+			onClick={onClick}
+			className={`hover:-translate-y-px flex h-12 w-12 items-center justify-center rounded-full transition-all duration-200 ease-in-out hover:scale-105 active:translate-y-0 active:scale-[1.02] ${className}
       `}
-      >
-         {icon}
-      </button>
-   )
+		>
+			{icon}
+		</button>
+	);
 }

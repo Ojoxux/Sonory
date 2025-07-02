@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * ローディングスピナーコンポーネント
@@ -12,9 +12,9 @@
  * ```
  */
 export function LoadingSpinner() {
-   return (
-      <div className="relative mx-auto h-10 w-10">
-         <div className="absolute inset-0 animate-spin rounded-full border-[3px] border-white/20 border-t-white" />
-      </div>
-   )
+	return (
+		<div className="relative mx-auto h-10 w-10">
+			<div className="absolute inset-0 animate-spin rounded-full border-[3px] border-white/20 border-t-white" />
+		</div>
+	);
 }

@@ -42,6 +42,16 @@
    },
    "overrides": [
       {
+         "include": ["*.tsx", "*.ts"],
+         "linter": {
+            "rules": {
+               "correctness": {
+                  "useExhaustiveDependencies": "off"
+               }
+            }
+         }
+      },
+      {
          "include": ["next.config.ts"],
          "linter": {
             "rules": {

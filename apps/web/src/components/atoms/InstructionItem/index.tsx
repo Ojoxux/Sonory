@@ -1,7 +1,7 @@
-'use client'
+"use client";
 
-import { motion } from 'framer-motion'
-import type { InstructionItemProps } from './types'
+import { motion } from "framer-motion";
+import type { InstructionItemProps } from "./types";
 
 /**
  * 確認事項アイテムコンポーネント
@@ -17,60 +17,60 @@ import type { InstructionItemProps } from './types'
  */
 
 export function InstructionItem({
-   text,
-   index,
-   isClosing,
-   className = '',
+	text,
+	index,
+	isClosing,
+	className = "",
 }: InstructionItemProps) {
-   return (
-      <motion.div
-         initial={{
-            opacity: 0,
-            x: -50,
-            scale: 0.8,
-         }}
-         animate={
-            isClosing
-               ? { opacity: 0, x: -30, scale: 0.8 }
-               : {
-                    opacity: 1,
-                    x: 0,
-                    scale: 1,
-                 }
-         }
-         transition={
-            isClosing
-               ? { duration: 0.2, delay: index * 0.05 }
-               : {
-                    delay: 1.2 + index * 0.15,
-                    duration: 0.8,
-                    ease: [0.68, -0.55, 0.265, 1.55],
-                 }
-         }
-         className={`flex items-start gap-3 rounded-lg border border-neutral-700/50 bg-black/20 p-3 backdrop-blur-sm ${className}`}
-      >
-         <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{
-               delay: 1.4 + index * 0.15,
-               duration: 0.6,
-               type: 'spring',
-               stiffness: 200,
-            }}
-            className="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-white"
-         />
-         <motion.span
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{
-               delay: 1.4 + index * 0.15,
-               duration: 0.6,
-            }}
-            className="font-medium text-neutral-100 text-sm leading-relaxed"
-         >
-            {text}
-         </motion.span>
-      </motion.div>
-   )
+	return (
+		<motion.div
+			initial={{
+				opacity: 0,
+				x: -50,
+				scale: 0.8,
+			}}
+			animate={
+				isClosing
+					? { opacity: 0, x: -30, scale: 0.8 }
+					: {
+							opacity: 1,
+							x: 0,
+							scale: 1,
+						}
+			}
+			transition={
+				isClosing
+					? { duration: 0.2, delay: index * 0.05 }
+					: {
+							delay: 1.2 + index * 0.15,
+							duration: 0.8,
+							ease: [0.68, -0.55, 0.265, 1.55],
+						}
+			}
+			className={`flex items-start gap-3 rounded-lg border border-neutral-700/50 bg-black/20 p-3 backdrop-blur-sm ${className}`}
+		>
+			<motion.div
+				initial={{ scale: 0 }}
+				animate={{ scale: 1 }}
+				transition={{
+					delay: 1.4 + index * 0.15,
+					duration: 0.6,
+					type: "spring",
+					stiffness: 200,
+				}}
+				className="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-white"
+			/>
+			<motion.span
+				initial={{ opacity: 0 }}
+				animate={{ opacity: 1 }}
+				transition={{
+					delay: 1.4 + index * 0.15,
+					duration: 0.6,
+				}}
+				className="font-medium text-neutral-100 text-sm leading-relaxed"
+			>
+				{text}
+			</motion.span>
+		</motion.div>
+	);
 }
