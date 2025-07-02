@@ -45,7 +45,7 @@
 ### 必要条件
 
 - Node.js 20.0.0以上
-- npm 10.0.0以上（または同等のyarn/pnpm/bun）
+- npm 10.0.0以上
 - Git
 
 ### 環境構築
@@ -61,12 +61,6 @@ cd Sonory
 
 ```bash
 npm install
-# or
-yarn install
-# or
-pnpm install
-# or
-bun install
 ```
 
 3. 共有パッケージのビルド
@@ -90,23 +84,21 @@ npm run build
 5. 開発サーバーの起動
 
 ```bash
-# フロントエンドのみ起動
-npm run dev:web
-
-# APIサーバーのみ起動  
-npm run dev:api
-
-# すべてのサービスを起動（推奨）
+# 全サービス同時起動（推奨）
 npm run start:all
 
-# または全パッケージを同時に起動
-npm run dev
+# 個別起動
+npm run start:frontend  # フロントエンドのみ
+npm run start:api       # APIサーバーのみ
+npm run start:python    # Python音声分析のみ
 ```
 
 開発サーバーが起動したら、以下のURLでアクセスできます：
 - **フロントエンド**: [http://localhost:3000](http://localhost:3000)
 - **API**: [http://localhost:8787](http://localhost:8787)  
 - **Python音声分析**: [http://localhost:8000](http://localhost:8000)
+
+> **詳細なnpmスクリプト情報**: [NPM_SCRIPTS_GUIDE.md](./NPM_SCRIPTS_GUIDE.md)をご覧ください
 
 ## 🗂 Project Structure
 
@@ -153,43 +145,28 @@ sonory/                               # プロジェクトルート（モノレ�
 ## 🛠 Development Tools
 
 ```bash
-# リント実行
-npm run lint
+# リント・フォーマット・型チェック
+npm run lint     # リント実行
+npm run format   # フォーマット実行  
+npm run type-check # 型チェック
 
-# フォーマット実行
-npm run format
-
-# CI環境用リント
-npm run ci
-
-# 型チェック
-npm run type-check
+# ビルド・クリーン
+npm run build    # 全パッケージビルド
+npm run clean    # 全パッケージクリーン
 ```
+
+> **全npmスクリプト詳細**: [NPM_SCRIPTS_GUIDE.md](./NPM_SCRIPTS_GUIDE.md)で起動・停止・トラブルシューティングを確認
 
 Huskyとlint-stagedを使用して、コミット前に自動的にリントとフォーマットが実行されます。
 
 ## 🏗 Build and Deploy
 
-本番用ビルドの作成:
-
 ```bash
+# 本番用ビルド
 npm run build
-# or
-yarn build
-# or
-pnpm build
-# or
-bun build
-```
 
-ビルド結果を確認:
-
-```bash
-# フロントエンドの本番環境起動
-cd apps/web && npm run start
-
-# または開発環境で確認
-npm run dev:web
+# ビルド結果の確認
+cd apps/web && npm run start  # 本番環境起動
 ```
 
 ## 📝 Development Guidelines
@@ -202,58 +179,40 @@ feature/i[issues番号]_hoge-fuga-hoge
 
 例:
 - `feature/i123_add-user-authentication`
-- `bugfix/i456_fix-login-error`
+- `feature/i456_fix-login-error`
 
 ### コミットメッセージ
 
 - 英語、日本語どちらでも可
-- プレフィックスを使用すること
-- 機能やコンポーネントの種類に応じてスコープを括弧内に明示すること
+- プレフィックスを使用すること（feat, fix, chore, refactor など）
+- スコープの記載は任意（必要に応じて括弧内に記載）
 - 絵文字の使用も可（特に録音・音声関連は🎤、音楽関連は🎵を使用）
 
 ```
-feat(atoms): チェックマークアイコンコンポーネントと型定義を作成
-feat(organisms): RecordingInterfaceに確認完了機能を追加
-feat(MediaRecorder): 🎤 録音機能を強化し、一時停止・再開機能を追加
-fix(molecules): 確認完了画面のアニメーション問題を修正
-fix(WaveformPlayer): 音声再生時のシークバー動作を修正
-style(organisms): AudioPlayback音声情報表記を削除
-refactor(fonts): フォント設定を整理しArial Rounded MT Pro追加
-remove(atoms): SelectAllButtonコンポーネントを削除
-chore(deps): next-pwaをdependenciesに追加
+feat: チェックマークアイコンコンポーネントを作成
+feat: 🎤 録音機能を強化し、一時停止・再開機能を追加
+fix: 確認完了画面のアニメーション問題を修正
+chore: next-pwaをdependenciesに追加
 ```
-
-**スコープの例:**
-- **コンポーネント**: `(atoms)`, `(molecules)`, `(organisms)`
-- **機能名**: `(MediaRecorder)`, `(WaveformPlayer)`, `(AudioPlayback)`, `(RecordingInterface)`
-- **技術関連**: `(fonts)`, `(deps)`, `(biome)`
 
 ### プルリクエストタイトル記載ルール
 
 - 日本語で記述すること
-- 以下の形式で記載すること
-- 機能やコンポーネントの種類に応じてスコープを括弧内に明示すること
+- プレフィックスを使用すること（feature, fix, chore, style など）
+- スコープの記載は任意（必要に応じて括弧内に記載）
+- Issue番号を含めること
 
 ```
-feature(scope)/#[issues番号]: ほげほげ
-fix(scope)/#[issues番号]: ほげほげ
-style(scope)/#[issues番号]: ほげほげ
+feature/#[issues番号]: ほげほげ
+fix/#[issues番号]: ほげほげ
+style/#[issues番号]: ほげほげ
 ```
 
 例:
-- `feature(atoms)/#123: チェックマークアイコンコンポーネントの実装`
-- `feature(organisms)/#124: RecordingInterface確認完了機能の追加`
-- `fix(molecules)/#456: 確認完了画面のアニメーション問題修正`
-- `fix(WaveformPlayer)/#457: 音声再生時のシークバー動作修正`
-- `style(organisms)/#458: AudioPlayback音声情報表記の削除`
-- `refactor(fonts)/#459: フォント設定の整理`
-
-**スコープの例:**
-- **コンポーネント**: `(atoms)`, `(molecules)`, `(organisms)`
-- **機能名**: `(MediaRecorder)`, `(WaveformPlayer)`, `(AudioPlayback)`, `(RecordingInterface)`
-- **技術関連**: `(fonts)`, `(deps)`, `(biome)`
-
-- 注意: 変更の対象となる機能やコンポーネントの種類を括弧内に明記することで、変更の範囲と内容を明確にしてください。
+- `feature/#123: チェックマークアイコンコンポーネントの実装`
+- `feature/#124: RecordingInterface確認完了機能の追加`
+- `fix/#456: 確認完了画面のアニメーション問題修正`
+- `chore/#459: フォント設定の整理`
 
 ## 🤝 Contribution Flow
 
@@ -320,15 +279,21 @@ style(scope)/#[issues番号]: ほげほげ
    npm run build
    ```
 
-3. **プルリクエスト作成時のコンフリクト**
+3. **最新のmainブランチとの同期**
+   - リモートの最新状態を確認してから、自分の変更を上に乗せる
    ```bash
-   # mainブランチの最新変更を取り込み、自分の変更を上に乗せる
-   git pull --rebase origin main
+   # リモートの最新状態を取得
+   git fetch origin main
    
-   # コンフリクトが発生した場合は解決後、以下のコマンドを実行
+   # 最新のmainブランチに自分の変更を上乗せ
+   git pull --rebase origin main
+   ```
+   - コンフリクトが発生した場合は解決後、以下のコマンドを実行
+   ```bash
    git add .
    git rebase --continue
-   
-   # リベース完了後、強制プッシュ（注意：履歴が書き換わります）
+   ```
+   - リベース完了後、強制プッシュ（注意：履歴が書き換わります）
+   ```bash
    git push --force-with-lease origin feature/hoge-hoge
    ```
