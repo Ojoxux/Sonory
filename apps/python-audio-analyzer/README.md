@@ -57,6 +57,26 @@ docker-compose -f docker-compose.dev.yml up
 
 ### 2.1. Windows-specific Setup
 
+**重要: Windows環境での既知の問題**
+
+日本語ユーザー名を含むWindowsシステムでは、TensorFlow Hubのキャッシュディレクトリに関する問題が発生する場合があります。
+
+**症状:**
+```
+ERROR: C:\Users\中村のPC\AppData\Local\Temp is not a directory
+tensorflow.python.framework.errors_impl.FailedPreconditionError
+```
+
+**解決方法:**
+本プロジェクトには自動修正機能が組み込まれていますが、問題が発生した場合は以下を実行してください：
+
+```powershell
+# 管理者権限でPowerShellを起動
+powershell -ExecutionPolicy Bypass -File fix-windows-issues.ps1
+```
+
+**詳細な解決方法:** [WINDOWS_SETUP.md](./WINDOWS_SETUP.md) を参照してください。
+
 **PowerShell/Command Prompt:**
 ```powershell
 # Navigate to Python analyzer directory
@@ -93,6 +113,12 @@ pip install -e .
 uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
+**Windows環境のトラブルシューティング:**
+- 日本語を含むユーザー名でエラーが発生する場合は、`fix-windows-issues.ps1` を実行
+- パスの区切り文字は自動的に処理されますが、環境変数でパスを指定する場合は `\\` を使用
+- PowerShellとCommand Promptでは環境変数の設定方法が異なります
+- Git Bashを使用することでUnix系コマンドが利用可能
+
 ### 3. Environment Variables
 
 Create a `.env` file in the `apps/python-audio-analyzer/` directory:
@@ -105,10 +131,71 @@ SUPABASE_SERVICE_KEY=your_service_key
 REDIS_URL=redis://localhost:6379
 ```
 
+**Windows環境での追加設定:**
+```env
+# TensorFlow Hubキャッシュディレクトリ（自動設定されますが、必要に応じて指定）
+TFHUB_CACHE_DIR=C:\path\to\sonory\apps\python-audio-analyzer\tf_hub_cache
+
+# TensorFlowログレベル
+TF_CPP_MIN_LOG_LEVEL=1
+```
+
 **Windows環境での注意事項:**
 - パスの区切り文字は自動的に処理されますが、環境変数でパスを指定する場合は `\\` を使用
 - PowerShellとCommand Promptでは環境変数の設定方法が異なります
 - Git Bashを使用することでUnix系コマンドが利用可能
+
+### 4. Visual C++ Runtime不足:
+```powershell
+# Microsoft Visual C++ Redistributableをインストール
+# https://aka.ms/vs/17/release/vc_redist.x64.exe
+```
+
+### 5. 日本語ユーザー名によるパス問題:
+```
+ERROR: C:\Users\中村のPC\AppData\Local\Temp is not a directory
+```
+
+### 自動修正スクリプト:
+```powershell
+# Windows環境の問題を自動診断・修正
+.\fix-windows-issues.ps1
+```
+
+### 診断コマンド:
+```powershell
+# サービスの起動確認
+curl http://localhost:8000/health
+
+# Python環境の確認
+python -c "import tensorflow as tf; print(tf.__version__)"
+python -c "import librosa; print('librosa OK')"
+python -c "import numpy; print('numpy OK')"
+```
+
+### 詳細なWindows環境対応
+
+Windows環境での開発で問題が発生した場合は、詳細なセットアップガイドを参照してください：
+
+📖 **[Windows開発環境セットアップガイド](./WINDOWS_SETUP.md)**
+
+このガイドには以下の内容が含まれています：
+- 日本語パス問題の詳細な解決方法
+- 環境変数の設定方法
+- トラブルシューティングの詳細
+- Docker環境での実行方法
+- パフォーマンス最適化のコツ
+
+## 📚 Additional Resources
+
+- [YAMNet Documentation](https://tfhub.dev/google/yamnet/1)
+- [FastAPI Documentation](https://fastapi.tiangolo.com/)
+- [TensorFlow Hub](https://tfhub.dev/)
+- [Windows開発環境セットアップ](./WINDOWS_SETUP.md)
+
+## 🤝 Contributing
+
+This service is part of the Sonory monorepo. Please follow the established development workflows and coding standards.
 
 ## 📊 API Endpoints
 
@@ -264,6 +351,11 @@ Audio classifications are mapped from English AudioSet classes to Japanese label
    # https://aka.ms/vs/17/release/vc_redist.x64.exe
    ```
    
+   **5. 日本語ユーザー名によるパス問題:**
+   ```
+   ERROR: C:\Users\中村のPC\AppData\Local\Temp is not a directory
+   ```
+   
    **自動修正スクリプト:**
    ```powershell
    # Windows環境の問題を自動診断・修正
@@ -281,99 +373,15 @@ Audio classifications are mapped from English AudioSet classes to Japanese label
    python -c "import numpy; print('numpy OK')"
    ```
 
-5. **Path Separator Issues**
-   - Windows: `\` vs Unix: `/`
-   - 環境変数でパスを指定する場合は `\\` を使用
-   - Python内では `pathlib.Path` を使用して自動処理
+### 詳細なWindows環境対応
 
-6. **Permission Errors**
-   - 管理者権限でターミナルを起動
-   - WSL2使用を検討（Linux互換環境）
+Windows環境での開発で問題が発生した場合は、詳細なセットアップガイドを参照してください：
 
-7. **Port Conflicts**
-   ```powershell
-   # ポート8000の使用状況確認
-   netstat -ano | findstr :8000
-   
-   # プロセス終了
-   taskkill /PID <process_id> /F
-   ```
+📖 **[Windows開発環境セットアップガイド](./WINDOWS_SETUP.md)**
 
-8. **Environment Variables**
-   ```powershell
-   # PowerShellでの環境変数設定
-   $env:PYTHON_AUDIO_ANALYZER_URL="http://localhost:8000"
-   $env:LOG_LEVEL="debug"
-   
-   # 確認
-   echo $env:PYTHON_AUDIO_ANALYZER_URL
-   ```
-
-### WSL2 Setup (推奨)
-
-Windows環境でLinux互換性を高めるため、WSL2の使用を推奨します：
-
-```bash
-# WSL2でのセットアップ
-wsl --install -d Ubuntu-22.04
-
-# WSL2内での作業
-cd /mnt/c/path/to/sonory/apps/python-audio-analyzer
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e .
-uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-### Debug Mode
-
-Enable debug logging:
-```env
-LOG_LEVEL=debug
-ENVIRONMENT=development
-```
-
-**Windows用デバッグスクリプト:**
-```powershell
-# debug-windows.ps1
-Write-Host "=== Sonory Python Audio Analyzer Debug ==="
-Write-Host "Python Version:" (python --version)
-Write-Host "Pip Version:" (pip --version)
-Write-Host "Virtual Environment:" $env:VIRTUAL_ENV
-Write-Host "Current Directory:" (Get-Location)
-
-# 依存関係チェック
-python -c "
-try:
-    import tensorflow as tf
-    print(f'TensorFlow: {tf.__version__}')
-except ImportError as e:
-    print(f'TensorFlow Error: {e}')
-
-try:
-    import librosa
-    print('librosa: OK')
-except ImportError as e:
-    print(f'librosa Error: {e}')
-
-try:
-    import uvicorn
-    print('uvicorn: OK')
-except ImportError as e:
-    print(f'uvicorn Error: {e}')
-"
-
-# サービス起動テスト
-Write-Host "Testing service startup..."
-Start-Process -NoNewWindow -FilePath "python" -ArgumentList "-c", "from src.main import create_app; app = create_app(); print('App created successfully')"
-```
-
-## 📚 Additional Resources
-
-- [YAMNet Documentation](https://tfhub.dev/google/yamnet/1)
-- [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- [TensorFlow Hub](https://tfhub.dev/)
-
-## 🤝 Contributing
-
-This service is part of the Sonory monorepo. Please follow the established development workflows and coding standards. 
+このガイドには以下の内容が含まれています：
+- 日本語パス問題の詳細な解決方法
+- 環境変数の設定方法
+- トラブルシューティングの詳細
+- Docker環境での実行方法
+- パフォーマンス最適化のコツ
