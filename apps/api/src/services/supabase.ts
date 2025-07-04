@@ -1,8 +1,8 @@
-import { ERROR_CODES } from '@sonory/shared-types'
-import { createClient } from '@supabase/supabase-js'
-import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Env } from '../index'
-import { APIException } from '../middleware/error'
+import { ERROR_CODES } from "@sonory/shared-types"
+import { createClient } from "@supabase/supabase-js"
+import type { SupabaseClient } from "@supabase/supabase-js"
+import type { Env } from "../index"
+import { APIException } from "../middleware/error"
 
 /**
  * Supabaseクライアントの管理
@@ -44,7 +44,7 @@ export function getSupabaseConfig(env: Env): SupabaseConfig {
    if (!url || !anonKey) {
       throw new APIException(
          ERROR_CODES.INTERNAL_SERVER_ERROR,
-         'Supabase configuration missing',
+         "Supabase configuration missing",
          500,
       )
    }
@@ -89,7 +89,7 @@ export function getSupabaseAdmin(env: Env): SupabaseClient {
       if (!config.serviceKey) {
          throw new APIException(
             ERROR_CODES.INTERNAL_SERVER_ERROR,
-            'Service key not configured',
+            "Service key not configured",
             500,
          )
       }

@@ -2,7 +2,7 @@
  * PWAインストール関連のカスタムフック
  */
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from "react"
 
 /** アニメーション遅延時間（ミリ秒） */
 const ANIMATION_DELAYS = {
@@ -17,25 +17,25 @@ const ANIMATION_DELAYS = {
 /** イベント名 */
 const EVENT_NAMES = {
    /** PWAデバッグ表示イベント */
-   PWA_DEBUG_SHOW: 'pwa-debug-show',
+   PWA_DEBUG_SHOW: "pwa-debug-show",
    /** PWAデバッグ非表示イベント */
-   PWA_DEBUG_HIDE: 'pwa-debug-hide',
+   PWA_DEBUG_HIDE: "pwa-debug-hide",
    /** インストール前プロンプトイベント */
-   BEFORE_INSTALL_PROMPT: 'beforeinstallprompt',
+   BEFORE_INSTALL_PROMPT: "beforeinstallprompt",
    /** アプリインストール完了イベント */
-   APP_INSTALLED: 'appinstalled',
+   APP_INSTALLED: "appinstalled",
 } as const
 
 /** メディアクエリ */
 const MEDIA_QUERIES = {
    /** スタンドアロンモード */
-   STANDALONE: '(display-mode: standalone)',
+   STANDALONE: "(display-mode: standalone)",
 } as const
 
 /** デバッグメッセージ */
 const DEBUG_MESSAGES = {
    /** インストールボタンクリック */
-   INSTALL_CLICKED: '[PWA Debug] インストールボタンがクリックされました',
+   INSTALL_CLICKED: "[PWA Debug] インストールボタンがクリックされました",
 } as const
 
 /**
@@ -47,7 +47,7 @@ export interface BeforeInstallPromptEvent extends Event {
    prompt: () => Promise<void>
    /** ユーザーの選択結果 */
    userChoice: Promise<{
-      outcome: 'accepted' | 'dismissed'
+      outcome: "accepted" | "dismissed"
       platform: string
    }>
 }
@@ -87,9 +87,9 @@ export function useCheckIfInstalled(): () => boolean {
    return useCallback((): boolean => {
       const isStandalone = window.matchMedia(MEDIA_QUERIES.STANDALONE).matches
       const isWebKit =
-         'standalone' in window.navigator &&
+         "standalone" in window.navigator &&
          (window.navigator as unknown as { standalone?: boolean }).standalone
-      const isAndroidApp = document.referrer.includes('android-app://')
+      const isAndroidApp = document.referrer.includes("android-app://")
 
       return isStandalone || Boolean(isWebKit) || isAndroidApp
    }, [])
@@ -159,7 +159,7 @@ export function usePWAInstallState(
          // ユーザーの選択を待機
          const { outcome } = await deferredPrompt.userChoice
 
-         if (outcome === 'accepted') {
+         if (outcome === "accepted") {
             setIsExpanded(false)
             setIsVisible(false)
             // 閉じるアニメーション後に非表示
@@ -172,7 +172,7 @@ export function usePWAInstallState(
          // プロンプトを一度だけ使用可能なのでクリア
          setDeferredPrompt(null)
       } catch (error) {
-         console.error('PWA install error:', error)
+         console.error("PWA install error:", error)
       }
    }, [deferredPrompt, isDebugActive, handleDismiss, onInstallSuccess])
 
@@ -187,11 +187,11 @@ export function usePWAInstallState(
    useEffect(() => {
       const onAppInstalled = (): void => {
          if (
-            typeof window !== 'undefined' &&
-            'gtag' in window &&
-            typeof window.gtag === 'function'
+            typeof window !== "undefined" &&
+            "gtag" in window &&
+            typeof window.gtag === "function"
          ) {
-            window.gtag('event', 'app_install', { method: 'pwa' })
+            window.gtag("event", "app_install", { method: "pwa" })
          }
       }
 

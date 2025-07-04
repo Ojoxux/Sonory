@@ -1,4 +1,4 @@
-import type { Context } from 'hono'
+import type { Context } from "hono"
 
 /**
  * ログレベル定義
@@ -31,7 +31,7 @@ interface LogEntry {
 export class Logger {
    private readonly minLevel: LogLevel
 
-   constructor(minLevel: LogLevel = 'INFO') {
+   constructor(minLevel: LogLevel = "INFO") {
       this.minLevel = minLevel
    }
 
@@ -71,10 +71,10 @@ export class Logger {
       const entry = this.createLogEntry(level, message, metadata)
 
       switch (level) {
-         case 'ERROR':
+         case "ERROR":
             console.error(JSON.stringify(entry))
             break
-         case 'WARN':
+         case "WARN":
             console.warn(JSON.stringify(entry))
             break
          default:
@@ -83,19 +83,19 @@ export class Logger {
    }
 
    debug(message: string, metadata?: Record<string, unknown>): void {
-      this.log('DEBUG', message, metadata)
+      this.log("DEBUG", message, metadata)
    }
 
    info(message: string, metadata?: Record<string, unknown>): void {
-      this.log('INFO', message, metadata)
+      this.log("INFO", message, metadata)
    }
 
    warn(message: string, metadata?: Record<string, unknown>): void {
-      this.log('WARN', message, metadata)
+      this.log("WARN", message, metadata)
    }
 
    error(message: string, metadata?: Record<string, unknown>): void {
-      this.log('ERROR', message, metadata)
+      this.log("ERROR", message, metadata)
    }
 
    /**
@@ -107,8 +107,8 @@ export class Logger {
       message: string,
       metadata?: Record<string, unknown>,
    ): void {
-      const requestId = c.get('requestId')
-      const userId = c.get('userId')
+      const requestId = c.get("requestId")
+      const userId = c.get("userId")
 
       this.log(level, message, {
          requestId,

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from "react"
 
 type Position = {
    latitude: number
@@ -89,7 +89,7 @@ function shouldUpdatePosition(
 export function useBrowserGeolocation() {
    const [position, setPosition] = useState<Position | null>(null)
    const [error, setError] = useState<GeolocationPositionError | null>(null)
-   const [permissionStatus, setPermissionStatus] = useState<string>('pending')
+   const [permissionStatus, setPermissionStatus] = useState<string>("pending")
    const lastPositionRef = useRef<Position | null>(null)
 
    useEffect(() => {
@@ -131,16 +131,16 @@ export function useBrowserGeolocation() {
             if (error.code === error.TIMEOUT) return
 
             geolocationInstance.error = error
-            console.error('位置情報の取得エラー:', error.message)
+            console.error("位置情報の取得エラー:", error.message)
 
             if (error.code === error.PERMISSION_DENIED) {
-               setPermissionStatus('denied')
+               setPermissionStatus("denied")
                console.warn(
-                  '位置情報へのアクセスが拒否されました。ブラウザの設定で許可してください。',
+                  "位置情報へのアクセスが拒否されました。ブラウザの設定で許可してください。",
                )
             } else if (error.code === error.POSITION_UNAVAILABLE) {
                console.warn(
-                  '現在位置を取得できませんでした。GPS信号が弱い可能性があります。',
+                  "現在位置を取得できませんでした。GPS信号が弱い可能性があります。",
                )
             }
          }

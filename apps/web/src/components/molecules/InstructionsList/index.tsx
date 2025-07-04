@@ -1,8 +1,8 @@
-'use client'
+"use client"
 
-import { motion } from 'framer-motion'
-import { InstructionItem } from '../../atoms/InstructionItem'
-import type { InstructionsListProps } from './types'
+import { motion } from "framer-motion"
+import { InstructionItem } from "../../atoms/InstructionItem"
+import type { InstructionsListProps } from "./types"
 
 /**
  * 確認事項リストコンポーネント
@@ -19,7 +19,7 @@ import type { InstructionsListProps } from './types'
 export function InstructionsList({
    items,
    isClosing,
-   className = '',
+   className = "",
 }: InstructionsListProps) {
    return (
       <motion.div

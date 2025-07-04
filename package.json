@@ -62,15 +62,28 @@
 		"typescript": "^5"
 	},
 	"lint-staged": {
-		"*.{js,jsx,ts,tsx}": ["biome check --write", "biome format --write"],
-		"apps/web/**/*.ts?(x)": ["cd apps/web && npx tsc --noEmit"],
-		"apps/api/**/*.ts?(x)": ["cd apps/api && npx tsc --noEmit"],
-		"packages/shared-types/**/*.ts?(x)": [
+		"apps/web/**/*.{js,jsx,ts,tsx}": [
+			"cd apps/web && npx biome check --write .",
+			"cd apps/web && npx tsc --noEmit"
+		],
+		"apps/api/**/*.{js,jsx,ts,tsx}": [
+			"cd apps/api && npx biome check --write .",
+			"cd apps/api && npx tsc --noEmit"
+		],
+		"packages/shared-types/**/*.{js,jsx,ts,tsx}": [
+			"cd packages/shared-types && npx biome check --write .",
 			"cd packages/shared-types && npx tsc --noEmit"
 		],
-		"packages/utils/**/*.ts?(x)": ["cd packages/utils && npx tsc --noEmit"],
-		"packages/python-types/**/*.ts?(x)": [
+		"packages/utils/**/*.{js,jsx,ts,tsx}": [
+			"cd packages/utils && npx biome check --write .",
+			"cd packages/utils && npx tsc --noEmit"
+		],
+		"packages/python-types/**/*.{js,jsx,ts,tsx}": [
+			"cd packages/python-types && npx biome check --write .",
 			"cd packages/python-types && npx tsc --noEmit"
+		],
+		"packages/config/**/*.{js,jsx,ts,tsx}": [
+			"npx biome check --write packages/config"
 		]
 	},
 	"packageManager": "npm@10.0.0"

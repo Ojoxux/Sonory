@@ -1,8 +1,8 @@
-import { ERROR_CODES } from '@sonory/shared-types'
-import type { AudioMetadata, AudioUploadResult } from '@sonory/shared-types'
-import { APIException } from '../middleware/error'
-import { BaseService } from './base.service'
-import { getSupabaseAdmin } from './supabase'
+import { ERROR_CODES } from "@sonory/shared-types"
+import type { AudioMetadata, AudioUploadResult } from "@sonory/shared-types"
+import { APIException } from "../middleware/error"
+import { BaseService } from "./base.service"
+import { getSupabaseAdmin } from "./supabase"
 
 /**
  * Python YAMNet分析結果の型定義
@@ -41,13 +41,13 @@ interface PythonAnalysisRequest {
  * Python YAMNetサービスとの統合分析機能を提供。
  */
 export class AudioService extends BaseService {
-   private readonly bucketName = 'sonory-audio'
+   private readonly bucketName = "sonory-audio"
    private readonly maxFileSize = 10 * 1024 * 1024 // 10MB
    private readonly maxDuration = 600 // 10 minutes
-   private readonly allowedFormats = ['webm', 'mp3', 'wav'] as const
+   private readonly allowedFormats = ["webm", "mp3", "wav"] as const
 
    protected getServiceName(): string {
-      return 'AudioService'
+      return "AudioService"
    }
 
    private get supabaseClient() {
@@ -70,7 +70,7 @@ export class AudioService extends BaseService {
          const fileName = this.generateFileName(file, userId)
          const filePath = this.generateFilePath(fileName, userId)
 
-         this.log('info', 'Starting audio upload', {
+         this.log("info", "Starting audio upload", {
             fileName,
             filePath,
             fileSize: file.size,
@@ -86,7 +86,7 @@ export class AudioService extends BaseService {
             })
 
          if (error) {
-            this.log('error', 'Supabase upload error', {
+            this.log("error", "Supabase upload error", {
                error: error.message,
                filePath,
             })
@@ -119,14 +119,14 @@ export class AudioService extends BaseService {
             metadata,
          }
 
-         this.log('info', 'Audio upload completed', {
+         this.log("info", "Audio upload completed", {
             audioId: result.audioId,
             audioUrl: result.audioUrl,
          })
 
          return result
       } catch (error) {
-         this.log('error', 'Audio upload failed', {
+         this.log("error", "Audio upload failed", {
             error: error instanceof Error ? error.message : String(error),
          })
 
@@ -136,7 +136,7 @@ export class AudioService extends BaseService {
 
          throw new APIException(
             ERROR_CODES.STORAGE_ERROR,
-            'Failed to upload audio file',
+            "Failed to upload audio file",
             500,
             error instanceof Error ? { message: error.message } : undefined,
          )
@@ -152,7 +152,7 @@ export class AudioService extends BaseService {
     */
    async deleteAudio(filePath: string): Promise<boolean> {
       try {
-         this.log('info', 'Starting audio deletion', {
+         this.log("info", "Starting audio deletion", {
             filePath,
          })
 
@@ -161,7 +161,7 @@ export class AudioService extends BaseService {
             .remove([filePath])
 
          if (error) {
-            this.log('error', 'Supabase deletion error', {
+            this.log("error", "Supabase deletion error", {
                error: error.message,
                filePath,
             })
@@ -172,13 +172,13 @@ export class AudioService extends BaseService {
             )
          }
 
-         this.log('info', 'Audio deletion completed', {
+         this.log("info", "Audio deletion completed", {
             filePath,
          })
 
          return true
       } catch (error) {
-         this.log('error', 'Audio deletion failed', {
+         this.log("error", "Audio deletion failed", {
             filePath,
             error: error instanceof Error ? error.message : String(error),
          })
@@ -189,7 +189,7 @@ export class AudioService extends BaseService {
 
          throw new APIException(
             ERROR_CODES.STORAGE_ERROR,
-            'Failed to delete audio file',
+            "Failed to delete audio file",
             500,
             error instanceof Error ? { message: error.message } : undefined,
          )
@@ -217,16 +217,16 @@ export class AudioService extends BaseService {
       if (!this.allowedFormats.includes(format)) {
          throw new APIException(
             ERROR_CODES.INVALID_AUDIO_FORMAT,
-            `Invalid audio format: ${format}. Allowed: ${this.allowedFormats.join(', ')}`,
+            `Invalid audio format: ${format}. Allowed: ${this.allowedFormats.join(", ")}`,
             400,
          )
       }
 
       // Check file content (basic MIME type validation)
-      if (!file.type.startsWith('audio/')) {
+      if (!file.type.startsWith("audio/")) {
          throw new APIException(
             ERROR_CODES.INVALID_AUDIO_FORMAT,
-            'File is not an audio format',
+            "File is not an audio format",
             400,
          )
       }
@@ -238,26 +238,26 @@ export class AudioService extends BaseService {
     * @param file - File to analyze
     * @returns Detected audio format
     */
-   private detectAudioFormat(file: File): 'webm' | 'mp3' | 'wav' {
+   private detectAudioFormat(file: File): "webm" | "mp3" | "wav" {
       const type = file.type.toLowerCase()
       const name = file.name.toLowerCase()
 
-      if (type.includes('webm') || name.endsWith('.webm')) return 'webm'
+      if (type.includes("webm") || name.endsWith(".webm")) return "webm"
       if (
-         type.includes('mp3') ||
-         type.includes('mpeg') ||
-         name.endsWith('.mp3')
+         type.includes("mp3") ||
+         type.includes("mpeg") ||
+         name.endsWith(".mp3")
       )
-         return 'mp3'
-      if (type.includes('wav') || name.endsWith('.wav')) return 'wav'
+         return "mp3"
+      if (type.includes("wav") || name.endsWith(".wav")) return "wav"
 
       // Fallback based on file extension
-      const extension = name.split('.').pop()
-      if (extension === 'webm') return 'webm'
-      if (extension === 'mp3') return 'mp3'
-      if (extension === 'wav') return 'wav'
+      const extension = name.split(".").pop()
+      if (extension === "webm") return "webm"
+      if (extension === "mp3") return "mp3"
+      if (extension === "wav") return "wav"
 
-      return 'webm' // Default fallback
+      return "webm" // Default fallback
    }
 
    /**
@@ -269,8 +269,8 @@ export class AudioService extends BaseService {
     */
    private generateFilePath(fileName: string, userId?: string): string {
       const date = new Date()
-      const dateFolder = date.toISOString().split('T')[0] // YYYY-MM-DD
-      const userFolder = userId || 'anonymous'
+      const dateFolder = date.toISOString().split("T")[0] // YYYY-MM-DD
+      const userFolder = userId || "anonymous"
 
       return `${userFolder}/${dateFolder}/${fileName}`
    }
@@ -286,7 +286,7 @@ export class AudioService extends BaseService {
       const timestamp = Date.now()
       const randomId = Math.random().toString(36).substring(2, 8)
       const extension = this.detectAudioFormat(file)
-      const prefix = userId ? `user-${userId}` : 'anonymous'
+      const prefix = userId ? `user-${userId}` : "anonymous"
 
       return `${prefix}-${timestamp}-${randomId}.${extension}`
    }
@@ -308,7 +308,7 @@ export class AudioService extends BaseService {
          size: file.size,
          format: this.extractFormat(file),
          duration: 0, // implement audio duration detection when needed
-         url: '', // URL should be provided by caller
+         url: "", // URL should be provided by caller
          uploadedAt: new Date().toISOString(),
       }
    }
@@ -321,23 +321,23 @@ export class AudioService extends BaseService {
     */
    private extractFormat(
       file: File,
-   ): 'webm' | 'mp3' | 'wav' | 'mp4' | 'm4a' | 'flac' | 'ogg' {
+   ): "webm" | "mp3" | "wav" | "mp4" | "m4a" | "flac" | "ogg" {
       const extension = this.detectAudioFormat(file)
 
       const formatMap: Record<
          string,
-         'webm' | 'mp3' | 'wav' | 'mp4' | 'm4a' | 'flac' | 'ogg'
+         "webm" | "mp3" | "wav" | "mp4" | "m4a" | "flac" | "ogg"
       > = {
-         webm: 'webm',
-         wav: 'wav',
-         mp3: 'mp3',
-         mp4: 'mp4',
-         m4a: 'm4a',
-         flac: 'flac',
-         ogg: 'ogg',
+         webm: "webm",
+         wav: "wav",
+         mp3: "mp3",
+         mp4: "mp4",
+         m4a: "m4a",
+         flac: "flac",
+         ogg: "ogg",
       }
 
-      return formatMap[extension] || 'webm'
+      return formatMap[extension] || "webm"
    }
 
    /**
@@ -356,7 +356,7 @@ export class AudioService extends BaseService {
          Number.parseInt(this.env.PYTHON_AUDIO_ANALYZER_TIMEOUT, 10) || 30000
 
       try {
-         this.log('info', 'Starting Python YAMNet analysis', {
+         this.log("info", "Starting Python YAMNet analysis", {
             audioUrl,
             pythonServiceUrl,
             topK,
@@ -372,10 +372,10 @@ export class AudioService extends BaseService {
          const response = await fetch(
             `${pythonServiceUrl}/api/v1/analyze/audio`,
             {
-               method: 'POST',
+               method: "POST",
                headers: {
-                  'Content-Type': 'application/json',
-                  'User-Agent': 'Sonory-API-Gateway/1.0',
+                  "Content-Type": "application/json",
+                  "User-Agent": "Sonory-API-Gateway/1.0",
                },
                body: JSON.stringify(analysisRequest),
                signal: AbortSignal.timeout(timeout),
@@ -383,8 +383,8 @@ export class AudioService extends BaseService {
          )
 
          if (!response.ok) {
-            const errorText = await response.text().catch(() => 'Unknown error')
-            this.log('error', 'Python analysis HTTP error', {
+            const errorText = await response.text().catch(() => "Unknown error")
+            this.log("error", "Python analysis HTTP error", {
                status: response.status,
                statusText: response.statusText,
                errorText,
@@ -399,7 +399,7 @@ export class AudioService extends BaseService {
 
          const analysisResult: PythonAnalysisResult = await response.json()
 
-         this.log('info', 'Python YAMNet analysis completed', {
+         this.log("info", "Python YAMNet analysis completed", {
             classificationsCount: analysisResult.classifications?.length || 0,
             primaryType: analysisResult.environment?.primary_type,
             processingTime: analysisResult.performance_metrics?.total_time,
@@ -407,7 +407,7 @@ export class AudioService extends BaseService {
 
          return analysisResult
       } catch (error) {
-         this.log('error', 'Python YAMNet analysis failed', {
+         this.log("error", "Python YAMNet analysis failed", {
             audioUrl,
             error: error instanceof Error ? error.message : String(error),
          })
@@ -417,19 +417,19 @@ export class AudioService extends BaseService {
          }
 
          // タイムアウトエラーの場合
-         if (error instanceof Error && error.name === 'TimeoutError') {
+         if (error instanceof Error && error.name === "TimeoutError") {
             throw new APIException(
                ERROR_CODES.AI_ANALYSIS_FAILED,
-               'Python analysis timeout',
+               "Python analysis timeout",
                504,
             )
          }
 
          // ネットワークエラーの場合
-         if (error instanceof Error && error.message.includes('fetch')) {
+         if (error instanceof Error && error.message.includes("fetch")) {
             throw new APIException(
                ERROR_CODES.AI_SERVICE_UNAVAILABLE,
-               'Python analysis service unavailable',
+               "Python analysis service unavailable",
                503,
             )
          }

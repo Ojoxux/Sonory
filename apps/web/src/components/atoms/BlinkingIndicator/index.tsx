@@ -1,8 +1,8 @@
-'use client'
+"use client"
 
-import { motion } from 'framer-motion'
-import { useEffect, useState } from 'react'
-import type { BlinkingIndicatorProps } from './type'
+import { motion } from "framer-motion"
+import { useEffect, useState } from "react"
+import type { BlinkingIndicatorProps } from "./type"
 
 /**
  * 点滅インジケーターコンポーネント
@@ -18,9 +18,9 @@ import type { BlinkingIndicatorProps } from './type'
  */
 export function BlinkingIndicator({
    isActive,
-   className = '',
-   size = 'w-2 h-2',
-   color = 'bg-red-500',
+   className = "",
+   size = "w-2 h-2",
+   color = "bg-red-500",
 }: BlinkingIndicatorProps) {
    // 各インスタンス独自のランダムタイミング
    const [delay] = useState(() => 100 + Math.random() * 400) // 100-500msのランダム遅延
@@ -45,7 +45,7 @@ export function BlinkingIndicator({
          transition={{
             duration: duration / 1000, // ミリ秒を秒に変換
             repeat: isAnimating ? Number.POSITIVE_INFINITY : 0,
-            ease: 'easeInOut',
+            ease: "easeInOut",
          }}
       />
    )

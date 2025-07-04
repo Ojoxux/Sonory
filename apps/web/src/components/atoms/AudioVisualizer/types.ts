@@ -7,7 +7,7 @@ export interface AudioVisualizerProps {
    /** バーの数 */
    barCount?: number
    /** バーの色 */
-   color?: 'blue' | 'green' | 'white' | 'red' | 'purple'
+   color?: "blue" | "green" | "white" | "red" | "purple"
    /** 追加のCSSクラス */
    className?: string
 }

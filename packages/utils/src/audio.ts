@@ -21,7 +21,7 @@ export async function getAudioInfo(file: File): Promise<{
 
       audio.onerror = () => {
          URL.revokeObjectURL(url)
-         reject(new Error('音声ファイルの読み込みに失敗しました'))
+         reject(new Error("音声ファイルの読み込みに失敗しました"))
       }
 
       audio.src = url
@@ -33,12 +33,12 @@ export async function getAudioInfo(file: File): Promise<{
  */
 export async function convertAudioFormat(
    audioBlob: Blob,
-   targetFormat: 'webm' | 'mp3' | 'wav',
+   targetFormat: "webm" | "mp3" | "wav",
 ): Promise<Blob> {
    // 実際の実装では、Web Audio APIやFFmpeg.wasmを使用
    // ここでは簡単な実装例を示す
 
-   if (targetFormat === 'webm') {
+   if (targetFormat === "webm") {
       return audioBlob
    }
 
@@ -86,7 +86,7 @@ export async function calculateAudioLevel(audioBlob: Blob): Promise<number[]> {
       }
 
       fileReader.onerror = () =>
-         reject(new Error('音声ファイルの読み込みに失敗しました'))
+         reject(new Error("音声ファイルの読み込みに失敗しました"))
       fileReader.readAsArrayBuffer(audioBlob)
    })
 }
@@ -131,14 +131,14 @@ export async function compressAudio(
  */
 export function detectAudioFormat(
    file: File,
-): 'webm' | 'mp3' | 'wav' | 'unknown' {
+): "webm" | "mp3" | "wav" | "unknown" {
    const type = file.type.toLowerCase()
 
-   if (type.includes('webm')) return 'webm'
-   if (type.includes('mp3') || type.includes('mpeg')) return 'mp3'
-   if (type.includes('wav')) return 'wav'
+   if (type.includes("webm")) return "webm"
+   if (type.includes("mp3") || type.includes("mpeg")) return "mp3"
+   if (type.includes("wav")) return "wav"
 
-   return 'unknown'
+   return "unknown"
 }
 
 /**
@@ -149,5 +149,5 @@ export function formatDuration(seconds: number): string {
    const remainingSeconds = Math.floor(seconds % 60)
    const milliseconds = Math.floor((seconds % 1) * 100)
 
-   return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(2, '0')}`
+   return `${minutes.toString().padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}.${milliseconds.toString().padStart(2, "0")}`
 }

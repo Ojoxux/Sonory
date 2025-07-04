@@ -1,8 +1,8 @@
-'use client'
+"use client"
 
-import { useBrowserGeolocation } from '@/components/organisms/MapComponent/hooks/useBrowserGeolocation'
-import { useDebugStore } from '@/store/useDebugStore'
-import { useState } from 'react'
+import { useBrowserGeolocation } from "@/components/organisms/MapComponent/hooks/useBrowserGeolocation"
+import { useDebugStore } from "@/store/useDebugStore"
+import { useState } from "react"
 
 /**
  * ホーム画面のロジックを管理するカスタムフック

@@ -1,5 +1,5 @@
-import { create } from 'zustand'
-import type { AudioData, InferenceResult } from './types'
+import { create } from "zustand"
+import type { AudioData, InferenceResult } from "./types"
 
 /**
  * 音声ピンデータの型定義
@@ -35,7 +35,7 @@ export type SoundPinState = {
    addPin: (
       pin: Omit<
          SoundPin,
-         'id' | 'recordedAt' | 'primaryLabel' | 'primaryConfidence'
+         "id" | "recordedAt" | "primaryLabel" | "primaryConfidence"
       >,
    ) => void
    /** ピンを削除 */
@@ -102,7 +102,7 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
          ...pin,
          id: crypto.randomUUID(),
          recordedAt: new Date(),
-         primaryLabel: primaryResult?.label ?? '不明',
+         primaryLabel: primaryResult?.label ?? "不明",
          primaryConfidence: primaryResult?.confidence ?? 0,
       }
 

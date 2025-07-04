@@ -1,7 +1,7 @@
-import type { APIError } from '@sonory/shared-types'
-import { ERROR_CODES } from '@sonory/shared-types'
-import type { Context, Next } from 'hono'
-import { HTTPException } from 'hono/http-exception'
+import type { APIError } from "@sonory/shared-types"
+import { ERROR_CODES } from "@sonory/shared-types"
+import type { Context, Next } from "hono"
+import { HTTPException } from "hono/http-exception"
 
 // ERROR_CODESを再エクスポート
 export { ERROR_CODES }
@@ -9,10 +9,10 @@ export { ERROR_CODES }
 // 追加のエラーコード（バックエンド固有）
 export const BACKEND_ERROR_CODES = {
    // バリデーション関連
-   INVALID_REQUEST: 'INVALID_REQUEST',
+   INVALID_REQUEST: "INVALID_REQUEST",
    // 認証関連
-   UNAUTHORIZED: 'UNAUTHORIZED',
-   FORBIDDEN: 'FORBIDDEN',
+   UNAUTHORIZED: "UNAUTHORIZED",
+   FORBIDDEN: "FORBIDDEN",
 } as const
 
 /**
@@ -26,7 +26,7 @@ export class APIException extends Error {
       public details?: unknown,
    ) {
       super(message)
-      this.name = 'APIException'
+      this.name = "APIException"
    }
 }
 
@@ -38,7 +38,7 @@ export const errorHandler = async (c: Context, next: Next) => {
    try {
       await next()
    } catch (error) {
-      const requestId = c.get('requestId') || crypto.randomUUID()
+      const requestId = c.get("requestId") || crypto.randomUUID()
       const timestamp = new Date().toISOString()
 
       // APIExceptionの場合
@@ -57,7 +57,7 @@ export const errorHandler = async (c: Context, next: Next) => {
             {
                status: error.statusCode,
                headers: {
-                  'Content-Type': 'application/json',
+                  "Content-Type": "application/json",
                },
             },
          )
@@ -66,7 +66,7 @@ export const errorHandler = async (c: Context, next: Next) => {
       // HTTPExceptionの場合
       if (error instanceof HTTPException) {
          const apiError: APIError = {
-            code: 'HTTP_ERROR',
+            code: "HTTP_ERROR",
             message: error.message,
             timestamp,
             requestId,
@@ -77,17 +77,17 @@ export const errorHandler = async (c: Context, next: Next) => {
             {
                status: error.status,
                headers: {
-                  'Content-Type': 'application/json',
+                  "Content-Type": "application/json",
                },
             },
          )
       }
 
       // その他のエラー
-      console.error('Unhandled error:', error)
+      console.error("Unhandled error:", error)
       const apiError: APIError = {
          code: ERROR_CODES.INTERNAL_SERVER_ERROR,
-         message: 'An unexpected error occurred',
+         message: "An unexpected error occurred",
          timestamp,
          requestId,
       }
@@ -95,7 +95,7 @@ export const errorHandler = async (c: Context, next: Next) => {
       return new Response(JSON.stringify({ success: false, error: apiError }), {
          status: 500,
          headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
          },
       })
    }

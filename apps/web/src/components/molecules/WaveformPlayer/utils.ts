@@ -54,7 +54,7 @@ const SECONDS_IN_MINUTE = 60
 export function formatTime(timeInSeconds: number): string {
    const minutes = Math.floor(timeInSeconds / SECONDS_IN_MINUTE)
    const seconds = Math.round(timeInSeconds % SECONDS_IN_MINUTE)
-   return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+   return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`
 }
 
 /**
@@ -69,7 +69,7 @@ export function setupHighDPICanvas(
    width: number,
    height: number,
 ): CanvasRenderingContext2D | null {
-   const ctx = canvas.getContext('2d')
+   const ctx = canvas.getContext("2d")
    if (!ctx) return null
 
    const dpr = window.devicePixelRatio || 1
@@ -163,13 +163,13 @@ export function calculateProgressFromClick(
  */
 export function validateAudioFormat(blob: Blob): boolean {
    const SUPPORTED_TYPES = [
-      'audio/mpeg',
-      'audio/mp3',
-      'audio/wav',
-      'audio/ogg',
-      'audio/webm',
-      'audio/mp4',
-      'audio/aac',
+      "audio/mpeg",
+      "audio/mp3",
+      "audio/wav",
+      "audio/ogg",
+      "audio/webm",
+      "audio/mp4",
+      "audio/aac",
    ]
 
    return SUPPORTED_TYPES.some((type) => blob.type.includes(type))
@@ -183,20 +183,20 @@ export function validateAudioFormat(blob: Blob): boolean {
 export function getLocalizedErrorMessage(error: Error): string {
    const message = error.message.toLowerCase()
 
-   if (message.includes('decode')) {
-      return '音声ファイルの形式が対応していません'
+   if (message.includes("decode")) {
+      return "音声ファイルの形式が対応していません"
    }
-   if (message.includes('network')) {
-      return 'ネットワークエラーが発生しました'
+   if (message.includes("network")) {
+      return "ネットワークエラーが発生しました"
    }
-   if (message.includes('permission')) {
-      return '音声の再生権限がありません'
+   if (message.includes("permission")) {
+      return "音声の再生権限がありません"
    }
-   if (message.includes('not supported')) {
-      return 'この音声形式はサポートされていません'
+   if (message.includes("not supported")) {
+      return "この音声形式はサポートされていません"
    }
 
-   return error.message || '不明なエラーが発生しました'
+   return error.message || "不明なエラーが発生しました"
 }
 
 /**
@@ -209,10 +209,10 @@ export function getLocalizedErrorMessage(error: Error): string {
 export function drawWaveformBackground(
    canvas: HTMLCanvasElement,
    peaks: number[],
-   waveColor = '#1f2937',
+   waveColor = "#1f2937",
    barGap = 1,
 ): void {
-   const ctx = canvas.getContext('2d')
+   const ctx = canvas.getContext("2d")
    if (!ctx || peaks.length === 0) return
 
    // Canvas要素のサイズを設定
@@ -266,11 +266,11 @@ export function drawHighQualityWaveform(
    canvas: HTMLCanvasElement,
    peaks: number[],
    progress = 0,
-   waveColor = '#1f2937',
-   progressColor = '#dc2626',
+   waveColor = "#1f2937",
+   progressColor = "#dc2626",
    barGap = 1,
 ): void {
-   const ctx = canvas.getContext('2d')
+   const ctx = canvas.getContext("2d")
    if (!ctx || peaks.length === 0) return
 
    // Canvas要素のサイズを設定

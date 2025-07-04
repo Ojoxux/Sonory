@@ -83,6 +83,16 @@
                }
             }
          }
+      },
+      {
+         "include": ["src/components/organisms/MapComponent/hooks.ts"],
+         "linter": {
+            "rules": {
+               "correctness": {
+                  "useExhaustiveDependencies": "off"
+               }
+            }
+         }
       }
    ]
 }

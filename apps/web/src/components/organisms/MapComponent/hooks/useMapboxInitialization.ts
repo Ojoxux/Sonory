@@ -1,87 +1,87 @@
-import mapboxgl from 'mapbox-gl'
-import { useCallback } from 'react'
-import 'mapbox-gl/dist/mapbox-gl.css'
+import mapboxgl from "mapbox-gl"
+import { useCallback } from "react"
+import "mapbox-gl/dist/mapbox-gl.css"
 
 // 環境変数からMapbox Access Tokenを取得
-const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || ''
+const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || ""
 
 // カラフルでスタイリッシュなカスタムスタイル
 const CUSTOM_STYLE = {
    version: 8,
-   name: 'Sonory Custom Style',
+   name: "Sonory Custom Style",
    sources: {
       mapbox: {
-         type: 'vector',
-         url: 'mapbox://mapbox.mapbox-streets-v8',
+         type: "vector",
+         url: "mapbox://mapbox.mapbox-streets-v8",
       },
    },
-   sprite: 'mapbox://sprites/mapbox/bright-v9',
-   glyphs: 'mapbox://fonts/mapbox/{fontstack}/{range}.pbf',
+   sprite: "mapbox://sprites/mapbox/bright-v9",
+   glyphs: "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
    layers: [
       // 背景
       {
-         id: 'background',
-         type: 'background',
+         id: "background",
+         type: "background",
          paint: {
-            'background-color': '#f0f7fa',
+            "background-color": "#f0f7fa",
          },
       },
       // 水域
       {
-         id: 'water',
-         type: 'fill',
-         source: 'mapbox',
-         'source-layer': 'water',
+         id: "water",
+         type: "fill",
+         source: "mapbox",
+         "source-layer": "water",
          paint: {
-            'fill-color': '#bde0f2',
+            "fill-color": "#bde0f2",
          },
       },
       // 公園・緑地
       {
-         id: 'landuse_park',
-         type: 'fill',
-         source: 'mapbox',
-         'source-layer': 'landuse',
-         filter: ['==', 'class', 'park'],
+         id: "landuse_park",
+         type: "fill",
+         source: "mapbox",
+         "source-layer": "landuse",
+         filter: ["==", "class", "park"],
          paint: {
-            'fill-color': '#c8e6c9',
+            "fill-color": "#c8e6c9",
          },
       },
       // 森林
       {
-         id: 'landuse_forest',
-         type: 'fill',
-         source: 'mapbox',
-         'source-layer': 'landuse',
-         filter: ['==', 'class', 'forest'],
+         id: "landuse_forest",
+         type: "fill",
+         source: "mapbox",
+         "source-layer": "landuse",
+         filter: ["==", "class", "forest"],
          paint: {
-            'fill-color': '#a5d6a7',
+            "fill-color": "#a5d6a7",
          },
       },
       // 道路（主要）
       {
-         id: 'road_major',
-         type: 'line',
-         source: 'mapbox',
-         'source-layer': 'road',
+         id: "road_major",
+         type: "line",
+         source: "mapbox",
+         "source-layer": "road",
          filter: [
-            'all',
+            "all",
             [
-               '!in',
-               'class',
-               'street',
-               'street_limited',
-               'service',
-               'track',
-               'path',
+               "!in",
+               "class",
+               "street",
+               "street_limited",
+               "service",
+               "track",
+               "path",
             ],
          ],
          paint: {
-            'line-color': '#ffffff',
-            'line-width': [
-               'interpolate',
-               ['linear'],
-               ['zoom'],
+            "line-color": "#ffffff",
+            "line-width": [
+               "interpolate",
+               ["linear"],
+               ["zoom"],
                10,
                1,
                15,
@@ -89,22 +89,22 @@ const CUSTOM_STYLE = {
                20,
                8,
             ],
-            'line-opacity': 0.8,
+            "line-opacity": 0.8,
          },
       },
       // 道路（一般）
       {
-         id: 'road_minor',
-         type: 'line',
-         source: 'mapbox',
-         'source-layer': 'road',
-         filter: ['in', 'class', 'street', 'street_limited'],
+         id: "road_minor",
+         type: "line",
+         source: "mapbox",
+         "source-layer": "road",
+         filter: ["in", "class", "street", "street_limited"],
          paint: {
-            'line-color': '#ffffff',
-            'line-width': [
-               'interpolate',
-               ['linear'],
-               ['zoom'],
+            "line-color": "#ffffff",
+            "line-width": [
+               "interpolate",
+               ["linear"],
+               ["zoom"],
                12,
                0.5,
                15,
@@ -112,57 +112,57 @@ const CUSTOM_STYLE = {
                20,
                6,
             ],
-            'line-opacity': 0.6,
+            "line-opacity": 0.6,
          },
       },
       // 建物の影
       {
-         id: 'building_shadow',
-         type: 'fill',
-         source: 'mapbox',
-         'source-layer': 'building',
+         id: "building_shadow",
+         type: "fill",
+         source: "mapbox",
+         "source-layer": "building",
          paint: {
-            'fill-color': '#000000',
-            'fill-opacity': 0.05,
-            'fill-translate': [2, 2],
+            "fill-color": "#000000",
+            "fill-opacity": 0.05,
+            "fill-translate": [2, 2],
          },
       },
       // 建物
       {
-         id: 'building',
-         type: 'fill',
-         source: 'mapbox',
-         'source-layer': 'building',
+         id: "building",
+         type: "fill",
+         source: "mapbox",
+         "source-layer": "building",
          paint: {
-            'fill-color': [
-               'interpolate',
-               ['linear'],
-               ['zoom'],
+            "fill-color": [
+               "interpolate",
+               ["linear"],
+               ["zoom"],
                15,
-               '#e1e9ed',
+               "#e1e9ed",
                18,
-               '#f5f5f5',
+               "#f5f5f5",
             ],
-            'fill-outline-color': '#dce3e8',
+            "fill-outline-color": "#dce3e8",
          },
       },
       // 地名ラベル
       {
-         id: 'place_label',
-         type: 'symbol',
-         source: 'mapbox',
-         'source-layer': 'place_label',
+         id: "place_label",
+         type: "symbol",
+         source: "mapbox",
+         "source-layer": "place_label",
          layout: {
-            'text-field': ['get', 'name_ja'],
-            'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Regular'],
-            'text-size': ['interpolate', ['linear'], ['zoom'], 10, 10, 15, 14],
-            'text-letter-spacing': 0.1,
-            'text-transform': 'uppercase',
+            "text-field": ["get", "name_ja"],
+            "text-font": ["DIN Offc Pro Medium", "Arial Unicode MS Regular"],
+            "text-size": ["interpolate", ["linear"], ["zoom"], 10, 10, 15, 14],
+            "text-letter-spacing": 0.1,
+            "text-transform": "uppercase",
          },
          paint: {
-            'text-color': '#5d6d7e',
-            'text-halo-color': '#ffffff',
-            'text-halo-width': 1,
+            "text-color": "#5d6d7e",
+            "text-halo-color": "#ffffff",
+            "text-halo-width": 1,
          },
       },
    ],
@@ -182,7 +182,7 @@ export function useMapboxInitialization() {
    if (MAPBOX_ACCESS_TOKEN) {
       mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN
    } else {
-      console.error('Mapbox access token is not defined')
+      console.error("Mapbox access token is not defined")
    }
 
    // マップの初期化関数
@@ -199,36 +199,36 @@ export function useMapboxInitialization() {
       })
 
       // 3Dビルディングレイヤーを追加
-      map.on('style.load', () => {
+      map.on("style.load", () => {
          // 建物の3D表示
          map.addLayer({
-            id: '3d-buildings',
-            source: 'mapbox',
-            'source-layer': 'building',
-            type: 'fill-extrusion',
+            id: "3d-buildings",
+            source: "mapbox",
+            "source-layer": "building",
+            type: "fill-extrusion",
             minzoom: 14,
             paint: {
-               'fill-extrusion-color': [
-                  'interpolate',
-                  ['linear'],
-                  ['zoom'],
+               "fill-extrusion-color": [
+                  "interpolate",
+                  ["linear"],
+                  ["zoom"],
                   14,
-                  '#e1e9ed',
+                  "#e1e9ed",
                   16,
-                  '#f5f5f5',
+                  "#f5f5f5",
                ],
-               'fill-extrusion-height': [
-                  'interpolate',
-                  ['linear'],
-                  ['zoom'],
+               "fill-extrusion-height": [
+                  "interpolate",
+                  ["linear"],
+                  ["zoom"],
                   14,
                   0,
                   16,
-                  ['get', 'height'],
+                  ["get", "height"],
                ],
-               'fill-extrusion-base': ['get', 'min_height'],
-               'fill-extrusion-opacity': 0.7,
-               'fill-extrusion-vertical-gradient': true,
+               "fill-extrusion-base": ["get", "min_height"],
+               "fill-extrusion-opacity": 0.7,
+               "fill-extrusion-vertical-gradient": true,
             },
          })
       })
@@ -238,7 +238,7 @@ export function useMapboxInitialization() {
          new mapboxgl.NavigationControl({
             visualizePitch: true, // ピッチコントロールを表示
          }),
-         'bottom-right',
+         "bottom-right",
       )
 
       // 現在地コントロールを追加
@@ -250,7 +250,7 @@ export function useMapboxInitialization() {
             trackUserLocation: true,
             showUserHeading: true,
          }),
-         'bottom-right',
+         "bottom-right",
       )
 
       // 著作権表示を追加

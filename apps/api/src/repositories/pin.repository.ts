@@ -3,16 +3,16 @@ import {
    type LocationCoordinates,
    type NearbyPinsQuery,
    type SoundPinAPI,
-} from '@sonory/shared-types'
-import type { SupabaseClient } from '@supabase/supabase-js'
-import { APIException } from '../middleware/error'
+} from "@sonory/shared-types"
+import type { SupabaseClient } from "@supabase/supabase-js"
+import { APIException } from "../middleware/error"
 import type {
    PostGISPoint,
    SoundPinInsert,
    SoundPinRecord,
    SoundPinUpdate,
-} from '../types/database'
-import { Logger } from '../utils/logger'
+} from "../types/database"
+import { Logger } from "../utils/logger"
 
 /**
  * Repository for sound pins data access
@@ -30,7 +30,7 @@ export class PinRepository {
       private supabase: SupabaseClient,
       private requestId?: string,
    ) {
-      this.logger = new Logger('INFO')
+      this.logger = new Logger("INFO")
    }
 
    /**
@@ -75,9 +75,9 @@ export class PinRepository {
                  aiAnalysis: {
                     transcription: record.ai_transcription,
                     categories: {
-                       emotion: record.ai_emotion || '',
-                       topic: record.ai_topic || '',
-                       language: record.ai_language || '',
+                       emotion: record.ai_emotion || "",
+                       topic: record.ai_topic || "",
+                       language: record.ai_language || "",
                        confidence: record.ai_confidence || 0,
                     },
                     ...(record.ai_summary
@@ -109,7 +109,7 @@ export class PinRepository {
    async create(data: SoundPinInsert): Promise<SoundPinAPI> {
       try {
          const { data: record, error } = await this.supabase
-            .from('sound_pins')
+            .from("sound_pins")
             .insert(data)
             .select()
             .single()
@@ -118,19 +118,19 @@ export class PinRepository {
             throw error
          }
 
-         this.logger.info('Pin created', {
+         this.logger.info("Pin created", {
             pinId: record.id,
             requestId: this.requestId,
          })
          return this.toDomainModel(record)
       } catch (error) {
-         this.logger.error('Failed to create pin', {
+         this.logger.error("Failed to create pin", {
             error: error instanceof Error ? error.message : String(error),
             requestId: this.requestId,
          })
          throw new APIException(
             ERROR_CODES.DATABASE_ERROR,
-            'Failed to create pin',
+            "Failed to create pin",
             500,
             error instanceof Error ? { message: error.message } : undefined,
          )
@@ -146,13 +146,13 @@ export class PinRepository {
    async findById(id: string): Promise<SoundPinAPI | null> {
       try {
          const { data: record, error } = await this.supabase
-            .from('sound_pins')
+            .from("sound_pins")
             .select()
-            .eq('id', id)
+            .eq("id", id)
             .single()
 
          if (error) {
-            if (error.code === 'PGRST116') {
+            if (error.code === "PGRST116") {
                return null // Not found
             }
             throw error
@@ -160,14 +160,14 @@ export class PinRepository {
 
          return this.toDomainModel(record)
       } catch (error) {
-         this.logger.error('Failed to find pin by ID', {
+         this.logger.error("Failed to find pin by ID", {
             error: error instanceof Error ? error.message : String(error),
             pinId: id,
             requestId: this.requestId,
          })
          throw new APIException(
             ERROR_CODES.DATABASE_ERROR,
-            'Failed to find pin',
+            "Failed to find pin",
             500,
             error instanceof Error ? { message: error.message } : undefined,
          )
@@ -184,33 +184,33 @@ export class PinRepository {
    async update(id: string, data: SoundPinUpdate): Promise<SoundPinAPI | null> {
       try {
          const { data: record, error } = await this.supabase
-            .from('sound_pins')
+            .from("sound_pins")
             .update(data)
-            .eq('id', id)
+            .eq("id", id)
             .select()
             .single()
 
          if (error) {
-            if (error.code === 'PGRST116') {
+            if (error.code === "PGRST116") {
                return null // Not found
             }
             throw error
          }
 
-         this.logger.info('Pin updated', {
+         this.logger.info("Pin updated", {
             pinId: id,
             requestId: this.requestId,
          })
          return this.toDomainModel(record)
       } catch (error) {
-         this.logger.error('Failed to update pin', {
+         this.logger.error("Failed to update pin", {
             error: error instanceof Error ? error.message : String(error),
             pinId: id,
             requestId: this.requestId,
          })
          throw new APIException(
             ERROR_CODES.DATABASE_ERROR,
-            'Failed to update pin',
+            "Failed to update pin",
             500,
             error instanceof Error ? { message: error.message } : undefined,
          )
@@ -226,12 +226,12 @@ export class PinRepository {
    async delete(id: string): Promise<boolean> {
       try {
          const { data, error } = await this.supabase
-            .from('sound_pins')
+            .from("sound_pins")
             .update({
-               status: 'deleted' as const,
+               status: "deleted" as const,
                deleted_at: new Date().toISOString(),
             })
-            .eq('id', id)
+            .eq("id", id)
             .select()
 
          if (error) {
@@ -240,7 +240,7 @@ export class PinRepository {
 
          const deleted = data.length > 0
          if (deleted) {
-            this.logger.info('Pin deleted', {
+            this.logger.info("Pin deleted", {
                pinId: id,
                requestId: this.requestId,
             })
@@ -248,14 +248,14 @@ export class PinRepository {
 
          return deleted
       } catch (error) {
-         this.logger.error('Failed to delete pin', {
+         this.logger.error("Failed to delete pin", {
             error: error instanceof Error ? error.message : String(error),
             pinId: id,
             requestId: this.requestId,
          })
          throw new APIException(
             ERROR_CODES.DATABASE_ERROR,
-            'Failed to delete pin',
+            "Failed to delete pin",
             500,
             error instanceof Error ? { message: error.message } : undefined,
          )
@@ -280,17 +280,17 @@ export class PinRepository {
       ))`
 
          let queryBuilder = this.supabase
-            .from('sound_pins')
+            .from("sound_pins")
             .select()
-            .eq('status', 'active')
-            .filter('location', 'cd', {
-               type: 'within',
+            .eq("status", "active")
+            .filter("location", "cd", {
+               type: "within",
                args: { geojson: boundsWKT },
             })
 
          // Apply category filter if provided
          if (query.categories && query.categories.length > 0) {
-            queryBuilder = queryBuilder.in('ai_topic', query.categories)
+            queryBuilder = queryBuilder.in("ai_topic", query.categories)
          }
 
          // Apply limit
@@ -304,14 +304,14 @@ export class PinRepository {
 
          return records.map((record) => this.toDomainModel(record))
       } catch (error) {
-         this.logger.error('Failed to find pins within bounds', {
+         this.logger.error("Failed to find pins within bounds", {
             error: error instanceof Error ? error.message : String(error),
             bounds: query.bounds,
             requestId: this.requestId,
          })
          throw new APIException(
             ERROR_CODES.DATABASE_ERROR,
-            'Failed to find pins',
+            "Failed to find pins",
             500,
             error instanceof Error ? { message: error.message } : undefined,
          )
@@ -334,7 +334,7 @@ export class PinRepository {
       try {
          // Use ST_DWithin for efficient radius search
          const { data: records, error } = await this.supabase.rpc(
-            'find_nearby_pins',
+            "find_nearby_pins",
             {
                lat: center.lat,
                lng: center.lng,
@@ -351,7 +351,7 @@ export class PinRepository {
             this.toDomainModel(record),
          )
       } catch (error) {
-         this.logger.error('Failed to find nearby pins', {
+         this.logger.error("Failed to find nearby pins", {
             error: error instanceof Error ? error.message : String(error),
             center,
             radiusKm,
@@ -359,7 +359,7 @@ export class PinRepository {
          })
          throw new APIException(
             ERROR_CODES.DATABASE_ERROR,
-            'Failed to find nearby pins',
+            "Failed to find nearby pins",
             500,
             error instanceof Error ? { message: error.message } : undefined,
          )

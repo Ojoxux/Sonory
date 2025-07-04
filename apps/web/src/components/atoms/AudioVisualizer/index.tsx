@@ -1,8 +1,8 @@
-'use client'
+"use client"
 
-import { motion } from 'framer-motion'
-import { useEffect, useState } from 'react'
-import type { AudioVisualizerProps } from './types'
+import { motion } from "framer-motion"
+import { useEffect, useState } from "react"
+import type { AudioVisualizerProps } from "./types"
 
 /**
  * 音響ビジュアライザーコンポーネント
@@ -24,8 +24,8 @@ import type { AudioVisualizerProps } from './types'
 export function AudioVisualizer({
    isActive = false,
    barCount = 8,
-   color = 'blue',
-   className = '',
+   color = "blue",
+   className = "",
 }: AudioVisualizerProps) {
    const [bars, setBars] = useState<number[]>([])
 
@@ -47,18 +47,18 @@ export function AudioVisualizer({
 
    const getColorClass = (): string => {
       switch (color) {
-         case 'blue':
-            return 'bg-blue-400'
-         case 'green':
-            return 'bg-green-400'
-         case 'white':
-            return 'bg-white'
-         case 'red':
-            return 'bg-red-400'
-         case 'purple':
-            return 'bg-purple-400'
+         case "blue":
+            return "bg-blue-400"
+         case "green":
+            return "bg-green-400"
+         case "white":
+            return "bg-white"
+         case "red":
+            return "bg-red-400"
+         case "purple":
+            return "bg-purple-400"
          default:
-            return 'bg-blue-400'
+            return "bg-blue-400"
       }
    }
 
@@ -76,7 +76,7 @@ export function AudioVisualizer({
                   }}
                   transition={{
                      duration: 0.3,
-                     ease: 'easeInOut',
+                     ease: "easeInOut",
                      opacity: {
                         duration: 1,
                         repeat: Number.POSITIVE_INFINITY,

@@ -1,8 +1,8 @@
-"use client";
+"use client"
 
-import { motion } from "framer-motion";
-import { MdMic } from "react-icons/md";
-import type { RecordingInitialStateProps } from "./types";
+import { motion } from "framer-motion"
+import { MdMic } from "react-icons/md"
+import type { RecordingInitialStateProps } from "./types"
 
 /**
  * 録音初期状態コンポーネント
@@ -13,14 +13,14 @@ import type { RecordingInitialStateProps } from "./types";
  * @param onClick 録音ボタンクリック時のコールバック
  */
 export function RecordingInitialState({ onClick }: RecordingInitialStateProps) {
-	return (
-		<motion.button
-			onClick={onClick}
-			className="w-48 h-16 sm:w-20 sm:h-20 mb-5 rounded-full bg-black hover:bg-gray-800 flex items-center justify-center shadow-2xl transition-all duration-300 touch-manipulation"
-			whileTap={{ scale: 0.95 }}
-			whileHover={{ scale: 1.05 }}
-		>
-			<MdMic className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
-		</motion.button>
-	);
+   return (
+      <motion.button
+         onClick={onClick}
+         className="mb-5 flex h-16 w-48 touch-manipulation items-center justify-center rounded-full bg-black shadow-2xl transition-all duration-300 hover:bg-gray-800 sm:h-20 sm:w-20"
+         whileTap={{ scale: 0.95 }}
+         whileHover={{ scale: 1.05 }}
+      >
+         <MdMic className="h-7 w-7 text-white sm:h-8 sm:w-8" />
+      </motion.button>
+   )
 }

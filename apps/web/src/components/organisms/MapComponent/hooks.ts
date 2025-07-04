@@ -29,11 +29,11 @@
  * ```
  */
 
-import { useDebugStore } from '@/store/useDebugStore'
-import { type SoundPin, useSoundPinStore } from '@/store/useSoundPinStore'
-import * as O from 'fp-ts/Option'
-import { pipe } from 'fp-ts/function'
-import mapboxgl from 'mapbox-gl'
+import { useDebugStore } from "@/store/useDebugStore"
+import { type SoundPin, useSoundPinStore } from "@/store/useSoundPinStore"
+import * as O from "fp-ts/Option"
+import { pipe } from "fp-ts/function"
+import mapboxgl from "mapbox-gl"
 import {
    type RefObject,
    useCallback,
@@ -41,25 +41,25 @@ import {
    useMemo,
    useRef,
    useState,
-} from 'react'
-import { useBrowserGeolocation } from './hooks/useBrowserGeolocation'
-import { useLocationIntegration } from './hooks/useLocationIntegration'
-import { useLocationStorage } from './hooks/useLocationStorage'
-import { useMapControls } from './hooks/useMapControls'
-import { useMapEnvironment } from './hooks/useMapEnvironment'
+} from "react"
+import { useBrowserGeolocation } from "./hooks/useBrowserGeolocation"
+import { useLocationIntegration } from "./hooks/useLocationIntegration"
+import { useLocationStorage } from "./hooks/useLocationStorage"
+import { useMapControls } from "./hooks/useMapControls"
+import { useMapEnvironment } from "./hooks/useMapEnvironment"
 import type {
    GeoJSONLineStringFeature,
    LocationData,
    MapboxExtendedMap,
    MapboxMapOptions,
    MapboxNonStandardMethods,
-} from './type'
+} from "./type"
 import {
    fromNullable,
    isValidPosition,
    selectBestPosition,
-} from './utils/functional'
-import type { LightingConfig } from './utils/sunCalculations'
+} from "./utils/functional"
+import type { LightingConfig } from "./utils/sunCalculations"
 
 export type UseMapComponentProps = {
    /** 位置情報取得準備完了時のコールバック */
@@ -110,14 +110,14 @@ export type UseMapComponentReturn = {
  */
 const supportsMethod = <T extends object>(obj: T, method: string): boolean =>
    method in obj &&
-   typeof (obj as Record<string, unknown>)[method] === 'function'
+   typeof (obj as Record<string, unknown>)[method] === "function"
 
 /**
  * Mapboxの非標準メソッドを安全に呼び出すためのヘルパー関数群（fpで安全に呼び出す）
  */
 const createMapboxHelpers = (): MapboxNonStandardMethods => ({
    setConfigProperty: (map, namespace, property, value) =>
-      pipe(supportsMethod(map, 'setConfigProperty'), (isSupported) => {
+      pipe(supportsMethod(map, "setConfigProperty"), (isSupported) => {
          if (isSupported && map.isStyleLoaded()) {
             try {
                const extendedMap = map as MapboxExtendedMap
@@ -125,19 +125,19 @@ const createMapboxHelpers = (): MapboxNonStandardMethods => ({
                   extendedMap.setConfigProperty(namespace, property, value)
                }
             } catch (error) {
-               if (process.env.NODE_ENV === 'development') {
-                  console.warn('⚠️ setConfigProperty実行エラー:', error)
+               if (process.env.NODE_ENV === "development") {
+                  console.warn("⚠️ setConfigProperty実行エラー:", error)
                }
             }
-         } else if (process.env.NODE_ENV === 'development') {
+         } else if (process.env.NODE_ENV === "development") {
             console.warn(
-               '⚠️ setConfigProperty: スタイル未読み込みまたは非サポート',
+               "⚠️ setConfigProperty: スタイル未読み込みまたは非サポート",
             )
          }
       }),
 
    setTerrain: (map, config) =>
-      pipe(supportsMethod(map, 'setTerrain'), (isSupported) => {
+      pipe(supportsMethod(map, "setTerrain"), (isSupported) => {
          if (isSupported && map.isStyleLoaded()) {
             try {
                const extendedMap = map as MapboxExtendedMap
@@ -145,18 +145,18 @@ const createMapboxHelpers = (): MapboxNonStandardMethods => ({
                   extendedMap.setTerrain(config)
                }
             } catch (error) {
-               if (process.env.NODE_ENV === 'development') {
-                  console.warn('⚠️ setTerrain実行エラー:', error)
+               if (process.env.NODE_ENV === "development") {
+                  console.warn("⚠️ setTerrain実行エラー:", error)
                }
                // 他のヘルパーメソッドと統一してエラーを再スローしない
             }
-         } else if (process.env.NODE_ENV === 'development') {
-            console.warn('⚠️ setTerrain: スタイル未読み込みまたは非サポート')
+         } else if (process.env.NODE_ENV === "development") {
+            console.warn("⚠️ setTerrain: スタイル未読み込みまたは非サポート")
          }
       }),
 
    setLight: (map, config) =>
-      pipe(supportsMethod(map, 'setLight'), (isSupported) => {
+      pipe(supportsMethod(map, "setLight"), (isSupported) => {
          if (isSupported && map.isStyleLoaded()) {
             try {
                const extendedMap = map as MapboxExtendedMap
@@ -164,17 +164,17 @@ const createMapboxHelpers = (): MapboxNonStandardMethods => ({
                   extendedMap.setLight(config)
                }
             } catch (error) {
-               if (process.env.NODE_ENV === 'development') {
-                  console.warn('⚠️ setLight実行エラー:', error)
+               if (process.env.NODE_ENV === "development") {
+                  console.warn("⚠️ setLight実行エラー:", error)
                }
             }
-         } else if (process.env.NODE_ENV === 'development') {
-            console.warn('⚠️ setLight: スタイル未読み込みまたは非サポート')
+         } else if (process.env.NODE_ENV === "development") {
+            console.warn("⚠️ setLight: スタイル未読み込みまたは非サポート")
          }
       }),
 
    setFog: (map, config) =>
-      pipe(supportsMethod(map, 'setFog'), (isSupported) => {
+      pipe(supportsMethod(map, "setFog"), (isSupported) => {
          if (isSupported && map.isStyleLoaded()) {
             try {
                const extendedMap = map as MapboxExtendedMap
@@ -182,12 +182,12 @@ const createMapboxHelpers = (): MapboxNonStandardMethods => ({
                   extendedMap.setFog(config)
                }
             } catch (error) {
-               if (process.env.NODE_ENV === 'development') {
-                  console.warn('⚠️ setFog実行エラー:', error)
+               if (process.env.NODE_ENV === "development") {
+                  console.warn("⚠️ setFog実行エラー:", error)
                }
             }
-         } else if (process.env.NODE_ENV === 'development') {
-            console.warn('⚠️ setFog: スタイル未読み込みまたは非サポート')
+         } else if (process.env.NODE_ENV === "development") {
+            console.warn("⚠️ setFog: スタイル未読み込みまたは非サポート")
          }
       }),
 })
@@ -235,7 +235,7 @@ export function useMapComponent({
 
    // 通知関数
    const createNotification = useCallback(
-      (message: string, type: 'success' | 'error' | 'warning') =>
+      (message: string, type: "success" | "error" | "warning") =>
          ({
             message,
             type,
@@ -254,7 +254,7 @@ export function useMapComponent({
 
    // 通知の実行
    const showNotification = useCallback(
-      (message: string, type: 'success' | 'error' | 'warning') => {
+      (message: string, type: "success" | "error" | "warning") => {
          const notification = createNotification(message, type)
          executeNotification(notification)
       },
@@ -296,12 +296,12 @@ export function useMapComponent({
          hasMapboxPosition: O.isSome(fromNullable(mapboxPosition)),
          hasValidPosition: position !== null,
          positionSource: mapboxPosition
-            ? ('mapbox' as const)
+            ? ("mapbox" as const)
             : customPosition
-              ? ('browser' as const)
+              ? ("browser" as const)
               : savedPosition
-                ? ('saved' as const)
-                : ('none' as const),
+                ? ("saved" as const)
+                : ("none" as const),
       }),
       [mapboxPosition, customPosition, savedPosition, position],
    )
@@ -331,13 +331,14 @@ export function useMapComponent({
    // マップ初期化（一度だけ実行、依存関係は意図的に除外）
    // 注意: この useEffect は意図的に依存関係を空にしています
    // 依存関係を追加するとマップが何度も再初期化されて問題を起こすためです
+   // biome-ignore lint/correctness/useExhaustiveDependencies: マップ初期化時の依存関係は意図的に制限しています
    useEffect(() => {
       if (!mapContainerRef.current || mapInitializedRef.current) return
 
       const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
 
       if (!mapboxToken) {
-         console.error('Mapbox access token is not set')
+         console.error("Mapbox access token is not set")
          return
       }
 
@@ -349,31 +350,31 @@ export function useMapComponent({
             debugTimeOverride !== null
                ? debugTimeOverride
                : new Date().getHours()
-         let initialLightPreset: 'day' | 'dawn' | 'dusk' | 'night' = 'dawn'
+         let initialLightPreset: "day" | "dawn" | "dusk" | "night" = "dawn"
 
          // 昼の時間帯（8時から17時）→ 明るい空が必要 → 'day'を使用
          if (currentHour >= 8 && currentHour < 17) {
-            initialLightPreset = 'day' // 正常
+            initialLightPreset = "day" // 正常
          }
          // 夜の時間帯（22時から4時）→ 暗い空が必要 → 'night'を使用
          else if (currentHour >= 22 || currentHour < 4) {
-            initialLightPreset = 'night' // 正常
+            initialLightPreset = "night" // 正常
          }
          // 夕方・早朝の時間帯（17時-22時、4時-8時）
          else if (
             (currentHour >= 17 && currentHour < 22) ||
             (currentHour >= 4 && currentHour < 8)
          ) {
-            initialLightPreset = 'dusk'
+            initialLightPreset = "dusk"
          }
 
-         if (process.env.NODE_ENV === 'development') {
+         if (process.env.NODE_ENV === "development") {
             // TODO: 開発環境でのログ出力を実装
          }
 
          const mapOptions: MapboxMapOptions = {
             container: mapContainerRef.current,
-            style: 'mapbox://styles/mapbox/standard',
+            style: "mapbox://styles/mapbox/standard",
             center: [139.6917, 35.6895], // 東京駅
             zoom: 16,
             pitch: 45,
@@ -406,7 +407,7 @@ export function useMapComponent({
             showUserLocation: false,
          })
 
-         mapInstance.addControl(geolocateControl, 'bottom-right')
+         mapInstance.addControl(geolocateControl, "bottom-right")
          geolocateControlRef.current = geolocateControl
 
          // HACK: ユーザーの地図操作をリスナーで検知するようにした
@@ -420,56 +421,56 @@ export function useMapComponent({
 
          // 各種ユーザー操作イベントを監視
          const eventTypes = [
-            'dragstart',
-            'zoomstart',
-            'rotatestart',
-            'pitchstart',
-            'touchstart',
+            "dragstart",
+            "zoomstart",
+            "rotatestart",
+            "pitchstart",
+            "touchstart",
          ] as const
          for (const eventType of eventTypes) {
             mapInstance.on(eventType, handleUserInteraction)
          }
 
          // イベントリスナー設定
-         mapInstance.on('load', () => {
-            if (process.env.NODE_ENV === 'development') {
+         mapInstance.on("load", () => {
+            if (process.env.NODE_ENV === "development") {
                // TODO: マップロード完了時のログ出力を実装
             }
             setMapStyleLoaded(true)
 
             // ユーザーパス用のソースとレイヤーを追加
-            mapInstance.addSource('user-path', {
-               type: 'geojson',
+            mapInstance.addSource("user-path", {
+               type: "geojson",
                data: {
-                  type: 'Feature',
+                  type: "Feature",
                   properties: {},
                   geometry: {
-                     type: 'LineString',
+                     type: "LineString",
                      coordinates: [],
                   },
                },
             })
 
             mapInstance.addLayer({
-               id: 'user-path',
-               type: 'line',
-               source: 'user-path',
+               id: "user-path",
+               type: "line",
+               source: "user-path",
                layout: {
-                  'line-join': 'round',
-                  'line-cap': 'round',
+                  "line-join": "round",
+                  "line-cap": "round",
                },
                paint: {
-                  'line-color': '#ff6b6b',
-                  'line-width': 3,
-                  'line-opacity': 0.8,
+                  "line-color": "#ff6b6b",
+                  "line-width": 3,
+                  "line-opacity": 0.8,
                },
             })
          })
 
          // スタイル読み込み完了時の処理（より確実な検知）
-         mapInstance.on('styledata', () => {
+         mapInstance.on("styledata", () => {
             if (mapInstance.isStyleLoaded()) {
-               if (process.env.NODE_ENV === 'development') {
+               if (process.env.NODE_ENV === "development") {
                   // TODO: スタイルロード完了時のログ出力を実装
                }
                setMapStyleLoaded(true)
@@ -484,23 +485,23 @@ export function useMapComponent({
          })
 
          // スタイルが完全に読み込まれた時の追加チェック
-         mapInstance.on('idle', () => {
+         mapInstance.on("idle", () => {
             // スタイルは読み込まれているがマップ全体の初期化が完了していない場合の補完的チェック
             if (mapInstance.isStyleLoaded() && !mapInitializedRef.current) {
-               if (process.env.NODE_ENV === 'development') {
+               if (process.env.NODE_ENV === "development") {
                   // TODO: スタイル読み込み完了後の初期化ログを実装
                }
                setMapStyleLoaded(true)
             }
          })
 
-         mapInstance.on('rotate', () => {
+         mapInstance.on("rotate", () => {
             const bearing = mapInstance.getBearing()
             onBearingChange?.(bearing)
          })
 
          // Geolocationコントロールのイベント
-         geolocateControl.on('geolocate', (e) => {
+         geolocateControl.on("geolocate", (e) => {
             const newPosition = {
                latitude: e.coords.latitude,
                longitude: e.coords.longitude,
@@ -510,17 +511,17 @@ export function useMapComponent({
             savePosition(newPosition)
          })
 
-         geolocateControl.on('trackuserlocationstart', () => {
+         geolocateControl.on("trackuserlocationstart", () => {
             setGeolocateInitialized(true)
          })
 
-         geolocateControl.on('trackuserlocationend', () => {
+         geolocateControl.on("trackuserlocationend", () => {
             // 位置追跡終了
          })
 
-         geolocateControl.on('error', (error) => {
-            if (process.env.NODE_ENV === 'development') {
-               console.error('Geolocation エラー:', error)
+         geolocateControl.on("error", (error) => {
+            if (process.env.NODE_ENV === "development") {
+               console.error("Geolocation エラー:", error)
             }
          })
 
@@ -558,7 +559,7 @@ export function useMapComponent({
             }
          })
       } catch (error) {
-         console.error('マップの初期化に失敗:', error)
+         console.error("マップの初期化に失敗:", error)
       }
 
       return () => {
@@ -566,11 +567,11 @@ export function useMapComponent({
             // イベントリスナーをクリーンアップ
             if (userInteractionHandlerRef.current) {
                const eventTypes = [
-                  'dragstart',
-                  'zoomstart',
-                  'rotatestart',
-                  'pitchstart',
-                  'touchstart',
+                  "dragstart",
+                  "zoomstart",
+                  "rotatestart",
+                  "pitchstart",
+                  "touchstart",
                ] as const
                for (const eventType of eventTypes) {
                   if (userInteractionHandlerRef.current) {
@@ -596,7 +597,7 @@ export function useMapComponent({
       const shouldAutoCenter =
          !userInteractionRef.current || timeSinceLastInteraction > 30000 // 30秒以上操作がない場合
 
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env.NODE_ENV === "development") {
          // TODO: 位置設定のデバッグログを実装
       }
 
@@ -621,8 +622,8 @@ export function useMapComponent({
       }
 
       // ユーザーパスを更新
-      if (map.getSource('user-path')) {
-         const source = map.getSource('user-path') as mapboxgl.GeoJSONSource
+      if (map.getSource("user-path")) {
+         const source = map.getSource("user-path") as mapboxgl.GeoJSONSource
 
          const updatePath = (currentCoordinates: [number, number][]): void => {
             const newCoord: [number, number] = [
@@ -645,10 +646,10 @@ export function useMapComponent({
                }
 
                const pathData: GeoJSONLineStringFeature = {
-                  type: 'Feature',
+                  type: "Feature",
                   properties: {},
                   geometry: {
-                     type: 'LineString',
+                     type: "LineString",
                      coordinates: updatedCoordinates,
                   },
                }

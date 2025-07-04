@@ -1,9 +1,9 @@
 declare global {
    interface Window {
       gtag: (
-         command: 'event' | 'config' | 'consent' | 'js' | 'set',
+         command: "event" | "config" | "consent" | "js" | "set",
          targetId: string | Date,
-         parameters?: Record<string, any>,
+         parameters?: Record<string, unknown>,
       ) => void
    }
 }

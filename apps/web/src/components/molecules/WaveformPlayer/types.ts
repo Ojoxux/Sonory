@@ -1,4 +1,4 @@
-import type { AudioData } from '../../../store/types'
+import type { AudioData } from "../../../store/types"
 
 /**
  * WaveformPlayerコンポーネントのプロパティ型

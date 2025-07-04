@@ -9,12 +9,12 @@
 /**
  * 波紋の色の種類
  */
-export type RippleColor = 'blue' | 'white' | 'green' | 'red'
+export type RippleColor = "blue" | "white" | "green" | "red"
 
 /**
  * 波紋のサイズの種類
  */
-export type RippleSize = 'small' | 'medium' | 'large'
+export type RippleSize = "small" | "medium" | "large"
 
 /**
  * DropRippleEffectコンポーネントのプロパティ

@@ -25,7 +25,7 @@ export type LocationData = {
  */
 export type MapboxStandardStyleConfig = {
    basemap: {
-      lightPreset: 'day' | 'dawn' | 'dusk' | 'night'
+      lightPreset: "day" | "dawn" | "dusk" | "night"
       showPlaceLabels: boolean
       showPointOfInterestLabels: boolean
       showRoadLabels: boolean
@@ -79,7 +79,7 @@ export type MapboxExtendedMap = mapboxgl.Map & {
  * Mapbox Light設定の型定義
  */
 export type MapboxLightConfig = {
-   anchor: 'map' | 'viewport'
+   anchor: "map" | "viewport"
    position: [number, number, number]
    color: string
    intensity: number
@@ -89,10 +89,10 @@ export type MapboxLightConfig = {
  * GeoJSONソースのデータ型
  */
 export type GeoJSONLineStringFeature = {
-   type: 'Feature'
+   type: "Feature"
    properties: Record<string, unknown>
    geometry: {
-      type: 'LineString'
+      type: "LineString"
       coordinates: [number, number][]
    }
 }

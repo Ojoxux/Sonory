@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react'
-import type { DebugPanelProps } from './types'
-import type { DebugLog, PerformanceData } from './types'
+import { useEffect, useState } from "react"
+import type { DebugPanelProps } from "./types"
+import type { DebugLog, PerformanceData } from "./types"
 
 export function useDebugPanel({
    onTimeChange,
    onUpdateLighting,
-}: Pick<DebugPanelProps, 'onTimeChange' | 'onUpdateLighting'>): {
+}: Pick<DebugPanelProps, "onTimeChange" | "onUpdateLighting">): {
    handleTimeChange: (time: number | null) => void
    handlePWADebugShow: (expanded: boolean) => void
    handlePWADebugHide: () => void
@@ -16,14 +16,14 @@ export function useDebugPanel({
    }
 
    const handlePWADebugShow = (expanded: boolean): void => {
-      const event = new CustomEvent('pwa-debug-show', {
+      const event = new CustomEvent("pwa-debug-show", {
          detail: { expanded },
       })
       window.dispatchEvent(event)
    }
 
    const handlePWADebugHide = (): void => {
-      const event = new CustomEvent('pwa-debug-hide')
+      const event = new CustomEvent("pwa-debug-hide")
       window.dispatchEvent(event)
    }
 
@@ -68,7 +68,7 @@ export function useYAMNetDebug() {
       return () => clearInterval(interval)
    }, [])
 
-   const addLog = (level: 'info' | 'warn' | 'error', message: string) => {
+   const addLog = (level: "info" | "warn" | "error", message: string) => {
       const newLog: DebugLog = {
          id: crypto.randomUUID(),
          level,

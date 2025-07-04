@@ -1,6 +1,6 @@
-'use client'
+"use client"
 
-import type { RecordButtonTextProps } from './type'
+import type { RecordButtonTextProps } from "./type"
 
 /**
  * 録音ボタンテキストコンポーネント
@@ -17,23 +17,23 @@ import type { RecordButtonTextProps } from './type'
 export function RecordButtonText({ status }: RecordButtonTextProps) {
    const getText = (): string => {
       switch (status) {
-         case 'recording':
-            return '停止'
-         case 'completed':
-            return '完了'
+         case "recording":
+            return "停止"
+         case "completed":
+            return "完了"
          default:
-            return '録音'
+            return "録音"
       }
    }
 
    const getTextStyle = (): string => {
       switch (status) {
-         case 'recording':
-            return 'text-white/90 font-bold'
-         case 'completed':
-            return 'text-white/90 font-bold'
+         case "recording":
+            return "text-white/90 font-bold"
+         case "completed":
+            return "text-white/90 font-bold"
          default:
-            return 'text-white/80 font-medium'
+            return "text-white/80 font-medium"
       }
    }
 

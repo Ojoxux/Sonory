@@ -1,6 +1,6 @@
-'use client'
+"use client"
 
-import type { PropsWithChildren } from 'react'
+import type { PropsWithChildren } from "react"
 
 /**
  * アプリケーション全体のプロバイダー

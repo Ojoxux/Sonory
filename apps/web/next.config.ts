@@ -1,15 +1,15 @@
-import type { NextConfig } from 'next'
+import type { NextConfig } from "next"
 
-const withPWA = require('@ducanh2912/next-pwa').default({
-   dest: 'public',
+const withPWA = require("@ducanh2912/next-pwa").default({
+   dest: "public",
    register: true,
    skipWaiting: true,
    runtimeCaching: [
       {
          urlPattern: /^https?.*/,
-         handler: 'NetworkFirst',
+         handler: "NetworkFirst",
          options: {
-            cacheName: 'offlineCache',
+            cacheName: "offlineCache",
             expiration: {
                maxEntries: 200,
                maxAgeSeconds: 24 * 60 * 60, // 24 hours
@@ -17,7 +17,7 @@ const withPWA = require('@ducanh2912/next-pwa').default({
          },
       },
    ],
-   disable: process.env.NODE_ENV === 'development',
+   disable: process.env.NODE_ENV === "development",
 })
 
 const nextConfig: NextConfig = {
@@ -31,8 +31,8 @@ const nextConfig: NextConfig = {
    async rewrites() {
       return [
          {
-            source: '/api/:path*',
-            destination: 'http://localhost:8787/api/:path*',
+            source: "/api/:path*",
+            destination: "http://localhost:8787/api/:path*",
          },
       ]
    },

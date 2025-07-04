@@ -1,8 +1,8 @@
-"use client";
+"use client"
 
-import type { ReactElement } from "react";
-import { MdDirectionsCar } from "react-icons/md";
-import type { CarIconProps } from "./types";
+import type { ReactElement } from "react"
+import { MdDirectionsCar } from "react-icons/md"
+import type { CarIconProps } from "./types"
 
 /**
  * 道路音分類用の車アイコンコンポーネント
@@ -26,36 +26,36 @@ import type { CarIconProps } from "./types";
  * ```
  */
 export function CarIcon({
-	size = "medium",
-	color = "text-blue-600",
-	className = "",
-	onClick,
+   size = "medium",
+   color = "text-blue-600",
+   className = "",
+   onClick,
 }: CarIconProps): ReactElement {
-	const sizeClasses = {
-		small: "w-4 h-4",
-		medium: "w-6 h-6",
-		large: "w-8 h-8",
-	} as const;
+   const sizeClasses = {
+      small: "w-4 h-4",
+      medium: "w-6 h-6",
+      large: "w-8 h-8",
+   } as const
 
-	const containerSizeClasses = {
-		small: "w-8 h-8",
-		medium: "w-12 h-12",
-		large: "w-16 h-16",
-	} as const;
+   const containerSizeClasses = {
+      small: "w-8 h-8",
+      medium: "w-12 h-12",
+      large: "w-16 h-16",
+   } as const
 
-	return (
-		<button
-			type="button"
-			onClick={onClick}
-			className={`
+   return (
+      <button
+         type="button"
+         onClick={onClick}
+         className={`
         ${containerSizeClasses[size]}bg-white flex cursor-pointer touch-manipulation items-center justify-center rounded-full border-2 border-gray-200 shadow-lg transition-all duration-200 hover:border-blue-300 hover:shadow-xl ${className}
       `}
-			aria-label="道路音の録音地点"
-		>
-			<MdDirectionsCar
-				className={`${sizeClasses[size]} ${color}`}
-				aria-hidden="true"
-			/>
-		</button>
-	);
+         aria-label="道路音の録音地点"
+      >
+         <MdDirectionsCar
+            className={`${sizeClasses[size]} ${color}`}
+            aria-hidden="true"
+         />
+      </button>
+   )
 }

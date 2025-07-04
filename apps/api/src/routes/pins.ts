@@ -2,13 +2,13 @@ import {
    ERROR_CODES,
    type NearbyPinsQuery,
    type SearchPinsQuery,
-} from '@sonory/shared-types'
-import { Hono } from 'hono'
-import { z } from 'zod'
-import { APIException } from '../middleware/error'
-import { validate } from '../middleware/validation'
-import { PinService } from '../services/pin.service'
-import type { Env } from '../types/api'
+} from "@sonory/shared-types"
+import { Hono } from "hono"
+import { z } from "zod"
+import { APIException } from "../middleware/error"
+import { validate } from "../middleware/validation"
+import { PinService } from "../services/pin.service"
+import type { Env } from "../types/api"
 
 const app = new Hono<{ Bindings: Env }>()
 
@@ -25,7 +25,7 @@ const createPinSchema = z.object({
    audio: z.object({
       url: z.string().url(),
       duration: z.number().positive().max(600),
-      format: z.enum(['webm', 'mp3', 'wav']),
+      format: z.enum(["webm", "mp3", "wav"]),
    }),
    weather: z
       .object({
@@ -35,14 +35,14 @@ const createPinSchema = z.object({
          humidity: z.number().min(0).max(100).optional(),
       })
       .optional(),
-   timeTag: z.enum(['朝', '昼', '夕', '夜']).optional(),
+   timeTag: z.enum(["朝", "昼", "夕", "夜"]).optional(),
    title: z.string().max(200).optional(),
    deviceInfo: z.string().optional(),
 })
 
 const updatePinSchema = z.object({
    title: z.string().max(200).optional(),
-   status: z.enum(['active', 'processing', 'deleted', 'reported']).optional(),
+   status: z.enum(["active", "processing", "deleted", "reported"]).optional(),
    aiAnalysis: z
       .object({
          transcription: z.string(),
@@ -85,7 +85,7 @@ const reportPinSchema = z.object({
 /**
  * POST /api/pins - Create a new pin
  */
-app.post('/', validate('json', createPinSchema), async (c) => {
+app.post("/", validate("json", createPinSchema), async (c) => {
    const service = new PinService(c)
    const data = await c.req.json()
 
@@ -100,14 +100,14 @@ app.post('/', validate('json', createPinSchema), async (c) => {
 /**
  * GET /api/pins/:id - Get pin by ID
  */
-app.get('/:id', async (c) => {
+app.get("/:id", async (c) => {
    const service = new PinService(c)
-   const id = c.req.param('id')
+   const id = c.req.param("id")
 
    const pin = await service.getPinById(id)
 
    if (!pin) {
-      throw new APIException(ERROR_CODES.DATABASE_ERROR, 'Pin not found', 404)
+      throw new APIException(ERROR_CODES.DATABASE_ERROR, "Pin not found", 404)
    }
 
    return c.json({
@@ -119,15 +119,15 @@ app.get('/:id', async (c) => {
 /**
  * PUT /api/pins/:id - Update pin
  */
-app.put('/:id', validate('json', updatePinSchema), async (c) => {
+app.put("/:id", validate("json", updatePinSchema), async (c) => {
    const service = new PinService(c)
-   const id = c.req.param('id')
+   const id = c.req.param("id")
    const data = await c.req.json()
 
    const pin = await service.updatePin(id, data)
 
    if (!pin) {
-      throw new APIException(ERROR_CODES.DATABASE_ERROR, 'Pin not found', 404)
+      throw new APIException(ERROR_CODES.DATABASE_ERROR, "Pin not found", 404)
    }
 
    return c.json({
@@ -139,14 +139,14 @@ app.put('/:id', validate('json', updatePinSchema), async (c) => {
 /**
  * DELETE /api/pins/:id - Delete pin
  */
-app.delete('/:id', async (c) => {
+app.delete("/:id", async (c) => {
    const service = new PinService(c)
-   const id = c.req.param('id')
+   const id = c.req.param("id")
 
    const deleted = await service.deletePin(id)
 
    if (!deleted) {
-      throw new APIException(ERROR_CODES.DATABASE_ERROR, 'Pin not found', 404)
+      throw new APIException(ERROR_CODES.DATABASE_ERROR, "Pin not found", 404)
    }
 
    return c.json({
@@ -158,9 +158,9 @@ app.delete('/:id', async (c) => {
 /**
  * GET /api/pins/nearby - Get nearby pins
  */
-app.get('/nearby', validate('query', nearbyPinsSchema), async (c) => {
+app.get("/nearby", validate("query", nearbyPinsSchema), async (c) => {
    const service = new PinService(c)
-   const validated = c.req.valid('query')
+   const validated = c.req.valid("query")
 
    const nearbyQuery: NearbyPinsQuery = {
       bounds: {
@@ -184,9 +184,9 @@ app.get('/nearby', validate('query', nearbyPinsSchema), async (c) => {
 /**
  * GET /api/pins/search - Search pins with filters
  */
-app.get('/search', validate('query', searchPinsSchema), async (c) => {
+app.get("/search", validate("query", searchPinsSchema), async (c) => {
    const service = new PinService(c)
-   const validated = c.req.valid('query')
+   const validated = c.req.valid("query")
 
    const searchQuery: SearchPinsQuery = {
       ...(validated.lat && validated.lng && validated.radius
@@ -223,9 +223,9 @@ app.get('/search', validate('query', searchPinsSchema), async (c) => {
 /**
  * GET /api/pins/user/:userId - Get user's pins
  */
-app.get('/user/:userId', async (c) => {
+app.get("/user/:userId", async (c) => {
    const service = new PinService(c)
-   const userId = c.req.param('userId')
+   const userId = c.req.param("userId")
 
    const pins = await service.getUserPins(userId)
 
@@ -238,7 +238,7 @@ app.get('/user/:userId', async (c) => {
 /**
  * POST /api/pins/batch - Create multiple pins
  */
-app.post('/batch', validate('json', z.array(createPinSchema)), async (c) => {
+app.post("/batch", validate("json", z.array(createPinSchema)), async (c) => {
    const service = new PinService(c)
    const data = await c.req.json()
 
@@ -257,15 +257,15 @@ app.post('/batch', validate('json', z.array(createPinSchema)), async (c) => {
 /**
  * POST /api/pins/:id/report - Report a pin
  */
-app.post('/:id/report', validate('json', reportPinSchema), async (c) => {
+app.post("/:id/report", validate("json", reportPinSchema), async (c) => {
    const service = new PinService(c)
-   const id = c.req.param('id')
+   const id = c.req.param("id")
    const { reason } = await c.req.json()
 
    const reported = await service.reportPin(id, reason)
 
    if (!reported) {
-      throw new APIException(ERROR_CODES.DATABASE_ERROR, 'Pin not found', 404)
+      throw new APIException(ERROR_CODES.DATABASE_ERROR, "Pin not found", 404)
    }
 
    return c.json({

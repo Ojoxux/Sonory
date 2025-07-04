@@ -1,20 +1,20 @@
-import { getCorsMiddleware } from '@/middleware/cors'
-import { errorHandler } from '@/middleware/error'
-import audioRoutes from '@/routes/audio'
-import { healthRoutes } from '@/routes/health'
-import pinsRoutes from '@/routes/pins'
-import { logger } from '@/utils/logger'
-import { Hono } from 'hono'
-import { logger as honoLogger } from 'hono/logger'
-import { requestId } from 'hono/request-id'
-import { timing } from 'hono/timing'
+import { getCorsMiddleware } from "@/middleware/cors"
+import { errorHandler } from "@/middleware/error"
+import audioRoutes from "@/routes/audio"
+import { healthRoutes } from "@/routes/health"
+import pinsRoutes from "@/routes/pins"
+import { logger } from "@/utils/logger"
+import { Hono } from "hono"
+import { logger as honoLogger } from "hono/logger"
+import { requestId } from "hono/request-id"
+import { timing } from "hono/timing"
 
 /**
  * Cloudflare Workers環境変数の型定義
  */
 export interface Env {
    // 環境変数
-   ENVIRONMENT: 'development' | 'production'
+   ENVIRONMENT: "development" | "production"
    CORS_ORIGIN?: string
 
    // Supabase
@@ -42,29 +42,29 @@ export interface Env {
 const app = new Hono<{ Bindings: Env }>()
 
 // グローバルミドルウェア
-app.use('*', requestId())
-app.use('*', timing())
-app.use('*', honoLogger())
-app.use('*', errorHandler)
+app.use("*", requestId())
+app.use("*", timing())
+app.use("*", honoLogger())
+app.use("*", errorHandler)
 
 // CORS設定（環境変数から取得）
-app.use('*', async (c, next) => {
+app.use("*", async (c, next) => {
    const corsMiddleware = getCorsMiddleware(c.env)
    return corsMiddleware(c, next)
 })
 
 // リクエストログ
-app.use('*', async (c, next) => {
+app.use("*", async (c, next) => {
    const start = Date.now()
    const method = c.req.method
    const url = new URL(c.req.url)
 
-   logger.info('Request received', {
-      requestId: c.get('requestId'),
+   logger.info("Request received", {
+      requestId: c.get("requestId"),
       method,
       path: url.pathname,
       query: Object.fromEntries(url.searchParams),
-      userAgent: c.req.header('user-agent'),
+      userAgent: c.req.header("user-agent"),
    })
 
    await next()
@@ -72,8 +72,8 @@ app.use('*', async (c, next) => {
    const duration = Date.now() - start
    const status = c.res.status
 
-   logger.info('Request completed', {
-      requestId: c.get('requestId'),
+   logger.info("Request completed", {
+      requestId: c.get("requestId"),
       method,
       path: url.pathname,
       status,
@@ -84,12 +84,12 @@ app.use('*', async (c, next) => {
 /**
  * ルートハンドラー
  */
-app.get('/', (c) => {
+app.get("/", (c) => {
    return c.json({
       success: true,
       data: {
-         name: 'Sonory API',
-         version: '0.1.0',
+         name: "Sonory API",
+         version: "0.1.0",
          environment: c.env.ENVIRONMENT,
          timestamp: new Date().toISOString(),
       },
@@ -97,9 +97,9 @@ app.get('/', (c) => {
 })
 
 // APIルート
-app.route('/api/health', healthRoutes)
-app.route('/api/audio', audioRoutes)
-app.route('/api/pins', pinsRoutes)
+app.route("/api/health", healthRoutes)
+app.route("/api/audio", audioRoutes)
+app.route("/api/pins", pinsRoutes)
 
 // 404ハンドラー
 app.notFound((c) => {
@@ -107,10 +107,10 @@ app.notFound((c) => {
       {
          success: false,
          error: {
-            code: 'NOT_FOUND',
-            message: 'The requested resource was not found',
+            code: "NOT_FOUND",
+            message: "The requested resource was not found",
             timestamp: new Date().toISOString(),
-            requestId: c.get('requestId'),
+            requestId: c.get("requestId"),
          },
       },
       404,

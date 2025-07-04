@@ -7,6 +7,8 @@ AudioSetの521クラスを日本語12カテゴリに変換し、環境タイプ�
 
 import asyncio
 import logging
+import os
+import tempfile
 from typing import Dict, List, Optional, Tuple
 import numpy as np
 import tensorflow as tf
@@ -15,6 +17,61 @@ import structlog
 
 logger = structlog.get_logger(__name__)
 
+# Windows環境でのパス問題を解決するための設定
+def setup_tensorflow_hub_cache():
+    """TensorFlow Hubのキャッシュディレクトリを安全な場所に設定"""
+    try:
+        # 現在のスクリプトディレクトリを取得
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        # パス正規化でセキュリティを向上
+        current_dir = os.path.normpath(current_dir)
+        
+        # python-audio-analyzerディレクトリにキャッシュディレクトリを作成
+        python_analyzer_root = os.path.dirname(os.path.dirname(current_dir))
+        python_analyzer_root = os.path.normpath(python_analyzer_root)
+        
+        # セキュリティ: パスが期待される場所内にあることを確認
+        if not os.path.exists(python_analyzer_root):
+            raise ValueError(f"Invalid python analyzer root path: {python_analyzer_root}")
+        
+        cache_dir = os.path.join(python_analyzer_root, "tf_hub_cache")
+        cache_dir = os.path.normpath(cache_dir)
+        
+        # セキュリティ: 相対パス攻撃を防ぐ
+        if not cache_dir.startswith(python_analyzer_root):
+            raise ValueError("Invalid cache directory path - potential path traversal attack")
+        
+        # ディレクトリが存在しない場合は作成
+        os.makedirs(cache_dir, exist_ok=True)
+        
+        # 書き込み権限を検証
+        test_file = os.path.join(cache_dir, '.write_test')
+        try:
+            with open(test_file, 'w') as f:
+                f.write('test')
+            os.remove(test_file)
+        except Exception as e:
+            raise RuntimeError(f"Cache directory not writable: {e}")
+        
+        # 環境変数を設定
+        os.environ['TFHUB_CACHE_DIR'] = cache_dir
+        
+        # TensorFlowの一時ディレクトリも設定
+        tf_temp_dir = os.path.join(cache_dir, "tf_temp")
+        tf_temp_dir = os.path.normpath(tf_temp_dir)
+        os.makedirs(tf_temp_dir, exist_ok=True)
+        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'  # INFO以上のログを表示
+        
+        return cache_dir
+    except Exception as e:
+        # フォールバック：システムの一時ディレクトリを使用
+        fallback_dir = tempfile.mkdtemp(prefix="tfhub_cache_")
+        os.environ['TFHUB_CACHE_DIR'] = fallback_dir
+        return fallback_dir
+
+# モジュール読み込み時の副作用を削除
+# setup_tensorflow_hub_cache()は初期化時に明示的に呼び出すように変更
 
 class YAMNetClassifier:
     """
@@ -151,20 +208,22 @@ class YAMNetClassifier:
     # 環境タイプ分類のためのキーワード
     ENVIRONMENT_KEYWORDS = {
         "urban": [
-            "Motor vehicle", "Car", "Truck", "Motorcycle", "Bus", "Traffic",
-            "Train", "Construction", "Power tool", "Siren"
+            "Motor vehicle", "Car", "Traffic noise", "Engine", "Truck", "Bus",
+            "Construction noise", "Jackhammer", "Siren", "Emergency vehicle",
+            "Train", "Aircraft", "Airplane", "Helicopter"
         ],
         "natural": [
-            "Bird", "Rain", "Wind", "Water", "Stream", "Ocean", "Thunder",
-            "Insect", "Animal"
+            "Bird", "Rain", "Wind", "Thunder", "Water", "Stream", "Ocean",
+            "Waves", "Animal", "Dog", "Cat"
         ],
         "indoor": [
-            "Speech", "Music", "Television", "Radio", "Air conditioning",
-            "Door", "Footsteps", "Typing"
+            "Speech", "Human voice", "Music", "Television", "Radio", "Typing",
+            "Microwave oven", "Vacuum cleaner", "Air conditioning", "Door",
+            "Footsteps", "Clapping"
         ],
         "outdoor": [
-            "Bird", "Rain", "Wind", "Traffic", "Construction", "Aircraft",
-            "Thunder", "Water"
+            "Bird", "Rain", "Wind", "Thunder", "Ocean", "Traffic noise",
+            "Construction noise", "Aircraft", "Siren"
         ]
     }
     
@@ -173,31 +232,48 @@ class YAMNetClassifier:
         YAMNetClassifierを初期化
         
         Args:
-            model_url: TensorFlow HubのYAMNetモデルURL
+            model_url: TensorFlow Hub上のYAMNetモデルURL
         """
         self.model_url = model_url
-        self.model: Optional[tf.keras.Model] = None
-        self.class_names: Optional[List[str]] = None
+        self.model = None
+        self.class_names = None
         self._initialized = False
+        self.logger = structlog.get_logger(self.__class__.__name__)
+        
+        # キャッシュディレクトリを明示的に設定（副作用を初期化時に制限）
+        self.cache_dir = setup_tensorflow_hub_cache()
+        
+        self.logger.info(
+            "YAMNetClassifier initialized",
+            model_url=model_url,
+            cache_dir=self.cache_dir
+        )
         
     async def initialize(self) -> None:
         """
-        モデルを非同期で初期化
+        YAMNetモデルを非同期で初期化
         
         Raises:
-            RuntimeError: モデル初期化に失敗した場合
+            RuntimeError: モデルの初期化に失敗した場合
         """
         if self._initialized:
             logger.info("YAMNet model already initialized")
             return
             
         try:
-            logger.info("Initializing YAMNet model", model_url=self.model_url)
+            # キャッシュディレクトリの状態を確認
+            cache_dir = os.environ.get('TFHUB_CACHE_DIR')
+            logger.info(
+                "Initializing YAMNet model", 
+                model_url=self.model_url,
+                cache_dir=cache_dir,
+                cache_dir_exists=os.path.exists(cache_dir) if cache_dir else False
+            )
             
             # 非同期でモデルを読み込み
             loop = asyncio.get_event_loop()
             self.model = await loop.run_in_executor(
-                None, hub.load, self.model_url
+                None, self._load_model_with_retry
             )
             
             # クラス名を読み込み
@@ -209,12 +285,32 @@ class YAMNetClassifier:
             self._initialized = True
             logger.info(
                 "YAMNet model initialized successfully",
-                num_classes=len(self.class_names) if self.class_names else 0
+                num_classes=len(self.class_names) if self.class_names else 0,
+                cache_dir=cache_dir
             )
             
         except Exception as e:
             logger.error("Failed to initialize YAMNet model", error=str(e))
             raise RuntimeError(f"YAMNet initialization failed: {e}")
+    
+    def _load_model_with_retry(self):
+        """モデルを再試行機能付きで読み込み"""
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                logger.info(f"Attempting to load YAMNet model (attempt {attempt + 1}/{max_retries})")
+                return hub.load(self.model_url)
+            except Exception as e:
+                logger.warning(
+                    f"Model loading attempt {attempt + 1} failed", 
+                    error=str(e),
+                    remaining_attempts=max_retries - attempt - 1
+                )
+                if attempt == max_retries - 1:
+                    raise
+                # 少し待ってから再試行
+                import time
+                time.sleep(2 ** attempt)  # 指数バックオフ
     
     def _load_class_names(self, class_map_path: str) -> List[str]:
         """

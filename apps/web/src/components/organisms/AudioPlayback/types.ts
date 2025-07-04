@@ -1,4 +1,4 @@
-import type { AudioData } from '../../../store/types'
+import type { AudioData } from "../../../store/types"
 
 /**
  * 位置情報の型定義

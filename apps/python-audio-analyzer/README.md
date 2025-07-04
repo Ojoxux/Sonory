@@ -1,101 +1,138 @@
-# Sonory Audio Analyzer - Python Service
+# Sonory オーディオアナライザー - Python サービス
 
-YAMNet-based audio classification service for environmental sound analysis.
+環境音分析のためのYAMNetベースのオーディオ分類サービスです。
 
-## 🎯 Overview
+## 🎯 概要
 
-This service provides reliable audio classification using Google's YAMNet model running in a Python environment. It offers better stability and performance compared to browser-based TensorFlow.js implementations.
+このサービスはPython環境でGoogle YAMNetモデルを使用した信頼性の高いオーディオ分類を提供します。ブラウザベースのTensorFlow.js実装と比較して、より良い安定性とパフォーマンスを実現します。
 
-## 🏗️ Architecture
+## 🏗️ アーキテクチャ
 
 ```
-Frontend (Next.js) → API Gateway (Cloudflare Workers) → Python Audio Analyzer
-                                                       ↓
-                                                   YAMNet Model
-                                                   TensorFlow
+フロントエンド (Next.js) → API ゲートウェイ (Cloudflare Workers) → Python オーディオアナライザー
+                                                              ↓
+                                                         YAMNet モデル
+                                                         TensorFlow
 ```
 
-## 🚀 Features
+## 🚀 機能
 
-- **YAMNet Audio Classification**: 521-class environmental sound classification
-- **FastAPI**: High-performance async API framework
-- **Docker Support**: Containerized deployment
-- **Type Safety**: Generated Python types from TypeScript shared types
-- **Caching**: Redis-based result caching
-- **Monitoring**: Structured logging and health checks
+- **YAMNet オーディオ分類**: 521クラスの環境音分類
+- **FastAPI**: 高性能非同期APIフレームワーク
+- **Docker サポート**: コンテナ化されたデプロイメント
+- **型安全性**: TypeScript共通型から生成されたPython型
+- **キャッシング**: Redisベースの結果キャッシュ
+- **モニタリング**: 構造化ログとヘルスチェック
 
-## 📋 Requirements
+## 📋 必要環境
 
-- Python 3.11+
-- Docker & Docker Compose (for containerized deployment)
-- Redis (for caching)
+- Python 3.11以上
+- Docker & Docker Compose (コンテナ化デプロイメント用)
+- Redis (キャッシング用)
 
-## 🛠️ Development Setup
+## 🛠️ 開発環境セットアップ
 
-### 1. Install Dependencies
+### 1. 依存関係のインストール
 
-From the monorepo root:
+モノレポのルートから：
 
 ```bash
-# Install Python dependencies
+# Python依存関係をインストール
 npm run python:install
 
-# Generate Python types from TypeScript
+# TypeScriptからPython型を生成
 npm run generate-types
 ```
 
-### 2. Local Development
+### 2. ローカル開発
 
 ```bash
-# Start development server
+# 開発サーバーを起動
 npm run python:dev
 
-# Or with Docker Compose
+# またはDocker Composeを使用
 cd apps/python-audio-analyzer
 docker-compose -f docker-compose.dev.yml up
 ```
 
-### 2.1. Windows-specific Setup
+### 2.1. Windows環境での設定
 
-**PowerShell/Command Prompt:**
+**重要: Windows環境での既知の問題**
+
+日本語ユーザー名を含むWindowsシステムでは、TensorFlow Hubのキャッシュディレクトリに関する問題が発生する場合があります。
+
+**症状:**
+```
+ERROR: C:\Users\中村のPC\AppData\Local\Temp is not a directory
+tensorflow.python.framework.errors_impl.FailedPreconditionError
+```
+
+**解決方法:**
+以下のセットアップスクリプトを実行してください：
+
 ```powershell
-# Navigate to Python analyzer directory
+# 環境設定のみ
+.\setup-windows.ps1
+
+# 環境設定 + サーバー起動
+.\setup-windows.ps1 -StartServer
+
+# 環境設定 + ヘルスチェック
+.\setup-windows.ps1 -CheckHealth
+```
+
+**手動設定の場合:**
+```powershell
+$env:TFHUB_CACHE_DIR = "$(Get-Location)\tf_hub_cache"
+$env:TF_CPP_MIN_LOG_LEVEL = "1"
+$env:PYTHONPATH = "$(Get-Location)\src"
+New-Item -ItemType Directory -Path "tf_hub_cache" -Force
+```
+
+**PowerShell/コマンドプロンプト:**
+```powershell
+# Python analyzerディレクトリに移動
 cd apps\python-audio-analyzer
 
-# Create virtual environment
+# 仮想環境を作成
 python -m venv .venv
 
-# Activate virtual environment
+# 仮想環境をアクティベート
 .venv\Scripts\activate
 
-# Install dependencies
+# 依存関係をインストール
 pip install -e .
 
-# Start development server
+# 開発サーバーを起動
 uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 **Git Bash (推奨):**
 ```bash
-# Navigate to Python analyzer directory
+# Python analyzerディレクトリに移動
 cd apps/python-audio-analyzer
 
-# Create virtual environment
+# 仮想環境を作成
 python -m venv .venv
 
-# Activate virtual environment
+# 仮想環境をアクティベート
 source .venv/Scripts/activate
 
-# Install dependencies
+# 依存関係をインストール
 pip install -e .
 
-# Start development server
+# 開発サーバーを起動
 uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### 3. Environment Variables
+**Windows環境のトラブルシューティング:**
+- 日本語を含むユーザー名でエラーが発生する場合は、`.\setup-windows.ps1` を実行
+- 仮想環境がアクティブでない場合は、`.venv\Scripts\activate` を実行
+- Git Bashを使用することでUnix系コマンドが利用可能
 
-Create a `.env` file in the `apps/python-audio-analyzer/` directory:
+### 3. 環境変数
+
+`apps/python-audio-analyzer/` ディレクトリに `.env` ファイルを作成してください：
 
 ```env
 ENVIRONMENT=development
@@ -105,19 +142,28 @@ SUPABASE_SERVICE_KEY=your_service_key
 REDIS_URL=redis://localhost:6379
 ```
 
+**Windows環境での追加設定:**
+```env
+# TensorFlow Hubキャッシュディレクトリ（自動設定されますが、必要に応じて指定）
+TFHUB_CACHE_DIR=C:\path\to\sonory\apps\python-audio-analyzer\tf_hub_cache
+
+# TensorFlowログレベル
+TF_CPP_MIN_LOG_LEVEL=1
+```
+
 **Windows環境での注意事項:**
 - パスの区切り文字は自動的に処理されますが、環境変数でパスを指定する場合は `\\` を使用
 - PowerShellとCommand Promptでは環境変数の設定方法が異なります
 - Git Bashを使用することでUnix系コマンドが利用可能
 
-## 📊 API Endpoints
+## 📊 API エンドポイント
 
-### Health Check
+### ヘルスチェック
 ```http
 GET /health
 ```
 
-### Audio Analysis
+### オーディオ分析
 ```http
 POST /api/v1/analyze/audio
 Content-Type: application/json
@@ -129,7 +175,7 @@ Content-Type: application/json
 }
 ```
 
-Response:
+レスポンス:
 ```json
 {
   "classifications": [
@@ -144,203 +190,143 @@ Response:
 }
 ```
 
-## 🧪 Testing
+## 🧪 テスト
 
 ```bash
-# Run tests
+# テストを実行
 npm run python:test
 
-# With coverage
+# カバレッジ付きで実行
 npm run python:test -- --cov=src --cov-report=html
 ```
 
-## 📝 Code Quality
+## 📝 コード品質
 
 ```bash
-# Lint code
+# コードを lint
 npm run python:lint
 
-# Format code
+# コードをフォーマット
 npm run python:format
 ```
 
-## 🐳 Docker Deployment
+## 🐳 Docker デプロイメント
 
-### Development
+### 開発環境
 ```bash
 docker-compose -f docker-compose.dev.yml up
 ```
 
-### Production
+### 本番環境
 ```bash
-# Build production image
+# 本番イメージをビルド
 npm run python:build
 
-# Run production container
+# 本番コンテナを実行
 docker run -p 8000:8000 \
   -e SUPABASE_URL=your_url \
   -e SUPABASE_SERVICE_KEY=your_key \
   sonory-audio-analyzer
 ```
 
-## 🔄 Integration with Main API
+## 🔄 メインAPIとの統合
 
-The Python service integrates with the existing Cloudflare Workers API:
+Python サービスは既存の Cloudflare Workers API と統合されます：
 
-1. **Audio Upload**: Files are uploaded to Supabase Storage via Cloudflare Workers
-2. **Analysis Request**: Workers proxy analysis requests to Python service
-3. **Result Storage**: Analysis results are stored in Supabase database
-4. **Caching**: Frequently accessed results are cached in Redis
+1. **オーディオアップロード**: ファイルはCloudflare Workers経由でSupabase Storageにアップロード
+2. **分析リクエスト**: WorkersがPythonサービスに分析リクエストをプロキシ
+3. **結果保存**: 分析結果はSupabaseデータベースに保存
+4. **キャッシング**: 頻繁にアクセスされる結果はRedisにキャッシュ
 
-## 🎛️ Configuration
+## 🎛️ 設定
 
-### YAMNet Model Configuration
+### YAMNet モデル設定
 
-The service automatically downloads and caches the YAMNet model on first startup. Model files are stored in the container for subsequent runs.
+サービスは初回起動時にYAMNetモデルを自動的にダウンロードしてキャッシュします。モデルファイルは後続の実行のためにコンテナに保存されます。
 
-### Classification Mapping
+### 分類マッピング
 
-Audio classifications are mapped from English AudioSet classes to Japanese labels for the Sonory application.
+オーディオ分類は、SonoryアプリケーションのためにAudioSetの英語クラスから日本語ラベルにマッピングされます。
 
-## 📈 Monitoring
+## 📈 モニタリング
 
-- **Health Checks**: Available at `/health` endpoint
-- **Structured Logging**: JSON logs with request tracing
-- **Metrics**: Processing time and error rate tracking
+- **ヘルスチェック**: `/health` エンドポイントで利用可能
+- **構造化ログ**: リクエスト追跡付きJSONログ
+- **メトリクス**: 処理時間とエラー率の追跡
 
-## 🔧 Troubleshooting
+## 🔧 トラブルシューティング
 
-### Common Issues
+### 一般的な問題
 
-1. **Model Download Fails**
-   - Check internet connectivity
-   - Verify TensorFlow Hub access
+1. **モデルダウンロードの失敗**
+   - インターネット接続を確認
+   - TensorFlow Hubへのアクセスを確認
 
-2. **Audio Processing Errors**
-   - Ensure audio file format is supported (webm, mp3, wav)
-   - Check file size limits (10MB max)
+2. **オーディオ処理エラー**
+   - サポートされているオーディオファイル形式を確認 (webm, mp3, wav)
+   - ファイルサイズ制限を確認 (最大10MB)
 
-3. **Memory Issues**
-   - Increase Docker memory allocation
-   - Consider model quantization for resource-constrained environments
+3. **メモリ問題**
+   - Dockerのメモリ割り当てを増やす
+   - リソース制約環境でのモデル量子化を検討
 
-### Windows-specific Issues
+### Windows固有の問題
 
-4. **Python Service "internal error" on Windows**
+4. **Windowsでの "internal error" (500エラー)**
    ```
    Error: internal error; reference = 0t0kgpo5g5veed5r26i3luhv
    ```
    
    **原因と解決策:**
-   - **仮想環境が未アクティブ:** `.venv\Scripts\activate` でPython仮想環境をアクティブ化
-   - **依存関係の不足:** `pip install -e .` で全ての依存関係を再インストール
-   - **ffmpeg不足:** `choco install ffmpeg` またはWindows用ffmpegをインストール
-   - **Visual C++ Runtime不足:** Microsoft Visual C++ Redistributableをインストール
    
-   **診断コマンド:**
+   **1. ffmpeg-pythonの依存関係不足:**
    ```powershell
-   # サービスの起動確認
-   curl http://localhost:8000/health
+   # pyproject.tomlに追加済み、再インストール必要
+   pip install -e . --force-reinstall
+   ```
    
-   # Python環境の確認
-   python -c "import tensorflow as tf; print(tf.__version__)"
-   python -c "import librosa; print('librosa OK')"
-   python -c "import numpy; print('numpy OK')"
+   **2. FFmpegバイナリの不足:**
+   ```powershell
+   # 方法1: Chocolatey使用（推奨）
+   choco install ffmpeg
+   
+   # 方法2: 手動インストール
+   # https://ffmpeg.org/download.html から Windows用をダウンロード
+   # システム環境変数PATHに追加
+   ```
+   
+   **3. Python仮想環境が未アクティブ:**
+   ```powershell
+   # PowerShell
+   .venv\Scripts\activate
+   
+   # Git Bash
+   source .venv/Scripts/activate
+   ```
+   
+   **4. Visual C++ Runtime不足:**
+   ```powershell
+   # Microsoft Visual C++ Redistributableをインストール
+   # https://aka.ms/vs/17/release/vc_redist.x64.exe
+   ```
+   
+   **5. 日本語ユーザー名によるパス問題:**
+   ```
+   ERROR: C:\Users\中村のPC\AppData\Local\Temp is not a directory
+   ```
+   
+   **解決方法:**
+   ```powershell
+   # Windows環境セットアップスクリプトを実行
+   .\setup-windows.ps1
    ```
 
-5. **Path Separator Issues**
-   - Windows: `\` vs Unix: `/`
-   - 環境変数でパスを指定する場合は `\\` を使用
-   - Python内では `pathlib.Path` を使用して自動処理
+## 📚 追加リソース
 
-6. **Permission Errors**
-   - 管理者権限でターミナルを起動
-   - WSL2使用を検討（Linux互換環境）
-
-7. **Port Conflicts**
-   ```powershell
-   # ポート8000の使用状況確認
-   netstat -ano | findstr :8000
-   
-   # プロセス終了
-   taskkill /PID <process_id> /F
-   ```
-
-8. **Environment Variables**
-   ```powershell
-   # PowerShellでの環境変数設定
-   $env:PYTHON_AUDIO_ANALYZER_URL="http://localhost:8000"
-   $env:LOG_LEVEL="debug"
-   
-   # 確認
-   echo $env:PYTHON_AUDIO_ANALYZER_URL
-   ```
-
-### WSL2 Setup (推奨)
-
-Windows環境でLinux互換性を高めるため、WSL2の使用を推奨します：
-
-```bash
-# WSL2でのセットアップ
-wsl --install -d Ubuntu-22.04
-
-# WSL2内での作業
-cd /mnt/c/path/to/sonory/apps/python-audio-analyzer
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e .
-uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-### Debug Mode
-
-Enable debug logging:
-```env
-LOG_LEVEL=debug
-ENVIRONMENT=development
-```
-
-**Windows用デバッグスクリプト:**
-```powershell
-# debug-windows.ps1
-Write-Host "=== Sonory Python Audio Analyzer Debug ==="
-Write-Host "Python Version:" (python --version)
-Write-Host "Pip Version:" (pip --version)
-Write-Host "Virtual Environment:" $env:VIRTUAL_ENV
-Write-Host "Current Directory:" (Get-Location)
-
-# 依存関係チェック
-python -c "
-try:
-    import tensorflow as tf
-    print(f'TensorFlow: {tf.__version__}')
-except ImportError as e:
-    print(f'TensorFlow Error: {e}')
-
-try:
-    import librosa
-    print('librosa: OK')
-except ImportError as e:
-    print(f'librosa Error: {e}')
-
-try:
-    import uvicorn
-    print('uvicorn: OK')
-except ImportError as e:
-    print(f'uvicorn Error: {e}')
-"
-
-# サービス起動テスト
-Write-Host "Testing service startup..."
-Start-Process -NoNewWindow -FilePath "python" -ArgumentList "-c", "from src.main import create_app; app = create_app(); print('App created successfully')"
-```
-
-## 📚 Additional Resources
-
-- [YAMNet Documentation](https://tfhub.dev/google/yamnet/1)
-- [FastAPI Documentation](https://fastapi.tiangolo.com/)
+- [YAMNet ドキュメント](https://tfhub.dev/google/yamnet/1)
+- [FastAPI ドキュメント](https://fastapi.tiangolo.com/)
 - [TensorFlow Hub](https://tfhub.dev/)
 
-## 🤝 Contributing
+## 🤝 コントリビューション
 
-This service is part of the Sonory monorepo. Please follow the established development workflows and coding standards. 
+このサービスはSonoryモノレポの一部です。確立された開発ワークフローとコーディング標準に従ってください。

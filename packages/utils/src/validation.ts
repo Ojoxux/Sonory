@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from "zod"
 
 interface Location {
    lat: number
@@ -8,7 +8,7 @@ interface Location {
 
 interface WeatherData {
    temperature: number
-   condition: 'sunny' | 'cloudy' | 'rainy' | 'snowy' | 'foggy' | 'windy'
+   condition: "sunny" | "cloudy" | "rainy" | "snowy" | "foggy" | "windy"
    windSpeed?: number
    humidity?: number
 }
@@ -35,7 +35,7 @@ export function validateLocation(location: unknown): location is Location {
  * 音声ファイルの形式をチェック
  */
 export function validateAudioFormat(file: File): boolean {
-   const allowedTypes = ['audio/webm', 'audio/mp3', 'audio/mpeg', 'audio/wav']
+   const allowedTypes = ["audio/webm", "audio/mp3", "audio/mpeg", "audio/wav"]
    return allowedTypes.includes(file.type)
 }
 
@@ -62,12 +62,12 @@ export function validateWeatherData(weather: unknown): weather is WeatherData {
       const WeatherDataSchema = z.object({
          temperature: z.number(),
          condition: z.enum([
-            'sunny',
-            'cloudy',
-            'rainy',
-            'snowy',
-            'foggy',
-            'windy',
+            "sunny",
+            "cloudy",
+            "rainy",
+            "snowy",
+            "foggy",
+            "windy",
          ]),
          windSpeed: z.number().optional(),
          humidity: z.number().min(0).max(100).optional(),
@@ -85,13 +85,13 @@ export function validateWeatherData(weather: unknown): weather is WeatherData {
  */
 export function generateTimeTag(
    date: Date = new Date(),
-): '朝' | '昼' | '夕' | '夜' {
+): "朝" | "昼" | "夕" | "夜" {
    const hour = date.getHours()
 
-   if (hour >= 6 && hour < 12) return '朝'
-   if (hour >= 12 && hour < 18) return '昼'
-   if (hour >= 18 && hour < 24) return '夕'
-   return '夜'
+   if (hour >= 6 && hour < 12) return "朝"
+   if (hour >= 12 && hour < 18) return "昼"
+   if (hour >= 18 && hour < 24) return "夕"
+   return "夜"
 }
 
 /**

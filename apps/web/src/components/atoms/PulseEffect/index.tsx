@@ -1,8 +1,8 @@
-'use client'
+"use client"
 
-import { motion } from 'framer-motion'
-import { useEffect, useState } from 'react'
-import type { PulseEffectProps } from './type'
+import { motion } from "framer-motion"
+import { useEffect, useState } from "react"
+import type { PulseEffectProps } from "./type"
 
 /**
  * パルスエフェクトコンポーネント
@@ -18,9 +18,9 @@ import type { PulseEffectProps } from './type'
  */
 export function PulseEffect({
    isActive,
-   className = '',
-   borderColor = 'border-red-500',
-   size = 'inset-0',
+   className = "",
+   borderColor = "border-red-500",
+   size = "inset-0",
 }: PulseEffectProps) {
    // 各インスタンス独自のランダムタイミング
    const [delay] = useState(() => Math.random() * 800) // 0-800msのランダム遅延
@@ -53,8 +53,8 @@ export function PulseEffect({
          transition={{
             duration: duration / 1000, // ミリ秒を秒に変換
             repeat: Number.POSITIVE_INFINITY,
-            ease: 'easeOut',
-            repeatType: 'loop',
+            ease: "easeOut",
+            repeatType: "loop",
          }}
       />
    )

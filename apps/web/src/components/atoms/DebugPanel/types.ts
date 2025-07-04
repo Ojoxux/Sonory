@@ -1,5 +1,5 @@
-import type { LocationData } from '@/components/organisms/MapComponent/type'
-import type { LightingConfig } from '@/components/organisms/MapComponent/utils/sunCalculations'
+import type { LocationData } from "@/components/organisms/MapComponent/type"
+import type { LightingConfig } from "@/components/organisms/MapComponent/utils/sunCalculations"
 
 export type DebugPanelProps = {
    /** 位置情報データ */
@@ -24,7 +24,7 @@ export type DebugPanelProps = {
 
 export type DebugLog = {
    id: string
-   level: 'info' | 'warn' | 'error'
+   level: "info" | "warn" | "error"
    message: string
    timestamp: string
 }

@@ -3,5 +3,5 @@
  */
 export interface RecordButtonContentProps {
    /** 録音の状態 */
-   status: 'idle' | 'recording' | 'processing' | 'completed'
+   status: "idle" | "recording" | "processing" | "completed"
 }

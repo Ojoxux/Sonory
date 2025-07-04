@@ -12,16 +12,32 @@ import structlog
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
+import sys
+import os
+
+# Windows環境でのパス問題を解決
+# srcディレクトリをパスに追加（uvicorn起動時にも有効）
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
+
 try:
     # Relative imports for package mode
     from .api.routes import router as api_router, http_exception_handler
     from .models.yamnet_wrapper import YAMNetManager
     from .services.analyzer import AudioAnalyzer
 except ImportError:
-    # Absolute imports for direct execution
-    from api.routes import router as api_router, http_exception_handler
-    from models.yamnet_wrapper import YAMNetManager
-    from services.analyzer import AudioAnalyzer
+    # Absolute imports for direct execution (Windows環境で修正)
+    try:
+        from api.routes import router as api_router, http_exception_handler
+        from models.yamnet_wrapper import YAMNetManager
+        from services.analyzer import AudioAnalyzer
+    except ImportError:
+        # 最後の手段：sys.pathを使用
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
+        from api.routes import router as api_router, http_exception_handler
+        from models.yamnet_wrapper import YAMNetManager
+        from services.analyzer import AudioAnalyzer
 
 
 # Configure structured logging
@@ -85,11 +101,24 @@ def create_app() -> FastAPI:
     )
     
     # Configure CORS
+    allowed_origins = [
+        "http://localhost:3000",
+        "http://localhost:8080",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:8080",
+    ]
+    
+    # 本番環境用設定のために環境変数をチェック
+    if os.getenv("ENVIRONMENT") == "production":
+        # 本番環境では環境変数ALLOWED_ORIGINSから許可オリジンを取得
+        production_origins = os.getenv("ALLOWED_ORIGINS", "").split(",")
+        allowed_origins = [origin.strip() for origin in production_origins if origin.strip()]
+    
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # Configure appropriately for production
+        allow_origins=allowed_origins,
         allow_credentials=True,
-        allow_methods=["*"],
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["*"],
     )
     

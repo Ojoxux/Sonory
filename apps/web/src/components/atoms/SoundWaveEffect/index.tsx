@@ -1,7 +1,7 @@
-'use client'
+"use client"
 
-import { motion } from 'framer-motion'
-import type { SoundWaveEffectProps } from './types'
+import { motion } from "framer-motion"
+import type { SoundWaveEffectProps } from "./types"
 
 /**
  * 音波エフェクトコンポーネント
@@ -22,37 +22,37 @@ import type { SoundWaveEffectProps } from './types'
  */
 export function SoundWaveEffect({
    isActive = false,
-   color = 'blue',
-   size = 'medium',
-   className = '',
+   color = "blue",
+   size = "medium",
+   className = "",
 }: SoundWaveEffectProps) {
    const getColorClass = (): string => {
       switch (color) {
-         case 'blue':
-            return 'border-blue-400/30'
-         case 'green':
-            return 'border-green-400/30'
-         case 'white':
-            return 'border-white/20'
-         case 'red':
-            return 'border-red-400/30'
+         case "blue":
+            return "border-blue-400/30"
+         case "green":
+            return "border-green-400/30"
+         case "white":
+            return "border-white/20"
+         case "red":
+            return "border-red-400/30"
          default:
-            return 'border-blue-400/30'
+            return "border-blue-400/30"
       }
    }
 
    const getSizeClass = (): string => {
       switch (size) {
-         case 'small':
-            return 'w-8 h-8'
-         case 'medium':
-            return 'w-16 h-16'
-         case 'large':
-            return 'w-24 h-24'
-         case 'xlarge':
-            return 'w-32 h-32'
+         case "small":
+            return "w-8 h-8"
+         case "medium":
+            return "w-16 h-16"
+         case "large":
+            return "w-24 h-24"
+         case "xlarge":
+            return "w-32 h-32"
          default:
-            return 'w-16 h-16'
+            return "w-16 h-16"
       }
    }
 
@@ -68,7 +68,7 @@ export function SoundWaveEffect({
             transition={{
                duration: 2,
                repeat: Number.POSITIVE_INFINITY,
-               ease: 'easeOut',
+               ease: "easeOut",
             }}
          />
 
@@ -80,7 +80,7 @@ export function SoundWaveEffect({
             transition={{
                duration: 2,
                repeat: Number.POSITIVE_INFINITY,
-               ease: 'easeOut',
+               ease: "easeOut",
                delay: 0.5,
             }}
          />
@@ -93,7 +93,7 @@ export function SoundWaveEffect({
             transition={{
                duration: 2,
                repeat: Number.POSITIVE_INFINITY,
-               ease: 'easeOut',
+               ease: "easeOut",
                delay: 1,
             }}
          />

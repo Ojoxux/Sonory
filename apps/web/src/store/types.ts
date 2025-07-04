@@ -5,7 +5,7 @@
 /**
  * 録音状態を表す型
  */
-export type RecordingStatus = 'idle' | 'recording' | 'paused' | 'completed'
+export type RecordingStatus = "idle" | "recording" | "paused" | "completed"
 
 /**
  * 音声データを表す型

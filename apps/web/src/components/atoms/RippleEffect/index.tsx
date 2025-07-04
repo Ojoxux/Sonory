@@ -1,8 +1,8 @@
-'use client'
+"use client"
 
-import { motion } from 'framer-motion'
-import { useEffect, useState } from 'react'
-import type { RippleEffectProps } from './type'
+import { motion } from "framer-motion"
+import { useEffect, useState } from "react"
+import type { RippleEffectProps } from "./type"
 
 /**
  * リップルエフェクトコンポーネント
@@ -18,9 +18,9 @@ import type { RippleEffectProps } from './type'
  */
 export function RippleEffect({
    isActive,
-   className = '',
-   borderColor = 'border-gray-400',
-   size = 'inset-0',
+   className = "",
+   borderColor = "border-gray-400",
+   size = "inset-0",
 }: RippleEffectProps) {
    // 各インスタンス独自のランダムタイミング
    const [delay] = useState(() => 300 + Math.random() * 600) // 300-900msのランダム遅延
@@ -53,8 +53,8 @@ export function RippleEffect({
          transition={{
             duration: duration / 1000, // ミリ秒を秒に変換
             repeat: Number.POSITIVE_INFINITY,
-            ease: 'easeOut',
-            repeatType: 'loop',
+            ease: "easeOut",
+            repeatType: "loop",
          }}
       />
    )

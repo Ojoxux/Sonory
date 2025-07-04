@@ -8,10 +8,10 @@
  * @returns 位置情報の保存・復元機能
  */
 
-import { useCallback, useEffect, useState } from 'react'
-import type { LocationData } from '../type'
+import { useCallback, useEffect, useState } from "react"
+import type { LocationData } from "../type"
 
-const STORAGE_KEY = 'sonory_last_position'
+const STORAGE_KEY = "sonory_last_position"
 const POSITION_EXPIRY_HOURS = 24
 
 /**
@@ -38,11 +38,11 @@ export function useLocationStorage(): UseLocationStorageReturn {
    const savePosition = useCallback((position: LocationData): void => {
       try {
          localStorage.setItem(STORAGE_KEY, JSON.stringify(position))
-         if (process.env.NODE_ENV === 'development') {
+         if (process.env.NODE_ENV === "development") {
             // TODO: 開発環境でのログ出力を実装
          }
       } catch (error) {
-         console.error('位置情報の保存に失敗:', error)
+         console.error("位置情報の保存に失敗:", error)
       }
    }, [])
 
@@ -53,11 +53,11 @@ export function useLocationStorage(): UseLocationStorageReturn {
       try {
          localStorage.removeItem(STORAGE_KEY)
          setSavedPosition(null)
-         if (process.env.NODE_ENV === 'development') {
+         if (process.env.NODE_ENV === "development") {
             // TODO: 開発環境でのログ出力を実装
          }
       } catch (error) {
-         console.error('位置情報のクリアに失敗:', error)
+         console.error("位置情報のクリアに失敗:", error)
       }
    }, [])
 
@@ -75,19 +75,19 @@ export function useLocationStorage(): UseLocationStorageReturn {
                POSITION_EXPIRY_HOURS * 60 * 60 * 1000
 
             if (isRecent) {
-               if (process.env.NODE_ENV === 'development') {
+               if (process.env.NODE_ENV === "development") {
                   // TODO: 開発環境でのログ出力を実装
                }
                setSavedPosition(parsedPosition)
             } else {
-               if (process.env.NODE_ENV === 'development') {
+               if (process.env.NODE_ENV === "development") {
                   // TODO: 開発環境でのログ出力を実装
                }
                localStorage.removeItem(STORAGE_KEY)
             }
          }
       } catch (error) {
-         console.error('保存された位置情報の読み込みに失敗:', error)
+         console.error("保存された位置情報の読み込みに失敗:", error)
       }
    }, [])
 

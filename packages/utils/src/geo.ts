@@ -77,10 +77,10 @@ export function calculateBounds(
 /**
  * 位置の精度レベルを判定
  */
-export function getAccuracyLevel(accuracy: number): 'high' | 'medium' | 'low' {
-   if (accuracy <= 10) return 'high'
-   if (accuracy <= 50) return 'medium'
-   return 'low'
+export function getAccuracyLevel(accuracy: number): "high" | "medium" | "low" {
+   if (accuracy <= 10) return "high"
+   if (accuracy <= 50) return "medium"
+   return "low"
 }
 
 /**

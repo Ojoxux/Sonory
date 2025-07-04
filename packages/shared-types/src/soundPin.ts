@@ -27,7 +27,7 @@ export interface SoundPinData {
 export interface AudioClassification {
    label: string
    confidence: number
-   category: 'music' | 'speech' | 'nature' | 'urban' | 'mechanical' | 'other'
+   category: "music" | "speech" | "nature" | "urban" | "mechanical" | "other"
 }
 
 /**
@@ -46,11 +46,11 @@ export interface AudioData {
  * 録音状態
  */
 export type RecordingStatus =
-   | 'idle'
-   | 'recording'
-   | 'processing'
-   | 'completed'
-   | 'error'
+   | "idle"
+   | "recording"
+   | "processing"
+   | "completed"
+   | "error"
 
 /**
  * 音声ピンマーカーのプロパティ

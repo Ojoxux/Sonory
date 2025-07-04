@@ -4,14 +4,14 @@
  * Mapbox Standard Styleを補完するための設定
  */
 
-import type { LightingConfig } from '../utils/sunCalculations'
+import type { LightingConfig } from "../utils/sunCalculations"
 
 /**
  * 地形データソースの設定
  */
 export const terrainSource = {
-   type: 'raster-dem' as const,
-   url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+   type: "raster-dem" as const,
+   url: "mapbox://mapbox.mapbox-terrain-dem-v1",
    tileSize: 512,
    maxzoom: 14,
 }
@@ -21,8 +21,8 @@ export const terrainSource = {
  */
 export function get3DTerrainConfig(): Record<string, unknown> {
    return {
-      source: 'mapbox-dem',
-      exaggeration: ['interpolate', ['linear'], ['zoom'], 0, 1, 15, 1.5],
+      source: "mapbox-dem",
+      exaggeration: ["interpolate", ["linear"], ["zoom"], 0, 1, 15, 1.5],
    }
 }
 
@@ -34,10 +34,10 @@ export function getAtmosphereConfig(
 ): Record<string, unknown> {
    return {
       color: lighting.fogColor,
-      'high-color': lighting.ambientColor,
-      'horizon-blend': lighting.fogDensity,
-      'space-color': lighting.ambientColor,
-      'star-intensity': lighting.sunIntensity < 0.1 ? 0.8 : 0,
+      "high-color": lighting.ambientColor,
+      "horizon-blend": lighting.fogDensity,
+      "space-color": lighting.ambientColor,
+      "star-intensity": lighting.sunIntensity < 0.1 ? 0.8 : 0,
    }
 }
 
@@ -56,7 +56,7 @@ export function applyNightLighting(
    const _IS_NIGHT = sunAltitudeOrTimeBasedValue < 0
 
    // lightPreset設定と整合性を保つためのログ（開発環境のみ）
-   if (process.env.NODE_ENV === 'development') {
+   if (process.env.NODE_ENV === "development") {
       // TODO: 開発環境でのログ出力を実装
    }
 

@@ -5,10 +5,10 @@
  * Option、Either、TaskEitherパターンを使用した関数群を提供
  */
 
-import * as E from 'fp-ts/Either'
-import * as O from 'fp-ts/Option'
-import * as te from 'fp-ts/TaskEither'
-import { pipe } from 'fp-ts/function'
+import * as E from "fp-ts/Either"
+import * as O from "fp-ts/Option"
+import * as te from "fp-ts/TaskEither"
+import { pipe } from "fp-ts/function"
 
 // =============================================================================
 // Option型ユーティリティ
@@ -34,7 +34,7 @@ export const firstSome = <T>(...options: O.Option<T>[]): O.Option<T> =>
  * エラーハンドリング用のEither型
  */
 export type AppError = {
-   readonly type: 'ValidationError' | 'NetworkError' | 'UnknownError'
+   readonly type: "ValidationError" | "NetworkError" | "UnknownError"
    readonly message: string
    readonly details?: unknown
 }
@@ -43,7 +43,7 @@ export type AppError = {
  * エラーを作成
  */
 export const createError = (
-   type: AppError['type'],
+   type: AppError["type"],
    message: string,
    details?: unknown,
 ): AppError => ({
@@ -61,8 +61,8 @@ export const tryCatch = <T>(fn: () => T): E.Either<AppError, T> => {
    } catch (error) {
       return E.left(
          createError(
-            'UnknownError',
-            error instanceof Error ? error.message : 'Unknown error occurred',
+            "UnknownError",
+            error instanceof Error ? error.message : "Unknown error occurred",
             error,
          ),
       )
@@ -81,8 +81,8 @@ export const tryCatchTask = <T>(
 ): te.TaskEither<AppError, T> =>
    te.tryCatch(task, (error) =>
       createError(
-         'NetworkError',
-         error instanceof Error ? error.message : 'Network error occurred',
+         "NetworkError",
+         error instanceof Error ? error.message : "Network error occurred",
          error,
       ),
    )
@@ -96,8 +96,8 @@ export const getGeolocationTE = (
    te.tryCatch(
       () =>
          new Promise<GeolocationPosition>((resolve, reject) => {
-            if (!('geolocation' in navigator)) {
-               reject(new Error('Geolocation is not supported'))
+            if (!("geolocation" in navigator)) {
+               reject(new Error("Geolocation is not supported"))
                return
             }
 
@@ -105,8 +105,8 @@ export const getGeolocationTE = (
          }),
       (error) =>
          createError(
-            'ValidationError',
-            error instanceof Error ? error.message : 'Geolocation failed',
+            "ValidationError",
+            error instanceof Error ? error.message : "Geolocation failed",
             error,
          ),
    )

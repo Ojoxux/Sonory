@@ -1,7 +1,7 @@
 /**
  * CarIconコンポーネントのサイズ型
  */
-export type CarIconSize = 'small' | 'medium' | 'large'
+export type CarIconSize = "small" | "medium" | "large"
 
 /**
  * CarIconコンポーネントのプロパティ型

@@ -1,10 +1,10 @@
-import { ERROR_CODES } from '@sonory/shared-types'
-import { Hono } from 'hono'
-import type { Context } from 'hono'
-import type { Env } from '../index'
-import { APIException } from '../middleware/error'
-import { rateLimits } from '../middleware/rateLimit'
-import { AudioService } from '../services/audio.service'
+import { ERROR_CODES } from "@sonory/shared-types"
+import { Hono } from "hono"
+import type { Context } from "hono"
+import type { Env } from "../index"
+import { APIException } from "../middleware/error"
+import { rateLimits } from "../middleware/rateLimit"
+import { AudioService } from "../services/audio.service"
 
 const app = new Hono<{ Bindings: Env }>()
 
@@ -16,7 +16,7 @@ const app = new Hono<{ Bindings: Env }>()
  * @param {string} [userId] - ユーザーID（オプション）
  * @returns {AudioUploadResult} アップロード結果
  */
-app.post('/upload', rateLimits.audioUpload, async (c) => {
+app.post("/upload", rateLimits.audioUpload, async (c) => {
    const audioService = new AudioService(
       c as unknown as Context<{ Bindings: Env }>,
    )
@@ -24,21 +24,21 @@ app.post('/upload', rateLimits.audioUpload, async (c) => {
    try {
       // FormDataからファイルを取得
       const formData = await c.req.formData()
-      const fileEntry = formData.get('audio')
-      const userIdEntry = formData.get('userId')
+      const fileEntry = formData.get("audio")
+      const userIdEntry = formData.get("userId")
 
       // ファイルの型チェック
       const file =
-         fileEntry && typeof fileEntry === 'object' && 'name' in fileEntry
+         fileEntry && typeof fileEntry === "object" && "name" in fileEntry
             ? (fileEntry as File)
             : null
-      const userId = typeof userIdEntry === 'string' ? userIdEntry : null
+      const userId = typeof userIdEntry === "string" ? userIdEntry : null
 
       // ファイルの存在確認
       if (!file) {
          throw new APIException(
             ERROR_CODES.INVALID_AUDIO_FORMAT,
-            'Audio file is required',
+            "Audio file is required",
             400,
          )
       }
@@ -47,7 +47,7 @@ app.post('/upload', rateLimits.audioUpload, async (c) => {
       if (file.size === 0) {
          throw new APIException(
             ERROR_CODES.INVALID_AUDIO_FORMAT,
-            'Audio file cannot be empty',
+            "Audio file cannot be empty",
             400,
          )
       }
@@ -66,7 +66,7 @@ app.post('/upload', rateLimits.audioUpload, async (c) => {
 
       throw new APIException(
          ERROR_CODES.STORAGE_ERROR,
-         'Failed to upload audio file',
+         "Failed to upload audio file",
          500,
          error instanceof Error ? { message: error.message } : undefined,
       )
@@ -80,17 +80,17 @@ app.post('/upload', rateLimits.audioUpload, async (c) => {
  * @param {string} audioId - 削除する音声ファイルのID
  * @returns {boolean} 削除成功可否
  */
-app.delete('/:audioId', rateLimits.default, async (c) => {
+app.delete("/:audioId", rateLimits.default, async (c) => {
    const audioService = new AudioService(
       c as unknown as Context<{ Bindings: Env }>,
    )
-   const audioId = c.req.param('audioId')
+   const audioId = c.req.param("audioId")
 
    try {
       if (!audioId) {
          throw new APIException(
             ERROR_CODES.INVALID_AUDIO_FORMAT,
-            'Audio ID is required',
+            "Audio ID is required",
             400,
          )
       }
@@ -112,7 +112,7 @@ app.delete('/:audioId', rateLimits.default, async (c) => {
 
       throw new APIException(
          ERROR_CODES.STORAGE_ERROR,
-         'Failed to delete audio file',
+         "Failed to delete audio file",
          500,
          error instanceof Error ? { message: error.message } : undefined,
       )
@@ -126,14 +126,14 @@ app.delete('/:audioId', rateLimits.default, async (c) => {
  * @param {string} audioId - 音声ファイルのID
  * @returns {AudioMetadata} メタデータ
  */
-app.get('/:audioId/metadata', rateLimits.default, async (c) => {
-   const audioId = c.req.param('audioId')
+app.get("/:audioId/metadata", rateLimits.default, async (c) => {
+   const audioId = c.req.param("audioId")
 
    try {
       if (!audioId) {
          throw new APIException(
             ERROR_CODES.INVALID_AUDIO_FORMAT,
-            'Audio ID is required',
+            "Audio ID is required",
             400,
          )
       }
@@ -144,7 +144,7 @@ app.get('/:audioId/metadata', rateLimits.default, async (c) => {
          id: audioId,
          filename: `audio-${audioId}`,
          size: 0,
-         format: 'webm' as const,
+         format: "webm" as const,
          duration: 0,
          uploadedAt: new Date().toISOString(),
       }
@@ -160,7 +160,7 @@ app.get('/:audioId/metadata', rateLimits.default, async (c) => {
 
       throw new APIException(
          ERROR_CODES.DATABASE_ERROR,
-         'Failed to get audio metadata',
+         "Failed to get audio metadata",
          500,
          error instanceof Error ? { message: error.message } : undefined,
       )
@@ -175,17 +175,17 @@ app.get('/:audioId/metadata', rateLimits.default, async (c) => {
  * @param {object} [options] - 分析オプション
  * @returns {AIAnalysisResult} AI分析結果
  */
-app.post('/:audioId/analyze', rateLimits.default, async (c) => {
+app.post("/:audioId/analyze", rateLimits.default, async (c) => {
    const audioService = new AudioService(
       c as unknown as Context<{ Bindings: Env }>,
    )
-   const audioId = c.req.param('audioId')
+   const audioId = c.req.param("audioId")
 
    try {
       if (!audioId) {
          throw new APIException(
             ERROR_CODES.INVALID_AUDIO_FORMAT,
-            'Audio ID is required',
+            "Audio ID is required",
             400,
          )
       }
@@ -198,7 +198,7 @@ app.post('/:audioId/analyze', rateLimits.default, async (c) => {
       if (!audioUrl) {
          throw new APIException(
             ERROR_CODES.INVALID_AUDIO_FORMAT,
-            'Audio URL is required for analysis',
+            "Audio URL is required for analysis",
             400,
          )
       }
@@ -211,21 +211,21 @@ app.post('/:audioId/analyze', rateLimits.default, async (c) => {
 
       // 分析結果を統一形式に変換
       const analysisResult = {
-         transcription: 'YAMNet音響分類完了',
+         transcription: "YAMNet音響分類完了",
          categories: {
-            emotion: 'N/A',
-            topic: pythonAnalysisResult.classifications[0]?.label || '環境音',
-            language: 'N/A',
+            emotion: "N/A",
+            topic: pythonAnalysisResult.classifications[0]?.label || "環境音",
+            language: "N/A",
             confidence:
                pythonAnalysisResult.classifications[0]?.confidence || 0.0,
          },
          summary: `検出された音: ${
-            pythonAnalysisResult.classifications[0]?.label || '不明'
+            pythonAnalysisResult.classifications[0]?.label || "不明"
          } (信頼度: ${Math.round(
             (pythonAnalysisResult.classifications[0]?.confidence || 0) * 100,
          )}%)`,
          environment:
-            pythonAnalysisResult.environment?.primary_type || 'unknown',
+            pythonAnalysisResult.environment?.primary_type || "unknown",
          allClassifications: pythonAnalysisResult.classifications || [],
          environmentDetails: pythonAnalysisResult.environment || {},
          performanceMetrics: pythonAnalysisResult.performance_metrics || {},
@@ -245,7 +245,7 @@ app.post('/:audioId/analyze', rateLimits.default, async (c) => {
 
       throw new APIException(
          ERROR_CODES.AI_ANALYSIS_FAILED,
-         'Failed to analyze audio',
+         "Failed to analyze audio",
          500,
          error instanceof Error ? { message: error.message } : undefined,
       )

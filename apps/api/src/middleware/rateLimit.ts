@@ -1,5 +1,5 @@
-import { APIException, ERROR_CODES } from '@/middleware/error'
-import type { AppContext, AppMiddleware } from '@/types/api'
+import { APIException, ERROR_CODES } from "@/middleware/error"
+import type { AppContext, AppMiddleware } from "@/types/api"
 
 /**
  * レート制限設定
@@ -24,7 +24,7 @@ export const rateLimit = (config: RateLimitConfig): AppMiddleware => {
    const {
       windowMs = 60 * 1000, // デフォルト: 1分
       max = 100, // デフォルト: 100リクエスト
-      keyGenerator = (c) => c.req.header('cf-connecting-ip') || 'unknown',
+      keyGenerator = (c) => c.req.header("cf-connecting-ip") || "unknown",
    } = config
 
    return async (c, next) => {
@@ -49,13 +49,13 @@ export const rateLimit = (config: RateLimitConfig): AppMiddleware => {
       if (limitInfo.count > max) {
          const retryAfter = Math.ceil((limitInfo.resetAt - now) / 1000)
 
-         c.header('X-RateLimit-Limit', max.toString())
-         c.header('X-RateLimit-Remaining', '0')
+         c.header("X-RateLimit-Limit", max.toString())
+         c.header("X-RateLimit-Remaining", "0")
          c.header(
-            'X-RateLimit-Reset',
+            "X-RateLimit-Reset",
             new Date(limitInfo.resetAt).toISOString(),
          )
-         c.header('Retry-After', retryAfter.toString())
+         c.header("Retry-After", retryAfter.toString())
 
          throw new APIException(
             ERROR_CODES.RATE_LIMIT_EXCEEDED,
@@ -68,9 +68,9 @@ export const rateLimit = (config: RateLimitConfig): AppMiddleware => {
       rateLimitStore.set(key, limitInfo)
 
       // レート制限ヘッダーを設定
-      c.header('X-RateLimit-Limit', max.toString())
-      c.header('X-RateLimit-Remaining', (max - limitInfo.count).toString())
-      c.header('X-RateLimit-Reset', new Date(limitInfo.resetAt).toISOString())
+      c.header("X-RateLimit-Limit", max.toString())
+      c.header("X-RateLimit-Remaining", (max - limitInfo.count).toString())
+      c.header("X-RateLimit-Reset", new Date(limitInfo.resetAt).toISOString())
 
       await next()
    }

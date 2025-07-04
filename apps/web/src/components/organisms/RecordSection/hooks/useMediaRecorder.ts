@@ -1,8 +1,8 @@
-'use client'
+"use client"
 
-import { useCallback, useRef, useState } from 'react'
-import type { AudioData } from '../../../../store/types'
-import { useRecorderStore } from '../../../../store/useRecorderStore'
+import { useCallback, useRef, useState } from "react"
+import type { AudioData } from "../../../../store/types"
+import { useRecorderStore } from "../../../../store/useRecorderStore"
 
 /**
  * MediaRecorder APIを使用した録音機能フック
@@ -47,8 +47,8 @@ export function useMediaRecorder() {
          setError(null)
 
          // MediaRecorderのサポート確認
-         if (typeof window === 'undefined' || !window.MediaRecorder) {
-            throw new Error('MediaRecorderがサポートされていません')
+         if (typeof window === "undefined" || !window.MediaRecorder) {
+            throw new Error("MediaRecorderがサポートされていません")
          }
 
          // マイクアクセス許可を取得
@@ -66,11 +66,11 @@ export function useMediaRecorder() {
 
          // MediaRecorderを初期化
          const mediaRecorder = new MediaRecorder(stream, {
-            mimeType: MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-               ? 'audio/webm;codecs=opus'
-               : MediaRecorder.isTypeSupported('audio/mp4')
-                 ? 'audio/mp4'
-                 : 'audio/webm',
+            mimeType: MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+               ? "audio/webm;codecs=opus"
+               : MediaRecorder.isTypeSupported("audio/mp4")
+                 ? "audio/mp4"
+                 : "audio/webm",
          })
 
          mediaRecorderRef.current = mediaRecorder
@@ -121,7 +121,7 @@ export function useMediaRecorder() {
          storeStartRecording()
       } catch (err) {
          const error =
-            err instanceof Error ? err : new Error('録音の開始に失敗しました')
+            err instanceof Error ? err : new Error("録音の開始に失敗しました")
          setError(error)
          setIsRecording(false)
          throw error
@@ -139,7 +139,7 @@ export function useMediaRecorder() {
          }
       } catch (err) {
          const error =
-            err instanceof Error ? err : new Error('録音の停止に失敗しました')
+            err instanceof Error ? err : new Error("録音の停止に失敗しました")
          setError(error)
          throw error
       }
@@ -151,7 +151,7 @@ export function useMediaRecorder() {
    const pauseRecording = useCallback((): void => {
       if (
          mediaRecorderRef.current &&
-         mediaRecorderRef.current.state === 'recording'
+         mediaRecorderRef.current.state === "recording"
       ) {
          mediaRecorderRef.current.pause()
       }
@@ -163,7 +163,7 @@ export function useMediaRecorder() {
    const resumeRecording = useCallback((): void => {
       if (
          mediaRecorderRef.current &&
-         mediaRecorderRef.current.state === 'paused'
+         mediaRecorderRef.current.state === "paused"
       ) {
          mediaRecorderRef.current.resume()
       }
@@ -197,6 +197,6 @@ export function useMediaRecorder() {
       cleanup,
       isRecording,
       error,
-      isSupported: typeof window !== 'undefined' && !!window.MediaRecorder,
+      isSupported: typeof window !== "undefined" && !!window.MediaRecorder,
    }
 }

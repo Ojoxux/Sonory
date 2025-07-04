@@ -1,6 +1,6 @@
-import type { Context } from 'hono'
-import type { Env } from '../index'
-import { logger } from '../utils/logger'
+import type { Context } from "hono"
+import type { Env } from "../index"
+import { logger } from "../utils/logger"
 
 /**
  * 基底サービスクラス
@@ -27,7 +27,7 @@ export abstract class BaseService {
    constructor(ctx: Context<{ Bindings: Env }>) {
       this.ctx = ctx
       this.env = ctx.env
-      this.requestId = ctx.get('requestId') || crypto.randomUUID()
+      this.requestId = ctx.get("requestId") || crypto.randomUUID()
    }
 
    /**
@@ -43,7 +43,7 @@ export abstract class BaseService {
     * @param data - 追加データ
     */
    protected log(
-      level: 'info' | 'warn' | 'error' | 'debug',
+      level: "info" | "warn" | "error" | "debug",
       message: string,
       data?: Record<string, unknown>,
    ): void {

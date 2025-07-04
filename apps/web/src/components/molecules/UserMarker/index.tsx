@@ -11,11 +11,11 @@
  * ```
  */
 
-'use client'
+"use client"
 
-import type { LocationData } from '@/components/organisms/MapComponent/type'
-import mapboxgl from 'mapbox-gl'
-import { useCallback, useEffect, useRef } from 'react'
+import type { LocationData } from "@/components/organisms/MapComponent/type"
+import mapboxgl from "mapbox-gl"
+import { useCallback, useEffect, useRef } from "react"
 
 export type UserMarkerProps = {
    /** Mapboxマップインスタンス */
@@ -45,14 +45,14 @@ export function UserMarker({ map, position }: UserMarkerProps): null {
          try {
             // シンプルなマーカーを作成
             const marker = new mapboxgl.Marker({
-               color: '#ff6b6b',
+               color: "#ff6b6b",
             })
                .setLngLat([lng, lat])
                .addTo(map)
 
             userMarkerRef.current = marker
          } catch (error) {
-            console.error('マーカー作成エラー:', error)
+            console.error("マーカー作成エラー:", error)
          }
       },
       [map],

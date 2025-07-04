@@ -1,6 +1,6 @@
-import { APIException, BACKEND_ERROR_CODES } from '@/middleware/error'
-import { zValidator } from '@hono/zod-validator'
-import type { ZodSchema } from 'zod'
+import { APIException, BACKEND_ERROR_CODES } from "@/middleware/error"
+import { zValidator } from "@hono/zod-validator"
+import type { ZodSchema } from "zod"
 
 /**
  * バリデーションエラーのフォーマット
@@ -10,7 +10,7 @@ export const formatValidationErrors = (
 ): string => {
    const messages = Object.entries(errors)
       .map(([field, error]) => `${field}: ${error}`)
-      .join(', ')
+      .join(", ")
    return `Validation failed: ${messages}`
 }
 
@@ -19,7 +19,7 @@ export const formatValidationErrors = (
  * @description Zodスキーマを使用してリクエストをバリデート
  */
 export const validate = <T>(
-   target: 'json' | 'query' | 'param',
+   target: "json" | "query" | "param",
    schema: ZodSchema<T>,
 ) => {
    return zValidator(target, schema, (result, _c) => {

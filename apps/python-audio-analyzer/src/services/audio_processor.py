@@ -186,8 +186,10 @@ class AudioProcessor:
             # 一時ファイルをクリーンアップ
             try:
                 Path(temp_file.name).unlink(missing_ok=True)
-            except:
-                pass
+            except OSError as e:
+                logger.warning(f"Failed to cleanup temp file: {e}")
+            except Exception as e:
+                logger.error(f"Unexpected error during temp file cleanup: {e}")
     
     async def process_audio_from_file(
         self,
@@ -287,15 +289,40 @@ class AudioProcessor:
             
             logger.info("Converting WebM to WAV", webm_path=str(webm_path), wav_path=str(wav_path))
             
-            # ffmpegで変換
-            (
-                ffmpeg
-                .input(str(webm_path))
-                .output(str(wav_path), acodec='pcm_s16le', ac=1, ar=16000)
-                .overwrite_output()
-                .run(quiet=True)
-            )
+            # クロスプラットフォーム対応のffmpeg変換
+            import platform
             
+            if platform.system() == 'Windows':
+                # Windowsではパスを適切にエスケープ
+                input_path = str(webm_path).replace('\\', '/')
+                output_path = str(wav_path).replace('\\', '/')
+                
+                # ffmpegバイナリの存在確認
+                try:
+                    subprocess.run(['ffmpeg', '-version'], check=True, capture_output=True)
+                except (subprocess.CalledProcessError, FileNotFoundError):
+                    logger.error("FFmpeg not found on Windows. Please install FFmpeg and add to PATH")
+                    raise RuntimeError("FFmpeg binary not found. Install ffmpeg from https://ffmpeg.org/download.html")
+                
+                # Windows用ffmpeg変換
+                (
+                    ffmpeg
+                    .input(input_path)
+                    .output(output_path, acodec='pcm_s16le', ac=1, ar=16000)
+                    .overwrite_output()
+                    .run(quiet=True)
+                )
+            else:
+                # Unix系OS用ffmpeg変換
+                (
+                    ffmpeg
+                    .input(str(webm_path))
+                    .output(str(wav_path), acodec='pcm_s16le', ac=1, ar=16000)
+                    .overwrite_output()
+                    .run(quiet=True)
+                )
+            
+            # 変換結果の確認
             if not wav_path.exists():
                 raise RuntimeError("WAV conversion failed - output file not created")
             
@@ -384,13 +411,18 @@ class AudioProcessor:
             processing_info["truncated"] = True
             logger.info(f"Audio truncated to {self.MAX_DURATION}s")
         
-        # 正規化
-        if np.max(np.abs(waveform)) > 0:
+        # 正規化（最適化されたバージョン）
+        max_abs = np.max(np.abs(waveform))
+        if max_abs > 0:
             # RMS正規化（YAMNetに適した正規化）
-            rms = np.sqrt(np.mean(waveform**2))
+            # 計算を最適化：一回の計算でRMS値を算出
+            rms = np.sqrt(np.mean(np.square(waveform)))
             if rms > 0:
-                waveform = waveform / (rms * 10)  # 適切なレベルに調整
-                waveform = np.clip(waveform, -1.0, 1.0)  # クリッピング防止
+                # スカラー演算を最適化
+                scaling_factor = 1.0 / (rms * 10)
+                waveform *= scaling_factor  # in-place multiplication for better performance
+                # クリッピング防止（最適化されたバージョン）
+                np.clip(waveform, -1.0, 1.0, out=waveform)
                 processing_info["normalized"] = True
         
         # float32に変換（YAMNet要件）

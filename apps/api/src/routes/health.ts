@@ -1,15 +1,15 @@
-import { logger } from '@/utils/logger'
-import type { APIResponse } from '@sonory/shared-types'
-import { Hono } from 'hono'
+import { logger } from "@/utils/logger"
+import type { APIResponse } from "@sonory/shared-types"
+import { Hono } from "hono"
 
 interface HealthCheckResponse {
-   status: 'healthy' | 'degraded' | 'unhealthy'
+   status: "healthy" | "degraded" | "unhealthy"
    timestamp: string
    version: string
    services: {
-      database: 'connected' | 'disconnected'
-      storage: 'connected' | 'disconnected'
-      ai: 'available' | 'unavailable'
+      database: "connected" | "disconnected"
+      storage: "connected" | "disconnected"
+      ai: "available" | "unavailable"
    }
    uptime: number
 }
@@ -27,24 +27,24 @@ export const healthRoutes = new Hono()
  * GET /health
  * @description 基本的なヘルスチェック
  */
-healthRoutes.get('/', (c) => {
+healthRoutes.get("/", (c) => {
    const response: APIResponse<HealthCheckResponse> = {
       success: true,
       data: {
-         status: 'healthy',
+         status: "healthy",
          timestamp: new Date().toISOString(),
-         version: '0.1.0',
+         version: "0.1.0",
          services: {
-            database: 'connected',
-            storage: 'connected',
-            ai: 'available',
+            database: "connected",
+            storage: "connected",
+            ai: "available",
          },
          uptime: Date.now() - startTime,
       },
    }
 
-   logger.debug('Health check performed', {
-      requestId: c.get('requestId'),
+   logger.debug("Health check performed", {
+      requestId: c.get("requestId"),
       uptime: response.data.uptime,
    })
 
@@ -55,7 +55,7 @@ healthRoutes.get('/', (c) => {
  * GET /health/detailed
  * @description 詳細なヘルスチェック（管理者用）
  */
-healthRoutes.get('/detailed', async (c) => {
+healthRoutes.get("/detailed", async (c) => {
    // TODO: 実際のサービスチェックを実装
    const checkDatabase = async (): Promise<boolean> => {
       // Supabaseへの接続チェック
@@ -79,25 +79,25 @@ healthRoutes.get('/detailed', async (c) => {
    ])
 
    const allHealthy = dbHealthy && storageHealthy && aiHealthy
-   const status = allHealthy ? 'healthy' : dbHealthy ? 'degraded' : 'unhealthy'
+   const status = allHealthy ? "healthy" : dbHealthy ? "degraded" : "unhealthy"
 
    const response: APIResponse<HealthCheckResponse> = {
       success: true,
       data: {
          status,
          timestamp: new Date().toISOString(),
-         version: '0.1.0',
+         version: "0.1.0",
          services: {
-            database: dbHealthy ? 'connected' : 'disconnected',
-            storage: storageHealthy ? 'connected' : 'disconnected',
-            ai: aiHealthy ? 'available' : 'unavailable',
+            database: dbHealthy ? "connected" : "disconnected",
+            storage: storageHealthy ? "connected" : "disconnected",
+            ai: aiHealthy ? "available" : "unavailable",
          },
          uptime: Date.now() - startTime,
       },
    }
 
-   logger.info('Detailed health check performed', {
-      requestId: c.get('requestId'),
+   logger.info("Detailed health check performed", {
+      requestId: c.get("requestId"),
       status,
       services: response.data.services,
    })

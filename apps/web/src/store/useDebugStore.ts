@@ -1,5 +1,5 @@
-import { create } from 'zustand'
-import { devtools } from 'zustand/middleware'
+import { create } from "zustand"
+import { devtools } from "zustand/middleware"
 
 interface DebugState {
    /** デバッグモードの有効/無効 */
@@ -27,7 +27,7 @@ export const useDebugStore = create<DebugState>()(
          setDebugTimeOverride: (time) => set({ debugTimeOverride: time }),
       }),
       {
-         name: 'debug-store',
+         name: "debug-store",
       },
    ),
 )

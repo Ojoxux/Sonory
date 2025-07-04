@@ -10,8 +10,8 @@
  * @returns キーボード制御の状態
  */
 
-import type mapboxgl from 'mapbox-gl'
-import { useEffect } from 'react'
+import type mapboxgl from "mapbox-gl"
+import { useEffect } from "react"
 
 export type UseMapKeyboardShortcutsProps = {
    /** Mapboxマップインスタンス */
@@ -45,18 +45,18 @@ export function useMapControls({
    useEffect(() => {
       const handleKeyDown = (e: KeyboardEvent): void => {
          // Shift + D でデバッグモード切り替え
-         if (e.shiftKey && e.key === 'D') {
+         if (e.shiftKey && e.key === "D") {
             onToggleDebugMode()
          }
 
          // Shift + G で位置情報を再取得
-         if (e.shiftKey && e.key === 'G') {
+         if (e.shiftKey && e.key === "G") {
             e.preventDefault()
             onGeolocationRetry()
          }
 
          // Shift + R で位置情報キャッシュをクリアして再取得
-         if (e.shiftKey && e.key === 'R') {
+         if (e.shiftKey && e.key === "R") {
             e.preventDefault()
             onGeolocationReset()
          }
@@ -64,13 +64,13 @@ export function useMapControls({
          // デバッグモード時の時間帯変更ショートカット
          if (debugMode) {
             // Shift + 1-4 で時間帯を変更
-            if (e.shiftKey && ['1', '2', '3', '4'].includes(e.key)) {
+            if (e.shiftKey && ["1", "2", "3", "4"].includes(e.key)) {
                e.preventDefault()
                const timeMap: Record<string, number> = {
-                  '1': 6, // 朝 (dawn)
-                  '2': 12, // 昼 (day)
-                  '3': 18, // 夕方 (dusk)
-                  '4': 22, // 夜 (night)
+                  "1": 6, // 朝 (dawn)
+                  "2": 12, // 昼 (day)
+                  "3": 18, // 夕方 (dusk)
+                  "4": 22, // 夜 (night)
                }
                const newTime = timeMap[e.key]
                if (newTime !== undefined) {
@@ -80,7 +80,7 @@ export function useMapControls({
             }
 
             // Shift + 0 でデバッグ時間をリセット
-            if (e.shiftKey && e.key === '0') {
+            if (e.shiftKey && e.key === "0") {
                e.preventDefault()
                onDebugTimeChange(null)
                onUpdateLighting()
@@ -88,10 +88,10 @@ export function useMapControls({
          }
       }
 
-      window.addEventListener('keydown', handleKeyDown)
+      window.addEventListener("keydown", handleKeyDown)
 
       return () => {
-         window.removeEventListener('keydown', handleKeyDown)
+         window.removeEventListener("keydown", handleKeyDown)
       }
    }, [
       debugMode,

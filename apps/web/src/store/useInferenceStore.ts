@@ -1,5 +1,5 @@
-import { create } from 'zustand'
-import type { AudioData, InferenceResult, InferenceState } from './types'
+import { create } from "zustand"
+import type { AudioData, InferenceResult, InferenceState } from "./types"
 
 /**
  * Python YAMNet API response classification type
@@ -16,18 +16,18 @@ interface APIClassification {
  * 現在は擬似的な分析結果を生成。将来的にはバックエンドのPython YAMNetサービスと統合予定。
  */
 const FALLBACK_CLASSIFICATIONS: readonly InferenceResult[] = [
-   { label: '車の音', confidence: 0.85 },
-   { label: 'バイクの音', confidence: 0.78 },
-   { label: 'トラックの音', confidence: 0.72 },
-   { label: '交通音', confidence: 0.8 },
-   { label: 'バスの音', confidence: 0.75 },
-   { label: '電車の音', confidence: 0.73 },
-   { label: '鳥の鳴き声', confidence: 0.82 },
-   { label: '雨音', confidence: 0.77 },
-   { label: '風の音', confidence: 0.73 },
-   { label: '人の声', confidence: 0.88 },
-   { label: '音楽', confidence: 0.85 },
-   { label: '工事の音', confidence: 0.79 },
+   { label: "車の音", confidence: 0.85 },
+   { label: "バイクの音", confidence: 0.78 },
+   { label: "トラックの音", confidence: 0.72 },
+   { label: "交通音", confidence: 0.8 },
+   { label: "バスの音", confidence: 0.75 },
+   { label: "電車の音", confidence: 0.73 },
+   { label: "鳥の鳴き声", confidence: 0.82 },
+   { label: "雨音", confidence: 0.77 },
+   { label: "風の音", confidence: 0.73 },
+   { label: "人の声", confidence: 0.88 },
+   { label: "音楽", confidence: 0.85 },
+   { label: "工事の音", confidence: 0.79 },
 ] as const
 
 /**
@@ -71,11 +71,11 @@ async function uploadAudioToStorage(audioData: AudioData): Promise<string> {
    try {
       // FormDataを作成
       const formData = new FormData()
-      formData.append('audio', audioData.blob, `audio-${audioData.id}.webm`)
+      formData.append("audio", audioData.blob, `audio-${audioData.id}.webm`)
 
       // 音声ファイルをアップロード
-      const response = await fetch('/api/audio/upload', {
-         method: 'POST',
+      const response = await fetch("/api/audio/upload", {
+         method: "POST",
          body: formData,
       })
 
@@ -83,7 +83,7 @@ async function uploadAudioToStorage(audioData: AudioData): Promise<string> {
          const errorData = await response.json().catch(() => ({}))
          throw new Error(
             `アップロード失敗: ${response.status} ${response.statusText} - ${
-               errorData.error?.message || '不明なエラー'
+               errorData.error?.message || "不明なエラー"
             }`,
          )
       }
@@ -91,11 +91,11 @@ async function uploadAudioToStorage(audioData: AudioData): Promise<string> {
       const result = await response.json()
 
       if (!result.success || !result.data?.audioUrl) {
-         throw new Error('アップロード結果が不正です')
+         throw new Error("アップロード結果が不正です")
       }
       return result.data.audioUrl
    } catch (error) {
-      console.error('❌ 音声アップロードエラー:', error)
+      console.error("❌ 音声アップロードエラー:", error)
       throw error
    }
 }
@@ -113,9 +113,9 @@ async function callBackendAnalysis(
    try {
       // API Gateway経由でPython YAMNet分析を実行
       const response = await fetch(`/api/audio/${audioData.id}/analyze`, {
-         method: 'POST',
+         method: "POST",
          headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
          },
          body: JSON.stringify({
             audioUrl: audioUrl, // アップロード後のURLを使用
@@ -127,7 +127,7 @@ async function callBackendAnalysis(
          const errorData = await response.json().catch(() => ({}))
          throw new Error(
             `API分析失敗: ${response.status} ${response.statusText} - ${
-               errorData.error?.message || '不明なエラー'
+               errorData.error?.message || "不明なエラー"
             }`,
          )
       }
@@ -135,7 +135,7 @@ async function callBackendAnalysis(
       const analysisResult = await response.json()
 
       if (!analysisResult.success || !analysisResult.data) {
-         throw new Error('分析結果の形式が正しくありません')
+         throw new Error("分析結果の形式が正しくありません")
       }
 
       // Python YAMNet分析結果を統一形式に変換
@@ -144,18 +144,18 @@ async function callBackendAnalysis(
       )
          .slice(0, 5) // 上位5件に制限
          .map((classification: APIClassification) => ({
-            label: classification.label || '不明',
+            label: classification.label || "不明",
             confidence: classification.confidence || 0,
          }))
 
       // 結果が空の場合はフォールバックを使用
       if (classifications.length === 0) {
-         throw new Error('分析結果が空でした - フォールバックを使用')
+         throw new Error("分析結果が空でした - フォールバックを使用")
       }
 
       return classifications
    } catch (error) {
-      console.warn('⚠️ バックエンドAPI呼び出し失敗:', error)
+      console.warn("⚠️ バックエンドAPI呼び出し失敗:", error)
       throw error // エラーを上位に伝播してフォールバック処理を実行
    }
 }
@@ -208,25 +208,25 @@ export const useInferenceStore = create<InferenceState>((set) => ({
             isInferring: false,
             error: isUsingFallback
                ? new Error(
-                    'バックエンドAPI接続失敗。フォールバック結果を表示しています。',
+                    "バックエンドAPI接続失敗。フォールバック結果を表示しています。",
                  )
                : null,
          })
 
          if (isUsingFallback) {
             console.warn(
-               '⚠️ フォールバック結果を使用中 - ネットワーク接続やサービス状態を確認してください',
+               "⚠️ フォールバック結果を使用中 - ネットワーク接続やサービス状態を確認してください",
             )
          }
       } catch (err) {
-         console.error('❌ 推論エラー:', err)
+         console.error("❌ 推論エラー:", err)
 
          // 最終フォールバック
          const fallbackResults = generateClassificationResults()
          const errorMessage =
             err instanceof Error
                ? `推論処理に失敗: ${err.message}. フォールバック結果を表示しています。`
-               : '推論処理に失敗しました。フォールバック結果を表示しています。'
+               : "推論処理に失敗しました。フォールバック結果を表示しています。"
 
          set({
             results: fallbackResults,

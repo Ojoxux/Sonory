@@ -1,5 +1,5 @@
-import { create } from 'zustand'
-import type { AudioData, RecorderState } from './types'
+import { create } from "zustand"
+import type { AudioData, RecorderState } from "./types"
 
 /**
  * 録音機能を管理するZustandストア
@@ -9,7 +9,7 @@ import type { AudioData, RecorderState } from './types'
  */
 export const useRecorderStore = create<RecorderState>((set) => ({
    // 初期状態
-   status: 'idle',
+   status: "idle",
    audioData: null,
    elapsedTime: 0,
 
@@ -20,7 +20,7 @@ export const useRecorderStore = create<RecorderState>((set) => ({
     * 実際の録音開始処理はUIコンポーネント側で行う必要があります
     */
    startRecording: () => {
-      set({ status: 'recording', elapsedTime: 0 })
+      set({ status: "recording", elapsedTime: 0 })
    },
 
    /**
@@ -32,9 +32,9 @@ export const useRecorderStore = create<RecorderState>((set) => ({
    stopRecording: () => {
       set((state) => {
          // すでに完了状態の場合は何もしない
-         if (state.status === 'completed') return state
+         if (state.status === "completed") return state
 
-         return { status: 'completed' }
+         return { status: "completed" }
       })
    },
 
@@ -47,9 +47,9 @@ export const useRecorderStore = create<RecorderState>((set) => ({
    pauseRecording: () => {
       set((state) => {
          // 録音中の場合のみ一時停止可能
-         if (state.status !== 'recording') return state
+         if (state.status !== "recording") return state
 
-         return { status: 'paused' }
+         return { status: "paused" }
       })
    },
 
@@ -62,9 +62,9 @@ export const useRecorderStore = create<RecorderState>((set) => ({
    resumeRecording: () => {
       set((state) => {
          // 一時停止中の場合のみ再開可能
-         if (state.status !== 'paused') return state
+         if (state.status !== "paused") return state
 
-         return { status: 'recording' }
+         return { status: "recording" }
       })
    },
 
@@ -76,7 +76,7 @@ export const useRecorderStore = create<RecorderState>((set) => ({
     */
    resetRecording: () => {
       set({
-         status: 'idle',
+         status: "idle",
          audioData: null,
          elapsedTime: 0,
       })

@@ -10,20 +10,20 @@
  * @returns 環境効果の状態と制御関数
  */
 
-import type mapboxgl from 'mapbox-gl'
-import { useCallback, useEffect, useState } from 'react'
+import type mapboxgl from "mapbox-gl"
+import { useCallback, useEffect, useState } from "react"
 import {
    applyNightLighting,
    get3DTerrainConfig,
    getAtmosphereConfig,
    terrainSource,
-} from '../styles/mapStyles'
+} from "../styles/mapStyles"
 import type {
    LocationData,
    MapboxExtendedMap,
    MapboxNonStandardMethods,
    MapboxSetStyleOptions,
-} from '../type'
+} from "../type"
 import {
    type LightingConfig,
    type WeatherEffects,
@@ -31,7 +31,7 @@ import {
    calculateSunPosition,
    defaultWeather,
    getLightingConfig,
-} from '../utils/sunCalculations'
+} from "../utils/sunCalculations"
 
 export type UseMapLightingProps = {
    /** Mapboxマップインスタンス */
@@ -63,42 +63,42 @@ export type UseMapLightingReturn = {
  */
 function getLightPresetFromTime(
    debugTimeOverride: number | null,
-): 'day' | 'dawn' | 'dusk' | 'night' {
+): "day" | "dawn" | "dusk" | "night" {
    // デバッグ時間オーバーライドがある場合はそれを使用、なければ現在時刻
    const hour =
       debugTimeOverride !== null ? debugTimeOverride : new Date().getHours()
 
    // 昼の時間帯（8時から17時）→ 明るい空が必要
    if (hour >= 8 && hour < 17) {
-      return 'day' // 正常: 昼間に明るい空を表示
+      return "day" // 正常: 昼間に明るい空を表示
    }
 
    // 夕方の時間帯（17時から22時）→ 夕方らしい色合い
    if (hour >= 17 && hour < 19) {
-      return 'dusk' // 夕方初期: オレンジ系の空
+      return "dusk" // 夕方初期: オレンジ系の空
    }
 
    if (hour >= 19 && hour < 22) {
-      return 'dusk' // 夕方後期: より暗めの夕焼け空
+      return "dusk" // 夕方後期: より暗めの夕焼け空
    }
 
    // 夜の時間帯（22時から4時）→ 暗い空が必要
    if (hour >= 22 || hour < 4) {
-      return 'night' // 正常: 夜間に暗い空を表示
+      return "night" // 正常: 夜間に暗い空を表示
    }
 
    // 早朝の時間帯（4時から6時）→ 暗めの朝焼け（夜に近い）
    if (hour >= 4 && hour < 6) {
-      return 'night' // 早朝は夜に近い暗さを維持
+      return "night" // 早朝は夜に近い暗さを維持
    }
 
    // 朝の時間帯（6時から8時）→ 自然な朝の光（オレンジ過ぎない）
    if (hour >= 6 && hour < 8) {
-      return 'dawn' // より自然な明るい空（オレンジ系を避ける）
+      return "dawn" // より自然な明るい空（オレンジ系を避ける）
    }
 
    // デフォルト（念のため）
-   return 'dawn'
+   return "dawn"
 }
 
 /**
@@ -106,14 +106,14 @@ function getLightPresetFromTime(
  */
 function setMapboxLightPreset(
    map: mapboxgl.Map,
-   lightPreset: 'day' | 'dawn' | 'dusk' | 'night',
+   lightPreset: "day" | "dawn" | "dusk" | "night",
 ): void {
    try {
       // スタイルが完全に読み込まれているかチェック
       if (!map.isStyleLoaded()) {
-         if (process.env.NODE_ENV === 'development') {
+         if (process.env.NODE_ENV === "development") {
             console.warn(
-               '⚠️ スタイルがまだ読み込み中です。lightPreset設定をスキップします。',
+               "⚠️ スタイルがまだ読み込み中です。lightPreset設定をスキップします。",
             )
          }
          return
@@ -124,13 +124,13 @@ function setMapboxLightPreset(
 
       // Method 1: setConfigProperty を使用（最も直接的）
       if (
-         'setConfigProperty' in extendedMap &&
-         typeof extendedMap.setConfigProperty === 'function'
+         "setConfigProperty" in extendedMap &&
+         typeof extendedMap.setConfigProperty === "function"
       ) {
          // スタイルが完全に読み込まれてから設定
-         extendedMap.setConfigProperty('basemap', 'lightPreset', lightPreset)
+         extendedMap.setConfigProperty("basemap", "lightPreset", lightPreset)
 
-         if (process.env.NODE_ENV === 'development') {
+         if (process.env.NODE_ENV === "development") {
             // TODO: lightPreset設定成功のログ出力を実装
          }
          return
@@ -140,7 +140,7 @@ function setMapboxLightPreset(
       const currentStyle = map.getStyle()
       if (currentStyle) {
          // 録音データを保存
-         const recordingData = localStorage.getItem('recording_data')
+         const recordingData = localStorage.getItem("recording_data")
 
          const setStyleOptions: MapboxSetStyleOptions = {
             config: {
@@ -162,57 +162,57 @@ function setMapboxLightPreset(
             ): mapboxgl.Map
          }
          mapWithSetStyle.setStyle(
-            'mapbox://styles/mapbox/standard',
+            "mapbox://styles/mapbox/standard",
             setStyleOptions,
          )
 
          // 録音データを復元
          if (recordingData) {
-            localStorage.setItem('recording_data', recordingData)
+            localStorage.setItem("recording_data", recordingData)
          }
 
-         if (process.env.NODE_ENV === 'development') {
+         if (process.env.NODE_ENV === "development") {
             // TODO: lightPreset設定成功 (setStyle方式)のログ出力を実装
          }
          return
       }
 
-      if (process.env.NODE_ENV === 'development') {
-         console.warn('⚠️ すべてのlightPreset設定方法が失敗しました')
+      if (process.env.NODE_ENV === "development") {
+         console.warn("⚠️ すべてのlightPreset設定方法が失敗しました")
       }
    } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-         console.error('❌ lightPreset設定エラー:', error)
+      if (process.env.NODE_ENV === "development") {
+         console.error("❌ lightPreset設定エラー:", error)
       }
 
       // 最後の手段: スタイル全体をリロード（遅延実行）
       try {
          // 録音データを保存
-         const recordingData = localStorage.getItem('recording_data')
+         const recordingData = localStorage.getItem("recording_data")
 
          setTimeout(() => {
             if (map.isStyleLoaded()) {
                const extendedMap = map as MapboxExtendedMap
                if (
-                  'setConfigProperty' in extendedMap &&
-                  typeof extendedMap.setConfigProperty === 'function'
+                  "setConfigProperty" in extendedMap &&
+                  typeof extendedMap.setConfigProperty === "function"
                ) {
                   extendedMap.setConfigProperty(
-                     'basemap',
-                     'lightPreset',
+                     "basemap",
+                     "lightPreset",
                      lightPreset,
                   )
 
                   // 録音データを復元
                   if (recordingData) {
-                     localStorage.setItem('recording_data', recordingData)
+                     localStorage.setItem("recording_data", recordingData)
                   }
                }
             }
          }, 1000)
       } catch (reloadError) {
-         if (process.env.NODE_ENV === 'development') {
-            console.error('❌ スタイルリロードも失敗:', reloadError)
+         if (process.env.NODE_ENV === "development") {
+            console.error("❌ スタイルリロードも失敗:", reloadError)
          }
       }
    }
@@ -242,9 +242,9 @@ export function useMapEnvironment({
 
          // スタイルが完全に読み込まれているかチェック
          if (!targetMap.isStyleLoaded()) {
-            if (process.env.NODE_ENV === 'development') {
+            if (process.env.NODE_ENV === "development") {
                console.warn(
-                  '⚠️ スタイルがまだ読み込み中です。ライティング更新をスキップします。',
+                  "⚠️ スタイルがまだ読み込み中です。ライティング更新をスキップします。",
                )
             }
             return
@@ -263,7 +263,7 @@ export function useMapEnvironment({
             // 時間ベースでlightPresetを決定
             const lightPreset = getLightPresetFromTime(debugTimeOverride)
 
-            if (process.env.NODE_ENV === 'development') {
+            if (process.env.NODE_ENV === "development") {
                // TODO: 時間ベースのライティング設定のログ出力を実装
             }
 
@@ -299,7 +299,7 @@ export function useMapEnvironment({
                sunAltitude = 0 // デフォルト
             }
 
-            if (position && process.env.NODE_ENV === 'development') {
+            if (position && process.env.NODE_ENV === "development") {
                const _SUN_POSITION = calculateSunPosition(
                   now,
                   position.latitude,
@@ -321,13 +321,13 @@ export function useMapEnvironment({
             // 3D地形を設定（エラーハンドリング強化）
             try {
                const terrainConfig = get3DTerrainConfig()
-               if (!targetMap.getSource('mapbox-dem')) {
-                  targetMap.addSource('mapbox-dem', terrainSource)
+               if (!targetMap.getSource("mapbox-dem")) {
+                  targetMap.addSource("mapbox-dem", terrainSource)
                }
                mapboxHelpers.setTerrain(targetMap, terrainConfig)
             } catch (terrainError) {
-               if (process.env.NODE_ENV === 'development') {
-                  console.warn('⚠️ 地形設定をスキップ:', terrainError)
+               if (process.env.NODE_ENV === "development") {
+                  console.warn("⚠️ 地形設定をスキップ:", terrainError)
                }
             }
 
@@ -340,12 +340,12 @@ export function useMapEnvironment({
                   ...atmosphereConfig,
                   range: [0.5, 10],
                   color: weatherAdjustedLighting.fogColor,
-                  'horizon-blend': weatherAdjustedLighting.fogDensity * 0.5,
+                  "horizon-blend": weatherAdjustedLighting.fogDensity * 0.5,
                }
                mapboxHelpers.setFog(targetMap, fogConfig)
             } catch (fogError) {
-               if (process.env.NODE_ENV === 'development') {
-                  console.warn('⚠️ フォグ設定をスキップ:', fogError)
+               if (process.env.NODE_ENV === "development") {
+                  console.warn("⚠️ フォグ設定をスキップ:", fogError)
                }
             }
 
@@ -353,16 +353,16 @@ export function useMapEnvironment({
             try {
                applyNightLighting(targetMap, isNightTime ? -20 : 45) // 時間ベースの値を渡す
             } catch (lightingError) {
-               if (process.env.NODE_ENV === 'development') {
-                  console.warn('⚠️ 夜間照明設定をスキップ:', lightingError)
+               if (process.env.NODE_ENV === "development") {
+                  console.warn("⚠️ 夜間照明設定をスキップ:", lightingError)
                }
             }
 
-            if (process.env.NODE_ENV === 'development') {
+            if (process.env.NODE_ENV === "development") {
                // TODO: ライティング更新完了のログ出力を実装
             }
          } catch (error) {
-            console.error('光と影の更新エラー:', error)
+            console.error("光と影の更新エラー:", error)
          }
       },
       [
@@ -406,7 +406,7 @@ export function useMapEnvironment({
    useEffect(() => {
       if (!map || !mapStyleLoaded) return
 
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env.NODE_ENV === "development") {
          // TODO: デバッグ時間変更のログ出力を実装
       }
 

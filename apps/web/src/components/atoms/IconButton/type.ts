@@ -1,4 +1,4 @@
-import type { MouseEventHandler, ReactNode } from 'react'
+import type { MouseEventHandler, ReactNode } from "react"
 
 /**
  * IconButtonコンポーネントのプロパティ型定義

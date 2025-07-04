@@ -121,9 +121,9 @@ export function getLightingConfig(sunAltitude: number): LightingConfig {
       return {
          sunIntensity: 0,
          ambientIntensity: 0.3,
-         sunColor: '#000033',
-         ambientColor: '#1a1a3e',
-         fogColor: '#0a0a1f',
+         sunColor: "#000033",
+         ambientColor: "#1a1a3e",
+         fogColor: "#0a0a1f",
          fogDensity: 0, // 霧を無効化
          shadowIntensity: 0,
       }
@@ -135,9 +135,9 @@ export function getLightingConfig(sunAltitude: number): LightingConfig {
       return {
          sunIntensity: 0.2 * factor,
          ambientIntensity: 0.4 + 0.2 * factor,
-         sunColor: '#ff6b6b',
-         ambientColor: '#4a5568',
-         fogColor: '#2d3748',
+         sunColor: "#ff6b6b",
+         ambientColor: "#4a5568",
+         fogColor: "#2d3748",
          fogDensity: 0, // 霧を無効化
          shadowIntensity: 0.1 * factor,
       }
@@ -149,9 +149,9 @@ export function getLightingConfig(sunAltitude: number): LightingConfig {
       return {
          sunIntensity: 0.3 + 0.4 * factor,
          ambientIntensity: 0.6 + 0.2 * factor,
-         sunColor: interpolateColor('#ffb366', '#ffd700', factor), // より柔らかいオレンジ
-         ambientColor: interpolateColor('#ffcc99', '#87ceeb', factor), // より自然な朝の色
-         fogColor: interpolateColor('#ffe6cc', '#87ceeb', factor), // 柔らかい朝霧色
+         sunColor: interpolateColor("#ffb366", "#ffd700", factor), // より柔らかいオレンジ
+         ambientColor: interpolateColor("#ffcc99", "#87ceeb", factor), // より自然な朝の色
+         fogColor: interpolateColor("#ffe6cc", "#87ceeb", factor), // 柔らかい朝霧色
          fogDensity: 0, // 霧を無効化
          shadowIntensity: 0.3 + 0.3 * factor,
       }
@@ -163,9 +163,9 @@ export function getLightingConfig(sunAltitude: number): LightingConfig {
       return {
          sunIntensity: 0.7 + 0.2 * factor,
          ambientIntensity: 0.8 + 0.1 * factor,
-         sunColor: interpolateColor('#ffe066', '#ffffff', factor), // より自然な朝の太陽色
-         ambientColor: interpolateColor('#b8d4f0', '#b0e0e6', factor), // 柔らかい朝の空色
-         fogColor: '#b8d4f0', // 自然な朝の霧色
+         sunColor: interpolateColor("#ffe066", "#ffffff", factor), // より自然な朝の太陽色
+         ambientColor: interpolateColor("#b8d4f0", "#b0e0e6", factor), // 柔らかい朝の空色
+         fogColor: "#b8d4f0", // 自然な朝の霧色
          fogDensity: 0, // 霧を無効化
          shadowIntensity: 0.6 + 0.2 * factor,
       }
@@ -175,9 +175,9 @@ export function getLightingConfig(sunAltitude: number): LightingConfig {
    return {
       sunIntensity: 1.0,
       ambientIntensity: 0.9,
-      sunColor: '#ffffff',
-      ambientColor: '#b0e0e6',
-      fogColor: '#e0f2fe',
+      sunColor: "#ffffff",
+      ambientColor: "#b0e0e6",
+      fogColor: "#e0f2fe",
       fogDensity: 0, // 霧を無効化
       shadowIntensity: 0.8,
    }
