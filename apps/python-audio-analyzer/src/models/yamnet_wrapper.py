@@ -24,9 +24,9 @@ def setup_tensorflow_hub_cache():
         # 現在のスクリプトディレクトリを取得
         current_dir = os.path.dirname(os.path.abspath(__file__))
         
-        # プロジェクトルートから安全なキャッシュディレクトリを作成
-        project_root = os.path.dirname(os.path.dirname(os.path.dirname(current_dir)))
-        cache_dir = os.path.join(project_root, "tf_hub_cache")
+        # python-audio-analyzerディレクトリにキャッシュディレクトリを作成
+        python_analyzer_root = os.path.dirname(os.path.dirname(current_dir))
+        cache_dir = os.path.join(python_analyzer_root, "tf_hub_cache")
         
         # ディレクトリが存在しない場合は作成
         os.makedirs(cache_dir, exist_ok=True)
@@ -223,7 +223,7 @@ class YAMNetClassifier:
             model_url=model_url,
             cache_dir=cache_dir
         )
-    
+        
     async def initialize(self) -> None:
         """
         YAMNetモデルを非同期で初期化
