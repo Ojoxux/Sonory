@@ -101,11 +101,24 @@ def create_app() -> FastAPI:
     )
     
     # Configure CORS
+    allowed_origins = [
+        "http://localhost:3000",
+        "http://localhost:8080",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:8080",
+    ]
+    
+    # 本番環境用設定のために環境変数をチェック
+    if os.getenv("ENVIRONMENT") == "production":
+        # 本番環境では環境変数ALLOWED_ORIGINSから許可オリジンを取得
+        production_origins = os.getenv("ALLOWED_ORIGINS", "").split(",")
+        allowed_origins = [origin.strip() for origin in production_origins if origin.strip()]
+    
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # Configure appropriately for production
+        allow_origins=allowed_origins,
         allow_credentials=True,
-        allow_methods=["*"],
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["*"],
     )
     

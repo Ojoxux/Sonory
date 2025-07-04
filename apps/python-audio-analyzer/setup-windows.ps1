@@ -6,6 +6,18 @@ param(
     [switch]$CheckHealth = $false
 )
 
+# セキュリティ: 管理者権限チェック
+if (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
+    Write-Warning "⚠️  管理者権限での実行が推奨されます"
+    Write-Host "   一部の機能が制限される可能性があります" -ForegroundColor Yellow
+    Write-Host "   管理者権限で実行するには: 'PowerShell を管理者として実行' を使用してください" -ForegroundColor Cyan
+    $response = Read-Host "続行しますか？ (y/N)"
+    if ($response -notmatch '^[yY]$') {
+        Write-Host "セットアップを中止しました" -ForegroundColor Yellow
+        exit 1
+    }
+}
+
 Write-Host "Sonory Python Audio Analyzer - Windows環境セットアップ" -ForegroundColor Green
 Write-Host "=============================================" -ForegroundColor Green
 

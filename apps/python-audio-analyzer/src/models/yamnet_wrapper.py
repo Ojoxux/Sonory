@@ -24,18 +24,42 @@ def setup_tensorflow_hub_cache():
         # 現在のスクリプトディレクトリを取得
         current_dir = os.path.dirname(os.path.abspath(__file__))
         
+        # パス正規化でセキュリティを向上
+        current_dir = os.path.normpath(current_dir)
+        
         # python-audio-analyzerディレクトリにキャッシュディレクトリを作成
         python_analyzer_root = os.path.dirname(os.path.dirname(current_dir))
+        python_analyzer_root = os.path.normpath(python_analyzer_root)
+        
+        # セキュリティ: パスが期待される場所内にあることを確認
+        if not os.path.exists(python_analyzer_root):
+            raise ValueError(f"Invalid python analyzer root path: {python_analyzer_root}")
+        
         cache_dir = os.path.join(python_analyzer_root, "tf_hub_cache")
+        cache_dir = os.path.normpath(cache_dir)
+        
+        # セキュリティ: 相対パス攻撃を防ぐ
+        if not cache_dir.startswith(python_analyzer_root):
+            raise ValueError("Invalid cache directory path - potential path traversal attack")
         
         # ディレクトリが存在しない場合は作成
         os.makedirs(cache_dir, exist_ok=True)
+        
+        # 書き込み権限を検証
+        test_file = os.path.join(cache_dir, '.write_test')
+        try:
+            with open(test_file, 'w') as f:
+                f.write('test')
+            os.remove(test_file)
+        except Exception as e:
+            raise RuntimeError(f"Cache directory not writable: {e}")
         
         # 環境変数を設定
         os.environ['TFHUB_CACHE_DIR'] = cache_dir
         
         # TensorFlowの一時ディレクトリも設定
         tf_temp_dir = os.path.join(cache_dir, "tf_temp")
+        tf_temp_dir = os.path.normpath(tf_temp_dir)
         os.makedirs(tf_temp_dir, exist_ok=True)
         os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'  # INFO以上のログを表示
         
@@ -46,8 +70,8 @@ def setup_tensorflow_hub_cache():
         os.environ['TFHUB_CACHE_DIR'] = fallback_dir
         return fallback_dir
 
-# モジュール読み込み時に実行
-setup_tensorflow_hub_cache()
+# モジュール読み込み時の副作用を削除
+# setup_tensorflow_hub_cache()は初期化時に明示的に呼び出すように変更
 
 class YAMNetClassifier:
     """
@@ -216,12 +240,13 @@ class YAMNetClassifier:
         self._initialized = False
         self.logger = structlog.get_logger(self.__class__.__name__)
         
-        # キャッシュディレクトリ情報をログ出力
-        cache_dir = os.environ.get('TFHUB_CACHE_DIR', 'default')
+        # キャッシュディレクトリを明示的に設定（副作用を初期化時に制限）
+        self.cache_dir = setup_tensorflow_hub_cache()
+        
         self.logger.info(
             "YAMNetClassifier initialized",
             model_url=model_url,
-            cache_dir=cache_dir
+            cache_dir=self.cache_dir
         )
         
     async def initialize(self) -> None:
