@@ -1,9 +1,11 @@
 # Dependencies
 node_modules/
 
-# Environment variables
-.env
-.env.*
+# Environment variables (アプリケーション固有)
+.env.local
+.env.development.local
+.env.production.local
+.env.test.local
 .dev.vars
 
 # Wrangler
