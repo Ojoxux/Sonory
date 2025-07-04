@@ -68,14 +68,26 @@ tensorflow.python.framework.errors_impl.FailedPreconditionError
 ```
 
 **解決方法:**
-本プロジェクトには自動修正機能が組み込まれていますが、問題が発生した場合は以下を実行してください：
+以下のセットアップスクリプトを実行してください：
 
 ```powershell
-# 管理者権限でPowerShellを起動
-powershell -ExecutionPolicy Bypass -File fix-windows-issues.ps1
+# 環境設定のみ
+.\setup-windows.ps1
+
+# 環境設定 + サーバー起動
+.\setup-windows.ps1 -StartServer
+
+# 環境設定 + ヘルスチェック
+.\setup-windows.ps1 -CheckHealth
 ```
 
-**詳細な解決方法:** [WINDOWS_SETUP.md](./WINDOWS_SETUP.md) を参照してください。
+**手動設定の場合:**
+```powershell
+$env:TFHUB_CACHE_DIR = "$(Get-Location)\tf_hub_cache"
+$env:TF_CPP_MIN_LOG_LEVEL = "1"
+$env:PYTHONPATH = "$(Get-Location)\src"
+New-Item -ItemType Directory -Path "tf_hub_cache" -Force
+```
 
 **PowerShell/Command Prompt:**
 ```powershell
@@ -114,9 +126,8 @@ uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 **Windows環境のトラブルシューティング:**
-- 日本語を含むユーザー名でエラーが発生する場合は、`fix-windows-issues.ps1` を実行
-- パスの区切り文字は自動的に処理されますが、環境変数でパスを指定する場合は `\\` を使用
-- PowerShellとCommand Promptでは環境変数の設定方法が異なります
+- 日本語を含むユーザー名でエラーが発生する場合は、`.\setup-windows.ps1` を実行
+- 仮想環境がアクティブでない場合は、`.venv\Scripts\activate` を実行
 - Git Bashを使用することでUnix系コマンドが利用可能
 
 ### 3. Environment Variables
@@ -156,42 +167,17 @@ TF_CPP_MIN_LOG_LEVEL=1
 ERROR: C:\Users\中村のPC\AppData\Local\Temp is not a directory
 ```
 
-### 自動修正スクリプト:
+**解決方法:**
 ```powershell
-# Windows環境の問題を自動診断・修正
-.\fix-windows-issues.ps1
+# Windows環境セットアップスクリプトを実行
+.\setup-windows.ps1
 ```
-
-### 診断コマンド:
-```powershell
-# サービスの起動確認
-curl http://localhost:8000/health
-
-# Python環境の確認
-python -c "import tensorflow as tf; print(tf.__version__)"
-python -c "import librosa; print('librosa OK')"
-python -c "import numpy; print('numpy OK')"
-```
-
-### 詳細なWindows環境対応
-
-Windows環境での開発で問題が発生した場合は、詳細なセットアップガイドを参照してください：
-
-📖 **[Windows開発環境セットアップガイド](./WINDOWS_SETUP.md)**
-
-このガイドには以下の内容が含まれています：
-- 日本語パス問題の詳細な解決方法
-- 環境変数の設定方法
-- トラブルシューティングの詳細
-- Docker環境での実行方法
-- パフォーマンス最適化のコツ
 
 ## 📚 Additional Resources
 
 - [YAMNet Documentation](https://tfhub.dev/google/yamnet/1)
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - [TensorFlow Hub](https://tfhub.dev/)
-- [Windows開発環境セットアップ](./WINDOWS_SETUP.md)
 
 ## 🤝 Contributing
 
