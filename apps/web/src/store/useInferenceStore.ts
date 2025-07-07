@@ -14,6 +14,7 @@ import { useRecorderStore } from "./useRecorderStore"
 interface APIClassification {
    label: string
    confidence: number
+   category?: string
 }
 
 /**
@@ -175,7 +176,7 @@ async function callBackendAnalysis(
  * Python YAMNetサービスをバックエンド経由で呼び出し、
  * 失敗時はフォールバック機能を使用します。
  */
-export const useInferenceStore = create<InferenceState>((set, get) => ({
+export const useInferenceStore = create<InferenceState>((set, _get) => ({
    // 初期状態
    results: [],
    isInferring: false,
@@ -341,11 +342,13 @@ export const useInferenceStore = create<InferenceState>((set, get) => ({
 
          // InferenceResult形式に変換
          const inferenceResults: InferenceResult[] =
-            result.data.allClassifications?.map((classification: any) => ({
-               label: classification.label,
-               confidence: classification.confidence,
-               category: classification.category || "unknown",
-            })) || []
+            result.data.allClassifications?.map(
+               (classification: APIClassification) => ({
+                  label: classification.label,
+                  confidence: classification.confidence,
+                  category: classification.category || "unknown",
+               }),
+            ) || []
 
          return inferenceResults
       } catch (error) {

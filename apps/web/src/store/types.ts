@@ -15,7 +15,12 @@ export type UploadStatus = "idle" | "uploading" | "success" | "error"
 /**
  * 分析状態を表す型
  */
-export type AnalysisStatus = "idle" | "analyzing" | "success" | "error" | "fallback"
+export type AnalysisStatus =
+   | "idle"
+   | "analyzing"
+   | "success"
+   | "error"
+   | "fallback"
 
 /**
  * 音声データを表す型
@@ -98,7 +103,10 @@ export type RecorderState = {
    /** 音声アップロード */
    uploadAudioToStorage: (
       audioBlob: Blob,
-      metadata: { duration: number; location?: { lat: number; lng: number; accuracy?: number } },
+      metadata: {
+         duration: number
+         location?: { lat: number; lng: number; accuracy?: number }
+      },
    ) => Promise<{ url: string; id: string }>
    /** アップロード状態設定 */
    setUploadStatus: (status: UploadStatus) => void
@@ -139,7 +147,10 @@ export type InferenceState = {
    /** 推論エラーの設定 */
    setError: (error: Error | null) => void
    /** バックエンドで音声分析 */
-   analyzeAudioWithBackend: (audioId: string, audioUrl: string) => Promise<InferenceResult[]>
+   analyzeAudioWithBackend: (
+      audioId: string,
+      audioUrl: string,
+   ) => Promise<InferenceResult[]>
    /** 分析状態設定 */
    setAnalysisStatus: (status: AnalysisStatus) => void
    /** バックエンド分析結果設定 */

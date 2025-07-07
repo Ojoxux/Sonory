@@ -50,20 +50,22 @@ export function AudioPlayback({
       results,
       error,
       clearResults,
-      analysisStatus,
       fallbackUsed,
       backendAnalysisResult,
    } = useInferenceStore()
    const {
       uploadAudioToStorage,
-      uploadStatus,
       uploadProgress,
       uploadError,
       uploadedAudioUrl,
-      uploadedAudioId,
       clearUploadState,
    } = useRecorderStore()
-   const { addPin } = useSoundPinStore()
+   const {
+      createPersistentPin,
+      pinCreationStatus,
+      pinCreationError,
+      clearPinCreationState,
+   } = useSoundPinStore()
    const [viewState, setViewState] = useState<ViewState>("audio-review")
    const [analysisMessage, setAnalysisMessage] = useState("音声を分析中...")
 
@@ -152,24 +154,30 @@ export function AudioPlayback({
    /**
     * ピン配置ボタンのクリックハンドラー
     */
-   const handlePlacePin = (): void => {
+   const handlePlacePin = async (): Promise<void> => {
       if (
          results.length > 0 &&
          currentPosition &&
          audioData &&
          uploadedAudioUrl
       ) {
-         // アップロード済みのURLと位置情報を使ってピンを作成
-         addPin({
-            latitude: currentPosition.latitude,
-            longitude: currentPosition.longitude,
-            audioData: {
-               ...audioData,
-               url: uploadedAudioUrl, // アップロード済みURLを使用
-            },
-            classificationResults: results,
-         })
-         onClose()
+         try {
+            // 永続化ピンを作成
+            await createPersistentPin(
+               uploadedAudioUrl,
+               {
+                  latitude: currentPosition.latitude,
+                  longitude: currentPosition.longitude,
+               },
+               results,
+            )
+
+            // 成功時は閉じる
+            onClose()
+         } catch (error) {
+            // エラー時はログ出力（エラー表示はストアで管理）
+            console.error("ピン配置エラー:", error)
+         }
       }
    }
 
@@ -184,9 +192,10 @@ export function AudioPlayback({
    useEffect(() => {
       clearResults()
       clearUploadState()
+      clearPinCreationState()
       setViewState("audio-review")
       setAnalysisMessage("音声を分析中...")
-   }, [clearResults, clearUploadState])
+   }, [clearResults, clearUploadState, clearPinCreationState])
 
    if (!audioData) {
       return null
@@ -316,14 +325,17 @@ export function AudioPlayback({
                            AI音分類結果
                         </h3>
 
-                        {(error || uploadError) && (
+                        {(error || uploadError || pinCreationError) && (
                            <motion.div
                               className="mb-4 rounded-lg border border-red-500/30 bg-red-500/20 p-4 backdrop-blur-sm"
                               initial={{ opacity: 0, scale: 0.9 }}
                               animate={{ opacity: 1, scale: 1 }}
                            >
                               <span className="font-medium text-red-300">
-                                 エラー: {uploadError || error?.message}
+                                 エラー:{" "}
+                                 {pinCreationError ||
+                                    uploadError ||
+                                    error?.message}
                               </span>
                            </motion.div>
                         )}
@@ -422,11 +434,26 @@ export function AudioPlayback({
                         uploadedAudioUrl ? (
                            <motion.button
                               onClick={handlePlacePin}
-                              className="w-full touch-manipulation rounded-xl border border-green-500/30 bg-green-600/80 px-4 py-3 font-semibold text-white shadow-[0_4px_20px_rgba(34,197,94,0.4)] backdrop-blur-sm transition-all duration-300 hover:bg-green-600 hover:shadow-[0_8px_32px_rgba(34,197,94,0.6)]"
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
+                              disabled={pinCreationStatus === "creating"}
+                              className={`w-full touch-manipulation rounded-xl border px-4 py-3 font-semibold text-white backdrop-blur-sm transition-all duration-300 ${
+                                 pinCreationStatus === "creating"
+                                    ? "cursor-not-allowed border-gray-500/30 bg-gray-600/80"
+                                    : "border-green-500/30 bg-green-600/80 shadow-[0_4px_20px_rgba(34,197,94,0.4)] hover:bg-green-600 hover:shadow-[0_8px_32px_rgba(34,197,94,0.6)]"
+                              }`}
+                              whileHover={
+                                 pinCreationStatus === "creating"
+                                    ? {}
+                                    : { scale: 1.02 }
+                              }
+                              whileTap={
+                                 pinCreationStatus === "creating"
+                                    ? {}
+                                    : { scale: 0.98 }
+                              }
                            >
-                              マップにピンを配置
+                              {pinCreationStatus === "creating"
+                                 ? "ピン作成中..."
+                                 : "マップにピンを配置"}
                            </motion.button>
                         ) : (
                            <motion.button

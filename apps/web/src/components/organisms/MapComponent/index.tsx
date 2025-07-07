@@ -5,6 +5,9 @@ import "mapbox-gl/dist/mapbox-gl.css"
 import { DebugPanel } from "@/components/atoms/DebugPanel"
 import { SoundPinMarkers } from "@/components/molecules/SoundPinMarkers"
 import { UserMarker } from "@/components/molecules/UserMarker"
+import { PinAudioPlayer } from "@/components/organisms/PinAudioPlayer"
+import type { SoundPin } from "@/store/useSoundPinStore"
+import { useState } from "react"
 import { useMapComponent } from "./hooks"
 import type { MapComponentProps } from "./type"
 
@@ -19,6 +22,8 @@ export function MapComponent({
    onReturnToLocationReady,
    onBearingChange,
 }: MapComponentProps): ReactElement {
+   const [playingPin, setPlayingPin] = useState<SoundPin | null>(null)
+
    const {
       mapContainerRef,
       map,
@@ -42,6 +47,29 @@ export function MapComponent({
       onBearingChange,
    })
 
+   /**
+    * ピン選択時の処理（音声再生対応）
+    */
+   const handlePinSelect = (pinId: string | null): void => {
+      selectPin(pinId)
+
+      if (pinId) {
+         // 選択されたピンを見つけて音声再生用に設定
+         const selectedPin = pins.find((pin) => pin.id === pinId)
+         if (selectedPin?.isPersisted && selectedPin.audioData?.url) {
+            setPlayingPin(selectedPin)
+         }
+      }
+   }
+
+   /**
+    * 音声再生を閉じる
+    */
+   const handleCloseAudioPlayer = (): void => {
+      setPlayingPin(null)
+      selectPin(null)
+   }
+
    return (
       <>
          <div
@@ -55,7 +83,7 @@ export function MapComponent({
             mapStyleLoaded={mapStyleLoaded}
             pins={pins}
             selectedPinId={selectedPinId}
-            onPinSelect={selectPin}
+            onPinSelect={handlePinSelect}
          />
 
          {/* ユーザーマーカー */}
@@ -74,6 +102,11 @@ export function MapComponent({
                onTimeChange={setDebugTimeOverride}
                onUpdateLighting={updateLightingAndShadows}
             />
+         )}
+
+         {/* 音声ピン再生 */}
+         {playingPin && (
+            <PinAudioPlayer pin={playingPin} onClose={handleCloseAudioPlayer} />
          )}
       </>
    )

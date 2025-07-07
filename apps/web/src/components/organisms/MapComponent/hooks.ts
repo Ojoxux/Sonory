@@ -30,7 +30,11 @@
  */
 
 import { useDebugStore } from "@/store/useDebugStore"
-import { type SoundPin, useSoundPinStore } from "@/store/useSoundPinStore"
+import {
+   type MapBounds,
+   type SoundPin,
+   useSoundPinStore,
+} from "@/store/useSoundPinStore"
 import * as O from "fp-ts/Option"
 import { pipe } from "fp-ts/function"
 import mapboxgl from "mapbox-gl"
@@ -225,7 +229,13 @@ export function useMapComponent({
       debugTimeOverride,
       setDebugTimeOverride,
    } = useDebugStore()
-   const { pins, selectedPinId, selectPin } = useSoundPinStore()
+   const {
+      pins,
+      selectedPinId,
+      selectPin,
+      mergeLocalAndPersistedPins,
+      loadNearbyPins,
+   } = useSoundPinStore()
 
    // カスタムフック
    const { position: customPosition, permissionStatus } =
@@ -331,7 +341,6 @@ export function useMapComponent({
    // マップ初期化（一度だけ実行、依存関係は意図的に除外）
    // 注意: この useEffect は意図的に依存関係を空にしています
    // 依存関係を追加するとマップが何度も再初期化されて問題を起こすためです
-   // biome-ignore lint/correctness/useExhaustiveDependencies: マップ初期化時の依存関係は意図的に制限しています
    useEffect(() => {
       if (!mapContainerRef.current || mapInitializedRef.current) return
 
@@ -663,6 +672,60 @@ export function useMapComponent({
       }
    }, [map, position, mapStyleLoaded])
 
+   // 地図の表示範囲変更時に周辺ピンを取得
+   useEffect(() => {
+      if (!map || !mapStyleLoaded) return
+
+      let loadTimeout: NodeJS.Timeout | null = null
+
+      const handleMapMove = () => {
+         // デバウンス処理（500ms後に実行）
+         if (loadTimeout) {
+            clearTimeout(loadTimeout)
+         }
+
+         loadTimeout = setTimeout(async () => {
+            try {
+               const bounds = map.getBounds()
+               if (!bounds) return
+
+               const mapBounds: MapBounds = {
+                  north: bounds.getNorth(),
+                  south: bounds.getSouth(),
+                  east: bounds.getEast(),
+                  west: bounds.getWest(),
+               }
+
+               await loadNearbyPins(mapBounds)
+            } catch (error) {
+               if (process.env.NODE_ENV === "development") {
+                  console.error("周辺ピン取得エラー:", error)
+               }
+            }
+         }, 500)
+      }
+
+      // 地図移動イベントをリスナーに追加
+      map.on("moveend", handleMapMove)
+      map.on("zoomend", handleMapMove)
+
+      // 初回読み込み
+      handleMapMove()
+
+      return () => {
+         if (loadTimeout) {
+            clearTimeout(loadTimeout)
+         }
+         map.off("moveend", handleMapMove)
+         map.off("zoomend", handleMapMove)
+      }
+   }, [map, mapStyleLoaded, loadNearbyPins])
+
+   // ピンの統合表示
+   const allPins = useMemo(() => {
+      return mergeLocalAndPersistedPins()
+   }, [pins, mergeLocalAndPersistedPins])
+
    return {
       mapContainerRef,
       map,
@@ -670,7 +733,7 @@ export function useMapComponent({
       position,
       currentLighting,
       debugMode,
-      pins,
+      pins: allPins, // 統合されたピンを返す
       selectedPinId,
       permissionStatus,
       geolocateInitialized,
