@@ -6,9 +6,10 @@
       "dev": "next dev --turbopack --port 3000",
       "build": "next build",
       "start": "next start",
-      "lint": "biome check --write .",
-      "lint:check": "biome check .",
-      "format": "biome format . --write",
+      "fix": "biome check --fix --unsafe .",
+      "fix:check": "biome check .",
+      "fix:style": "biome format . --write --unsafe",
+      "fix:all": "npm run fix && npm run fix:style",
       "type-check": "tsc --noEmit",
       "clean": "rm -rf .next"
    },

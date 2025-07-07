@@ -22,7 +22,7 @@ interface AudioMetadata {
  * 録音の開始、停止、一時停止、再開、リセットなどの機能を提供します。
  * MediaRecorder APIを使用して録音を行い、Supabase Storageへのアップロード機能も含みます。
  */
-export const useRecorderStore = create<RecorderState>((set, get) => ({
+export const useRecorderStore = create<RecorderState>((set, _get) => ({
    // 初期状態
    status: "idle",
    audioData: null,
