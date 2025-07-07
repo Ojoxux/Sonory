@@ -1,5 +1,12 @@
 import { create } from "zustand"
-import type { AudioData, InferenceResult, InferenceState } from "./types"
+import type {
+   AnalysisStatus,
+   AudioData,
+   InferenceResult,
+   InferenceState,
+   PythonAnalysisResult,
+} from "./types"
+import { useRecorderStore } from "./useRecorderStore"
 
 /**
  * Python YAMNet API response classification type
@@ -62,7 +69,7 @@ function generateClassificationResults(): InferenceResult[] {
 }
 
 /**
- * 音声ファイルをSupabase Storageにアップロード
+ * 音声ファイルをSupabase Storageにアップロード（レガシー実装）
  *
  * @param audioData - アップロードする音声データ
  * @returns アップロード後のURL
@@ -168,11 +175,16 @@ async function callBackendAnalysis(
  * Python YAMNetサービスをバックエンド経由で呼び出し、
  * 失敗時はフォールバック機能を使用します。
  */
-export const useInferenceStore = create<InferenceState>((set) => ({
+export const useInferenceStore = create<InferenceState>((set, get) => ({
    // 初期状態
    results: [],
    isInferring: false,
    error: null,
+   analysisStatus: "idle",
+   backendAnalysisResult: null,
+   fallbackUsed: false,
+   analysisError: null,
+   lastAnalyzedAudioId: null,
 
    /**
     * 音声データから音響AI推論を開始します
@@ -184,22 +196,63 @@ export const useInferenceStore = create<InferenceState>((set) => ({
     */
    startInference: async (audioData: AudioData): Promise<void> => {
       try {
-         set({ isInferring: true, error: null })
+         set({
+            isInferring: true,
+            error: null,
+            analysisStatus: "analyzing",
+            fallbackUsed: false,
+            analysisError: null,
+            lastAnalyzedAudioId: audioData.id,
+         })
 
          let results: InferenceResult[]
          let isUsingFallback = false
 
          try {
-            // 1. 音声ファイルをSupabase Storageにアップロード
-            const audioUrl = await uploadAudioToStorage(audioData)
+            // RecorderStoreから既存のアップロード情報を取得
+            const recorderState = useRecorderStore.getState()
+            let audioUrl = recorderState.uploadedAudioUrl
 
-            // 2. アップロードされたURLを使ってバックエンドAPI呼び出しを実行
+            // アップロード済みURLがない場合はレガシー実装を使用
+            if (!audioUrl) {
+               console.log(
+                  "⚠️ アップロード済みURLがありません。レガシー実装を使用します。",
+               )
+               audioUrl = await uploadAudioToStorage(audioData)
+            } else {
+               console.log("✅ アップロード済みURLを使用:", audioUrl)
+            }
+
+            // バックエンドAPI呼び出しを実行
             results = await callBackendAnalysis(audioData, audioUrl)
+
+            // バックエンド分析結果をPythonAnalysisResult形式で保存
+            const pythonResult: PythonAnalysisResult = {
+               classifications: results.map((r) => ({
+                  label: r.label,
+                  confidence: r.confidence,
+               })),
+               // 環境情報は実際のAPIレスポンスから取得できる場合に設定
+            }
+
+            set({
+               analysisStatus: "success",
+               backendAnalysisResult: pythonResult,
+            })
          } catch (_backendError) {
             isUsingFallback = true
 
             // フォールバック分析を実行
             results = generateClassificationResults()
+
+            set({
+               analysisStatus: "fallback",
+               fallbackUsed: true,
+               analysisError:
+                  _backendError instanceof Error
+                     ? _backendError.message
+                     : "バックエンドAPI接続失敗",
+            })
          }
 
          // 結果を設定
@@ -232,7 +285,80 @@ export const useInferenceStore = create<InferenceState>((set) => ({
             results: fallbackResults,
             isInferring: false,
             error: new Error(errorMessage),
+            analysisStatus: "error",
+            fallbackUsed: true,
+            analysisError: errorMessage,
          })
+      }
+   },
+
+   /**
+    * バックエンドで音声分析を実行
+    *
+    * @param audioId - 音声ID
+    * @param audioUrl - 音声URL
+    * @returns 分析結果
+    */
+   analyzeAudioWithBackend: async (
+      audioId: string,
+      audioUrl: string,
+   ): Promise<InferenceResult[]> => {
+      try {
+         set({
+            analysisStatus: "analyzing",
+            analysisError: null,
+            lastAnalyzedAudioId: audioId,
+         })
+
+         const response = await fetch(`/api/audio/${audioId}/analyze`, {
+            method: "POST",
+            headers: {
+               "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+               audioUrl: audioUrl,
+               topK: 5,
+            }),
+         })
+
+         if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}))
+            throw new Error(errorData.message || `分析失敗: ${response.status}`)
+         }
+
+         const result = await response.json()
+
+         if (!result.success || !result.data) {
+            throw new Error("分析結果が不正です")
+         }
+
+         // バックエンドの分析結果を保存
+         set({
+            backendAnalysisResult: result.data,
+            analysisStatus: "success",
+            fallbackUsed: false,
+         })
+
+         // InferenceResult形式に変換
+         const inferenceResults: InferenceResult[] =
+            result.data.allClassifications?.map((classification: any) => ({
+               label: classification.label,
+               confidence: classification.confidence,
+               category: classification.category || "unknown",
+            })) || []
+
+         return inferenceResults
+      } catch (error) {
+         const errorMessage =
+            error instanceof Error ? error.message : "分析に失敗しました"
+
+         set({
+            analysisStatus: "error",
+            analysisError: errorMessage,
+            fallbackUsed: false,
+         })
+
+         throw new Error(errorMessage)
       }
    },
 
@@ -259,5 +385,45 @@ export const useInferenceStore = create<InferenceState>((set) => ({
     */
    setError: (error: Error | null): void => {
       set({ error })
+   },
+
+   /**
+    * 分析状態を設定
+    *
+    * @param status - 分析状態
+    */
+   setAnalysisStatus: (status: AnalysisStatus): void => {
+      set({ analysisStatus: status })
+   },
+
+   /**
+    * バックエンド分析結果を設定
+    *
+    * @param result - Python YAMNet分析結果
+    */
+   setBackendAnalysisResult: (result: PythonAnalysisResult): void => {
+      set({ backendAnalysisResult: result })
+   },
+
+   /**
+    * フォールバック使用フラグを設定
+    *
+    * @param used - フォールバック使用フラグ
+    */
+   setFallbackUsed: (used: boolean): void => {
+      set({ fallbackUsed: used })
+   },
+
+   /**
+    * 分析状態をクリア
+    */
+   clearAnalysisState: (): void => {
+      set({
+         analysisStatus: "idle",
+         backendAnalysisResult: null,
+         fallbackUsed: false,
+         analysisError: null,
+         lastAnalyzedAudioId: null,
+      })
    },
 }))
