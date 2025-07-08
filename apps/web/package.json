@@ -6,12 +6,16 @@
       "dev": "next dev --turbopack --port 3000",
       "build": "next build",
       "start": "next start",
-      "fix": "biome check --fix --unsafe .",
-      "fix:check": "biome check .",
-      "fix:style": "biome format . --write --unsafe",
-      "fix:all": "npm run fix && npm run fix:style",
-      "type-check": "tsc --noEmit",
-      "clean": "rm -rf .next"
+      "lint": "biome check .",
+      "lint:fix": "biome check --fix --unsafe .",
+      "format": "biome format .",
+      "format:fix": "biome format . --write",
+      "type": "tsc --noEmit",
+      "validate": "npm run lint && npm run type",
+      "clean": "rm -rf .next out node_modules/.cache",
+      "prepare": "npm run validate",
+      "ci": "npm run validate && npm run build",
+      "precommit": "npm run lint:fix && npm run format:fix"
    },
    "dependencies": {
       "@ducanh2912/next-pwa": "^10.2.9",
