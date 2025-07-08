@@ -218,7 +218,9 @@ export const useRealtimeStore = create<RealtimeState & RealtimeActions>(
             const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
             if (!supabaseUrl || !supabaseAnonKey) {
-               throw new Error("Supabase設定が不正です")
+               console.warn("Supabase設定が見つかりません。リアルタイム通知機能は無効化されます。")
+               set({ connectionStatus: "disconnected" })
+               return
             }
 
             const client = createClient(supabaseUrl, supabaseAnonKey)
