@@ -1,6 +1,8 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Sonory Monorepo - Root .gitignore
+# モノレポ全体に共通するファイルのみを管理
+# アプリケーション固有のファイルは各アプリケーションの.gitignoreで管理
 
-# dependencies
+# Dependencies (ワークスペース全体)
 /node_modules
 /.pnp
 .pnp.*
@@ -10,96 +12,54 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# PWA関連の自動生成ファイル
-/public/sw.js
-/public/workbox-*.js
-/public/worker-*.js
-/public/sw.js.map
-/public/workbox-*.js.map
-/public/worker-*.js.map
-/public/fallback-*.js
-
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
+# Environment files (ルートレベル)
 .env
 .env.local
 .env.development
 .env.production
 .env.test
-.env.test.local
-.env.production.local
-.env.development.local
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-# vscode settings (プロジェクト設定は共有、個人設定のみ除外)
-# .vscode
-.vscode/settings-personal.json
 
 # Turborepo
 .turbo
 
-# モノレポ各アプリの生成ファイル
-apps/*/.next/
-apps/*/.turbo/
-apps/*/out/
-apps/*/build/
-apps/*/dist/
-apps/*/*.tsbuildinfo
-apps/*/next-env.d.ts
+# Next.js build files (ルートレベルに出力される場合)
+.next/
 
-# パッケージの生成ファイル
+# Shared packages build outputs
 packages/*/dist/
 packages/*/build/
 packages/*/*.tsbuildinfo
 
-# Cloudflare Workers (将来のapi app用)
-apps/api/.wrangler/
-apps/api/dist/
-
-# ログファイル
-*.log
-
-# OS生成ファイル
-Thumbs.db
+# OS generated files
 .DS_Store
+Thumbs.db
 *~
 
-# エディタ設定
+# IDE settings (個人設定のみ除外、プロジェクト設定は共有)
+.vscode/settings-personal.json
 .idea/
 *.swp
 *.swo
-*~
 
-# 一時ファイル
+# Logs (プロジェクト全体)
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Temporary files
 *.tmp
 *.temp
 
-# 削除された古いモノレポ移行前のファイル (GitHubコンフリクト表示対策)
-src/components/molecules/WaveformPlayer/
-src/components/organisms/MapComponent/hooks/
+# Deployment (プロジェクト全体)
+.vercel
 
+# Security
+*.pem
+
+# Testing (プロジェクト全体)
+coverage/
+
+# Other
+*.tsbuildinfo
