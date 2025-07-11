@@ -231,7 +231,9 @@ export function useMapComponent({
    } = useDebugStore()
    const {
       pins,
+      persistedPins,
       selectedPinId,
+      lastCreatedPinId,
       selectPin,
       mergeLocalAndPersistedPins,
       loadNearbyPins,
@@ -721,10 +723,48 @@ export function useMapComponent({
       }
    }, [map, mapStyleLoaded, loadNearbyPins])
 
+   // 新しいピンが作成されたときに周辺ピンを再読み込み
+   useEffect(() => {
+      if (!lastCreatedPinId || !map || !mapStyleLoaded) return
+
+      console.log(
+         "🔄 新しいピンが作成されました。周辺ピンを再読み込みします:",
+         lastCreatedPinId,
+      )
+
+      // 少し遅延してから再読み込み（データベースの更新を待つ）
+      const reloadTimeout = setTimeout(async () => {
+         try {
+            const bounds = map.getBounds()
+            if (!bounds) return
+
+            const mapBounds: MapBounds = {
+               north: bounds.getNorth(),
+               south: bounds.getSouth(),
+               east: bounds.getEast(),
+               west: bounds.getWest(),
+            }
+
+            console.log("🔄 周辺ピン再読み込み実行:", {
+               bounds: mapBounds,
+               lastCreatedPinId,
+            })
+
+            await loadNearbyPins(mapBounds)
+         } catch (error) {
+            console.error("新ピン作成後の周辺ピン再読み込みエラー:", error)
+         }
+      }, 2000) // 2秒後に再読み込み（DBの一貫性を確保）
+
+      return () => {
+         clearTimeout(reloadTimeout)
+      }
+   }, [lastCreatedPinId, map, mapStyleLoaded, loadNearbyPins])
+
    // ピンの統合表示
    const allPins = useMemo(() => {
       return mergeLocalAndPersistedPins()
-   }, [pins, mergeLocalAndPersistedPins])
+   }, [pins, persistedPins, mergeLocalAndPersistedPins])
 
    return {
       mapContainerRef,
