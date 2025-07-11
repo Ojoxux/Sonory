@@ -1954,7 +1954,7 @@ docker-compose -f docker-compose.dev.yml ps
 
 ---
 
-## 📋 **Phase 5: 音声マップピン永続化機能実装（準備開始）**
+## 📋 **Phase 5: 音声マップピン永続化機能実装**
 
 ### 🎯 **Issue #93: マップピンが永続的にマップに保持される機能の実装**
 
@@ -1976,123 +1976,533 @@ docker-compose -f docker-compose.dev.yml ps
 - 🚧 **永続化ピンの取得**: 地図表示時のピン読み込み
 - 🚧 **リアルタイム更新**: 新しいピンの即座反映
 
-### 🎯 **実装予定機能**
-
-#### **Phase 5A: フロントエンド統合**
-1. **音声アップロード統合**
-   - `useRecorderStore` → Supabase Storage連携
-   - アップロード進捗表示・エラーハンドリング
-
-2. **AI分析統合**
-   - `useInferenceStore` → Python YAMNet呼び出し
-   - 分析結果の永続化・ローディング状態管理
-
-3. **ピン作成統合**
-   - `useSoundPinStore` → バックエンドAPI連携
-   - 位置情報 + 分析結果 → DB保存・成功失敗通知
-
-#### **Phase 5B: 地図表示統合**
-1. **既存ピン取得**
-   - `MapComponent` → 周辺ピン API呼び出し
-   - 範囲指定（viewport bounds）・ページネーション対応
-
-2. **ピン表示統合**
-   - ローカルピン + 永続化ピン統合表示
-   - 重複排除ロジック・表示優先度管理
-
-3. **インタラクション**
-   - ピンクリック → 音声再生
-   - 詳細情報表示（分析結果・時刻・天気）・削除報告機能
-
-#### **Phase 5C: リアルタイム機能**
-1. **Supabase Realtime統合**
-   - 新ピン作成通知・地図範囲内の購読設定・接続状態管理
-
-2. **UI更新**
-   - 新ピンの自動表示・通知バナー・音声自動再生オプション
-
-### 🔧 **技術仕様**
+### 🔧 **技術仕様詳細**
 
 #### **統合データフロー**
 ```
-1. 音声録音 (10秒) → RecordSection
-2. 音声アップロード → Supabase Storage  
-3. AI分析実行 → Python YAMNet Service
-4. ピン作成 → PostgreSQL + PostGIS
-5. 地図更新 → リアルタイム表示
+1. 音声録音完了 → useRecorderStore.uploadAudioToStorage()
+2. アップロード成功 → useInferenceStore.analyzeAudioWithBackend()
+3. 分析完了 → useSoundPinStore.createPersistentPin()
+4. ピン作成成功 → MapComponent.loadNearbyPins()
+5. 地図更新 → リアルタイム表示・通知
 ```
 
 #### **主要APIエンドポイント**
 ```typescript
+POST /api/audio/upload      # 音声アップロード
+POST /api/audio/:id/analyze # AI分析実行
 POST /api/pins              # ピン作成
 GET  /api/pins/nearby       # 周辺ピン取得
 PUT  /api/pins/:id          # ピン更新
 DELETE /api/pins/:id        # ピン削除
-POST /api/audio/upload      # 音声アップロード
-POST /api/audio/:id/analyze # AI分析実行
 ```
-
-### 📊 **実装優先度**
-
-#### **高優先度（v1.0必須）**
-1. 音声アップロード → DB保存フロー
-2. 地図での永続化ピン表示
-3. 基本的な音声再生機能
-
-#### **中優先度（v1.1）**
-1. リアルタイム更新機能
-2. ピン詳細情報表示
-3. パフォーマンス最適化
-
-#### **低優先度（v1.2以降）**
-1. 高度な分析結果表示
-2. ソーシャル機能（いいね・コメント）
-3. 統計・分析ダッシュボード
-
-### 🎯 **成功指標**
-
-#### **機能要件**
-- ✅ 音声録音 → 永続化保存が100%成功
-- ✅ 地図リロード後もピンが表示される
-- ✅ 他ユーザーのピンがリアルタイムで表示される
-- ✅ 音声再生機能が正常動作する
-
-#### **パフォーマンス要件**
-- ✅ ピン作成レスポンス時間 < 3秒
-- ✅ 地図表示時のピン読み込み < 1秒
-- ✅ 同時接続100ユーザーまで対応
-
-### 🚧 **技術的課題と対策**
-
-1. **音声ファイルサイズ最適化**
-   - 課題: 10秒音声でも数MBになる可能性
-   - 対策: 録音時の圧縮設定最適化、WebM形式活用
-
-2. **地図パフォーマンス**
-   - 課題: 大量ピン表示時の描画負荷
-   - 対策: クラスタリング、LOD（Level of Detail）実装
-
-3. **リアルタイム接続管理**
-   - 課題: 接続断・再接続時の状態同期
-   - 対策: 接続状態監視、自動再接続、差分同期
-
-### 📅 **実装スケジュール**
-
-#### **Week 1: フロントエンド統合**
-- Day 1-2: 音声アップロード統合
-- Day 3-4: AI分析統合
-- Day 5-7: ピン作成統合・テスト
-
-#### **Week 2: 地図表示統合**
-- Day 1-3: 既存ピン取得・表示
-- Day 4-5: インタラクション実装
-- Day 6-7: 統合テスト・バグ修正
-
-#### **Week 3: リアルタイム機能**
-- Day 1-3: Supabase Realtime統合
-- Day 4-5: UI更新・通知機能
-- Day 6-7: パフォーマンス最適化
 
 ---
 
-**Phase 5実装完了により、Sonoryアプリは真の「音声地図共有プラットフォーム」として完成予定**
+## 🚀 **Phase 5A: 音声アップロード・AI分析統合**
+
+### 📋 **実装概要**
+**目標**: 音声録音→Supabase Storage保存→Python YAMNet分析の完全統合
+
+### 🎯 **実装要件**
+
+#### **1. 音声アップロード統合**
+
+**対象ファイル**: `apps/web/src/store/useRecorderStore.ts`
+
+**実装内容**:
+- 録音完了時にSupabase Storageへ自動アップロード
+- アップロード進捗状態の管理
+- エラーハンドリング（ネットワーク・ストレージ・権限エラー）
+- 成功・失敗時のユーザーフィードバック
+
+**必要な状態追加**:
+```typescript
+interface RecorderState {
+  // 既存状態...
+  uploadStatus: 'idle' | 'uploading' | 'success' | 'error'
+  uploadProgress: number // 0-100
+  uploadError: string | null
+  uploadedAudioUrl: string | null
+  uploadedAudioId: string | null // 分析用ID
+}
+```
+
+**実装する関数**:
+```typescript
+uploadAudioToStorage: (audioBlob: Blob, metadata: AudioMetadata) => Promise<{url: string, id: string}>
+setUploadStatus: (status: UploadStatus) => void
+setUploadProgress: (progress: number) => void
+setUploadError: (error: string | null) => void
+clearUploadState: () => void
+```
+
+#### **2. AI分析統合**
+
+**対象ファイル**: `apps/web/src/store/useInferenceStore.ts`
+
+**実装内容**:
+- バックエンドAPI呼び出し統合（既存のフォールバック機能は保持）
+- 分析結果の永続化準備
+- ローディング状態管理の強化
+- エラー分類・ユーザー通知の改善
+
+**強化する機能**:
+```typescript
+interface InferenceState {
+  // 既存状態...
+  analysisStatus: 'idle' | 'analyzing' | 'success' | 'error' | 'fallback'
+  backendAnalysisResult: PythonAnalysisResult | null
+  fallbackUsed: boolean
+  analysisError: string | null
+  lastAnalyzedAudioId: string | null
+}
+```
+
+**実装する関数**:
+```typescript
+analyzeAudioWithBackend: (audioId: string, audioUrl: string) => Promise<InferenceResult[]>
+setAnalysisStatus: (status: AnalysisStatus) => void
+setBackendAnalysisResult: (result: PythonAnalysisResult) => void
+setFallbackUsed: (used: boolean) => void
+clearAnalysisState: () => void
+```
+
+### 🎯 **Phase 5A成功指標**
+
+#### **機能要件**
+- ✅ 音声録音→アップロード→分析が100%成功
+- ✅ エラー時のフォールバック機能が正常動作
+- ✅ ユーザーフィードバック（進捗・成功・失敗）が適切に表示
+- ✅ 既存のローカルピン機能が影響を受けない
+
+#### **パフォーマンス要件**
+- ✅ アップロード完了時間 < 5秒（10秒音声）
+- ✅ AI分析完了時間 < 10秒
+- ✅ UI応答性維持（ローディング状態適切表示）
+
+---
+
+## 🚀 **Phase 5B: ピン作成・地図表示統合**
+
+### 📋 **実装概要**
+**目標**: AI分析結果→DB保存→地図表示→音声再生の完全統合
+
+### 🎯 **実装要件**
+
+#### **1. ピン作成統合**
+
+**対象ファイル**: `apps/web/src/store/useSoundPinStore.ts`
+
+**実装内容**:
+- バックエンドAPI連携（`POST /api/pins`）
+- 位置情報 + 分析結果の統合
+- データベース保存処理
+- 成功・失敗通知
+- ローカルピンと永続化ピンの統合管理
+
+**追加する状態**:
+```typescript
+interface SoundPinState {
+  // 既存状態...
+  persistedPins: SoundPin[] // DB保存済みピン
+  pinCreationStatus: 'idle' | 'creating' | 'success' | 'error'
+  pinCreationError: string | null
+  lastCreatedPinId: string | null
+  isLoadingNearbyPins: boolean
+  nearbyPinsError: string | null
+}
+```
+
+**実装する関数**:
+```typescript
+createPersistentPin: (audioUrl: string, location: LocationData, analysisResult: InferenceResult[]) => Promise<SoundPin>
+setPinCreationStatus: (status: PinCreationStatus) => void
+setPinCreationError: (error: string | null) => void
+mergeLocalAndPersistedPins: () => SoundPin[]
+loadNearbyPins: (bounds: MapBounds) => Promise<SoundPin[]>
+clearPinCreationState: () => void
+```
+
+#### **2. 地図表示統合**
+
+**対象ファイル**: `apps/web/src/components/organisms/MapComponent/index.tsx`
+
+**実装内容**:
+- 周辺ピンAPI呼び出し（`GET /api/pins/nearby`）
+- 範囲指定（viewport bounds）での効率的な取得
+- ローカルピン + 永続化ピン統合表示
+- 重複排除ロジック・表示優先度管理
+
+**追加する機能**:
+```typescript
+// 周辺ピン取得関数
+const loadNearbyPins = async (bounds: MapBounds) => {
+  const response = await fetch('/api/pins/nearby', {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      bounds: {
+        north: bounds.north,
+        south: bounds.south,
+        east: bounds.east,
+        west: bounds.west
+      },
+      limit: 50
+    })
+  })
+  
+  if (!response.ok) throw new Error(`ピン取得失敗: ${response.statusText}`)
+  return response.json()
+}
+
+// ピン統合表示ロジック
+const mergeAndDisplayPins = (localPins: SoundPin[], persistedPins: SoundPin[]) => {
+  // 重複排除（同じ位置・時間のピンは統合）
+  // 表示優先度（新しいピン > 分析済みピン > ローカルピン）
+  // パフォーマンス最適化（表示範囲内のみ描画）
+}
+```
+
+#### **3. 音声再生統合**
+
+**対象ファイル**: `apps/web/src/components/organisms/AudioPlayback/index.tsx`
+
+**実装内容**:
+- ピンクリック → 音声再生
+- Supabase Storage URLからの音声読み込み
+- 再生状態管理・エラーハンドリング
+- 複数ピンの再生競合制御
+
+**強化する機能**:
+```typescript
+interface AudioPlaybackState {
+  // 既存状態...
+  currentPlayingPinId: string | null
+  audioLoadingStatus: 'idle' | 'loading' | 'ready' | 'error'
+  audioLoadError: string | null
+  playbackQueue: string[] // 再生待ちピンID
+}
+
+// 実装する関数
+playPinAudio: (pinId: string, audioUrl: string) => Promise<void>
+stopAllAudio: () => void
+setAudioLoadingStatus: (status: AudioLoadingStatus) => void
+addToPlaybackQueue: (pinId: string) => void
+```
+
+### 🎯 **Phase 5B成功指標**
+
+#### **機能要件**
+- ✅ AI分析結果→ピン作成→DB保存が100%成功
+- ✅ 地図リロード後も永続化ピンが表示される
+- ✅ ローカルピンと永続化ピンが統合表示される
+- ✅ ピンクリック→音声再生が正常動作する
+
+#### **パフォーマンス要件**
+- ✅ ピン作成完了時間 < 3秒
+- ✅ 地図表示時のピン読み込み < 1秒
+- ✅ 音声再生開始時間 < 2秒
+- ✅ 地図操作時の応答性維持
+
+---
+
+## 🚀 **Phase 5C: リアルタイム機能統合**
+
+### 📋 **実装概要**
+**目標**: Supabase Realtime→新ピン通知→地図更新→ユーザー体験向上
+
+### 🎯 **実装要件**
+
+#### **1. リアルタイム通知システム**
+
+**対象ファイル**: `apps/web/src/store/useRealtimeStore.ts` (新規作成)
+
+**実装内容**:
+- Supabase Realtime購読設定
+- 新ピン作成イベントの受信
+- 地理的範囲フィルタリング
+- 通知表示・音声アラート
+
+**作成する状態**:
+```typescript
+interface RealtimeState {
+  isConnected: boolean
+  connectionStatus: 'connecting' | 'connected' | 'disconnected' | 'error'
+  subscribedChannels: string[]
+  recentNotifications: RealtimeNotification[]
+  notificationSettings: {
+    enabled: boolean
+    soundEnabled: boolean
+    vibrationEnabled: boolean
+    maxDistance: number // km
+  }
+  connectionError: string | null
+}
+
+interface RealtimeNotification {
+  id: string
+  type: 'new_pin' | 'pin_analysis_complete'
+  pinId: string
+  location: { lat: number; lng: number }
+  distance: number // meters
+  timestamp: Date
+  isRead: boolean
+}
+```
+
+**実装する関数**:
+```typescript
+connectRealtime: () => Promise<void>
+disconnectRealtime: () => void
+subscribeToNearbyPins: (userLocation: LocationData, radius: number) => void
+unsubscribeFromChannel: (channelId: string) => void
+handleNewPinNotification: (payload: any) => void
+markNotificationAsRead: (notificationId: string) => void
+updateNotificationSettings: (settings: Partial<NotificationSettings>) => void
+```
+
+#### **2. 地図リアルタイム更新**
+
+**対象ファイル**: `apps/web/src/components/organisms/MapComponent/index.tsx`
+
+**実装内容**:
+- リアルタイム購読統合
+- 新ピンの即座表示
+- アニメーション効果（新ピン出現）
+- 地図範囲変更時の購読更新
+
+**追加する機能**:
+```typescript
+// リアルタイム購読管理
+const subscribeToMapUpdates = (bounds: MapBounds) => {
+  const { subscribeToNearbyPins } = useRealtimeStore()
+  
+  // 地図中心点と範囲で購読
+  const centerLat = (bounds.north + bounds.south) / 2
+  const centerLng = (bounds.east + bounds.west) / 2
+  const radius = calculateRadius(bounds)
+  
+  subscribeToNearbyPins({ latitude: centerLat, longitude: centerLng }, radius)
+}
+
+// 新ピンアニメーション
+const animateNewPin = (pinId: string) => {
+  // ピンドロップアニメーション
+  // 一時的なハイライト効果
+  // 通知バナー表示
+}
+
+// 地図範囲変更時の購読更新
+const handleMapBoundsChange = (newBounds: MapBounds) => {
+  // 前回の購読を解除
+  // 新しい範囲で購読
+  // 既存ピンとの重複チェック
+}
+```
+
+#### **3. 通知UI統合**
+
+**対象ファイル**: `apps/web/src/components/organisms/NotificationCenter/index.tsx` (新規作成)
+
+**実装内容**:
+- 通知バナー表示
+- 通知履歴管理
+- 設定パネル
+- 音声・振動アラート
+
+**作成するコンポーネント**:
+```typescript
+interface NotificationCenterProps {
+  position: 'top' | 'bottom'
+  maxNotifications: number
+  autoHideDuration: number
+}
+
+// 通知バナーコンポーネント
+const NotificationBanner = ({ notification, onClose, onPinClick }) => {
+  return (
+    <div className="notification-banner">
+      <div className="notification-content">
+        <h4>新しい音声ピンが近くに投稿されました</h4>
+        <p>{notification.distance}m先 • {notification.timestamp}</p>
+      </div>
+      <div className="notification-actions">
+        <button onClick={() => onPinClick(notification.pinId)}>
+          ピンを見る
+        </button>
+        <button onClick={onClose}>×</button>
+      </div>
+    </div>
+  )
+}
+
+// 通知設定パネル
+const NotificationSettings = ({ settings, onUpdate }) => {
+  return (
+    <div className="notification-settings">
+      <h3>通知設定</h3>
+      <label>
+        <input
+          type="checkbox"
+          checked={settings.enabled}
+          onChange={(e) => onUpdate({ enabled: e.target.checked })}
+        />
+        通知を有効にする
+      </label>
+      <label>
+        <input
+          type="range"
+          min="100"
+          max="5000"
+          value={settings.maxDistance}
+          onChange={(e) => onUpdate({ maxDistance: parseInt(e.target.value) })}
+        />
+        通知範囲: {settings.maxDistance}m
+      </label>
+    </div>
+  )
+}
+```
+
+#### **4. PWA通知統合**
+
+**対象ファイル**: `apps/web/src/utils/notifications.ts` (新規作成)
+
+**実装内容**:
+- Push通知権限要求
+- バックグラウンド通知
+- Service Worker統合
+- 通知クリック時の動作
+
+**実装する機能**:
+```typescript
+// Push通知権限管理
+const requestNotificationPermission = async (): Promise<boolean> => {
+  if (!('Notification' in window)) return false
+  
+  const permission = await Notification.requestPermission()
+  return permission === 'granted'
+}
+
+// 通知送信
+const sendNotification = (title: string, options: NotificationOptions) => {
+  if (Notification.permission === 'granted') {
+    const notification = new Notification(title, {
+      ...options,
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/icon-72x72.png',
+      vibrate: [200, 100, 200],
+      tag: 'sonory-pin-notification'
+    })
+    
+    notification.onclick = (event) => {
+      event.preventDefault()
+      window.focus()
+      // ピンの位置に地図移動
+    }
+  }
+}
+
+// Service Worker通信
+const registerNotificationHandlers = () => {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      if (event.data.type === 'NEW_PIN_NOTIFICATION') {
+        handleNewPinNotification(event.data.payload)
+      }
+    })
+  }
+}
+```
+
+### 🎯 **Phase 5C成功指標**
+
+#### **機能要件**
+- ✅ 新ピン作成時にリアルタイム通知が配信される
+- ✅ 地図範囲内のピンのみ通知される
+- ✅ 通知クリックで該当ピンに移動・再生される
+- ✅ 通知設定でカスタマイズ可能
+
+#### **パフォーマンス要件**
+- ✅ 通知配信遅延 < 3秒
+- ✅ 地図更新応答時間 < 1秒
+- ✅ バックグラウンド通知が正常動作
+- ✅ バッテリー消費が適切
+
+---
+
+## 📊 **Phase 5 全体成功指標**
+
+### **機能要件**
+- ✅ 音声録音→永続化保存→地図表示が100%成功
+- ✅ 地図リロード後も永続化ピンが表示される
+- ✅ 他ユーザーのピンがリアルタイムで表示される
+- ✅ 音声再生機能が正常動作する
+- ✅ 通知機能が適切に動作する
+
+### **パフォーマンス要件**
+- ✅ エンドツーエンド処理時間 < 15秒
+- ✅ 地図表示時のピン読み込み < 1秒
+- ✅ 音声再生開始時間 < 2秒
+- ✅ 同時接続100ユーザーまで対応
+
+### **品質要件**
+- ✅ TypeScript型安全性100%
+- ✅ エラーハンドリング網羅
+- ✅ ユーザビリティ（直感的な操作・明確なフィードバック）
+- ✅ PWA対応（オフライン・バックグラウンド通知）
+
+---
+
+## 🚧 **実装時の注意事項**
+
+### **1. 既存機能の保持**
+- 現在のローカルピン機能は完全に保持
+- フォールバック機能（バックエンド失敗時）は必須
+- 既存のUI/UXは可能な限り維持
+
+### **2. エラーハンドリング**
+- ネットワークエラー（接続失敗・タイムアウト）
+- 認証エラー（Supabase権限不足）
+- ストレージエラー（容量不足・形式不正）
+- API エラー（バックエンドサービス障害）
+
+### **3. ユーザーフィードバック**
+- 進捗状態の視覚的表示（プログレスバー・スピナー）
+- 成功時の明確な通知（トースト・バナー）
+- 失敗時の分かりやすいエラーメッセージ
+- 再試行オプションの提供
+
+### **4. パフォーマンス最適化**
+- 地図範囲変更時の効率的なピン読み込み
+- 大量ピン表示時のクラスタリング検討
+- 音声ファイルの適切なキャッシング
+- 不要な再描画防止
+
+---
+
+## 📅 **実装スケジュール**
+
+### **Phase 5A: 音声アップロード・AI分析統合**
+- **実装対象**: `useRecorderStore.ts`, `useInferenceStore.ts`
+- **期間**: 3-5日
+- **成果物**: 音声録音→アップロード→分析の完全フロー
+
+### **Phase 5B: ピン作成・地図表示統合**
+- **実装対象**: `useSoundPinStore.ts`, `MapComponent/index.tsx`, `AudioPlayback/index.tsx`
+- **期間**: 5-7日
+- **成果物**: 分析結果→ピン作成→地図表示→音声再生
+
+### **Phase 5C: リアルタイム機能統合**
+- **実装対象**: `useRealtimeStore.ts`, `NotificationCenter/index.tsx`, `notifications.ts`
+- **期間**: 4-6日
+- **成果物**: リアルタイム通知→地図更新→PWA通知
+
+### **統合テスト・最適化**
+- **期間**: 2-3日
+- **成果物**: エンドツーエンド動作確認・パフォーマンス最適化
+
+---
+
+**🎯 Phase 5完了により、Sonoryは真のリアルタイム音声地図共有プラットフォームとして完成します！**
