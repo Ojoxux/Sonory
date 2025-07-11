@@ -7,6 +7,7 @@ import { Hono } from "hono"
 import { z } from "zod"
 import { APIException } from "../middleware/error"
 import { validate } from "../middleware/validation"
+import { AudioService } from "../services/audio.service"
 import { PinService } from "../services/pin.service"
 import type { Env } from "../types/api"
 
@@ -98,61 +99,150 @@ app.post("/", validate("json", createPinSchema), async (c) => {
 })
 
 /**
- * GET /api/pins/:id - Get pin by ID
+ * POST /api/pins/upload - Create a new pin with audio upload
  */
-app.get("/:id", async (c) => {
+app.post("/upload", async (c) => {
    const service = new PinService(c)
-   const id = c.req.param("id")
+   const audioService = new AudioService(c)
 
-   const pin = await service.getPinById(id)
+   try {
+      // FormDataから音声ファイルと位置情報を取得
+      const formData = await c.req.formData()
+      const audioFile = formData.get("audio") as unknown as File
+      const locationStr = formData.get("location") as string
+      const metadataStr = formData.get("metadata") as string
 
-   if (!pin) {
-      throw new APIException(ERROR_CODES.DATABASE_ERROR, "Pin not found", 404)
+      if (!audioFile || !(audioFile instanceof File)) {
+         throw new APIException(
+            ERROR_CODES.INVALID_AUDIO_FORMAT,
+            "音声ファイルが必要です",
+         )
+      }
+
+      if (!locationStr) {
+         throw new APIException(
+            ERROR_CODES.INVALID_LOCATION,
+            "位置情報が必要です",
+         )
+      }
+
+      const location = JSON.parse(locationStr)
+      const metadata = metadataStr ? JSON.parse(metadataStr) : {}
+
+      if (!location || !location.lat || !location.lng) {
+         throw new APIException(
+            ERROR_CODES.INVALID_LOCATION,
+            "位置情報が必要です",
+         )
+      }
+
+      // 音声ファイルをSupabase Storageにアップロード
+      console.log("🔄 音声ファイルアップロード開始:", {
+         fileName: audioFile.name,
+         fileSize: audioFile.size,
+         fileType: audioFile.type,
+      })
+
+      const uploadResult = await audioService.uploadAudio(audioFile)
+
+      console.log("✅ 音声ファイルアップロード完了:", {
+         audioId: uploadResult.audioId,
+         audioUrl: uploadResult.audioUrl,
+      })
+
+      // 音声フォーマットを決定
+      let audioFormat: "webm" | "mp3" | "wav" = "webm"
+      if (audioFile.type.includes("mp3")) {
+         audioFormat = "mp3"
+      } else if (audioFile.type.includes("wav")) {
+         audioFormat = "wav"
+      }
+
+      // ピンデータを作成
+      const pinData = {
+         location: {
+            lat: location.lat,
+            lng: location.lng,
+            accuracy: location.accuracy,
+         },
+         audio: {
+            url: uploadResult.audioUrl,
+            duration: metadata.duration || 10,
+            format: audioFormat,
+         },
+         weather: metadata.weather, // 天気情報を追加
+         timeTag: metadata.timeTag,
+         title: metadata.title,
+         deviceInfo: metadata.deviceInfo,
+      }
+
+      const pin = await service.createPin(pinData)
+
+      // 非同期でAI分析を実行
+      console.log("🤖 AI分析を非同期で開始:", pin.id)
+      c.executionCtx.waitUntil(
+         (async (): Promise<void> => {
+            try {
+               // 少し待機してからAI分析を実行
+               await new Promise((resolve) => setTimeout(resolve, 1000))
+
+               const analysisResponse = await fetch(
+                  `http://localhost:8787/api/audio/${uploadResult.audioId}/analyze`,
+                  {
+                     method: "POST",
+                     headers: {
+                        "Content-Type": "application/json",
+                     },
+                  },
+               )
+
+               if (analysisResponse.ok) {
+                  const analysisResult = (await analysisResponse.json()) as {
+                     success: boolean
+                     data?: {
+                        transcription: string
+                        categories: {
+                           emotion: string
+                           topic: string
+                           language: string
+                           confidence: number
+                        }
+                        summary?: string
+                     }
+                  }
+
+                  if (analysisResult.success && analysisResult.data) {
+                     // 分析結果でピンを更新
+                     await service.updatePin(pin.id, {
+                        aiAnalysis: analysisResult.data,
+                     })
+
+                     console.log("✅ AI分析完了・ピン更新:", {
+                        pinId: pin.id,
+                        analysis: analysisResult.data,
+                     })
+                  }
+               }
+            } catch (error) {
+               console.error("❌ AI分析エラー:", error)
+            }
+         })(),
+      )
+
+      return c.json({
+         success: true,
+         data: pin,
+      })
+   } catch (error) {
+      if (error instanceof APIException) {
+         throw error
+      }
+
+      throw new APIException(
+         ERROR_CODES.INTERNAL_SERVER_ERROR,
+         error instanceof Error ? error.message : "ピン作成に失敗しました",
+      )
    }
-
-   return c.json({
-      success: true,
-      data: pin,
-   })
-})
-
-/**
- * PUT /api/pins/:id - Update pin
- */
-app.put("/:id", validate("json", updatePinSchema), async (c) => {
-   const service = new PinService(c)
-   const id = c.req.param("id")
-   const data = await c.req.json()
-
-   const pin = await service.updatePin(id, data)
-
-   if (!pin) {
-      throw new APIException(ERROR_CODES.DATABASE_ERROR, "Pin not found", 404)
-   }
-
-   return c.json({
-      success: true,
-      data: pin,
-   })
-})
-
-/**
- * DELETE /api/pins/:id - Delete pin
- */
-app.delete("/:id", async (c) => {
-   const service = new PinService(c)
-   const id = c.req.param("id")
-
-   const deleted = await service.deletePin(id)
-
-   if (!deleted) {
-      throw new APIException(ERROR_CODES.DATABASE_ERROR, "Pin not found", 404)
-   }
-
-   return c.json({
-      success: true,
-      data: { deleted: true },
-   })
 })
 
 /**
@@ -251,6 +341,64 @@ app.post("/batch", validate("json", z.array(createPinSchema)), async (c) => {
          requested: data.length,
          created: pins.length,
       },
+   })
+})
+
+/**
+ * GET /api/pins/:id - Get pin by ID
+ */
+app.get("/:id", async (c) => {
+   const service = new PinService(c)
+   const id = c.req.param("id")
+
+   const pin = await service.getPinById(id)
+
+   if (!pin) {
+      throw new APIException(ERROR_CODES.DATABASE_ERROR, "Pin not found", 404)
+   }
+
+   return c.json({
+      success: true,
+      data: pin,
+   })
+})
+
+/**
+ * PUT /api/pins/:id - Update pin
+ */
+app.put("/:id", validate("json", updatePinSchema), async (c) => {
+   const service = new PinService(c)
+   const id = c.req.param("id")
+   const data = await c.req.json()
+
+   const pin = await service.updatePin(id, data)
+
+   if (!pin) {
+      throw new APIException(ERROR_CODES.DATABASE_ERROR, "Pin not found", 404)
+   }
+
+   return c.json({
+      success: true,
+      data: pin,
+   })
+})
+
+/**
+ * DELETE /api/pins/:id - Delete pin
+ */
+app.delete("/:id", async (c) => {
+   const service = new PinService(c)
+   const id = c.req.param("id")
+
+   const deleted = await service.deletePin(id)
+
+   if (!deleted) {
+      throw new APIException(ERROR_CODES.DATABASE_ERROR, "Pin not found", 404)
+   }
+
+   return c.json({
+      success: true,
+      data: { deleted: true },
    })
 })
 

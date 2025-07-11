@@ -27,7 +27,7 @@ export interface SupabaseConfig {
 
 /** クライアントキャッシュ */
 let supabaseClient: SupabaseClient | null = null
-let adminClient: SupabaseClient | null = null
+let _adminClient: SupabaseClient | null = null
 
 /**
  * 環境変数からSupabase設定を取得
@@ -76,36 +76,31 @@ export function getSupabaseClient(env: Env): SupabaseClient {
 }
 
 /**
- * Supabase管理クライアントを取得（サービスロール用）
+ * Supabase管理クライアントを取得
  *
  * @param env - Cloudflare Workers環境変数
- * @returns Supabase管理クライアントインスタンス
- * @throws APIException サービスキーが未設定の場合
+ * @returns Supabase管理クライアント
  */
 export function getSupabaseAdmin(env: Env): SupabaseClient {
-   if (!adminClient) {
-      const config = getSupabaseConfig(env)
-
-      if (!config.serviceKey) {
-         throw new APIException(
-            ERROR_CODES.INTERNAL_SERVER_ERROR,
-            "Service key not configured",
-            500,
-         )
-      }
-
-      adminClient = createClient(config.url, config.serviceKey, {
-         auth: {
-            persistSession: false,
-            autoRefreshToken: false,
-         },
-         global: {
-            fetch: fetch.bind(globalThis),
-         },
+   if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_KEY) {
+      console.error("❌ Supabase環境変数が設定されていません:", {
+         hasUrl: !!env.SUPABASE_URL,
+         hasKey: !!env.SUPABASE_SERVICE_KEY,
       })
+      throw new Error("Supabase configuration is missing")
    }
 
-   return adminClient
+   console.log("🔄 Supabase管理クライアントを初期化:", {
+      url: env.SUPABASE_URL,
+      keyLength: env.SUPABASE_SERVICE_KEY.length,
+   })
+
+   return createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, {
+      auth: {
+         autoRefreshToken: false,
+         persistSession: false,
+      },
+   })
 }
 
 /**
@@ -113,5 +108,5 @@ export function getSupabaseAdmin(env: Env): SupabaseClient {
  */
 export function resetClients(): void {
    supabaseClient = null
-   adminClient = null
+   _adminClient = null
 }

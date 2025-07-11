@@ -8,11 +8,7 @@ import {
 import type { Context } from "hono"
 import { APIException } from "../middleware/error"
 import { PinRepository } from "../repositories/pin.repository"
-import type {
-   PostGISPoint,
-   SoundPinInsert,
-   SoundPinUpdate,
-} from "../types/database"
+import type { SoundPinInsert, SoundPinUpdate } from "../types/database"
 import { BaseService } from "./base.service"
 import { getSupabaseClient } from "./supabase"
 
@@ -47,7 +43,11 @@ export class PinService extends BaseService {
     * @throws APIException on validation or creation error
     */
    async createPin(request: CreatePinRequest): Promise<SoundPinAPI> {
-      this.log("info", "Creating new pin", { location: request.location })
+      this.log("info", "Creating new pin", {
+         location: request.location,
+         audio: request.audio,
+         requestData: request,
+      })
 
       try {
          // Validate location
@@ -59,6 +59,8 @@ export class PinService extends BaseService {
          // Convert to database insert format
          const pinData = this.toDatabaseInsert(request)
 
+         this.log("info", "Database insert data", { pinData })
+
          // Create pin in database
          const createdPin = await this.repository.create(pinData)
 
@@ -67,6 +69,7 @@ export class PinService extends BaseService {
       } catch (error) {
          this.log("error", "Failed to create pin", {
             error: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined,
          })
          throw error
       }
@@ -409,15 +412,13 @@ export class PinService extends BaseService {
     * @returns Database insert format
     */
    private toDatabaseInsert(request: CreatePinRequest): SoundPinInsert {
-      const point: PostGISPoint = {
-         type: "Point",
-         coordinates: [request.location.lng, request.location.lat],
-      }
+      // PostGISのPOINT関数を使用してGeography型に変換
+      const locationWKT = `POINT(${request.location.lng} ${request.location.lat})`
 
       return {
          // 必須フィールド
          user_id: null, // TODO: 認証実装後はコンテキストから取得
-         location: JSON.stringify(point),
+         location: locationWKT,
          audio_url: request.audio.url,
          audio_duration: request.audio.duration,
          audio_format: request.audio.format,
@@ -432,10 +433,10 @@ export class PinService extends BaseService {
          ai_summary: null,
 
          // 天気情報（任意）
-         weather_temperature: request.weather?.temperature || null,
-         weather_condition: request.weather?.condition || null,
-         weather_wind_speed: request.weather?.windSpeed || null,
-         weather_humidity: request.weather?.humidity || null,
+         weather_temperature: request.weather?.temperature ?? null,
+         weather_condition: request.weather?.condition ?? null,
+         weather_wind_speed: request.weather?.windSpeed ?? null,
+         weather_humidity: request.weather?.humidity ?? null,
 
          // メタデータ（任意）
          time_tag: request.timeTag || null,
