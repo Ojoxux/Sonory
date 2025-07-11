@@ -6,7 +6,7 @@
       "lib": ["ES2022"],
       "types": ["@cloudflare/workers-types", "node"],
       "jsx": "react-jsx",
-      "moduleResolution": "bundler",
+      "moduleResolution": "node",
       "moduleDetection": "force",
       "allowImportingTsExtensions": true,
       "resolveJsonModule": true,
