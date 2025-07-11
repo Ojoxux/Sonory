@@ -88,7 +88,7 @@ export function PinAudioPlayer({
       if (!Number.isFinite(seconds) || seconds < 0) {
          return "00:00"
       }
-      
+
       const mins = Math.floor(seconds / 60)
       const secs = Math.floor(seconds % 60)
       return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
@@ -117,7 +117,10 @@ export function PinAudioPlayer({
                // durationが無効な場合は、デフォルト値を設定
                setDuration(10) // 10秒のデフォルト値
                setAudioLoadingStatus("ready")
-               console.warn("音声のdurationが無効です。デフォルト値を使用します:", audioDuration)
+               console.warn(
+                  "音声のdurationが無効です。デフォルト値を使用します:",
+                  audioDuration,
+               )
             }
          }
 
@@ -228,22 +231,30 @@ export function PinAudioPlayer({
    /**
     * シークバーのクリック処理
     */
-   const handleSeek = useCallback((event: React.MouseEvent<HTMLDivElement>): void => {
-      if (!audioElement || !progressBarRef.current || !Number.isFinite(duration) || duration <= 0) {
-         return
-      }
+   const handleSeek = useCallback(
+      (event: React.MouseEvent<HTMLDivElement>): void => {
+         if (
+            !audioElement ||
+            !progressBarRef.current ||
+            !Number.isFinite(duration) ||
+            duration <= 0
+         ) {
+            return
+         }
 
-      const rect = progressBarRef.current.getBoundingClientRect()
-      const clickX = event.clientX - rect.left
-      const progressBarWidth = rect.width
-      const clickRatio = Math.max(0, Math.min(1, clickX / progressBarWidth))
-      const newTime = clickRatio * duration
+         const rect = progressBarRef.current.getBoundingClientRect()
+         const clickX = event.clientX - rect.left
+         const progressBarWidth = rect.width
+         const clickRatio = Math.max(0, Math.min(1, clickX / progressBarWidth))
+         const newTime = clickRatio * duration
 
-      if (Number.isFinite(newTime) && newTime >= 0 && newTime <= duration) {
-         audioElement.currentTime = newTime
-         setCurrentTime(newTime)
-      }
-   }, [audioElement, duration])
+         if (Number.isFinite(newTime) && newTime >= 0 && newTime <= duration) {
+            audioElement.currentTime = newTime
+            setCurrentTime(newTime)
+         }
+      },
+      [audioElement, duration],
+   )
 
    /**
     * 閉じるボタンのクリックハンドラー
@@ -292,8 +303,12 @@ export function PinAudioPlayer({
 
    // 安全な時間表示のための値
    const safeDuration = Number.isFinite(duration) && duration > 0 ? duration : 0
-   const safeCurrentTime = Number.isFinite(currentTime) && currentTime >= 0 ? currentTime : 0
-   const progressPercentage = safeDuration > 0 ? Math.min(100, (safeCurrentTime / safeDuration) * 100) : 0
+   const safeCurrentTime =
+      Number.isFinite(currentTime) && currentTime >= 0 ? currentTime : 0
+   const progressPercentage =
+      safeDuration > 0
+         ? Math.min(100, (safeCurrentTime / safeDuration) * 100)
+         : 0
 
    return (
       <motion.div
@@ -456,20 +471,48 @@ export function PinAudioPlayer({
 
                      {/* 再生時間表示 */}
                      <div className="text-center text-neutral-300 text-sm">
-                        {formatTime(safeCurrentTime)} / {formatTime(safeDuration)}
+                        {formatTime(safeCurrentTime)} /{" "}
+                        {formatTime(safeDuration)}
                      </div>
 
                      {/* 進捗バー（クリック可能） */}
-                     <div 
+                     <div
                         ref={progressBarRef}
-                        className="mt-2 h-2 w-full rounded-full bg-white/10 cursor-pointer"
+                        className="mt-2 h-2 w-full cursor-pointer rounded-full bg-white/10"
                         onClick={handleSeek}
+                        onKeyDown={(e) => {
+                           if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault()
+                              // キーボードイベントの場合は中央位置にシーク
+                              if (progressBarRef.current) {
+                                 const rect =
+                                    progressBarRef.current.getBoundingClientRect()
+                                 const centerX = rect.left + rect.width / 2
+                                 const mockEvent = {
+                                    clientX: centerX,
+                                    preventDefault: () => {
+                                       // キーボードイベント用の空実装
+                                    },
+                                 } as React.MouseEvent<HTMLDivElement>
+                                 handleSeek(mockEvent)
+                              }
+                           }
+                        }}
+                        tabIndex={0}
+                        role="slider"
+                        aria-label="再生位置"
+                        aria-valuemin={0}
+                        aria-valuemax={safeDuration}
+                        aria-valuenow={safeCurrentTime}
                      >
                         <div
                            className="h-2 rounded-full bg-blue-500"
                            style={{
                               width: `${progressPercentage}%`,
-                              transition: playbackState === "playing" ? "none" : "width 0.2s ease-out",
+                              transition:
+                                 playbackState === "playing"
+                                    ? "none"
+                                    : "width 0.2s ease-out",
                            }}
                         />
                      </div>

@@ -85,7 +85,7 @@ export function SoundPinIcon({
             onClick={onClick}
             className={`relative z-10 flex items-center justify-center ${currentSize.container}
                ${currentVariant.bg}
-               ${currentVariant.shadow} border-2 ${currentVariant.border} rounded-full cursor-pointer touch-manipulation transition-all duration-300 hover:scale-110 hover:shadow-xl active:scale-95 ${className}
+               ${currentVariant.shadow} border-2 ${currentVariant.border} cursor-pointer touch-manipulation rounded-full transition-all duration-300 hover:scale-110 hover:shadow-xl active:scale-95 ${className}
             `}
             whileHover={animated ? { scale: 1.1 } : {}}
             whileTap={animated ? { scale: 0.95 } : {}}

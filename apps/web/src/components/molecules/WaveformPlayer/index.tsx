@@ -76,7 +76,7 @@ export function WaveformPlayer({
          try {
             isDestroyingRef.current = true
             setIsInitialized(false)
-            
+
             // アニメーションフレームをクリーンアップ
             if (animationFrameRef.current) {
                cancelAnimationFrame(animationFrameRef.current)
@@ -214,7 +214,10 @@ export function WaveformPlayer({
             } else {
                // durationが無効な場合は、デフォルト値を設定
                setDuration(10) // 10秒のデフォルト値
-               console.warn("WaveSurfer音声のdurationが無効です。デフォルト値を使用します:", duration)
+               console.warn(
+                  "WaveSurfer音声のdurationが無効です。デフォルト値を使用します:",
+                  duration,
+               )
             }
             onReady?.()
             wavesurfer.play() // 再生を ready イベント内で確実に実行
@@ -222,15 +225,20 @@ export function WaveformPlayer({
 
          // 再生中の現在時刻を更新（requestAnimationFrameで滑らかに）
          const updateTime = () => {
-            if (wavesurfer && wavesurfer.isPlaying && wavesurfer.isPlaying()) {
+            if (wavesurfer?.isPlaying?.()) {
                const time = wavesurfer.getCurrentTime()
                if (Number.isFinite(time) && time >= 0) {
                   setCurrentTime(time)
                }
-               
+
                // 終了間近になったら手動で終了処理をトリガーする
                const duration = wavesurfer.getDuration()
-               if (Number.isFinite(duration) && duration > 0 && Number.isFinite(time) && time >= duration - 0.05) {
+               if (
+                  Number.isFinite(duration) &&
+                  duration > 0 &&
+                  Number.isFinite(time) &&
+                  time >= duration - 0.05
+               ) {
                   // すでに再生が停止していなければ、手動で停止し、終了処理を呼び出す
                   if (wavesurfer.isPlaying()) {
                      wavesurfer.pause() // 再生を停止
@@ -252,7 +260,12 @@ export function WaveformPlayer({
             }
             // 終了間近になったら手動で終了処理をトリガーする
             const duration = wavesurfer.getDuration()
-            if (Number.isFinite(duration) && duration > 0 && Number.isFinite(time) && time >= duration - 0.05) {
+            if (
+               Number.isFinite(duration) &&
+               duration > 0 &&
+               Number.isFinite(time) &&
+               time >= duration - 0.05
+            ) {
                // すでに再生が停止していなければ、手動で停止し、終了処理を呼び出す
                if (wavesurfer.isPlaying()) {
                   wavesurfer.pause() // 再生を停止
@@ -401,7 +414,7 @@ export function WaveformPlayer({
       if (!Number.isFinite(time) || time < 0) {
          return "00:00"
       }
-      
+
       const minutes = Math.floor(time / SECONDS_IN_MINUTE)
       const seconds = Math.round(time % SECONDS_IN_MINUTE)
       return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`
@@ -503,9 +516,13 @@ export function WaveformPlayer({
             </button>
 
             <div className="flex items-center gap-2 font-mono text-gray-600 text-sm">
-               <span>{formatTime(Number.isFinite(currentTime) ? currentTime : 0)}</span>
+               <span>
+                  {formatTime(Number.isFinite(currentTime) ? currentTime : 0)}
+               </span>
                <span>/</span>
-               <span>{formatTime(Number.isFinite(duration) ? duration : 0)}</span>
+               <span>
+                  {formatTime(Number.isFinite(duration) ? duration : 0)}
+               </span>
             </div>
 
             <div className="w-12" />
