@@ -1,28 +1,9 @@
-# Dependencies
-node_modules/
+# Sonory API - アプリケーション固有の .gitignore
+# 共通設定はルートレベルの .gitignore で管理
 
-# Environment variables (アプリケーション固有)
-.env.local
-.env.development.local
-.env.production.local
-.env.test.local
+# Cloudflare Workers固有
+.wrangler/
 .dev.vars
 
-# Wrangler
-.wrangler/
-dist/
-
-# Build outputs
-.next/
-out/
-
-# Logs
-*.log
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# IDE
-.vscode/
-.idea/ 
+# Wrangler固有の環境変数
+wrangler.toml.backup 

@@ -2,12 +2,15 @@
 	"name": "sonory-monorepo",
 	"version": "0.1.0",
 	"private": true,
-	"workspaces": ["apps/*", "packages/*"],
+	"workspaces": ["apps/web", "apps/python-audio-analyzer", "packages/*"],
 	"scripts": {
 		"build": "turbo build",
 		"dev": "turbo dev",
 		"lint": "turbo lint",
-		"format": "turbo format",
+		"fix": "turbo fix",
+		"fix:check": "turbo fix:check",
+		"fix:style": "turbo fix:style",
+		"fix:all": "turbo fix:all",
 		"test": "turbo test",
 		"clean": "turbo clean",
 		"type-check": "turbo type-check",
@@ -34,23 +37,9 @@
 		"win:start:all": "concurrently \"npm run win:start:python\" \"npm run start:api\" \"npm run start:frontend\" --names \"🐍Python,🔗API,📱Frontend\" --prefix-colors \"yellow,blue,green\""
 	},
 	"dependencies": {
-		"@ducanh2912/next-pwa": "^10.2.9",
-		"@mapbox/mapbox-gl-geocoder": "^5.0.3",
-		"@supabase/supabase-js": "^2.49.8",
-		"fp-ts": "^2.16.10",
-		"framer-motion": "^12.15.0",
-		"idb": "^8.0.3",
-		"lucide-react": "^0.514.0",
-		"mapbox-gl": "^3.12.0",
-		"next": "15.3.2",
-		"react": "^19.0.0",
-		"react-dom": "^19.0.0",
-		"react-icons": "^5.5.0",
-		"recordrtc": "^5.6.2",
-		"uuid": "^11.1.0",
-		"wavesurfer.js": "^7.9.5",
-		"zod": "^3.25.28",
-		"zustand": "^5.0.5"
+		"@sonory/shared-types": "*",
+		"@sonory/utils": "*",
+		"@sonory/config": "*"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
@@ -63,27 +52,27 @@
 	},
 	"lint-staged": {
 		"apps/web/**/*.{js,jsx,ts,tsx}": [
-			"cd apps/web && npx biome check --write .",
+			"cd apps/web && npx biome check --fix --unsafe . && npx biome format . --write --unsafe",
 			"cd apps/web && npx tsc --noEmit"
 		],
 		"apps/api/**/*.{js,jsx,ts,tsx}": [
-			"cd apps/api && npx biome check --write .",
+			"cd apps/api && npx biome check --fix --unsafe . && npx biome format . --write --unsafe",
 			"cd apps/api && npx tsc --noEmit"
 		],
 		"packages/shared-types/**/*.{js,jsx,ts,tsx}": [
-			"cd packages/shared-types && npx biome check --write .",
+			"cd packages/shared-types && npx biome check --fix --unsafe . && npx biome format . --write --unsafe",
 			"cd packages/shared-types && npx tsc --noEmit"
 		],
 		"packages/utils/**/*.{js,jsx,ts,tsx}": [
-			"cd packages/utils && npx biome check --write .",
+			"cd packages/utils && npx biome check --fix --unsafe . && npx biome format . --write --unsafe",
 			"cd packages/utils && npx tsc --noEmit"
 		],
 		"packages/python-types/**/*.{js,jsx,ts,tsx}": [
-			"cd packages/python-types && npx biome check --write .",
+			"cd packages/python-types && npx biome check --fix --unsafe . && npx biome format . --write --unsafe",
 			"cd packages/python-types && npx tsc --noEmit"
 		],
 		"packages/config/**/*.{js,jsx,ts,tsx}": [
-			"npx biome check --write packages/config"
+			"npx biome check --fix --unsafe packages/config && npx biome format packages/config --write --unsafe"
 		]
 	},
 	"packageManager": "npm@10.0.0"

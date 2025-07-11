@@ -46,7 +46,7 @@ export function SonicLoader({
          transition: {
             duration: 1.5,
             repeat: Number.POSITIVE_INFINITY,
-            ease: "easeInOut",
+            ease: "easeInOut" as const,
          },
       },
    }
@@ -60,7 +60,7 @@ export function SonicLoader({
          rotate: 360, // 360度回転しながら広がる
          transition: {
             duration: 6, // アニメーションの持続時間を6秒に延長
-            ease: "easeOut",
+            ease: "easeOut" as const,
             repeat: Number.POSITIVE_INFINITY,
             repeatDelay: 0.3, // 繰り返し間の遅延
             delay: i * 0.7, // 各波紋の開始をずらす
@@ -122,7 +122,7 @@ export function SonicLoader({
                transition={{
                   duration: 2.5,
                   repeat: Number.POSITIVE_INFINITY,
-                  ease: "easeInOut",
+                  ease: "easeInOut" as const,
                }}
             />
             {/* 内側の脈動するリング */}

@@ -1,6 +1,7 @@
 "use client"
 
 import { useInferenceStore } from "@/store/useInferenceStore"
+import { useRecorderStore } from "@/store/useRecorderStore"
 import { useSoundPinStore } from "@/store/useSoundPinStore"
 import { motion } from "framer-motion"
 import { useEffect, useState } from "react"
@@ -13,7 +14,7 @@ import type { AudioPlaybackProps } from "./types"
 /**
  * 表示状態の型定義
  */
-type ViewState = "audio-review" | "ai-analyzing" | "results"
+type ViewState = "audio-review" | "uploading" | "ai-analyzing" | "results"
 
 /**
  * 録音完了後の音声再生コンポーネント
@@ -44,8 +45,27 @@ export function AudioPlayback({
    className = "",
    currentPosition,
 }: AudioPlaybackProps) {
-   const { startInference, results, error, clearResults } = useInferenceStore()
-   const { addPin } = useSoundPinStore()
+   const {
+      startInference,
+      results,
+      error,
+      clearResults,
+      fallbackUsed,
+      backendAnalysisResult,
+   } = useInferenceStore()
+   const {
+      uploadAudioToStorage,
+      uploadProgress,
+      uploadError,
+      uploadedAudioUrl,
+      clearUploadState,
+   } = useRecorderStore()
+   const {
+      createPersistentPin,
+      pinCreationStatus,
+      pinCreationError,
+      clearPinCreationState,
+   } = useSoundPinStore()
    const [viewState, setViewState] = useState<ViewState>("audio-review")
    const [analysisMessage, setAnalysisMessage] = useState("音声を分析中...")
 
@@ -77,28 +97,89 @@ export function AudioPlayback({
     */
    const handleContinue = async (): Promise<void> => {
       if (!audioData) return
-      setViewState("ai-analyzing")
-
-      // 段階的にメッセージを変更（15秒間）
-      setAnalysisMessage("音声データを読み込み中...")
-
-      setTimeout(() => {
-         setAnalysisMessage("AIモデルで分析中...")
-      }, 5000)
-
-      setTimeout(() => {
-         setAnalysisMessage("パターンマッチングを実行中...")
-      }, 10000)
-
-      setTimeout(() => {
-         setAnalysisMessage("結果を生成中...")
-      }, 13000)
 
       try {
-         await startInference(audioData)
+         // まず音声をアップロード
+         setViewState("uploading")
+         setAnalysisMessage("音声をアップロード中...")
+
+         // 音声時間を計算（10秒固定または実際の長さ）
+         const duration = audioData.recordedAt ? 10 : 10 // デフォルト10秒
+
+         const metadata = {
+            duration,
+            location: currentPosition
+               ? {
+                    lat: currentPosition.latitude,
+                    lng: currentPosition.longitude,
+                 }
+               : undefined,
+         }
+
+         // アップロードを試行（タイムアウト付き）
+         let uploadResult: { url: string; id: string } | null = null
+         try {
+            console.log("🔄 音声アップロード開始:", {
+               blobSize: audioData.blob.size,
+               blobType: audioData.blob.type,
+               metadata,
+            })
+
+            const uploadPromise = uploadAudioToStorage(audioData.blob, metadata)
+            const timeoutPromise = new Promise<never>((_, reject) =>
+               setTimeout(
+                  () => reject(new Error("アップロードタイムアウト")),
+                  10000,
+               ),
+            )
+
+            uploadResult = await Promise.race([uploadPromise, timeoutPromise])
+            console.log("✅ 音声アップロード成功:", uploadResult)
+         } catch (uploadError) {
+            console.warn(
+               "⚠️ アップロードに失敗しました。オフライン分析を実行します:",
+               uploadError,
+            )
+            // アップロードに失敗してもAI分析は続行
+         }
+
+         // AI分析を開始
+         setViewState("ai-analyzing")
+
+         // 段階的にメッセージを変更（15秒間）
+         setAnalysisMessage("音声データを読み込み中...")
+
+         setTimeout(() => {
+            setAnalysisMessage("AIモデルで分析中...")
+         }, 2000)
+
+         setTimeout(() => {
+            setAnalysisMessage("パターンマッチングを実行中...")
+         }, 4000)
+
+         setTimeout(() => {
+            setAnalysisMessage("結果を生成中...")
+         }, 6000)
+
+         // AI分析を実行（タイムアウト付き）
+         try {
+            const inferencePromise = startInference(audioData)
+            const timeoutPromise = new Promise((_, reject) =>
+               setTimeout(() => reject(new Error("AI分析タイムアウト")), 15000),
+            )
+
+            await Promise.race([inferencePromise, timeoutPromise])
+         } catch (inferenceError) {
+            console.warn(
+               "⚠️ AI分析に失敗しました。フォールバック結果を使用します:",
+               inferenceError,
+            )
+            // フォールバック結果は useInferenceStore 内で自動的に生成される
+         }
+
          setViewState("results")
       } catch (err) {
-         console.error("💥 AI分析に失敗しました:", err)
+         console.error("💥 処理に失敗しました:", err)
          // エラーが発生した場合も結果画面に遷移（エラー表示のため）
          setViewState("results")
       }
@@ -107,15 +188,50 @@ export function AudioPlayback({
    /**
     * ピン配置ボタンのクリックハンドラー
     */
-   const handlePlacePin = (): void => {
+   const handlePlacePin = async (): Promise<void> => {
       if (results.length > 0 && currentPosition && audioData) {
-         addPin({
-            latitude: currentPosition.latitude,
-            longitude: currentPosition.longitude,
-            audioData,
-            classificationResults: results,
+         try {
+            // アップロード済みURLを優先的に使用
+            let audioUrl = uploadedAudioUrl
+
+            // アップロード済みURLがない場合は、BlobURLを使用（createPersistentPin内でアップロードされる）
+            if (!audioUrl) {
+               audioUrl = audioData.url || URL.createObjectURL(audioData.blob)
+               console.log(
+                  "⚠️ アップロード済みURLがないため、BlobURLを使用します",
+               )
+            }
+
+            console.log("📍 ピン配置開始:", {
+               hasUploadedUrl: !!uploadedAudioUrl,
+               audioUrl: `${audioUrl.substring(0, 100)}...`, // URLの先頭のみ表示
+               position: currentPosition,
+               resultsCount: results.length,
+            })
+
+            // 永続化ピンを作成
+            await createPersistentPin(
+               audioUrl,
+               {
+                  latitude: currentPosition.latitude,
+                  longitude: currentPosition.longitude,
+               },
+               results,
+            )
+
+            console.log("✅ ピン配置成功")
+            // 成功時は閉じる
+            onClose()
+         } catch (error) {
+            // エラー時はログ出力（エラー表示はストアで管理）
+            console.error("❌ ピン配置エラー:", error)
+         }
+      } else {
+         console.warn("⚠️ ピン配置条件が満たされていません:", {
+            hasResults: results.length > 0,
+            hasPosition: !!currentPosition,
+            hasAudioData: !!audioData,
          })
-         onClose()
       }
    }
 
@@ -129,9 +245,11 @@ export function AudioPlayback({
    // コンポーネントがマウントされたときに推論結果をクリア
    useEffect(() => {
       clearResults()
+      clearUploadState()
+      clearPinCreationState()
       setViewState("audio-review")
       setAnalysisMessage("音声を分析中...")
-   }, [clearResults])
+   }, [clearResults, clearUploadState, clearPinCreationState])
 
    if (!audioData) {
       return null
@@ -163,6 +281,7 @@ export function AudioPlayback({
                      transition={{ delay: 0.2 }}
                   >
                      {viewState === "audio-review" && "録音完了"}
+                     {viewState === "uploading" && "アップロード中"}
                      {viewState === "ai-analyzing" && "AI分析中"}
                      {viewState === "results" && "AI分析結果"}
                   </motion.h2>
@@ -235,6 +354,14 @@ export function AudioPlayback({
                   </motion.div>
                )}
 
+               {/* アップロード中画面 */}
+               {viewState === "uploading" && (
+                  <SonicLoader
+                     isLoading={true}
+                     text={`${analysisMessage} (${uploadProgress}%)`}
+                  />
+               )}
+
                {/* AI分析中画面 */}
                {viewState === "ai-analyzing" && (
                   <SonicLoader isLoading={true} text={analysisMessage} />
@@ -252,14 +379,30 @@ export function AudioPlayback({
                            AI音分類結果
                         </h3>
 
-                        {error && (
+                        {(error || uploadError || pinCreationError) && (
                            <motion.div
                               className="mb-4 rounded-lg border border-red-500/30 bg-red-500/20 p-4 backdrop-blur-sm"
                               initial={{ opacity: 0, scale: 0.9 }}
                               animate={{ opacity: 1, scale: 1 }}
                            >
                               <span className="font-medium text-red-300">
-                                 分析エラー: {error.message}
+                                 エラー:{" "}
+                                 {pinCreationError ||
+                                    uploadError ||
+                                    error?.message}
+                              </span>
+                           </motion.div>
+                        )}
+
+                        {fallbackUsed && (
+                           <motion.div
+                              className="mb-4 rounded-lg border border-yellow-500/30 bg-yellow-500/20 p-4 backdrop-blur-sm"
+                              initial={{ opacity: 0, scale: 0.9 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                           >
+                              <span className="font-medium text-yellow-300">
+                                 ⚠️
+                                 バックエンドAPI接続失敗。オフライン分析結果を表示しています。
                               </span>
                            </motion.div>
                         )}
@@ -300,6 +443,22 @@ export function AudioPlayback({
                               ))}
                            </div>
                         )}
+
+                        {backendAnalysisResult?.environment && (
+                           <motion.div
+                              className="mb-4 rounded-lg border border-blue-500/30 bg-blue-500/20 p-4 backdrop-blur-sm"
+                              initial={{ opacity: 0, scale: 0.9 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                           >
+                              <span className="font-medium text-blue-300">
+                                 環境:{" "}
+                                 {backendAnalysisResult.environment
+                                    .description ||
+                                    backendAnalysisResult.environment
+                                       .primary_type}
+                              </span>
+                           </motion.div>
+                        )}
                      </div>
 
                      {/* 録音音声プレイヤー（結果画面でも表示） */}
@@ -324,15 +483,51 @@ export function AudioPlayback({
 
                      {/* アクションボタン */}
                      <div className="flex gap-3">
-                        {results.length > 0 && currentPosition ? (
-                           <motion.button
-                              onClick={handlePlacePin}
-                              className="w-full touch-manipulation rounded-xl border border-green-500/30 bg-green-600/80 px-4 py-3 font-semibold text-white shadow-[0_4px_20px_rgba(34,197,94,0.4)] backdrop-blur-sm transition-all duration-300 hover:bg-green-600 hover:shadow-[0_8px_32px_rgba(34,197,94,0.6)]"
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                           >
-                              マップにピンを配置
-                           </motion.button>
+                        {results.length > 0 ? (
+                           <>
+                              {/* ピン配置ボタン */}
+                              <motion.button
+                                 onClick={handlePlacePin}
+                                 disabled={
+                                    pinCreationStatus === "creating" ||
+                                    !currentPosition
+                                 }
+                                 className={`flex-1 touch-manipulation rounded-xl border px-4 py-3 font-semibold text-white backdrop-blur-sm transition-all duration-300 ${
+                                    pinCreationStatus === "creating" ||
+                                    !currentPosition
+                                       ? "cursor-not-allowed border-gray-500/30 bg-gray-600/80"
+                                       : "border-green-500/30 bg-green-600/80 shadow-[0_4px_20px_rgba(34,197,94,0.4)] hover:bg-green-600 hover:shadow-[0_8px_32px_rgba(34,197,94,0.6)]"
+                                 }`}
+                                 whileHover={
+                                    pinCreationStatus === "creating" ||
+                                    !currentPosition
+                                       ? {}
+                                       : { scale: 1.02 }
+                                 }
+                                 whileTap={
+                                    pinCreationStatus === "creating" ||
+                                    !currentPosition
+                                       ? {}
+                                       : { scale: 0.98 }
+                                 }
+                              >
+                                 {pinCreationStatus === "creating"
+                                    ? "ピン作成中..."
+                                    : !currentPosition
+                                      ? "位置情報が必要です"
+                                      : "マップにピンを配置"}
+                              </motion.button>
+
+                              {/* 閉じるボタン */}
+                              <motion.button
+                                 onClick={handleClose}
+                                 className="flex-1 touch-manipulation rounded-xl border border-white/10 bg-white/10 px-4 py-3 font-semibold text-white shadow-[0_4px_20px_rgba(255,255,255,0.1)] backdrop-blur-sm transition-all duration-300 hover:bg-white/20 hover:shadow-[0_8px_32px_rgba(255,255,255,0.2)]"
+                                 whileHover={{ scale: 1.02 }}
+                                 whileTap={{ scale: 0.98 }}
+                              >
+                                 閉じる
+                              </motion.button>
+                           </>
                         ) : (
                            <motion.button
                               onClick={handleClose}

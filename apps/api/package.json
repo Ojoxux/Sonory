@@ -1,34 +1,36 @@
 {
-	"name": "@sonory/api",
-	"version": "0.1.0",
-	"private": true,
-	"type": "module",
-	"scripts": {
-		"dev": "wrangler dev src/index.ts --env development --port 8787",
-		"build": "tsc",
-		"deploy": "wrangler deploy",
-		"lint": "biome check --write .",
-		"lint:check": "biome check .",
-		"format": "biome format . --write",
-		"type-check": "tsc --noEmit",
-		"test": "vitest run",
-		"test:watch": "vitest",
-		"clean": "rm -rf dist .wrangler"
-	},
-	"dependencies": {
-		"@cloudflare/workers-types": "^4.20241218.0",
-		"@hono/zod-validator": "^0.5.0",
-		"@sonory/shared-types": "*",
-		"@sonory/utils": "*",
-		"@supabase/supabase-js": "^2.49.8",
-		"hono": "^4.6.0",
-		"zod": "^3.25.28"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "1.9.4",
-		"@types/node": "^20",
-		"typescript": "^5",
-		"vitest": "^3.2.4",
-		"wrangler": "^4.21.2"
-	}
+   "name": "@sonory/api",
+   "version": "0.1.0",
+   "private": true,
+   "type": "module",
+   "scripts": {
+      "dev": "wrangler dev",
+      "build": "tsc",
+      "deploy": "wrangler deploy",
+      "lint": "biome check .",
+      "lint:check": "biome check .",
+      "format": "biome format . --write",
+      "type-check": "tsc --noEmit",
+      "test": "vitest",
+      "test:watch": "vitest --watch",
+      "setup:db": "node scripts/apply-rpc-functions.js",
+      "setup:storage": "node scripts/setup-storage.js",
+      "clean": "rm -rf dist .wrangler"
+   },
+   "dependencies": {
+      "@cloudflare/workers-types": "^4.20241218.0",
+      "@hono/zod-validator": "^0.5.0",
+      "@sonory/shared-types": "file:../../packages/shared-types",
+      "@sonory/utils": "file:../../packages/utils",
+      "@supabase/supabase-js": "^2.49.8",
+      "hono": "^4.6.0",
+      "zod": "^3.25.28"
+   },
+   "devDependencies": {
+      "@biomejs/biome": "1.9.4",
+      "@types/node": "^20",
+      "typescript": "^5",
+      "vitest": "^3.2.4",
+      "wrangler": "^4.21.2"
+   }
 }

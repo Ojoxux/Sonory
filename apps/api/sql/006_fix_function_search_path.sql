@@ -1,4 +1,8 @@
--- Create RPC function for finding nearby pins
+-- =============================================
+-- Fix Function Search Path Mutable Warnings
+-- =============================================
+
+-- 1. Fix find_nearby_pins function
 CREATE OR REPLACE FUNCTION find_nearby_pins(
   lat DOUBLE PRECISION,
   lng DOUBLE PRECISION,
@@ -33,6 +37,7 @@ RETURNS TABLE (
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 BEGIN
   RETURN QUERY
@@ -55,21 +60,18 @@ BEGIN
 END;
 $$;
 
--- Grant execute permission to authenticated users
-GRANT EXECUTE ON FUNCTION find_nearby_pins TO authenticated;
-GRANT EXECUTE ON FUNCTION find_nearby_pins TO service_role;
-
-/**
- * Find nearby pins filtered by specific IDs
- * Used for location-based search with pre-filtered results
- */
+-- 2. Fix find_nearby_pins_by_ids function
 CREATE OR REPLACE FUNCTION find_nearby_pins_by_ids(
   lat DOUBLE PRECISION,
   lng DOUBLE PRECISION,
   radius_meters INTEGER,
   pin_ids UUID[]
 )
-RETURNS SETOF sound_pins AS $$
+RETURNS SETOF sound_pins 
+LANGUAGE plpgsql 
+STABLE
+SET search_path = public
+AS $$
 BEGIN
   RETURN QUERY
   SELECT *
@@ -86,12 +88,9 @@ BEGIN
     ST_MakePoint(lng, lat)::geography
   ) ASC;
 END;
-$$ LANGUAGE plpgsql STABLE;
+$$;
 
--- Grant execute permission
-GRANT EXECUTE ON FUNCTION find_nearby_pins_by_ids TO authenticated;
-
--- Create RPC function for creating pins with PostGIS location
+-- 3. Fix create_sound_pin function
 CREATE OR REPLACE FUNCTION create_sound_pin(
   p_user_id UUID,
   p_lat DOUBLE PRECISION,
@@ -134,6 +133,7 @@ RETURNS TABLE (
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
   new_pin_id UUID;
@@ -198,6 +198,21 @@ BEGIN
 END;
 $$;
 
--- Grant execute permission
+-- 4. Fix update_updated_at_column function
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER 
+LANGUAGE plpgsql
+SET search_path = public
+AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$;
+
+-- Re-grant permissions
+GRANT EXECUTE ON FUNCTION find_nearby_pins TO authenticated;
+GRANT EXECUTE ON FUNCTION find_nearby_pins TO service_role;
+GRANT EXECUTE ON FUNCTION find_nearby_pins_by_ids TO authenticated;
 GRANT EXECUTE ON FUNCTION create_sound_pin TO authenticated;
-GRANT EXECUTE ON FUNCTION create_sound_pin TO service_role;
+GRANT EXECUTE ON FUNCTION create_sound_pin TO service_role; 

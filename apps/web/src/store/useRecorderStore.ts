@@ -2,16 +2,36 @@ import { create } from "zustand"
 import type { AudioData, RecorderState } from "./types"
 
 /**
+ * 音声メタデータの型定義
+ *
+ * @description
+ * アップロード時に必要な音声ファイルのメタデータ
+ */
+interface AudioMetadata {
+   duration: number
+   location?: {
+      lat: number
+      lng: number
+      accuracy?: number
+   }
+}
+
+/**
  * 録音機能を管理するZustandストア
  *
  * 録音の開始、停止、一時停止、再開、リセットなどの機能を提供します。
- * MediaRecorder APIを使用して録音を行います。
+ * MediaRecorder APIを使用して録音を行い、Supabase Storageへのアップロード機能も含みます。
  */
-export const useRecorderStore = create<RecorderState>((set) => ({
+export const useRecorderStore = create<RecorderState>((set, _get) => ({
    // 初期状態
    status: "idle",
    audioData: null,
    elapsedTime: 0,
+   uploadStatus: "idle",
+   uploadProgress: 0,
+   uploadError: null,
+   uploadedAudioUrl: null,
+   uploadedAudioId: null,
 
    /**
     * 録音を開始します
@@ -79,6 +99,11 @@ export const useRecorderStore = create<RecorderState>((set) => ({
          status: "idle",
          audioData: null,
          elapsedTime: 0,
+         uploadStatus: "idle",
+         uploadProgress: 0,
+         uploadError: null,
+         uploadedAudioUrl: null,
+         uploadedAudioId: null,
       })
    },
 
@@ -102,5 +127,168 @@ export const useRecorderStore = create<RecorderState>((set) => ({
     */
    setAudioData: (data: AudioData) => {
       set({ audioData: data })
+   },
+
+   /**
+    * 音声をバックエンドAPI経由でアップロード
+    * @param audioBlob - アップロードする音声Blob
+    * @param metadata - 音声メタデータ
+    * @returns アップロード結果
+    */
+   uploadAudioToStorage: async (
+      audioBlob: Blob,
+      metadata: AudioMetadata,
+   ): Promise<{ url: string; id: string }> => {
+      try {
+         set({
+            uploadStatus: "uploading",
+            uploadProgress: 0,
+            uploadError: null,
+         })
+
+         // FormDataを作成
+         const formData = new FormData()
+         formData.append("audio", audioBlob, `audio-${Date.now()}.webm`)
+
+         // 位置情報をメタデータとして追加（必要に応じて）
+         if (metadata.location) {
+            formData.append(
+               "metadata",
+               JSON.stringify({
+                  location: metadata.location,
+                  duration: metadata.duration,
+               }),
+            )
+         }
+
+         // 進捗をシミュレート（実際のアップロード進捗は取得困難）
+         const progressInterval = setInterval(() => {
+            set((state) => ({
+               uploadProgress: Math.min(state.uploadProgress + 10, 90),
+            }))
+         }, 200)
+
+         // バックエンドAPIにアップロード
+         console.log("🔄 音声アップロード実行中...", {
+            endpoint: "/api/audio/upload",
+            blobSize: audioBlob.size,
+            hasMetadata: !!metadata.location,
+         })
+
+         const response = await fetch("/api/audio/upload", {
+            method: "POST",
+            body: formData,
+         })
+
+         clearInterval(progressInterval)
+
+         console.log("📡 アップロードレスポンス受信:", {
+            status: response.status,
+            ok: response.ok,
+            headers: Object.fromEntries(response.headers.entries()),
+         })
+
+         if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}))
+            console.error("❌ アップロードエラー:", {
+               status: response.status,
+               errorData,
+            })
+            throw new Error(
+               errorData.message || `アップロード失敗: ${response.status}`,
+            )
+         }
+
+         const result = await response.json()
+
+         console.log("📤 アップロードレスポンス:", result)
+
+         if (!result.success || !result.data) {
+            throw new Error("アップロード結果が不正です")
+         }
+
+         // バックエンドのレスポンス形式に対応
+         const { audioUrl, audioId } = result.data
+
+         // 値の存在確認
+         if (!audioUrl || !audioId) {
+            console.error(
+               "❌ アップロードレスポンスに必要な値が含まれていません:",
+               {
+                  audioUrl,
+                  audioId,
+                  fullResponse: result,
+               },
+            )
+            throw new Error("アップロードレスポンスが不完全です")
+         }
+
+         const url = audioUrl
+         const id = audioId
+
+         console.log("✅ アップロード成功:", { url, id })
+
+         set({
+            uploadStatus: "success",
+            uploadProgress: 100,
+            uploadedAudioUrl: url,
+            uploadedAudioId: id,
+         })
+
+         return { url, id }
+      } catch (error) {
+         const errorMessage =
+            error instanceof Error
+               ? error.message
+               : "アップロードに失敗しました"
+
+         set({
+            uploadStatus: "error",
+            uploadError: errorMessage,
+            uploadProgress: 0,
+         })
+
+         throw new Error(errorMessage)
+      }
+   },
+
+   /**
+    * アップロード状態を設定
+    *
+    * @param status - 設定するアップロード状態
+    */
+   setUploadStatus: (status) => {
+      set({ uploadStatus: status })
+   },
+
+   /**
+    * アップロード進捗を設定
+    *
+    * @param progress - 進捗（0-100）
+    */
+   setUploadProgress: (progress) => {
+      set({ uploadProgress: progress })
+   },
+
+   /**
+    * アップロードエラーを設定
+    *
+    * @param error - エラーメッセージ
+    */
+   setUploadError: (error) => {
+      set({ uploadError: error })
+   },
+
+   /**
+    * アップロード状態をクリア
+    */
+   clearUploadState: () => {
+      set({
+         uploadStatus: "idle",
+         uploadProgress: 0,
+         uploadError: null,
+         uploadedAudioUrl: null,
+         uploadedAudioId: null,
+      })
    },
 }))

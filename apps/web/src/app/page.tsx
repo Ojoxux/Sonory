@@ -1,5 +1,6 @@
 "use client"
 
+import NotificationCenter from "@/components/organisms/NotificationCenter"
 import { UIOverlay } from "@/components/organisms/UIOverlay"
 import { useDebugStore } from "@/store/useDebugStore"
 import dynamic from "next/dynamic"
@@ -79,6 +80,9 @@ export default function Home(): ReactElement {
                   debugTimeOverride={debugTimeOverride}
                   mapBearing={mapBearing}
                />
+            </div>
+            <div className="pointer-events-none absolute inset-0 z-20">
+               <NotificationCenter />
             </div>
          </div>
       </>

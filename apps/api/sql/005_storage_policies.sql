@@ -1,4 +1,22 @@
 -- =============================================
+-- Supabase Storage Bucket Creation and Policies
+-- =============================================
+
+-- バケットを作成（存在しない場合）
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+    'sonory-audio',
+    'sonory-audio', 
+    true, -- 公開バケット
+    10485760, -- 10MB
+    ARRAY['audio/webm', 'audio/mp3', 'audio/mpeg', 'audio/wav', 'audio/x-wav', 'audio/wave']
+)
+ON CONFLICT (id) DO UPDATE SET
+    public = true,
+    file_size_limit = 10485760,
+    allowed_mime_types = ARRAY['audio/webm', 'audio/mp3', 'audio/mpeg', 'audio/wav', 'audio/x-wav', 'audio/wave'];
+
+-- =============================================
 -- Supabase Storage Policies for sonory-audio bucket
 -- =============================================
 

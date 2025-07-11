@@ -34,19 +34,364 @@ export class PinRepository {
    }
 
    /**
+    * Parses location data from either WKT, GeoJSON, or PostGIS binary format
+    * @param locationData - Location data in various formats
+    * @returns Parsed coordinates
+    */
+   private parseLocationData(locationData: string): {
+      lat: number
+      lng: number
+   } {
+      // PostGIS WKB format (binary) - parse directly
+      if (locationData.startsWith("0101000020")) {
+         return this.parsePostGISBinary(locationData)
+      }
+
+      if (locationData.startsWith("POINT(")) {
+         // WKT format: POINT(lng lat)
+         const locationMatch = locationData.match(/POINT\(([^)]+)\)/)
+         if (!locationMatch || !locationMatch[1]) {
+            throw new Error(`Invalid WKT location format: ${locationData}`)
+         }
+         const [lngStr, latStr] = locationMatch[1].split(" ")
+         return {
+            lng: Number(lngStr),
+            lat: Number(latStr),
+         }
+      } else {
+         // GeoJSON format
+         try {
+            const location = JSON.parse(locationData) as PostGISPoint
+            return {
+               lat: location.coordinates[1],
+               lng: location.coordinates[0],
+            }
+         } catch (_error) {
+            throw new Error(`Invalid location format: ${locationData}`)
+         }
+      }
+   }
+
+   /**
+    * Parses PostGIS binary format (WKB) to extract coordinates
+    * @param wkbHex - PostGIS binary data as hex string
+    * @returns Parsed coordinates
+    */
+   private parsePostGISBinary(wkbHex: string): { lat: number; lng: number } {
+      try {
+         this.logger.info("Parsing PostGIS binary", {
+            wkbHex: `${wkbHex.slice(0, 50)}...`,
+            length: wkbHex.length,
+            fullHex: wkbHex,
+            requestId: this.requestId,
+         })
+
+         if (wkbHex.length < 48) {
+            throw new Error(
+               `WKB hex too short: ${wkbHex.length} chars, expected at least 48`,
+            )
+         }
+
+         // PostGIS WKB format for POINT with SRID:
+         // Bytes 0: 01 (little endian) - 2 hex chars
+         // Bytes 1-4: 01000020 (POINT with SRID) - 8 hex chars
+         // Bytes 5-8: E6100000 (SRID 4326 in little endian) - 8 hex chars
+         // Total header: 18 hex chars (9 bytes)
+         // Bytes 9-16: X coordinate (longitude) as 8-byte double - 16 hex chars
+         // Bytes 17-24: Y coordinate (latitude) as 8-byte double - 16 hex chars
+
+         // Verify WKB header format
+         if (!wkbHex.startsWith("0101000020E6100000")) {
+            throw new Error(`Invalid WKB header: ${wkbHex.slice(0, 18)}`)
+         }
+
+         // Try different header lengths and coordinate orders to find the correct one
+         const headerLengths = [16, 18, 20] // 8, 9, 10 bytes
+         let bestResult: { lat: number; lng: number } | null = null
+
+         for (const headerLength of headerLengths) {
+            try {
+               const coordsHex = wkbHex.slice(headerLength)
+
+               if (coordsHex.length < 32) {
+                  continue
+               }
+
+               // Extract coordinates - first 8 bytes = 16 hex chars, next 8 bytes = 16 hex chars
+               const coord1Hex = coordsHex.slice(0, 16)
+               const coord2Hex = coordsHex.slice(16, 32)
+
+               this.logger.info(`Trying header length ${headerLength}`, {
+                  headerLength,
+                  coordsHex: coordsHex.slice(0, 32),
+                  coord1Hex,
+                  coord2Hex,
+                  requestId: this.requestId,
+               })
+
+               // Try both coordinate orders: (lng, lat) and (lat, lng)
+               const coord1 = this.parseIEEE754Double(coord1Hex)
+               const coord2 = this.parseIEEE754Double(coord2Hex)
+
+               // Try order 1: coord1=lng, coord2=lat
+               if (
+                  !isNaN(coord1) &&
+                  !isNaN(coord2) &&
+                  coord2 >= -90 &&
+                  coord2 <= 90 &&
+                  coord1 >= -180 &&
+                  coord1 <= 180
+               ) {
+                  bestResult = { lat: coord2, lng: coord1 }
+                  this.logger.info(
+                     `Found valid coordinates (lng,lat) with header length ${headerLength}`,
+                     {
+                        headerLength,
+                        lat: coord2,
+                        lng: coord1,
+                        requestId: this.requestId,
+                     },
+                  )
+                  break
+               }
+
+               // Try order 2: coord1=lat, coord2=lng
+               if (
+                  !isNaN(coord1) &&
+                  !isNaN(coord2) &&
+                  coord1 >= -90 &&
+                  coord1 <= 90 &&
+                  coord2 >= -180 &&
+                  coord2 <= 180
+               ) {
+                  bestResult = { lat: coord1, lng: coord2 }
+                  this.logger.info(
+                     `Found valid coordinates (lat,lng) with header length ${headerLength}`,
+                     {
+                        headerLength,
+                        lat: coord1,
+                        lng: coord2,
+                        requestId: this.requestId,
+                     },
+                  )
+                  break
+               }
+            } catch (error) {
+               this.logger.warn(`Header length ${headerLength} failed`, {
+                  headerLength,
+                  error: error instanceof Error ? error.message : String(error),
+                  requestId: this.requestId,
+               })
+            }
+         }
+
+         if (!bestResult) {
+            throw new Error(
+               "Could not parse coordinates with any header length",
+            )
+         }
+
+         const { lat, lng } = bestResult
+
+         // Validate coordinates
+         if (isNaN(lat) || isNaN(lng)) {
+            throw new Error(`Invalid coordinates: lat=${lat}, lng=${lng}`)
+         }
+
+         if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+            throw new Error(`Coordinates out of range: lat=${lat}, lng=${lng}`)
+         }
+
+         this.logger.info("Successfully parsed WKB coordinates", {
+            lat,
+            lng,
+            requestId: this.requestId,
+         })
+
+         return { lat, lng }
+      } catch (error) {
+         this.logger.error("Failed to parse PostGIS binary", {
+            wkbHex: wkbHex.slice(0, 100),
+            error: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined,
+            requestId: this.requestId,
+         })
+         throw new Error(
+            `Failed to parse PostGIS binary: ${error instanceof Error ? error.message : String(error)}`,
+         )
+      }
+   }
+
+   /**
+    * Converts hex string to double (little-endian)
+    * @param hex - Hex string (16 characters)
+    * @returns Double value
+    */
+   private hexToDouble(hex: string): number {
+      try {
+         if (hex.length !== 16) {
+            throw new Error(`Invalid hex length: ${hex.length}, expected 16`)
+         }
+
+         // Convert hex pairs to bytes (little-endian)
+         const bytes = new Uint8Array(8)
+         for (let i = 0; i < 8; i++) {
+            const hexPair = hex.slice(i * 2, i * 2 + 2)
+            const byteValue = Number.parseInt(hexPair, 16)
+            if (isNaN(byteValue)) {
+               throw new Error(`Invalid hex pair: ${hexPair} at position ${i}`)
+            }
+            bytes[i] = byteValue
+         }
+
+         this.logger.info("Hex to double conversion", {
+            hex,
+            bytes: Array.from(bytes),
+            requestId: this.requestId,
+         })
+
+         // Create DataView and read as little-endian double
+         const view = new DataView(bytes.buffer)
+         const result = view.getFloat64(0, true) // true = little-endian
+
+         this.logger.info("Double conversion result", {
+            hex,
+            result,
+            requestId: this.requestId,
+         })
+
+         return result
+      } catch (error) {
+         this.logger.error("Failed to convert hex to double", {
+            hex,
+            error: error instanceof Error ? error.message : String(error),
+            requestId: this.requestId,
+         })
+         throw error
+      }
+   }
+
+   /**
+    * Converts hex string to little-endian double with proper byte order
+    * @param hex - 16 character hex string representing 8 bytes
+    * @returns Double value
+    */
+   private hexToLittleEndianDouble(hex: string): number {
+      try {
+         if (hex.length !== 16) {
+            throw new Error(`Invalid hex length: ${hex.length}, expected 16`)
+         }
+
+         // Convert hex string to bytes in the exact order they appear
+         const bytes = new Uint8Array(8)
+         for (let i = 0; i < 8; i++) {
+            const hexPair = hex.slice(i * 2, i * 2 + 2)
+            const byteValue = Number.parseInt(hexPair, 16)
+            if (isNaN(byteValue)) {
+               throw new Error(`Invalid hex pair: ${hexPair} at position ${i}`)
+            }
+            bytes[i] = byteValue
+         }
+
+         this.logger.info("Little-endian hex to double conversion", {
+            hex,
+            bytes: Array.from(bytes),
+            requestId: this.requestId,
+         })
+
+         // Create DataView and read as little-endian double
+         const view = new DataView(bytes.buffer)
+         const result = view.getFloat64(0, true) // true = little-endian
+
+         // Check if result is reasonable for geographic coordinates
+         if (Math.abs(result) > 180) {
+            this.logger.warn("Coordinate value seems out of range", {
+               hex,
+               result,
+               requestId: this.requestId,
+            })
+         }
+
+         this.logger.info("Little-endian double conversion result", {
+            hex,
+            result,
+            requestId: this.requestId,
+         })
+
+         return result
+      } catch (error) {
+         this.logger.error("Failed to convert hex to little-endian double", {
+            hex,
+            error: error instanceof Error ? error.message : String(error),
+            requestId: this.requestId,
+         })
+         throw error
+      }
+   }
+
+   /**
+    * Parses IEEE 754 double precision number from hex string (little-endian)
+    * @param hex - 16 character hex string representing 8 bytes
+    * @returns Double value
+    */
+   private parseIEEE754Double(hex: string): number {
+      try {
+         if (hex.length !== 16) {
+            throw new Error(`Invalid hex length: ${hex.length}, expected 16`)
+         }
+
+         // Convert hex string to bytes (little-endian format)
+         const bytes = new Uint8Array(8)
+         for (let i = 0; i < 8; i++) {
+            const hexPair = hex.slice(i * 2, i * 2 + 2)
+            const byteValue = Number.parseInt(hexPair, 16)
+            if (isNaN(byteValue)) {
+               throw new Error(`Invalid hex pair: ${hexPair} at position ${i}`)
+            }
+            bytes[i] = byteValue
+         }
+
+         this.logger.info("IEEE 754 double parsing", {
+            hex,
+            bytes: Array.from(bytes),
+            requestId: this.requestId,
+         })
+
+         // Create DataView and read as little-endian double
+         const view = new DataView(bytes.buffer)
+         const result = view.getFloat64(0, true) // true = little-endian
+
+         this.logger.info("IEEE 754 double result", {
+            hex,
+            result,
+            requestId: this.requestId,
+         })
+
+         return result
+      } catch (error) {
+         this.logger.error("Failed to parse IEEE 754 double", {
+            hex,
+            error: error instanceof Error ? error.message : String(error),
+            requestId: this.requestId,
+         })
+         throw error
+      }
+   }
+
+   /**
     * Converts database record to domain model
     * @param record - Database record
     * @returns Domain model
     */
    private toDomainModel(record: SoundPinRecord): SoundPinAPI {
-      const location = JSON.parse(record.location) as PostGISPoint
+      const { lat, lng } = this.parseLocationData(record.location)
 
       return {
          id: record.id,
          ...(record.user_id ? { userId: record.user_id } : {}),
          location: {
-            lat: location.coordinates[1],
-            lng: location.coordinates[0],
+            lat,
+            lng,
          },
          audio: {
             url: record.audio_url,
@@ -108,24 +453,71 @@ export class PinRepository {
     */
    async create(data: SoundPinInsert): Promise<SoundPinAPI> {
       try {
+         this.logger.info("Creating pin with data", {
+            data,
+            requestId: this.requestId,
+         })
+
+         // Parse location from WKT format to get coordinates
+         const locationMatch = data.location.match(/POINT\(([^)]+)\)/)
+         if (!locationMatch || !locationMatch[1]) {
+            throw new Error("Invalid location format")
+         }
+
+         const [lng, lat] = locationMatch[1].split(" ").map(Number)
+
+         const rpcParams = {
+            p_user_id: data.user_id,
+            p_lat: lat,
+            p_lng: lng,
+            p_audio_url: data.audio_url,
+            p_audio_duration: data.audio_duration,
+            p_audio_format: data.audio_format,
+            p_weather_temperature: data.weather_temperature,
+            p_weather_condition: data.weather_condition,
+            p_weather_wind_speed: data.weather_wind_speed,
+            p_weather_humidity: data.weather_humidity,
+            p_time_tag: data.time_tag,
+            p_title: data.title,
+            p_device_info: data.device_info,
+         }
+
+         this.logger.info("Calling RPC function with params", {
+            rpcParams,
+            requestId: this.requestId,
+         })
+
          const { data: record, error } = await this.supabase
-            .from("sound_pins")
-            .insert(data)
-            .select()
+            .rpc("create_sound_pin", rpcParams)
             .single()
 
          if (error) {
+            this.logger.error("RPC function error", {
+               error,
+               requestId: this.requestId,
+            })
             throw error
          }
 
-         this.logger.info("Pin created", {
-            pinId: record.id,
+         if (!record) {
+            throw new Error("No record returned from RPC function")
+         }
+
+         this.logger.info("RPC function returned record", {
+            record,
             requestId: this.requestId,
          })
-         return this.toDomainModel(record)
+
+         const pinRecord = record as SoundPinRecord
+         this.logger.info("Pin created", {
+            pinId: pinRecord.id,
+            requestId: this.requestId,
+         })
+         return this.toDomainModel(pinRecord)
       } catch (error) {
          this.logger.error("Failed to create pin", {
             error: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined,
             requestId: this.requestId,
          })
          throw new APIException(
@@ -187,7 +579,10 @@ export class PinRepository {
             .from("sound_pins")
             .update(data)
             .eq("id", id)
-            .select()
+            .select(`
+               *,
+               location_text:ST_AsText(location)
+            `)
             .single()
 
          if (error) {
@@ -270,23 +665,18 @@ export class PinRepository {
     */
    async findWithinBounds(query: NearbyPinsQuery): Promise<SoundPinAPI[]> {
       try {
-         // Build PostGIS query using ST_Within
-         const boundsWKT = `POLYGON((
-        ${query.bounds.west} ${query.bounds.south},
-        ${query.bounds.east} ${query.bounds.south},
-        ${query.bounds.east} ${query.bounds.north},
-        ${query.bounds.west} ${query.bounds.north},
-        ${query.bounds.west} ${query.bounds.south}
-      ))`
+         this.logger.info("Finding pins within bounds", {
+            bounds: query.bounds,
+            categories: query.categories,
+            limit: query.limit,
+            requestId: this.requestId,
+         })
 
+         // Use simple bounding box query instead of complex PostGIS
          let queryBuilder = this.supabase
             .from("sound_pins")
             .select()
             .eq("status", "active")
-            .filter("location", "cd", {
-               type: "within",
-               args: { geojson: boundsWKT },
-            })
 
          // Apply category filter if provided
          if (query.categories && query.categories.length > 0) {
@@ -302,7 +692,70 @@ export class PinRepository {
             throw error
          }
 
-         return records.map((record) => this.toDomainModel(record))
+         this.logger.info("Raw database results", {
+            totalRecords: records?.length || 0,
+            bounds: query.bounds,
+            requestId: this.requestId,
+         })
+
+         if (!records || records.length === 0) {
+            this.logger.info("No records found in database", {
+               requestId: this.requestId,
+            })
+            return []
+         }
+
+         // Filter by bounds in application code for now
+         const filteredRecords = records.filter((record, index) => {
+            try {
+               // Parse location data directly
+               const { lat, lng } = this.parseLocationData(record.location)
+
+               const isWithinBounds =
+                  lat >= query.bounds.south &&
+                  lat <= query.bounds.north &&
+                  lng >= query.bounds.west &&
+                  lng <= query.bounds.east
+
+               this.logger.info(
+                  `Record ${index} location parsed successfully`,
+                  {
+                     recordId: record.id,
+                     recordLat: lat,
+                     recordLng: lng,
+                     bounds: query.bounds,
+                     isWithinBounds,
+                     requestId: this.requestId,
+                  },
+               )
+
+               return isWithinBounds
+            } catch (error) {
+               this.logger.error(
+                  "CRITICAL: Error processing location data - excluding record",
+                  {
+                     recordId: record.id,
+                     location: record.location,
+                     locationLength: record.location?.length,
+                     locationPreview: record.location?.slice(0, 50),
+                     error:
+                        error instanceof Error ? error.message : String(error),
+                     stack: error instanceof Error ? error.stack : undefined,
+                     requestId: this.requestId,
+                  },
+               )
+               // Return false to exclude this record
+               return false
+            }
+         })
+
+         this.logger.info("Filtered results", {
+            totalRecords: records.length,
+            filteredCount: filteredRecords.length,
+            requestId: this.requestId,
+         })
+
+         return filteredRecords.map((record) => this.toDomainModel(record))
       } catch (error) {
          this.logger.error("Failed to find pins within bounds", {
             error: error instanceof Error ? error.message : String(error),

@@ -2,7 +2,10 @@
 # モノレポ全体に共通するファイルのみを管理
 # アプリケーション固有のファイルは各アプリケーションの.gitignoreで管理
 
+# =============================================================================
 # Dependencies (ワークスペース全体)
+# =============================================================================
+# ルートレベル
 /node_modules
 /.pnp
 .pnp.*
@@ -12,54 +15,173 @@
 !.yarn/releases
 !.yarn/versions
 
-# Environment files (ルートレベル)
+# パッケージレベル
+packages/*/node_modules
+packages/*/dist
+packages/*/build
+packages/*/*.tsbuildinfo
+
+# アプリケーションレベル
+apps/*/node_modules
+apps/*/dist
+apps/*/build
+apps/*/*.tsbuildinfo
+
+# =============================================================================
+# Environment files (ワークスペース全体)
+# =============================================================================
 .env
 .env.local
 .env.development
 .env.production
 .env.test
+.env.*.local
 
+# パッケージ・アプリケーションレベルの環境ファイル
+packages/*/.env
+packages/*/.env.local
+packages/*/.env.development
+packages/*/.env.production
+packages/*/.env.test
+packages/*/.env.*.local
+
+apps/*/.env
+apps/*/.env.local
+apps/*/.env.development
+apps/*/.env.production
+apps/*/.env.test
+apps/*/.env.*.local
+
+# =============================================================================
+# Build outputs (ワークスペース全体)
+# =============================================================================
 # Turborepo
 .turbo
 
-# Next.js build files (ルートレベルに出力される場合)
+# Next.js
 .next/
+apps/web/.next/
+apps/web/out/
+
+# TypeScript
+*.tsbuildinfo
+packages/*/*.tsbuildinfo
+apps/*/*.tsbuildinfo
 
 # Shared packages build outputs
 packages/*/dist/
 packages/*/build/
-packages/*/*.tsbuildinfo
+packages/*/lib/
 
-# OS generated files
-.DS_Store
-Thumbs.db
-*~
+# Apps build outputs
+apps/*/dist/
+apps/*/build/
+apps/*/lib/
 
-# IDE settings (個人設定のみ除外、プロジェクト設定は共有)
-.vscode/settings-personal.json
-.idea/
-*.swp
-*.swo
+# =============================================================================
+# Testing & Coverage
+# =============================================================================
+coverage/
+packages/*/coverage/
+apps/*/coverage/
+.nyc_output
+*.lcov
 
-# Logs (プロジェクト全体)
+# =============================================================================
+# Logs
+# =============================================================================
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+lerna-debug.log*
 
+# パッケージ・アプリケーションレベルのログ
+packages/*/*.log
+packages/*/npm-debug.log*
+packages/*/yarn-debug.log*
+packages/*/yarn-error.log*
+
+apps/*/*.log
+apps/*/npm-debug.log*
+apps/*/yarn-debug.log*
+apps/*/yarn-error.log*
+
+# =============================================================================
+# OS generated files
+# =============================================================================
+.DS_Store
+Thumbs.db
+*~
+packages/*/.DS_Store
+apps/*/.DS_Store
+
+# =============================================================================
+# IDE settings (個人設定のみ除外、プロジェクト設定は共有)
+# =============================================================================
+.vscode/settings-personal.json
+.idea/
+*.swp
+*.swo
+
+# =============================================================================
 # Temporary files
+# =============================================================================
 *.tmp
 *.temp
+.cache/
+packages/*/.cache/
+apps/*/.cache/
 
-# Deployment (プロジェクト全体)
+# =============================================================================
+# Deployment
+# =============================================================================
 .vercel
+.netlify
+apps/web/.vercel
+apps/web/.netlify
 
+# =============================================================================
 # Security
+# =============================================================================
 *.pem
+*.key
+*.crt
+*.cert
 
-# Testing (プロジェクト全体)
-coverage/
+# =============================================================================
+# Service Worker & PWA
+# =============================================================================
+sw.js
+workbox-*.js
+apps/web/public/sw.js
+apps/web/public/workbox-*.js
 
-# Other
-*.tsbuildinfo
+# =============================================================================
+# AI & ML Models (Python Audio Analyzer)
+# =============================================================================
+apps/python-audio-analyzer/tf_hub_cache/
+apps/python-audio-analyzer/__pycache__/
+apps/python-audio-analyzer/*.pyc
+apps/python-audio-analyzer/models/
+apps/python-audio-analyzer/.pytest_cache/
+
+# =============================================================================
+# Database & Storage
+# =============================================================================
+*.db
+*.sqlite
+*.sqlite3
+
+# =============================================================================
+# Docker
+# =============================================================================
+.dockerignore
+Dockerfile.prod
+
+# =============================================================================
+# Miscellaneous
+# =============================================================================
+.eslintcache
+.stylelintcache
