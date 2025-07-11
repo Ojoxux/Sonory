@@ -1,1 +1,65 @@
-npm run lint-staged
+#!/usr/bin/env sh
+
+# Function to add path if directory exists
+add_to_path() {
+  if [ -d "$1" ]; then
+    export PATH="$1:$PATH"
+  fi
+}
+
+# Load Node.js version managers if available
+# NVM (Node Version Manager)
+if [ -f "$HOME/.nvm/nvm.sh" ]; then
+  . "$HOME/.nvm/nvm.sh"
+elif [ -f "$NVM_DIR/nvm.sh" ]; then
+  . "$NVM_DIR/nvm.sh"
+fi
+
+# FNM (Fast Node Manager)
+if command -v fnm >/dev/null 2>&1; then
+  eval "$(fnm env)"
+fi
+
+# Volta
+if command -v volta >/dev/null 2>&1; then
+  export PATH="$VOLTA_HOME/bin:$PATH"
+fi
+
+# Add common Node.js installation paths
+add_to_path "/usr/local/bin"           # Common Unix installation
+add_to_path "/opt/homebrew/bin"        # Homebrew on Apple Silicon
+add_to_path "$HOME/.local/bin"         # User local installation
+add_to_path "$HOME/bin"                # User bin directory
+
+# Add current Node.js path if node is available
+if command -v node >/dev/null 2>&1; then
+  NODE_PATH=$(dirname "$(which node)")
+  add_to_path "$NODE_PATH"
+fi
+
+# Verify npm is available, if not try to find it
+if ! command -v npm >/dev/null 2>&1; then
+  echo "Warning: npm not found in PATH. Trying to locate..."
+  
+  # Try common npm locations
+  for npm_path in \
+    "$HOME/.npm-global/bin/npm" \
+    "/usr/local/bin/npm" \
+    "/opt/homebrew/bin/npm" \
+    "$(dirname "$(which node)" 2>/dev/null)/npm"; do
+    if [ -f "$npm_path" ]; then
+      export PATH="$(dirname "$npm_path"):$PATH"
+      break
+    fi
+  done
+fi
+
+# Final check and run lint-staged
+if command -v npx >/dev/null 2>&1; then
+  npx lint-staged
+elif command -v npm >/dev/null 2>&1; then
+  npm run lint-staged
+else
+  echo "Error: Neither npx nor npm found. Please ensure Node.js is properly installed."
+  exit 1
+fi
