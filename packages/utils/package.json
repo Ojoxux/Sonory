@@ -11,7 +11,7 @@
       "lint:check": "biome check .",
       "format": "biome format . --write",
       "type-check": "tsc --noEmit",
-      "clean": "rm -rf dist"
+            "clean": "rm -rf dist"
    },
    "devDependencies": {
       "@biomejs/biome": "1.9.4",

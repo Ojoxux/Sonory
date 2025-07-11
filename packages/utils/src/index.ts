@@ -6,3 +6,6 @@ export * from "./geo"
 
 // 音声処理関連
 export * from "./audio"
+
+// URL関連
+export * from "./url"

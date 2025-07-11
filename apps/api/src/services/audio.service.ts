@@ -1,5 +1,6 @@
 import { ERROR_CODES } from "@sonory/shared-types"
 import type { AudioMetadata, AudioUploadResult } from "@sonory/shared-types"
+import { joinUrl } from "@sonory/utils"
 import { APIException } from "../middleware/error"
 import { BaseService } from "./base.service"
 import { getSupabaseAdmin } from "./supabase"
@@ -370,7 +371,7 @@ export class AudioService extends BaseService {
          }
 
          const response = await fetch(
-            `${pythonServiceUrl}/api/v1/analyze/audio`,
+            joinUrl(pythonServiceUrl, "/api/v1/analyze/audio"),
             {
                method: "POST",
                headers: {
