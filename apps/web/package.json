@@ -10,10 +10,9 @@
       "lint:fix": "biome check --fix --unsafe .",
       "format": "biome format .",
       "format:fix": "biome format . --write",
-      "type": "tsc --noEmit",
-      "validate": "npm run lint && npm run type",
+      "type-check": "tsc --noEmit",
+      "validate": "npm run lint && npm run type-check",
       "clean": "rm -rf .next out node_modules/.cache",
-      "prepare": "npm run validate",
       "ci": "npm run validate && npm run build",
       "precommit": "npm run lint:fix && npm run format:fix"
    },
