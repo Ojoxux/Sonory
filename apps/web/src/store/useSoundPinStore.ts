@@ -146,16 +146,82 @@ function calculateDistance(
 }
 
 /**
- * 現在の時間から時間タグを生成
- *
- * @param date - 対象の日時
- * @returns 時間タグ
+ * 天気情報を取得する関数
+ */
+async function fetchWeatherData(
+   lat: number,
+   lng: number,
+): Promise<
+   | {
+        temperature: number
+        condition: string
+        windSpeed?: number
+        humidity?: number
+     }
+   | undefined
+> {
+   try {
+      const response = await fetch(
+         `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true&timezone=auto`,
+      )
+
+      if (!response.ok) {
+         throw new Error(`天気情報の取得に失敗: ${response.status}`)
+      }
+
+      const data = await response.json()
+
+      if (data.current_weather) {
+         return {
+            temperature: data.current_weather.temperature,
+            condition: getWeatherCondition(data.current_weather.weathercode),
+            windSpeed: data.current_weather.windspeed,
+            humidity: data.current_weather.humidity || null,
+         }
+      }
+
+      return undefined
+   } catch (error) {
+      console.warn("天気情報の取得に失敗:", error)
+      return undefined
+   }
+}
+
+/**
+ * 天気コードから天気状態を取得
+ */
+function getWeatherCondition(weatherCode: number): string {
+   const weatherConditions: Record<number, string> = {
+      0: "晴れ",
+      1: "ほぼ晴れ",
+      2: "部分的に曇り",
+      3: "曇り",
+      45: "霧",
+      48: "霧氷",
+      51: "小雨",
+      53: "雨",
+      55: "大雨",
+      61: "小雨",
+      63: "雨",
+      65: "大雨",
+      71: "小雪",
+      73: "雪",
+      75: "大雪",
+      95: "雷雨",
+   }
+
+   return weatherConditions[weatherCode] || "不明"
+}
+
+/**
+ * 時間帯タグを生成
  */
 function generateTimeTag(date: Date): "朝" | "昼" | "夕" | "夜" {
    const hour = date.getHours()
+
    if (hour >= 6 && hour < 12) return "朝"
    if (hour >= 12 && hour < 18) return "昼"
-   if (hour >= 18 && hour < 24) return "夕"
+   if (hour >= 18 && hour < 21) return "夕"
    return "夜"
 }
 
@@ -274,30 +340,79 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
          const timeTag = generateTimeTag(now)
          const primaryResult = analysisResult[0]
 
-         // バックエンドAPIに送信するデータを準備
-         const pinData = {
-            location: {
+         // 天気情報を取得
+         const weatherData = await fetchWeatherData(
+            location.latitude,
+            location.longitude,
+         )
+
+         // まず、ローカルピンとして即座に表示（DB同期まで表示を維持）
+         const tempPin: SoundPin = {
+            id: crypto.randomUUID(), // 一時的なID
+            latitude: location.latitude,
+            longitude: location.longitude,
+            audioData: {
+               blob: new Blob(),
+               url: audioUrl,
+               recordedAt: now,
+               id: crypto.randomUUID(),
+            },
+            classificationResults: analysisResult,
+            recordedAt: now,
+            primaryLabel: primaryResult?.label ?? "不明",
+            primaryConfidence: primaryResult?.confidence ?? 0,
+            isPersisted: false, // まだ永続化されていない
+            timeTag: timeTag,
+            environment: primaryResult?.label || "unknown",
+            weather: weatherData, // 天気情報を追加
+         }
+
+         // ローカルピンとして即座に追加
+         set((state) => ({
+            pins: [...state.pins, tempPin],
+         }))
+
+         let response: Response
+
+         // 常に /api/pins/upload エンドポイントを使用
+         console.log("🔄 音声ファイルをアップロード")
+
+         let audioBlob: Blob
+
+         if (audioUrl.startsWith("blob:")) {
+            // BlobURLから音声データを取得
+            audioBlob = await fetch(audioUrl).then((res) => res.blob())
+         } else {
+            // 既存のURLから音声データを取得
+            audioBlob = await fetch(audioUrl).then((res) => res.blob())
+         }
+
+         // FormDataを作成
+         const formData = new FormData()
+         formData.append("audio", audioBlob, "audio.webm")
+         formData.append(
+            "location",
+            JSON.stringify({
                lat: location.latitude,
                lng: location.longitude,
                accuracy: location.accuracy,
-            },
-            audio: {
-               url: audioUrl,
-               duration: 10, // 10秒固定
-               format: "webm" as const,
-            },
-            timeTag,
-            title: primaryResult?.label || "音声ピン",
-            deviceInfo: navigator.userAgent,
-         }
+            }),
+         )
+         formData.append(
+            "metadata",
+            JSON.stringify({
+               duration: 10,
+               timeTag,
+               title: primaryResult?.label || "音声ピン",
+               deviceInfo: navigator.userAgent,
+               ...(weatherData ? { weather: weatherData } : {}), // 天気情報がある場合のみ追加
+            }),
+         )
 
-         // バックエンドAPIにピンを作成
-         const response = await fetch("/api/pins", {
+         // アップロードエンドポイントを使用
+         response = await fetch("/api/pins/upload", {
             method: "POST",
-            headers: {
-               "Content-Type": "application/json",
-            },
-            body: JSON.stringify(pinData),
+            body: formData,
          })
 
          if (!response.ok) {
@@ -307,7 +422,29 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
             )
          }
 
-         const result = await response.json()
+         const result: {
+            success: boolean
+            data?: {
+               id: string
+               audio_url: string
+               location: {
+                  lat: number
+                  lng: number
+               }
+               audio: {
+                  url: string
+               }
+               createdAt: string
+               timeTag?: "朝" | "昼" | "夕" | "夜"
+               weather?: {
+                  temperature: number
+                  condition: string
+                  windSpeed?: number
+                  humidity?: number
+               }
+            }
+            error?: string
+         } = await response.json()
 
          if (!result.success || !result.data) {
             throw new Error("ピン作成結果が不正です")
@@ -315,7 +452,7 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
 
          // 作成されたピンをローカル形式に変換
          const createdPin: SoundPin = {
-            id: result.data.id,
+            id: result.data.id, // 実際のDBのID
             latitude: result.data.location.lat,
             longitude: result.data.location.lng,
             audioData: {
@@ -331,23 +468,35 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
             isPersisted: true,
             timeTag: result.data.timeTag,
             environment: primaryResult?.label || "unknown",
+            weather: result.data.weather, // 天気情報を追加
          }
 
+         // 一時ピンを削除し、永続化ピンを追加
          set((state) => ({
+            pins: state.pins.filter((p) => p.id !== tempPin.id), // 一時ピンを削除
             persistedPins: [...state.persistedPins, createdPin],
             pinCreationStatus: "success",
             lastCreatedPinId: createdPin.id,
          }))
+
+         console.log("📍 ピン作成完了:", {
+            pinId: createdPin.id,
+            location: { lat: createdPin.latitude, lng: createdPin.longitude },
+            isPersisted: createdPin.isPersisted,
+            weather: createdPin.weather,
+         })
 
          return createdPin
       } catch (error) {
          const errorMessage =
             error instanceof Error ? error.message : "ピン作成に失敗しました"
 
-         set({
+         // エラー時は一時ピンも削除
+         set((state) => ({
+            pins: state.pins.filter((p) => !p.isPersisted), // 一時ピンをクリア
             pinCreationStatus: "error",
             pinCreationError: errorMessage,
-         })
+         }))
 
          throw error
       }
@@ -427,10 +576,25 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
             limit: "50",
          })
 
+         console.log("🔍 周辺ピン検索開始:", {
+            bounds,
+            queryParams: Object.fromEntries(params.entries()),
+            url: `/api/pins/nearby?${params}`,
+         })
+
          const response = await fetch(`/api/pins/nearby?${params}`)
+
+         console.log("📡 周辺ピン検索レスポンス:", {
+            status: response.status,
+            ok: response.ok,
+         })
 
          if (!response.ok) {
             const errorData = await response.json().catch(() => ({}))
+            console.error("❌ 周辺ピン取得エラー:", {
+               status: response.status,
+               errorData,
+            })
             throw new Error(
                errorData.message || `ピン取得失敗: ${response.status}`,
             )
@@ -438,12 +602,21 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
 
          const result = await response.json()
 
+         console.log("📋 周辺ピン検索結果:", {
+            success: result.success,
+            dataType: typeof result.data,
+            dataLength: Array.isArray(result.data)
+               ? result.data.length
+               : "not array",
+            data: result.data,
+         })
+
          if (!result.success || !result.data) {
             throw new Error("ピン取得結果が不正です")
          }
 
          // DB結果をSoundPin形式に変換
-         const loadedPins: SoundPin[] = (result.data.pins || []).map(
+         const loadedPins: SoundPin[] = (result.data || []).map(
             (dbPin: unknown) => {
                const pin = dbPin as {
                   id: string
@@ -486,6 +659,12 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
             persistedPins: loadedPins,
             isLoadingNearbyPins: false,
          }))
+
+         console.log("🗺️ 周辺ピン読み込み完了:", {
+            bounds,
+            loadedCount: loadedPins.length,
+            pins: loadedPins,
+         })
 
          return loadedPins
       } catch (error) {

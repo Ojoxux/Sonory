@@ -169,6 +169,12 @@ export const useRecorderStore = create<RecorderState>((set, _get) => ({
          }, 200)
 
          // バックエンドAPIにアップロード
+         console.log("🔄 音声アップロード実行中...", {
+            endpoint: "/api/audio/upload",
+            blobSize: audioBlob.size,
+            hasMetadata: !!metadata.location,
+         })
+
          const response = await fetch("/api/audio/upload", {
             method: "POST",
             body: formData,
@@ -176,8 +182,18 @@ export const useRecorderStore = create<RecorderState>((set, _get) => ({
 
          clearInterval(progressInterval)
 
+         console.log("📡 アップロードレスポンス受信:", {
+            status: response.status,
+            ok: response.ok,
+            headers: Object.fromEntries(response.headers.entries()),
+         })
+
          if (!response.ok) {
             const errorData = await response.json().catch(() => ({}))
+            console.error("❌ アップロードエラー:", {
+               status: response.status,
+               errorData,
+            })
             throw new Error(
                errorData.message || `アップロード失敗: ${response.status}`,
             )
@@ -185,11 +201,32 @@ export const useRecorderStore = create<RecorderState>((set, _get) => ({
 
          const result = await response.json()
 
+         console.log("📤 アップロードレスポンス:", result)
+
          if (!result.success || !result.data) {
             throw new Error("アップロード結果が不正です")
          }
 
-         const { url, id } = result.data
+         // バックエンドのレスポンス形式に対応
+         const { audioUrl, audioId } = result.data
+
+         // 値の存在確認
+         if (!audioUrl || !audioId) {
+            console.error(
+               "❌ アップロードレスポンスに必要な値が含まれていません:",
+               {
+                  audioUrl,
+                  audioId,
+                  fullResponse: result,
+               },
+            )
+            throw new Error("アップロードレスポンスが不完全です")
+         }
+
+         const url = audioUrl
+         const id = audioId
+
+         console.log("✅ アップロード成功:", { url, id })
 
          set({
             uploadStatus: "success",
