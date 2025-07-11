@@ -1,4 +1,7 @@
-# Python
+# Sonory Python Audio Analyzer - アプリケーション固有の .gitignore
+# 共通設定はルートレベルの .gitignore で管理
+
+# Python固有（基本的なもの）
 __pycache__/
 *.py[cod]
 *$py.class
@@ -109,37 +112,13 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-# TensorFlow Hub キャッシュ
-tf_hub_cache/
-
-# ログファイル
-*.log
-logs/
-
-# 一時ファイル
-*.tmp
-*.temp
-
-# macOS
-.DS_Store
-
-# Windows
-Thumbs.db
-desktop.ini
-
-# IDE
-.vscode/settings-personal.json
-.idea/
-*.swp
-*.swo
-
-# プロジェクト固有の一時ファイル
+# プロジェクト固有
+# 音声ファイル（テスト用）
 *.wav
 *.mp3
 *.webm
 test_audio/
 temp_audio/
 
-# Docker
-.dockerignore
+# Docker固有
 docker-compose.override.yml 

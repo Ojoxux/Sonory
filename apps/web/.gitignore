@@ -1,79 +1,15 @@
-# Next.js
-/.next/
-/out/
+# Sonory Web - アプリケーション固有の .gitignore
+# 共通設定はルートレベルの .gitignore で管理
+
+# Next.js固有
 next-env.d.ts
-*.tsbuildinfo
-
-# production
-/build
-
-# PWA関連の自動生成ファイル
-/public/sw.js
-/public/workbox-*.js
-/public/worker-*.js
-/public/sw.js.map
-/public/workbox-*.js.map
-/public/worker-*.js.map
-/public/fallback-*.js
-
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-
-# testing
-/coverage
-
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files (アプリケーション固有)
-.env.local
-.env.development.local
-.env.production.local
-.env.test.local
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-
-# Turborepo
-.turbo/
-
-# IDE
-.vscode/settings-personal.json
-.idea/
-*.swp
-*.swo
-
-# ログファイル
-*.log
-
-# 一時ファイル
-*.tmp
-*.temp
-
-# macOS
-.DS_Store
-
-# Windows
-Thumbs.db
-desktop.ini
 
 # プロジェクト固有の一時ファイル
 /public/temp/
 /public/cache/
 /public/generated/
 
+# Testing frameworks
 # Storybook
 storybook-static/
 
