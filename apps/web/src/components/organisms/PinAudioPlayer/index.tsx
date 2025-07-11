@@ -2,7 +2,7 @@
 
 import type { SoundPin } from "@/store/useSoundPinStore"
 import { motion } from "framer-motion"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { MdClose, MdPause, MdPlayArrow } from "react-icons/md"
 import { SoundWaveBackground } from "../../atoms/SoundWaveBackground"
 
@@ -62,6 +62,8 @@ export function PinAudioPlayer({
    )
    const [currentTime, setCurrentTime] = useState<number>(0)
    const [duration, setDuration] = useState<number>(0)
+   const progressBarRef = useRef<HTMLDivElement>(null)
+   const animationFrameRef = useRef<number | null>(null)
 
    /**
     * 録音時間をフォーマット
@@ -79,8 +81,14 @@ export function PinAudioPlayer({
 
    /**
     * 時間をフォーマット（MM:SS形式）
+    * NaNやInfinityを安全に処理
     */
    const formatTime = useCallback((seconds: number): string => {
+      // NaN、Infinity、負の値をチェック
+      if (!Number.isFinite(seconds) || seconds < 0) {
+         return "00:00"
+      }
+      
       const mins = Math.floor(seconds / 60)
       const secs = Math.floor(seconds % 60)
       return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
@@ -93,34 +101,89 @@ export function PinAudioPlayer({
       try {
          setAudioLoadingStatus("loading")
          setAudioLoadError(null)
+         setCurrentTime(0)
+         setDuration(0)
 
          const audio = new Audio(audioUrl)
 
          // 音声読み込み完了時の処理
          audio.onloadedmetadata = () => {
-            setDuration(audio.duration)
-            setAudioLoadingStatus("ready")
+            const audioDuration = audio.duration
+            // durationが有効な値かチェック
+            if (Number.isFinite(audioDuration) && audioDuration > 0) {
+               setDuration(audioDuration)
+               setAudioLoadingStatus("ready")
+            } else {
+               // durationが無効な場合は、デフォルト値を設定
+               setDuration(10) // 10秒のデフォルト値
+               setAudioLoadingStatus("ready")
+               console.warn("音声のdurationが無効です。デフォルト値を使用します:", audioDuration)
+            }
          }
 
-         // 音声再生時間更新
+         // 音声データが利用可能になったときの処理
+         audio.oncanplaythrough = () => {
+            const audioDuration = audio.duration
+            if (Number.isFinite(audioDuration) && audioDuration > 0) {
+               setDuration(audioDuration)
+               setAudioLoadingStatus("ready")
+            }
+         }
+
+         // 音声再生時間更新（requestAnimationFrameで滑らかに）
+         const updateTime = () => {
+            if (audio && !audio.paused && !audio.ended) {
+               const currentTime = audio.currentTime
+               if (Number.isFinite(currentTime) && currentTime >= 0) {
+                  setCurrentTime(currentTime)
+               }
+               animationFrameRef.current = requestAnimationFrame(updateTime)
+            }
+         }
+
          audio.ontimeupdate = () => {
-            setCurrentTime(audio.currentTime)
+            const currentTime = audio.currentTime
+            if (Number.isFinite(currentTime) && currentTime >= 0) {
+               setCurrentTime(currentTime)
+            }
+         }
+
+         // 再生開始時にアニメーションフレーム更新を開始
+         audio.onplay = () => {
+            if (animationFrameRef.current) {
+               cancelAnimationFrame(animationFrameRef.current)
+            }
+            animationFrameRef.current = requestAnimationFrame(updateTime)
+         }
+
+         // 一時停止・終了時にアニメーションフレーム更新を停止
+         audio.onpause = () => {
+            if (animationFrameRef.current) {
+               cancelAnimationFrame(animationFrameRef.current)
+               animationFrameRef.current = null
+            }
          }
 
          // 音声再生終了時の処理
          audio.onended = () => {
+            if (animationFrameRef.current) {
+               cancelAnimationFrame(animationFrameRef.current)
+               animationFrameRef.current = null
+            }
             setPlaybackState("ended")
             setCurrentTime(0)
          }
 
          // 音声読み込みエラー時の処理
-         audio.onerror = () => {
+         audio.onerror = (error) => {
+            console.error("音声読み込みエラー:", error)
             setAudioLoadingStatus("error")
             setAudioLoadError("音声の読み込みに失敗しました")
          }
 
          setAudioElement(audio)
       } catch (error) {
+         console.error("音声読み込み処理エラー:", error)
          setAudioLoadingStatus("error")
          setAudioLoadError(
             error instanceof Error
@@ -163,6 +226,26 @@ export function PinAudioPlayer({
    }, [audioElement])
 
    /**
+    * シークバーのクリック処理
+    */
+   const handleSeek = useCallback((event: React.MouseEvent<HTMLDivElement>): void => {
+      if (!audioElement || !progressBarRef.current || !Number.isFinite(duration) || duration <= 0) {
+         return
+      }
+
+      const rect = progressBarRef.current.getBoundingClientRect()
+      const clickX = event.clientX - rect.left
+      const progressBarWidth = rect.width
+      const clickRatio = Math.max(0, Math.min(1, clickX / progressBarWidth))
+      const newTime = clickRatio * duration
+
+      if (Number.isFinite(newTime) && newTime >= 0 && newTime <= duration) {
+         audioElement.currentTime = newTime
+         setCurrentTime(newTime)
+      }
+   }, [audioElement, duration])
+
+   /**
     * 閉じるボタンのクリックハンドラー
     */
    const handleClose = useCallback((): void => {
@@ -178,6 +261,10 @@ export function PinAudioPlayer({
 
       return () => {
          // クリーンアップ
+         if (animationFrameRef.current) {
+            cancelAnimationFrame(animationFrameRef.current)
+            animationFrameRef.current = null
+         }
          if (audioElement) {
             audioElement.pause()
             audioElement.src = ""
@@ -188,6 +275,10 @@ export function PinAudioPlayer({
    // コンポーネントがアンマウントされるときのクリーンアップ
    useEffect(() => {
       return () => {
+         if (animationFrameRef.current) {
+            cancelAnimationFrame(animationFrameRef.current)
+            animationFrameRef.current = null
+         }
          if (audioElement) {
             audioElement.pause()
             audioElement.src = ""
@@ -198,6 +289,11 @@ export function PinAudioPlayer({
    if (!pin) {
       return null
    }
+
+   // 安全な時間表示のための値
+   const safeDuration = Number.isFinite(duration) && duration > 0 ? duration : 0
+   const safeCurrentTime = Number.isFinite(currentTime) && currentTime >= 0 ? currentTime : 0
+   const progressPercentage = safeDuration > 0 ? Math.min(100, (safeCurrentTime / safeDuration) * 100) : 0
 
    return (
       <motion.div
@@ -359,23 +455,24 @@ export function PinAudioPlayer({
                      </div>
 
                      {/* 再生時間表示 */}
-                     {duration > 0 && (
-                        <div className="text-center text-neutral-300 text-sm">
-                           {formatTime(currentTime)} / {formatTime(duration)}
-                        </div>
-                     )}
+                     <div className="text-center text-neutral-300 text-sm">
+                        {formatTime(safeCurrentTime)} / {formatTime(safeDuration)}
+                     </div>
 
-                     {/* 進捗バー */}
-                     {duration > 0 && (
-                        <div className="mt-2 h-2 w-full rounded-full bg-white/10">
-                           <div
-                              className="h-2 rounded-full bg-blue-500 transition-all duration-300"
-                              style={{
-                                 width: `${(currentTime / duration) * 100}%`,
-                              }}
-                           />
-                        </div>
-                     )}
+                     {/* 進捗バー（クリック可能） */}
+                     <div 
+                        ref={progressBarRef}
+                        className="mt-2 h-2 w-full rounded-full bg-white/10 cursor-pointer"
+                        onClick={handleSeek}
+                     >
+                        <div
+                           className="h-2 rounded-full bg-blue-500"
+                           style={{
+                              width: `${progressPercentage}%`,
+                              transition: playbackState === "playing" ? "none" : "width 0.2s ease-out",
+                           }}
+                        />
+                     </div>
                   </div>
                </div>
 

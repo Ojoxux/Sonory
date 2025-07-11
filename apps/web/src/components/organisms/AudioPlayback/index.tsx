@@ -116,33 +116,67 @@ export function AudioPlayback({
                : undefined,
          }
 
-         await uploadAudioToStorage(audioData.blob, metadata)
+         // アップロードを試行（タイムアウト付き）
+         let uploadResult: { url: string; id: string } | null = null
+         try {
+            console.log("🔄 音声アップロード開始:", {
+               blobSize: audioData.blob.size,
+               blobType: audioData.blob.type,
+               metadata,
+            })
 
-         // アップロード完了後、AI分析を開始
+            const uploadPromise = uploadAudioToStorage(audioData.blob, metadata)
+            const timeoutPromise = new Promise<never>((_, reject) =>
+               setTimeout(
+                  () => reject(new Error("アップロードタイムアウト")),
+                  10000,
+               ),
+            )
+
+            uploadResult = await Promise.race([uploadPromise, timeoutPromise])
+            console.log("✅ 音声アップロード成功:", uploadResult)
+         } catch (uploadError) {
+            console.warn(
+               "⚠️ アップロードに失敗しました。オフライン分析を実行します:",
+               uploadError,
+            )
+            // アップロードに失敗してもAI分析は続行
+         }
+
+         // AI分析を開始
          setViewState("ai-analyzing")
 
          // 段階的にメッセージを変更（15秒間）
          setAnalysisMessage("音声データを読み込み中...")
 
          setTimeout(() => {
-            if (viewState === "ai-analyzing") {
-               setAnalysisMessage("AIモデルで分析中...")
-            }
-         }, 5000)
+            setAnalysisMessage("AIモデルで分析中...")
+         }, 2000)
 
          setTimeout(() => {
-            if (viewState === "ai-analyzing") {
-               setAnalysisMessage("パターンマッチングを実行中...")
-            }
-         }, 10000)
+            setAnalysisMessage("パターンマッチングを実行中...")
+         }, 4000)
 
          setTimeout(() => {
-            if (viewState === "ai-analyzing") {
-               setAnalysisMessage("結果を生成中...")
-            }
-         }, 13000)
+            setAnalysisMessage("結果を生成中...")
+         }, 6000)
 
-         await startInference(audioData)
+         // AI分析を実行（タイムアウト付き）
+         try {
+            const inferencePromise = startInference(audioData)
+            const timeoutPromise = new Promise((_, reject) =>
+               setTimeout(() => reject(new Error("AI分析タイムアウト")), 15000),
+            )
+
+            await Promise.race([inferencePromise, timeoutPromise])
+         } catch (inferenceError) {
+            console.warn(
+               "⚠️ AI分析に失敗しました。フォールバック結果を使用します:",
+               inferenceError,
+            )
+            // フォールバック結果は useInferenceStore 内で自動的に生成される
+         }
+
          setViewState("results")
       } catch (err) {
          console.error("💥 処理に失敗しました:", err)
@@ -155,16 +189,29 @@ export function AudioPlayback({
     * ピン配置ボタンのクリックハンドラー
     */
    const handlePlacePin = async (): Promise<void> => {
-      if (
-         results.length > 0 &&
-         currentPosition &&
-         audioData &&
-         uploadedAudioUrl
-      ) {
+      if (results.length > 0 && currentPosition && audioData) {
          try {
+            // アップロード済みURLを優先的に使用
+            let audioUrl = uploadedAudioUrl
+
+            // アップロード済みURLがない場合は、BlobURLを使用（createPersistentPin内でアップロードされる）
+            if (!audioUrl) {
+               audioUrl = audioData.url || URL.createObjectURL(audioData.blob)
+               console.log(
+                  "⚠️ アップロード済みURLがないため、BlobURLを使用します",
+               )
+            }
+
+            console.log("📍 ピン配置開始:", {
+               hasUploadedUrl: !!uploadedAudioUrl,
+               audioUrl: `${audioUrl.substring(0, 100)}...`, // URLの先頭のみ表示
+               position: currentPosition,
+               resultsCount: results.length,
+            })
+
             // 永続化ピンを作成
             await createPersistentPin(
-               uploadedAudioUrl,
+               audioUrl,
                {
                   latitude: currentPosition.latitude,
                   longitude: currentPosition.longitude,
@@ -172,12 +219,19 @@ export function AudioPlayback({
                results,
             )
 
+            console.log("✅ ピン配置成功")
             // 成功時は閉じる
             onClose()
          } catch (error) {
             // エラー時はログ出力（エラー表示はストアで管理）
-            console.error("ピン配置エラー:", error)
+            console.error("❌ ピン配置エラー:", error)
          }
+      } else {
+         console.warn("⚠️ ピン配置条件が満たされていません:", {
+            hasResults: results.length > 0,
+            hasPosition: !!currentPosition,
+            hasAudioData: !!audioData,
+         })
       }
    }
 
@@ -429,32 +483,51 @@ export function AudioPlayback({
 
                      {/* アクションボタン */}
                      <div className="flex gap-3">
-                        {results.length > 0 &&
-                        currentPosition &&
-                        uploadedAudioUrl ? (
-                           <motion.button
-                              onClick={handlePlacePin}
-                              disabled={pinCreationStatus === "creating"}
-                              className={`w-full touch-manipulation rounded-xl border px-4 py-3 font-semibold text-white backdrop-blur-sm transition-all duration-300 ${
-                                 pinCreationStatus === "creating"
-                                    ? "cursor-not-allowed border-gray-500/30 bg-gray-600/80"
-                                    : "border-green-500/30 bg-green-600/80 shadow-[0_4px_20px_rgba(34,197,94,0.4)] hover:bg-green-600 hover:shadow-[0_8px_32px_rgba(34,197,94,0.6)]"
-                              }`}
-                              whileHover={
-                                 pinCreationStatus === "creating"
-                                    ? {}
-                                    : { scale: 1.02 }
-                              }
-                              whileTap={
-                                 pinCreationStatus === "creating"
-                                    ? {}
-                                    : { scale: 0.98 }
-                              }
-                           >
-                              {pinCreationStatus === "creating"
-                                 ? "ピン作成中..."
-                                 : "マップにピンを配置"}
-                           </motion.button>
+                        {results.length > 0 ? (
+                           <>
+                              {/* ピン配置ボタン */}
+                              <motion.button
+                                 onClick={handlePlacePin}
+                                 disabled={
+                                    pinCreationStatus === "creating" ||
+                                    !currentPosition
+                                 }
+                                 className={`flex-1 touch-manipulation rounded-xl border px-4 py-3 font-semibold text-white backdrop-blur-sm transition-all duration-300 ${
+                                    pinCreationStatus === "creating" ||
+                                    !currentPosition
+                                       ? "cursor-not-allowed border-gray-500/30 bg-gray-600/80"
+                                       : "border-green-500/30 bg-green-600/80 shadow-[0_4px_20px_rgba(34,197,94,0.4)] hover:bg-green-600 hover:shadow-[0_8px_32px_rgba(34,197,94,0.6)]"
+                                 }`}
+                                 whileHover={
+                                    pinCreationStatus === "creating" ||
+                                    !currentPosition
+                                       ? {}
+                                       : { scale: 1.02 }
+                                 }
+                                 whileTap={
+                                    pinCreationStatus === "creating" ||
+                                    !currentPosition
+                                       ? {}
+                                       : { scale: 0.98 }
+                                 }
+                              >
+                                 {pinCreationStatus === "creating"
+                                    ? "ピン作成中..."
+                                    : !currentPosition
+                                      ? "位置情報が必要です"
+                                      : "マップにピンを配置"}
+                              </motion.button>
+
+                              {/* 閉じるボタン */}
+                              <motion.button
+                                 onClick={handleClose}
+                                 className="flex-1 touch-manipulation rounded-xl border border-white/10 bg-white/10 px-4 py-3 font-semibold text-white shadow-[0_4px_20px_rgba(255,255,255,0.1)] backdrop-blur-sm transition-all duration-300 hover:bg-white/20 hover:shadow-[0_8px_32px_rgba(255,255,255,0.2)]"
+                                 whileHover={{ scale: 1.02 }}
+                                 whileTap={{ scale: 0.98 }}
+                              >
+                                 閉じる
+                              </motion.button>
+                           </>
                         ) : (
                            <motion.button
                               onClick={handleClose}
