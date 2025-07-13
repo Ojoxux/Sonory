@@ -4,7 +4,7 @@ import { useInferenceStore } from "@/store/useInferenceStore"
 import { useRecorderStore } from "@/store/useRecorderStore"
 import { useSoundPinStore } from "@/store/useSoundPinStore"
 import { motion } from "framer-motion"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { MdClose } from "react-icons/md"
 import { SonicLoader } from "../../atoms/SonicLoader"
 import { SoundWaveBackground } from "../../atoms/SoundWaveBackground"
@@ -74,7 +74,7 @@ export function AudioPlayback({
    /**
     * 録音時間をフォーマット
     */
-   const formatRecordedAt = (date: Date): string => {
+   const formatRecordedAt = useCallback((date: Date): string => {
       return date.toLocaleString("ja-JP", {
          year: "numeric",
          month: "2-digit",
@@ -83,14 +83,28 @@ export function AudioPlayback({
          minute: "2-digit",
          second: "2-digit",
       })
-   }
+   }, [])
 
    /**
     * 信頼度をパーセンテージでフォーマット
     */
-   const formatConfidence = (confidence: number): string => {
+   const formatConfidence = useCallback((confidence: number): string => {
       return `${Math.round(confidence * 100)}%`
-   }
+   }, [])
+
+   /**
+    * 波形プレイヤーの準備完了時のコールバック（メモ化）
+    */
+   const handleWaveformReady = useCallback(() => {
+      // TODO: 音声準備完了時の処理を実装
+   }, [])
+
+   /**
+    * 波形プレイヤーの再生完了時のコールバック（メモ化）
+    */
+   const handleWaveformFinish = useCallback(() => {
+      // TODO: 音声再生完了時の処理を実装
+   }, [])
 
    /**
     * 続けるボタンのクリックハンドラー
@@ -324,12 +338,8 @@ export function AudioPlayback({
                            waveColor="#9ca3af"
                            progressColor="#dc2626"
                            className="w-full"
-                           onReady={() => {
-                              // TODO: 音声準備完了時の処理を実装
-                           }}
-                           onFinish={() => {
-                              // TODO: 音声再生完了時の処理を実装
-                           }}
+                           onReady={handleWaveformReady}
+                           onFinish={handleWaveformFinish}
                         />
                      </div>
 
@@ -472,12 +482,8 @@ export function AudioPlayback({
                            waveColor="#9ca3af"
                            progressColor="#dc2626"
                            className="w-full"
-                           onReady={() => {
-                              // TODO: 音声準備完了時の処理を実装
-                           }}
-                           onFinish={() => {
-                              // TODO: 音声再生完了時の処理を実装
-                           }}
+                           onReady={handleWaveformReady}
+                           onFinish={handleWaveformFinish}
                         />
                      </div>
 
