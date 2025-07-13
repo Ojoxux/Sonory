@@ -1,7 +1,13 @@
-name: Lint
+name: Lint CI
 
-# トリガー条件: pushされたとき
-on: [push]
+# トリガー条件: pushされたとき (python-audio-analyzerを除く)
+on:
+  push:
+    paths-ignore:
+      - 'apps/python-audio-analyzer/**'
+  pull_request:
+    paths-ignore:
+      - 'apps/python-audio-analyzer/**'
 
 jobs:
   build:

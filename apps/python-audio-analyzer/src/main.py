@@ -4,7 +4,6 @@ Sonory Audio Analyzer - YAMNet-based audio classification service
 Main FastAPI application entry point.
 """
 
-import logging
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
@@ -51,7 +50,7 @@ structlog.configure(
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
         structlog.processors.UnicodeDecoder(),
-        structlog.processors.JSONRenderer()
+        structlog.processors.JSONRenderer(),
     ],
     context_class=dict,
     logger_factory=structlog.stdlib.LoggerFactory(),
@@ -66,26 +65,26 @@ logger = structlog.get_logger(__name__)
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Manage application lifecycle."""
     logger.info("Starting Sonory Audio Analyzer service")
-    
+
     # Initialize YAMNet model on startup
     try:
         yamnet_manager = YAMNetManager()
         await yamnet_manager.initialize()
         app.state.yamnet_manager = yamnet_manager
-        
+
         # Initialize audio analyzer
         app.state.audio_analyzer = AudioAnalyzer(yamnet_manager)
-        
+
         logger.info("YAMNet model initialized successfully")
     except Exception as e:
         logger.error("Failed to initialize YAMNet model", error=str(e))
         raise
-    
+
     yield
-    
+
     # Cleanup on shutdown
     logger.info("Shutting down Sonory Audio Analyzer service")
-    if hasattr(app.state, 'yamnet_manager'):
+    if hasattr(app.state, "yamnet_manager"):
         await app.state.yamnet_manager.cleanup()
 
 
@@ -99,7 +98,7 @@ def create_app() -> FastAPI:
         docs_url="/docs",
         redoc_url="/redoc",
     )
-    
+
     # Configure CORS
     allowed_origins = [
         "http://localhost:3000",
@@ -107,13 +106,15 @@ def create_app() -> FastAPI:
         "http://127.0.0.1:3000",
         "http://127.0.0.1:8080",
     ]
-    
+
     # 本番環境用設定のために環境変数をチェック
     if os.getenv("ENVIRONMENT") == "production":
         # 本番環境では環境変数ALLOWED_ORIGINSから許可オリジンを取得
         production_origins = os.getenv("ALLOWED_ORIGINS", "").split(",")
-        allowed_origins = [origin.strip() for origin in production_origins if origin.strip()]
-    
+        allowed_origins = [
+            origin.strip() for origin in production_origins if origin.strip()
+        ]
+
     app.add_middleware(
         CORSMiddleware,
         allow_origins=allowed_origins,
@@ -121,13 +122,13 @@ def create_app() -> FastAPI:
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["*"],
     )
-    
+
     # Include API routes
     app.include_router(api_router, prefix="/api/v1")
-    
+
     # Add exception handlers
     app.add_exception_handler(HTTPException, http_exception_handler)
-    
+
     return app
 
 
@@ -138,20 +139,16 @@ app = create_app()
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""
-    return {
-        "status": "healthy",
-        "service": "sonory-audio-analyzer",
-        "version": "0.1.0"
-    }
+    return {"status": "healthy", "service": "sonory-audio-analyzer", "version": "0.1.0"}
 
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
         port=8000,
         reload=True,
         log_config=None,  # Use structlog configuration
-    ) 
+    )

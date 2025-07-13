@@ -13,8 +13,6 @@
       "type-check": "tsc --noEmit",
       "test": "vitest",
       "test:watch": "vitest --watch",
-      "setup:db": "node scripts/apply-rpc-functions.js",
-      "setup:storage": "node scripts/setup-storage.js",
       "clean": "rm -rf dist .wrangler"
    },
    "dependencies": {
