@@ -203,22 +203,40 @@ export function WaveformPlayer({
 
          wavesurferRef.current = wavesurfer
 
+         // durationを安全に設定するヘルパー関数
+         const setDurationSafely = () => {
+            const duration = wavesurfer.getDuration()
+            if (Number.isFinite(duration) && duration > 0) {
+               setDuration(duration)
+               return true
+            }
+            return false
+         }
+
          // イベントリスナーを設定
          wavesurfer.on("ready", () => {
             setIsLoading(false)
             setIsInitialized(true)
-            const duration = wavesurfer.getDuration()
-            // durationが有効な値かチェック
-            if (Number.isFinite(duration) && duration > 0) {
-               setDuration(duration)
-            } else {
-               // durationが無効な場合は、デフォルト値を設定
-               setDuration(10) // 10秒のデフォルト値
-               console.warn(
-                  "WaveSurfer音声のdurationが無効です。デフォルト値を使用します:",
-                  duration,
-               )
+
+            // 即座にdurationを試行
+            if (!setDurationSafely()) {
+               // 少し遅延を入れてから再試行
+               setTimeout(() => {
+                  if (!setDurationSafely()) {
+                     // さらに遅延して最終試行
+                     setTimeout(() => {
+                        if (!setDurationSafely()) {
+                           // 最終的にデフォルト値を設定
+                           setDuration(10)
+                           console.warn(
+                              "WaveSurfer音声のdurationが取得できませんでした。デフォルト値を使用します。",
+                           )
+                        }
+                     }, 100)
+                  }
+               }, 50)
             }
+
             onReady?.()
             wavesurfer.play() // 再生を ready イベント内で確実に実行
          })
@@ -232,12 +250,12 @@ export function WaveformPlayer({
                }
 
                // 終了間近になったら手動で終了処理をトリガーする
-               const duration = wavesurfer.getDuration()
+               const audioDuration = wavesurfer.getDuration()
                if (
-                  Number.isFinite(duration) &&
-                  duration > 0 &&
+                  Number.isFinite(audioDuration) &&
+                  audioDuration > 0 &&
                   Number.isFinite(time) &&
-                  time >= duration - 0.05
+                  time >= audioDuration - 0.05
                ) {
                   // すでに再生が停止していなければ、手動で停止し、終了処理を呼び出す
                   if (wavesurfer.isPlaying()) {
@@ -259,12 +277,12 @@ export function WaveformPlayer({
                setCurrentTime(time)
             }
             // 終了間近になったら手動で終了処理をトリガーする
-            const duration = wavesurfer.getDuration()
+            const audioDuration = wavesurfer.getDuration()
             if (
-               Number.isFinite(duration) &&
-               duration > 0 &&
+               Number.isFinite(audioDuration) &&
+               audioDuration > 0 &&
                Number.isFinite(time) &&
-               time >= duration - 0.05
+               time >= audioDuration - 0.05
             ) {
                // すでに再生が停止していなければ、手動で停止し、終了処理を呼び出す
                if (wavesurfer.isPlaying()) {
