@@ -86,19 +86,11 @@ npm run build
 ```bash
 # 全サービス同時起動（推奨）
 npm run start:all
-
-# 個別起動
-npm run start:frontend  # フロントエンドのみ
-npm run start:api       # APIサーバーのみ
-npm run start:python    # Python音声分析のみ
 ```
 
-開発サーバーが起動したら、以下のURLでアクセスできます：
-- **フロントエンド**: [http://localhost:3000](http://localhost:3000)
-- **API**: [http://localhost:8787](http://localhost:8787)  
-- **Python音声分析**: [http://localhost:8000](http://localhost:8000)
+開発サーバーが起動したら、[http://localhost:3000](http://localhost:3000) でアクセスできます。
 
-> **詳細なnpmスクリプト情報**: [NPM_SCRIPTS_GUIDE.md](./NPM_SCRIPTS_GUIDE.md)をご覧ください
+> **詳細な開発用スクリプト**: [NPM_SCRIPTS_GUIDE.md](./NPM_SCRIPTS_GUIDE.md)をご覧ください
 
 ## 🗂 Project Structure
 
@@ -132,7 +124,7 @@ sonory/                               # プロジェクトルート（モノレ�
 ## 💻 Technical Stack
 
 - **フレームワーク**: Next.js 15.3.2 (Turbopack使用)
-- **UI**: React 19 + Chakra UI + Tailwind CSS v4
+- **UI**: React 19 + Tailwind CSS v4
 - **PWA**: next-pwa（サービスワーカー、オフライン対応）
 - **音声処理**: MediaRecorder API + wavesurfer.js
 - **AI推論**: TensorFlow.js + YAMNet（量子化モデル）
@@ -144,18 +136,20 @@ sonory/                               # プロジェクトルート（モノレ�
 
 ## 🛠 Development Tools
 
+### 全体管理
 ```bash
-# リント・フォーマット・型チェック
-npm run lint     # リント実行
-npm run format   # フォーマット実行  
-npm run type-check # 型チェック
-
-# ビルド・クリーン
-npm run build    # 全パッケージビルド
-npm run clean    # 全パッケージクリーン
+npm run start:all        # 全サービス起動（Python + API + Web）
+npm run start:backend    # バックエンドのみ（Python + API）
+npm run stop:all         # 全サービス停止
+npm run build            # 全パッケージビルド
+npm run lint             # 全プロジェクトリント
+npm run type-check       # 全プロジェクト型チェック
 ```
 
-> **全npmスクリプト詳細**: [NPM_SCRIPTS_GUIDE.md](./NPM_SCRIPTS_GUIDE.md)で起動・停止・トラブルシューティングを確認
+### 個別アプリケーション
+- **フロントエンド**: [apps/web/README.md](apps/web/README.md)
+- **API**: [apps/api/README.md](apps/api/README.md)  
+- **Python音声分析**: [apps/python-audio-analyzer/README.md](apps/python-audio-analyzer/README.md)
 
 Huskyとlint-stagedを使用して、コミット前に自動的にリントとフォーマットが実行されます。
 
@@ -241,59 +235,6 @@ style/#[issues番号]: ほげほげ
    - 承認後、マージを実行
    - Issueをクローズ
 
-## 🔧 Troubleshooting
+## 🚨 トラブルシューティング
 
-### よくある問題
-
-1. **モジュールが見つからないエラー**
-   ```bash
-   # モジュールが見つからないエラーの場合
-   Error: Cannot find module 'xxx'
-   
-   # 依存関係が正しくインストールされていない可能性があります
-   # package-lock.jsonを削除して再インストール
-   rm package-lock.json
-   npm install
-   
-   # または特定のモジュールを明示的にインストール
-   npm install xxx
-   ```
-
-2. **@sonory/shared-types が解決できないエラー**
-   ```bash
-   # Could not resolve "@sonory/shared-types" エラーの場合
-   
-   # モノレポの内部パッケージがビルドされていない可能性があります
-   # プロジェクトルートで以下を実行
-   npm install
-   npm run build
-   
-   # または個別にshared-typesをビルド
-   cd packages/shared-types
-   npm run build
-   cd ../..
-   
-   # それでも解決しない場合は、node_modulesをクリーンアップ
-   rm -rf node_modules packages/*/node_modules apps/*/node_modules
-   npm install
-   npm run build
-   ```
-
-3. **最新のmainブランチとの同期**
-   - リモートの最新状態を確認してから、自分の変更を上に乗せる
-   ```bash
-   # リモートの最新状態を取得
-   git fetch origin main
-   
-   # 最新のmainブランチに自分の変更を上乗せ
-   git pull --rebase origin main
-   ```
-   - コンフリクトが発生した場合は解決後、以下のコマンドを実行
-   ```bash
-   git add .
-   git rebase --continue
-   ```
-   - リベース完了後、強制プッシュ（注意：履歴が書き換わります）
-   ```bash
-   git push --force-with-lease origin feature/hoge-hoge
-   ```
+開発中に問題が発生した場合は、[TROUBLESHOOTING.md](./TROUBLESHOOTING.md) を参照してください。
