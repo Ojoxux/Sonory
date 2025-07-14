@@ -117,8 +117,27 @@ export function AudioPlayback({
          setViewState("uploading")
          setAnalysisMessage("音声をアップロード中...")
 
-         // 音声時間を計算（10秒固定または実際の長さ）
-         const duration = audioData.recordedAt ? 10 : 10 // デフォルト10秒
+         // 音声時間を実際のBlobから計算
+         const duration = await new Promise<number>((resolve) => {
+            const audio = new Audio(audioData.url)
+            audio.onloadedmetadata = () => {
+               const actualDuration = audio.duration
+               resolve(Number.isFinite(actualDuration) ? actualDuration : 10)
+            }
+            audio.onerror = () => resolve(10) // エラー時はデフォルト10秒
+         })
+
+         console.log("🎵 録音時間チェック:", { duration })
+
+         // 録音時間のバリデーション（9.9秒未満の場合はエラー）
+         if (duration < 9.9) {
+            console.error("録音時間が不足しています:", { duration })
+            setViewState("audio-review")
+            setAnalysisMessage(
+               `録音時間が${duration.toFixed(1)}秒のため、マップピンを作成できません。10秒の録音が必要です。`,
+            )
+            return
+         }
 
          const metadata = {
             duration,
