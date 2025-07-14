@@ -60,7 +60,7 @@ class AudioProcessor:
     # YAMNetの仕様
     TARGET_SAMPLE_RATE = 16000  # Hz
     MAX_DURATION = 30.0  # 秒（長すぎる音声の制限）
-    MIN_DURATION = 0.1  # 秒（短すぎる音声の制限）
+    MIN_DURATION = 9.9  # 秒（短すぎる音声の制限、タイマー精度を考慮）
 
     # サポートする音声フォーマット
     SUPPORTED_FORMATS = {".wav", ".mp3", ".webm", ".m4a", ".flac", ".ogg"}
@@ -360,7 +360,7 @@ class AudioProcessor:
 
         if metadata.duration < self.MIN_DURATION:
             raise ValueError(
-                f"Audio too short: {metadata.duration:.2f}s < {self.MIN_DURATION}s"
+                f"Audio too short: {metadata.duration:.2f}s < {self.MIN_DURATION}s (10 seconds required)"
             )
 
         if metadata.duration > self.MAX_DURATION:
