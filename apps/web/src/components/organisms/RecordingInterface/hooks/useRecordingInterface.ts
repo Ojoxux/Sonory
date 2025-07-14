@@ -69,21 +69,29 @@ export function useRecordingInterface(
       }
    }, [showInstructions])
 
+   // 録音開始時刻を記録
+   const recordingStartTimeRef = useRef<number | null>(null)
+   // 10秒タイマーのref
+   const tenSecondTimerRef = useRef<NodeJS.Timeout | null>(null)
+
    // 録音時間のカウント（requestAnimationFrameを使用）
    useEffect(() => {
       if (status !== "recording") return
 
+      recordingStartTimeRef.current = performance.now()
       let animationId: number
-      let lastTime = performance.now()
 
       const updateTime = (currentTime: number) => {
-         const deltaTime = (currentTime - lastTime) / 1000 // ミリ秒を秒に変換
-         lastTime = currentTime
+         if (recordingStartTimeRef.current === null) return
 
-         setRecordingTime((prev) => {
-            const newTime = prev + deltaTime
-            return newTime >= 10 ? 10 : newTime
-         })
+         const elapsedTime =
+            (currentTime - recordingStartTimeRef.current) / 1000
+
+         // 時間表示は最大10秒でクリップ
+         setRecordingTime(Math.min(elapsedTime, 10))
+
+         // MediaRecorderが自動的に10秒で停止するため、
+         // ここでの手動停止は不要
 
          animationId = requestAnimationFrame(updateTime)
       }
@@ -92,15 +100,9 @@ export function useRecordingInterface(
 
       return () => {
          cancelAnimationFrame(animationId)
+         recordingStartTimeRef.current = null
       }
    }, [status])
-
-   // 10秒で自動停止
-   useEffect(() => {
-      if (recordingTime >= 10 && status === "recording") {
-         handleStop()
-      }
-   }, [recordingTime, status])
 
    // 展開状態が変更されたときに親コンポーネントに通知
    useEffect(() => {
@@ -121,6 +123,16 @@ export function useRecordingInterface(
       }
    }, [status, audioData])
 
+   // MediaRecorderの自動停止を検知
+   useEffect(() => {
+      if (audioData && status === "recording") {
+         // MediaRecorderが停止してaudioDataが設定された場合、
+         // 自動的に録音完了状態に遷移
+         console.log("🎵 録音完了を検知:", { audioData: audioData.id, status })
+         setStatus("completed")
+      }
+   }, [audioData, status])
+
    const handleRecord = async () => {
       // 注意書きを表示
       setShowInstructions(true)
@@ -134,7 +146,15 @@ export function useRecordingInterface(
          // 確認関連の状態をリセット
          setIsAgreed(false)
          setShowConfirmationComplete(false)
+
+         // 前回のaudioDataをクリア（新しい録音のため）
+         const { resetRecording } = useRecorderStore.getState()
+         resetRecording()
+
          await startRecording()
+
+         // MediaRecorderレベルで10秒タイマーが設定されているため、
+         // ここでは追加のタイマーは不要
       } catch (error) {
          console.error("録音の開始に失敗しました:", error)
          setStatus("idle")
@@ -157,6 +177,11 @@ export function useRecordingInterface(
    const handleStop = async () => {
       try {
          setStatus("completed")
+         // 10秒タイマーをクリア
+         if (tenSecondTimerRef.current) {
+            clearTimeout(tenSecondTimerRef.current)
+            tenSecondTimerRef.current = null
+         }
          await stopRecording()
       } catch (error) {
          console.error("録音の停止に失敗しました:", error)
