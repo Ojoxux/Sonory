@@ -25,7 +25,7 @@ const createPinSchema = z.object({
    }),
    audio: z.object({
       url: z.string().url(),
-      duration: z.number().positive().max(600),
+      duration: z.number().min(9.9).max(600), // タイマー精度を考慮して9.9秒以上
       format: z.enum(["webm", "mp3", "wav"]),
    }),
    weather: z

@@ -20,13 +20,19 @@ export function RecordingHeader({
 }: RecordingHeaderProps) {
    return (
       <div className="relative flex items-center justify-between px-6 py-4 pb-2 sm:px-8 sm:pb-3">
-         <button
-            type="button"
-            onClick={onCancel}
-            className="touch-manipulation font-medium text-base text-gray-600 transition-colors hover:text-gray-900 sm:text-lg"
-         >
-            キャンセル
-         </button>
+         {!isRecording ? (
+            <button
+               type="button"
+               onClick={onCancel}
+               className="touch-manipulation font-medium text-base text-gray-600 transition-colors hover:text-gray-900 sm:text-lg"
+            >
+               キャンセル
+            </button>
+         ) : (
+            <div className="touch-manipulation font-medium text-base text-gray-400 sm:text-lg">
+               キャンセル
+            </div>
+         )}
 
          <div className="-translate-x-1/2 absolute left-1/2 flex transform items-center gap-2">
             <BlinkingIndicator

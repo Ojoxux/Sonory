@@ -68,6 +68,8 @@ export type SoundPinState = {
    pins: SoundPin[]
    /** DB保存済みピンの配列 */
    persistedPins: SoundPin[]
+   /** 一時ピンの配列（新ピン作成中に表示） */
+   tempPins: SoundPin[]
    /** 選択中のピンID */
    selectedPinId: string | null
    /** ピン作成状態 */
@@ -236,6 +238,7 @@ function generateTimeTag(date: Date): "朝" | "昼" | "夕" | "夜" {
 export const useSoundPinStore = create<SoundPinState>((set, get) => ({
    pins: [],
    persistedPins: [],
+   tempPins: [],
    selectedPinId: null,
    pinCreationStatus: "idle",
    pinCreationError: null,
@@ -367,9 +370,10 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
             weather: weatherData, // 天気情報を追加
          }
 
-         // ローカルピンとして即座に追加
+         // 一時ピンとして即座に追加し、lastCreatedPinIdを設定
          set((state) => ({
-            pins: [...state.pins, tempPin],
+            tempPins: [...state.tempPins, tempPin],
+            lastCreatedPinId: tempPin.id, // 一時ピンのIDを設定（即座の表示更新のため）
          }))
 
          let response: Response
@@ -473,11 +477,16 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
 
          // 一時ピンを削除し、永続化ピンを追加
          set((state) => ({
-            pins: state.pins.filter((p) => p.id !== tempPin.id), // 一時ピンを削除
+            tempPins: state.tempPins.filter((p) => p.id !== tempPin.id), // 一時ピンを削除
             persistedPins: [...state.persistedPins, createdPin],
             pinCreationStatus: "success",
-            lastCreatedPinId: createdPin.id,
+            lastCreatedPinId: createdPin.id, // 永続化ピンのIDに更新
          }))
+
+         console.log("🔄 永続化ピン作成完了、lastCreatedPinIdを更新:", {
+            tempPinId: tempPin.id,
+            persistedPinId: createdPin.id,
+         })
 
          console.log("📍 ピン作成完了:", {
             pinId: createdPin.id,
@@ -486,14 +495,27 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
             weather: createdPin.weather,
          })
 
+         // ⚠️ 重要：データベースの読み取り一貫性を確保するため、
+         // 新ピン作成後の周辺ピン検索を1秒遅延させる
+         console.log("⏰ 新ピン作成後の周辺ピン検索を1秒遅延...")
+         setTimeout(() => {
+            console.log("🔄 遅延後の周辺ピン検索実行")
+            // 遅延後の周辺ピン検索は、MapComponent側で実行される
+            // ここでは新ピン作成フラグを設定して通知
+            set((state) => ({
+               ...state,
+               lastCreatedPinId: createdPin.id,
+            }))
+         }, 1000)
+
          return createdPin
       } catch (error) {
          const errorMessage =
             error instanceof Error ? error.message : "ピン作成に失敗しました"
 
          // エラー時は一時ピンも削除
-         set((state) => ({
-            pins: state.pins.filter((p) => !p.isPersisted), // 一時ピンをクリア
+         set((_state) => ({
+            tempPins: [], // 一時ピンをクリア
             pinCreationStatus: "error",
             pinCreationError: errorMessage,
          }))
@@ -526,26 +548,66 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
     * @returns 統合されたピン配列
     */
    mergeLocalAndPersistedPins: (): SoundPin[] => {
-      const { pins, persistedPins } = get()
-      const allPins = [...pins, ...persistedPins]
+      const { pins, persistedPins, tempPins } = get()
+      const allPins = [...pins, ...persistedPins, ...tempPins]
 
-      // 重複排除（同じ位置・時間のピンは統合）
+      console.log("🔄 ピン統合処理:", {
+         localPins: pins.length,
+         persistedPins: persistedPins.length,
+         tempPins: tempPins.length,
+         totalPins: allPins.length,
+         localPinsData: pins.map((p) => ({
+            id: p.id,
+            isPersisted: p.isPersisted,
+            lat: p.latitude,
+            lng: p.longitude,
+            recordedAt: p.recordedAt,
+         })),
+         persistedPinsData: persistedPins.map((p) => ({
+            id: p.id,
+            isPersisted: p.isPersisted,
+            lat: p.latitude,
+            lng: p.longitude,
+            recordedAt: p.recordedAt,
+         })),
+         tempPinsData: tempPins.map((p) => ({
+            id: p.id,
+            isPersisted: p.isPersisted,
+            lat: p.latitude,
+            lng: p.longitude,
+            recordedAt: p.recordedAt,
+         })),
+         allPinsData: allPins.map((p, index) => ({
+            index,
+            id: p.id,
+            isPersisted: p.isPersisted,
+            lat: p.latitude,
+            lng: p.longitude,
+            recordedAt: p.recordedAt,
+         })),
+      })
+
+      // 重複排除（IDベースの重複のみ除外）
       const uniquePins = allPins.filter((pin, index, array) => {
-         return (
-            array.findIndex((p) => {
-               const isSameLocation =
-                  Math.abs(p.latitude - pin.latitude) < 0.0001 &&
-                  Math.abs(p.longitude - pin.longitude) < 0.0001
-               const isSameTime =
-                  Math.abs(p.recordedAt.getTime() - pin.recordedAt.getTime()) <
-                  60000 // 1分以内
-               return isSameLocation && isSameTime
-            }) === index
-         )
+         const isDuplicate = array.findIndex((p) => p.id === pin.id) === index
+
+         if (!isDuplicate) {
+            console.log("🔄 重複ピンを除外（ID重複）:", {
+               duplicatePin: {
+                  id: pin.id,
+                  lat: pin.latitude,
+                  lng: pin.longitude,
+                  isPersisted: pin.isPersisted,
+               },
+               index: index,
+            })
+         }
+
+         return isDuplicate
       })
 
       // 表示優先度でソート（新しいピン > 分析済みピン > ローカルピン）
-      return uniquePins.sort((a, b) => {
+      const sortedPins = uniquePins.sort((a, b) => {
          // 永続化済みピンを優先
          if (a.isPersisted && !b.isPersisted) return -1
          if (!a.isPersisted && b.isPersisted) return 1
@@ -553,6 +615,19 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
          // 新しいピンを優先
          return b.recordedAt.getTime() - a.recordedAt.getTime()
       })
+
+      console.log("✅ ピン統合完了:", {
+         uniquePins: uniquePins.length,
+         sortedPins: sortedPins.length,
+         finalPins: sortedPins.map((p) => ({
+            id: p.id,
+            isPersisted: p.isPersisted,
+            lat: p.latitude,
+            lng: p.longitude,
+         })),
+      })
+
+      return sortedPins
    },
 
    /**
@@ -658,12 +733,18 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
          set((_state) => ({
             persistedPins: loadedPins,
             isLoadingNearbyPins: false,
+            nearbyPinsError: null,
          }))
 
          console.log("🗺️ 周辺ピン読み込み完了:", {
             bounds,
             loadedCount: loadedPins.length,
-            pins: loadedPins,
+            pins: loadedPins.map((p) => ({
+               id: p.id,
+               lat: p.latitude,
+               lng: p.longitude,
+               isPersisted: p.isPersisted,
+            })),
          })
 
          return loadedPins

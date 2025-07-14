@@ -19,7 +19,6 @@ import type { RecordingExpandedDisplayProps } from "./types"
  * @param formatTime 時間フォーマット関数
  * @param onCancel キャンセルボタンクリック時のコールバック
  * @param onNext 次へボタンクリック時のコールバック
- * @param onStop 停止ボタンクリック時のコールバック
  */
 export function RecordingExpandedDisplay({
    status,
@@ -28,7 +27,6 @@ export function RecordingExpandedDisplay({
    formatTime,
    onCancel,
    onNext,
-   onStop,
 }: RecordingExpandedDisplayProps) {
    return (
       <motion.div
@@ -71,11 +69,8 @@ export function RecordingExpandedDisplay({
             </motion.div>
          </div>
 
-         {/* 停止ボタン */}
-         <RecordingControls
-            onStop={onStop}
-            isRecording={status === "recording"}
-         />
+         {/* 停止ボタン - 録音中は非表示 */}
+         {status === "completed" && <RecordingControls isRecording={false} />}
       </motion.div>
    )
 }

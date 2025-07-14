@@ -23,32 +23,19 @@ export function RecordingMiniDisplay({
    recordingTime,
    waveformData,
    formatTime,
-   onStop,
 }: RecordingMiniDisplayProps) {
    return (
       <div className="flex h-16 items-center justify-between">
          {/* 録音ボタン */}
-         <motion.button
-            onClick={() => {
-               console.log("録音ボタンがクリックされました", { status })
-               if (status === "recording") {
-                  onStop()
-               }
-            }}
+         <motion.div
             className={`relative flex h-14 w-14 touch-manipulation items-center justify-center rounded-full shadow-lg transition-all duration-300 sm:h-16 sm:w-16 ${
                status === "recording"
-                  ? "bg-red-600 hover:bg-red-700"
+                  ? "bg-red-600"
                   : status === "completed"
-                    ? "cursor-not-allowed bg-gray-400"
-                    : "bg-gray-600 hover:bg-gray-700"
+                    ? "bg-gray-400"
+                    : "bg-gray-600"
             }
         `}
-            style={{
-               cursor: status === "completed" ? "not-allowed" : "pointer",
-            }}
-            whileTap={status !== "completed" ? { scale: 0.95 } : {}}
-            whileHover={status !== "completed" ? { scale: 1.05 } : {}}
-            disabled={status === "completed"}
          >
             {status === "recording" ? (
                <MdStop className="h-6 w-6 text-white sm:h-8 sm:w-8" />
@@ -75,7 +62,7 @@ export function RecordingMiniDisplay({
                isActive={status === "recording"}
                borderColor="border-red-500"
             />
-         </motion.button>
+         </motion.div>
 
          {/* 波形表示 */}
          <div className="mx-3 flex-1 sm:mx-6">

@@ -157,6 +157,26 @@ export function MapComponent({
             onPinSelect={handlePinSelect}
          />
 
+         {/* デバッグ: ピンデータの状態確認 */}
+         {process.env.NODE_ENV === "development" && (
+            <div className="fixed top-20 right-4 z-50 max-w-xs rounded bg-black bg-opacity-75 p-2 text-white text-xs">
+               <div>📍 ピン数: {pins.length}</div>
+               <div>🗺️ マップ: {map ? "✅" : "❌"}</div>
+               <div>🎨 スタイル: {mapStyleLoaded ? "✅" : "❌"}</div>
+               {pins.length > 0 && (
+                  <div className="mt-2 text-xs">
+                     <div>最新ピン:</div>
+                     {pins.slice(0, 3).map((pin) => (
+                        <div key={pin.id} className="text-xs">
+                           • {pin.id.slice(0, 8)}... (
+                           {pin.isPersisted ? "DB" : "Local"})
+                        </div>
+                     ))}
+                  </div>
+               )}
+            </div>
+         )}
+
          {/* ユーザーマーカー */}
          <UserMarker map={map} position={position} />
 

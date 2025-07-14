@@ -2,13 +2,6 @@
  * RecordingControlsコンポーネントのプロパティ型定義
  */
 export interface RecordingControlsProps {
-   /**
-    * 停止ボタンクリック時のコールバック
-    */
-   onStop: () => void
-
-   /**
-    * 録音中かどうか
-    */
+   /** 録音状態 */
    isRecording: boolean
 }
