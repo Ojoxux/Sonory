@@ -232,11 +232,12 @@ export function useMapComponent({
    const {
       pins,
       persistedPins,
+      tempPins,
       selectedPinId,
-      lastCreatedPinId,
       selectPin,
-      mergeLocalAndPersistedPins,
+      lastCreatedPinId,
       loadNearbyPins,
+      mergeLocalAndPersistedPins,
    } = useSoundPinStore()
 
    // カスタムフック
@@ -732,8 +733,8 @@ export function useMapComponent({
          lastCreatedPinId,
       )
 
-      // 少し遅延してから再読み込み（データベースの更新を待つ）
-      const reloadTimeout = setTimeout(async () => {
+      // 即座に再読み込み（新ピンの表示を優先）
+      const immediateReload = async () => {
          try {
             const bounds = map.getBounds()
             if (!bounds) return
@@ -745,7 +746,7 @@ export function useMapComponent({
                west: bounds.getWest(),
             }
 
-            console.log("🔄 周辺ピン再読み込み実行:", {
+            console.log("🔄 周辺ピン即座再読み込み実行:", {
                bounds: mapBounds,
                lastCreatedPinId,
             })
@@ -754,17 +755,54 @@ export function useMapComponent({
          } catch (error) {
             console.error("新ピン作成後の周辺ピン再読み込みエラー:", error)
          }
-      }, 2000) // 2秒後に再読み込み（DBの一貫性を確保）
+      }
+
+      // ⚠️ データベースの読み取り一貫性を確保するため、
+      // 新ピン作成後の周辺ピン検索を1秒遅延させる
+      console.log("⏰ 新ピン作成検知、1秒後に周辺ピン検索実行...")
+      const reloadTimeout = setTimeout(() => {
+         console.log("🔄 遅延後の周辺ピン検索実行")
+         immediateReload()
+      }, 1000)
+
+      // 新しいピンの位置にマップを移動
+      const { tempPins } = useSoundPinStore.getState()
+      const newPin =
+         pins.find((p) => p.id === lastCreatedPinId) ||
+         persistedPins.find((p) => p.id === lastCreatedPinId) ||
+         tempPins.find((p) => p.id === lastCreatedPinId)
+      if (newPin && map) {
+         console.log("🎯 新しいピンの位置にマップを移動:", {
+            pinId: newPin.id,
+            location: { lat: newPin.latitude, lng: newPin.longitude },
+         })
+
+         map.flyTo({
+            center: [newPin.longitude, newPin.latitude],
+            zoom: 18,
+            pitch: 50,
+            bearing: -20,
+            essential: true,
+            duration: 1000,
+         })
+      }
 
       return () => {
          clearTimeout(reloadTimeout)
       }
-   }, [lastCreatedPinId, map, mapStyleLoaded, loadNearbyPins])
+   }, [
+      lastCreatedPinId,
+      map,
+      mapStyleLoaded,
+      loadNearbyPins,
+      pins,
+      persistedPins,
+   ])
 
    // ピンの統合表示
    const allPins = useMemo(() => {
       return mergeLocalAndPersistedPins()
-   }, [pins, persistedPins, mergeLocalAndPersistedPins])
+   }, [pins, persistedPins, tempPins, mergeLocalAndPersistedPins])
 
    return {
       mapContainerRef,

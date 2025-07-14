@@ -97,7 +97,6 @@ export function RecordingInterface({
                         recordingTime={recordingTime}
                         waveformData={waveformData}
                         formatTime={formatTime}
-                        onStop={handleStop}
                      />
                   ) : (
                      <RecordingExpandedDisplay
@@ -105,12 +104,8 @@ export function RecordingInterface({
                         recordingTime={recordingTime}
                         waveformData={waveformData}
                         formatTime={formatTime}
-                        onCancel={() => {
-                           handleStop()
-                           setIsExpanded(false)
-                        }}
+                        onCancel={handleStop}
                         onNext={handleStop}
-                        onStop={handleStop}
                      />
                   )}
                </RecordingContainer>
