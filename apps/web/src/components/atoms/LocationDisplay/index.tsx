@@ -1,177 +1,93 @@
 "use client"
 
-import { memo, useEffect, useRef, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { memo, useMemo, useCallback } from "react"
 import type { LocationDisplayProps } from "./type"
-
-// 位置情報のキャッシュ
-const locationCache = new Map<string, string>()
 
 /**
  * 位置情報表示コンポーネント
  *
  * @description
- * 現在の地域名を英語で表示するAtomコンポーネント
- * タイポグラフィを重視したデザイン
- * メモ化とキャッシュにより不要な再レンダリングとAPIコールを防止
- *
- * @param latitude 緯度
- * @param longitude 経度
- * @param className クラス名
+ * 緯度・経度を基に逆ジオコーディングで地名を取得し表示する
+ * React Queryを使用してキャッシュと再取得を最適化
  *
  * @example
  * ```tsx
- * <LocationDisplay latitude={37.1234} longitude={139.1234} />
+ * <LocationDisplay
+ *   latitude={35.6762}
+ *   longitude={139.6503}
+ * />
  * ```
  */
-export const LocationDisplay = memo(function LocationDisplay({
+const LocationDisplayComponent = function LocationDisplay({
    latitude,
    longitude,
    className = "",
    debugTimeOverride = null,
 }: LocationDisplayProps) {
-   // 前回の位置情報を保持
-   const prevLocationRef = useRef<{
-      lat: number
-      lon: number
-      name: string
-   } | null>(null)
+   // 座標を丸めてキャッシュキーを生成（精度を下げてキャッシュヒット率を上げる）
+   const roundedLat = useMemo(() => latitude ? Math.round(latitude * 100) / 100 : null, [latitude])
+   const roundedLon = useMemo(() => longitude ? Math.round(longitude * 100) / 100 : null, [longitude])
 
-   const [locationName, setLocationName] = useState<string>(() => {
-      // 前回の位置情報があれば使用
-      if (prevLocationRef.current && latitude && longitude) {
-         const prevLat = Math.round(prevLocationRef.current.lat * 100) / 100
-         const prevLon = Math.round(prevLocationRef.current.lon * 100) / 100
-         const currentLat = Math.round(latitude * 100) / 100
-         const currentLon = Math.round(longitude * 100) / 100
-
-         if (prevLat === currentLat && prevLon === currentLon) {
-            return prevLocationRef.current.name
-         }
-      }
-      return ""
-   })
-
-   const [isLoading, setIsLoading] = useState(() => {
-      // 既に位置情報がある場合はローディングをスキップ
-      return locationName === ""
-   })
-
-   const [hasError, setHasError] = useState(false)
-   const [isDarkTime, setIsDarkTime] = useState(false)
-   const fetchedRef = useRef(false)
-
-   const EVENING_START_HOUR = 17 // 17時以降を夜の時間帯とする
-   const MORNING_END_HOUR = 5 // 5時までを夜の時間帯とする
-
-   // 時間帯をチェック（17時以降を夜の時間帯とする）
-   useEffect(() => {
-      const checkTimeOfDay = () => {
-         // デバッグ時間オーバーライドがある場合はそれを使用、なければ現在時刻
-         const hour =
-            debugTimeOverride !== null
-               ? debugTimeOverride
-               : new Date().getHours()
-         setIsDarkTime(hour >= EVENING_START_HOUR || hour < MORNING_END_HOUR)
-      }
-
-      checkTimeOfDay()
-      const interval = setInterval(checkTimeOfDay, 60000) // 1分ごとに更新
-
-      return () => clearInterval(interval)
+   // 時間帯をチェック
+   const isDarkTime = useMemo(() => {
+      const EVENING_START_HOUR = 17
+      const MORNING_END_HOUR = 5
+      const hour = debugTimeOverride !== null ? debugTimeOverride : new Date().getHours()
+      return hour >= EVENING_START_HOUR || hour < MORNING_END_HOUR
    }, [debugTimeOverride])
 
-   useEffect(() => {
-      const fetchLocationName = async () => {
-         if (!latitude || !longitude) {
-            setLocationName("")
-            setIsLoading(false)
-            return
-         }
+   // クエリキーを安定化
+   const queryKey = useMemo(() => ["location", roundedLat, roundedLon], [roundedLat, roundedLon])
 
-         // キャッシュキーを作成（小数点以下2桁に丸めて、より広い範囲でキャッシュ）
-         const roundedLat = Math.round(latitude * 100) / 100
-         const roundedLon = Math.round(longitude * 100) / 100
-         const cacheKey = `${roundedLat},${roundedLon}`
+   // クエリ関数を安定化
+   const queryFn = useCallback(async () => {
+      const response = await fetch(
+         `/api/geocoding/reverse?lat=${latitude}&lon=${longitude}&lang=en`,
+      )
 
-         // キャッシュをチェック
-         const cached = locationCache.get(cacheKey)
-         if (cached) {
-            setLocationName(cached)
-            setIsLoading(false)
-            return
-         }
-
-         // 既にフェッチ中の場合はスキップ
-         if (fetchedRef.current) return
-         fetchedRef.current = true
-
-         try {
-            setIsLoading(true)
-            setHasError(false)
-
-            // 自前のAPI Routeを使用して逆ジオコーディング（CORSエラー回避）
-            const response = await fetch(
-               `/api/geocoding/reverse?lat=${latitude}&lon=${longitude}&lang=en`,
-            )
-
-            if (!response.ok) {
-               throw new Error(`API error: ${response.status}`)
-            }
-
-            const data = await response.json()
-
-            // エラーレスポンスの場合
-            if (data.error) {
-               throw new Error(data.error)
-            }
-
-            const location = data.locationName || ""
-
-            setLocationName(location)
-
-            // キャッシュに保存（元の座標と丸めた座標の両方でキャッシュ）
-            if (location) {
-               locationCache.set(cacheKey, location)
-               // 元の精度でもキャッシュ
-               const originalKey = `${latitude.toFixed(4)},${longitude.toFixed(4)}`
-               locationCache.set(originalKey, location)
-
-               // 前回の位置情報として保存
-               prevLocationRef.current = {
-                  lat: latitude,
-                  lon: longitude,
-                  name: location,
-               }
-            }
-         } catch (error) {
-            console.error("Failed to fetch location name:", error)
-            setHasError(true)
-            // エラー時は座標表示をフォールバックとして使用
-            setLocationName(
-               `${latitude.toFixed(3)}°N, ${longitude.toFixed(3)}°E`,
-            )
-         } finally {
-            setIsLoading(false)
-            fetchedRef.current = false
-         }
+      if (!response.ok) {
+         throw new Error(`API error: ${response.status}`)
       }
 
-      // 少し遅延を入れて、頻繁な更新を防ぐ
-      const timer = setTimeout(() => {
-         fetchLocationName()
-      }, 300)
+      const data = await response.json()
 
-      return () => clearTimeout(timer)
+      if (data.error) {
+         throw new Error(data.error)
+      }
+
+      return data.locationName || ""
    }, [latitude, longitude])
 
-   // 位置情報がない場合は何も表示しない
-   if (!latitude || !longitude || (!locationName && !isLoading)) {
-      return null
-   }
+   // enabledフラグを安定化
+   const enabled = useMemo(() => !!(latitude && longitude), [latitude, longitude])
+
+   // React Queryで逆ジオコーディングを実行
+   const { data: locationName, isLoading, isError } = useQuery({
+      queryKey,
+      queryFn,
+      // 30分間キャッシュ
+      staleTime: 30 * 60 * 1000,
+      // 1時間キャッシュを保持
+      gcTime: 60 * 60 * 1000,
+      // 座標が有効な場合のみクエリを実行
+      enabled,
+      // エラー時の再試行を1回に制限
+      retry: 1,
+      // ウィンドウフォーカス時の再取得を無効化
+      refetchOnWindowFocus: false,
+   })
 
    // 時間帯に応じたスタイル
-   const textColorClass = isDarkTime ? "text-white" : "text-gray-900"
-   const borderColorClass = isDarkTime ? "border-white" : "border-gray-900"
+   const textColorClass = useMemo(() => isDarkTime ? "text-white" : "text-gray-900", [isDarkTime])
+   const borderColorClass = useMemo(() => isDarkTime ? "border-white" : "border-gray-900", [isDarkTime])
+
+   // 位置情報がない場合は何も表示しない
+   const hasValidPosition = useMemo(() => !!(latitude && longitude), [latitude, longitude])
+
+   if (!hasValidPosition) {
+      return null
+   }
 
    return (
       <div className={`relative ${className}`}>
@@ -192,7 +108,7 @@ export const LocationDisplay = memo(function LocationDisplay({
             ) : (
                <div className="inline-block">
                   <h2
-                     className={`font-arial-rounded-mt-pro font-bold text-6xl tracking-tight ${textColorClass} pb-2 leading-none ${hasError ? "text-yellow-500" : ""}`}
+                     className={`font-arial-rounded-mt-pro font-bold text-6xl tracking-tight ${textColorClass} pb-2 leading-none ${isError ? "text-yellow-500" : ""}`}
                   >
                      {locationName}
                   </h2>
@@ -202,8 +118,8 @@ export const LocationDisplay = memo(function LocationDisplay({
                   <p
                      className={`mt-3 font-arial-rounded-mt-pro font-bold text-sm tracking-wide ${isDarkTime ? "text-white/50" : "text-gray-500"}`}
                   >
-                     {latitude.toFixed(4)}° N, {longitude.toFixed(4)}° E
-                     {hasError && (
+                     {latitude?.toFixed(4)}° N, {longitude?.toFixed(4)}° E
+                     {isError && (
                         <span className="ml-2 text-xs text-yellow-500">
                            (位置情報取得エラー)
                         </span>
@@ -214,4 +130,6 @@ export const LocationDisplay = memo(function LocationDisplay({
          </div>
       </div>
    )
-})
+}
+
+export const LocationDisplay = memo(LocationDisplayComponent)
