@@ -48,10 +48,11 @@ export function validateAudioSize(file: File): boolean {
 }
 
 /**
- * 音声ファイルの長さをチェック（10秒制限）
+ * 音声ファイルの長さをチェック（9.9秒以上10.1秒以下）
+ * タイマー精度やブラウザ実装の差異を考慮して、わずかな誤差を許容
  */
 export function validateAudioDuration(duration: number): boolean {
-   return duration > 0 && duration <= 10
+   return duration >= 9.9 && duration <= 10.1
 }
 
 /**

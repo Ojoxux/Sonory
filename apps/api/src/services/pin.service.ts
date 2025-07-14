@@ -387,10 +387,10 @@ export class PinService extends BaseService {
          )
       }
 
-      if (audio.duration <= 0 || audio.duration > 600) {
+      if (audio.duration < 9.9 || audio.duration > 600) {
          throw new APIException(
             ERROR_CODES.AUDIO_DURATION_INVALID,
-            "Audio duration must be between 0 and 600 seconds",
+            "Audio duration must be between 9.9 and 600 seconds",
             400,
          )
       }
