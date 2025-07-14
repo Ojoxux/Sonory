@@ -35,6 +35,7 @@ import {
    type SoundPin,
    useSoundPinStore,
 } from "@/store/useSoundPinStore"
+import { useNearbyPins } from "@/hooks/useNearbyPins"
 import * as O from "fp-ts/Option"
 import { pipe } from "fp-ts/function"
 import mapboxgl from "mapbox-gl"
@@ -49,6 +50,7 @@ import {
 import { useBrowserGeolocation } from "./hooks/useBrowserGeolocation"
 import { useLocationIntegration } from "./hooks/useLocationIntegration"
 import { useLocationStorage } from "./hooks/useLocationStorage"
+import { useMapboxInitialization } from "./hooks/useMapboxInitialization"
 import { useMapControls } from "./hooks/useMapControls"
 import { useMapEnvironment } from "./hooks/useMapEnvironment"
 import type {
@@ -221,6 +223,7 @@ export function useMapComponent({
    const [mapStyleLoaded, setMapStyleLoaded] = useState<boolean>(false)
    const [geolocateInitialized, setGeolocateInitialized] =
       useState<boolean>(false)
+   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null)
 
    // ストア
    const {
@@ -230,14 +233,9 @@ export function useMapComponent({
       setDebugTimeOverride,
    } = useDebugStore()
    const {
-      pins,
-      persistedPins,
-      tempPins,
       selectedPinId,
       selectPin,
       lastCreatedPinId,
-      loadNearbyPins,
-      mergeLocalAndPersistedPins,
    } = useSoundPinStore()
 
    // カスタムフック
@@ -245,6 +243,43 @@ export function useMapComponent({
       useBrowserGeolocation()
    const { savedPosition, savePosition, clearSavedPosition } =
       useLocationStorage()
+
+   // React Queryで周辺ピンを取得
+   const { 
+      pins: nearbyPins, 
+      isLoading: isLoadingNearbyPins, 
+      isError: isErrorNearbyPins,
+      error: nearbyPinsError,
+      refetch: refetchPins,
+   } = useNearbyPins(mapBounds)
+
+   console.log("🔍 MapComponent: useNearbyPins呼び出し", {
+      mapBounds,
+      mapExists: !!map,
+      mapStyleLoaded,
+      enabled: !!mapBounds,
+      nearbyPinsCount: nearbyPins.length,
+      isLoadingNearbyPins,
+      isErrorNearbyPins,
+      nearbyPinsError: nearbyPinsError?.message,
+      mapBoundsDetail: mapBounds ? {
+         north: mapBounds.north.toFixed(4),
+         south: mapBounds.south.toFixed(4),
+         east: mapBounds.east.toFixed(4),
+         west: mapBounds.west.toFixed(4),
+      } : null,
+   })
+
+   // mapBoundsの状態を詳しく監視
+   console.log("🔍 MapComponent: mapBounds状態監視", {
+      mapBounds,
+      mapBoundsIsNull: mapBounds === null,
+      mapBoundsType: typeof mapBounds,
+      mapExists: !!map,
+      mapStyleLoaded,
+      mapLoaded: map?.loaded(),
+      mapIsStyleLoaded: map?.isStyleLoaded(),
+   })
 
    // 通知関数
    const createNotification = useCallback(
@@ -274,6 +309,7 @@ export function useMapComponent({
       [createNotification, executeNotification],
    )
 
+   // 位置情報統合
    const {
       mapboxPosition,
       geolocateAttempted,
@@ -319,6 +355,10 @@ export function useMapComponent({
       [mapboxPosition, customPosition, savedPosition, position],
    )
 
+   // Mapbox初期化
+   const { initializeMap } = useMapboxInitialization()
+
+   // 環境設定
    const { currentLighting, updateLightingAndShadows } = useMapEnvironment({
       map,
       mapStyleLoaded,
@@ -445,9 +485,7 @@ export function useMapComponent({
 
          // イベントリスナー設定
          mapInstance.on("load", () => {
-            if (process.env.NODE_ENV === "development") {
-               // TODO: マップロード完了時のログ出力を実装
-            }
+            console.log("🔍 MapComponent: マップロード完了")
             setMapStyleLoaded(true)
 
             // ユーザーパス用のソースとレイヤーを追加
@@ -477,14 +515,27 @@ export function useMapComponent({
                   "line-opacity": 0.8,
                },
             })
+
+            // マップロード完了時に境界を設定
+            setTimeout(() => {
+               const bounds = mapInstance.getBounds()
+               if (bounds) {
+                  const newBounds: MapBounds = {
+                     north: bounds.getNorth(),
+                     south: bounds.getSouth(),
+                     east: bounds.getEast(),
+                     west: bounds.getWest(),
+                  }
+                  console.log("🔍 MapComponent: ロード時の境界設定", newBounds)
+                  setMapBounds(newBounds)
+               }
+            }, 100)
          })
 
          // スタイル読み込み完了時の処理（より確実な検知）
          mapInstance.on("styledata", () => {
             if (mapInstance.isStyleLoaded()) {
-               if (process.env.NODE_ENV === "development") {
-                  // TODO: スタイルロード完了時のログ出力を実装
-               }
+               console.log("🔍 MapComponent: スタイルロード完了")
                setMapStyleLoaded(true)
 
                // スタイル読み込み完了後にライティング設定を適用
@@ -493,6 +544,21 @@ export function useMapComponent({
                      updateLightingAndShadows(mapInstance)
                   }
                }, 500)
+
+               // スタイルロード完了時にも境界を設定
+               setTimeout(() => {
+                  const bounds = mapInstance.getBounds()
+                  if (bounds) {
+                     const newBounds: MapBounds = {
+                        north: bounds.getNorth(),
+                        south: bounds.getSouth(),
+                        east: bounds.getEast(),
+                        west: bounds.getWest(),
+                     }
+                     console.log("🔍 MapComponent: スタイルロード時の境界設定", newBounds)
+                     setMapBounds(newBounds)
+                  }
+               }, 100)
             }
          })
 
@@ -504,6 +570,21 @@ export function useMapComponent({
                   // TODO: スタイル読み込み完了後の初期化ログを実装
                }
                setMapStyleLoaded(true)
+
+               // idle状態でも境界を設定
+               setTimeout(() => {
+                  const bounds = mapInstance.getBounds()
+                  if (bounds) {
+                     const newBounds: MapBounds = {
+                        north: bounds.getNorth(),
+                        south: bounds.getSouth(),
+                        east: bounds.getEast(),
+                        west: bounds.getWest(),
+                     }
+                     console.log("🔍 MapComponent: idle時の境界設定", newBounds)
+                     setMapBounds(newBounds)
+                  }
+               }, 100)
             }
          })
 
@@ -539,6 +620,7 @@ export function useMapComponent({
 
          setMap(mapInstance)
          mapInitializedRef.current = true
+         console.log("🔍 MapComponent: マップインスタンス設定完了")
 
          // コールバック関数を設定
          onGeolocationReady?.(attemptGeolocation)
@@ -675,102 +757,141 @@ export function useMapComponent({
       }
    }, [map, position, mapStyleLoaded])
 
-   // 地図の表示範囲変更時に周辺ピンを取得
+   // マップ境界の管理とピン取得
    useEffect(() => {
-      if (!map || !mapStyleLoaded) return
+      console.log("🔍 MapComponent: 境界管理useEffect呼び出し", {
+         mapExists: !!map,
+         mapStyleLoaded,
+         mapLoaded: map?.loaded(),
+         mapIsStyleLoaded: map?.isStyleLoaded(),
+      })
 
-      let loadTimeout: NodeJS.Timeout | null = null
+      if (!map || !mapStyleLoaded) {
+         console.log("🔍 MapComponent: マップまたはスタイルが未準備", {
+            mapExists: !!map,
+            mapStyleLoaded,
+            mapLoaded: map?.loaded(),
+            mapIsStyleLoaded: map?.isStyleLoaded(),
+         })
+         return
+      }
+
+      console.log("🔍 MapComponent: 境界管理useEffect開始", {
+         mapExists: !!map,
+         mapStyleLoaded,
+         mapLoaded: map?.loaded(),
+         mapIsStyleLoaded: map?.isStyleLoaded(),
+      })
+
+      let lastBounds: MapBounds | null = null
+
+      const isSignificantChange = (oldBounds: MapBounds | null, newBounds: MapBounds): boolean => {
+         if (!oldBounds) return true
+
+         const threshold = 0.001 // 約100mの変化
+         return (
+            Math.abs(oldBounds.north - newBounds.north) > threshold ||
+            Math.abs(oldBounds.south - newBounds.south) > threshold ||
+            Math.abs(oldBounds.east - newBounds.east) > threshold ||
+            Math.abs(oldBounds.west - newBounds.west) > threshold
+         )
+      }
 
       const handleMapMove = () => {
-         // デバウンス処理（500ms後に実行）
-         if (loadTimeout) {
-            clearTimeout(loadTimeout)
+         console.log("🔍 MapComponent: handleMapMove実行開始", {
+            mapExists: !!map,
+            mapLoaded: map?.loaded(),
+            mapIsStyleLoaded: map?.isStyleLoaded(),
+         })
+         
+         const bounds = map.getBounds()
+         if (!bounds) {
+            console.log("🔍 MapComponent: マップ境界が取得できません", {
+               mapExists: !!map,
+               mapLoaded: map?.loaded(),
+               mapIsStyleLoaded: map?.isStyleLoaded(),
+               boundsValue: bounds,
+            })
+            return
          }
 
-         loadTimeout = setTimeout(async () => {
-            try {
-               const bounds = map.getBounds()
-               if (!bounds) return
+         const newBounds: MapBounds = {
+            north: bounds.getNorth(),
+            south: bounds.getSouth(),
+            east: bounds.getEast(),
+            west: bounds.getWest(),
+         }
 
-               const mapBounds: MapBounds = {
-                  north: bounds.getNorth(),
-                  south: bounds.getSouth(),
-                  east: bounds.getEast(),
-                  west: bounds.getWest(),
-               }
+         console.log("🔍 MapComponent: handleMapMove", {
+            newBounds: {
+               north: newBounds.north.toFixed(4),
+               south: newBounds.south.toFixed(4),
+               east: newBounds.east.toFixed(4),
+               west: newBounds.west.toFixed(4),
+            },
+            lastBounds: lastBounds ? {
+               north: lastBounds.north.toFixed(4),
+               south: lastBounds.south.toFixed(4),
+               east: lastBounds.east.toFixed(4),
+               west: lastBounds.west.toFixed(4),
+            } : null,
+         })
 
-               await loadNearbyPins(mapBounds)
-            } catch (error) {
-               if (process.env.NODE_ENV === "development") {
-                  console.error("周辺ピン取得エラー:", error)
-               }
+         // 変化が小さい場合はスキップ
+         if (!isSignificantChange(lastBounds, newBounds)) {
+            console.log("🔍 MapComponent: 境界変更が小さいためスキップ")
+            return
+         }
+
+         console.log("🔍 MapComponent: 境界を更新", {
+            newBounds: {
+               north: newBounds.north.toFixed(4),
+               south: newBounds.south.toFixed(4),
+               east: newBounds.east.toFixed(4),
+               west: newBounds.west.toFixed(4),
             }
-         }, 500)
+         })
+
+         lastBounds = newBounds
+         console.log("🔍 MapComponent: setMapBounds実行", { newBounds })
+         setMapBounds(newBounds)
       }
 
       // 地図移動イベントをリスナーに追加
       map.on("moveend", handleMapMove)
       map.on("zoomend", handleMapMove)
 
-      // 初回読み込み
-      handleMapMove()
+      // マップとスタイルが準備できたらすぐに初回境界を設定
+      console.log("🔍 MapComponent: マップとスタイルが準備完了、境界を設定")
+      
+      // 少し遅延を入れてから境界を設定（Mapboxの完全な初期化を待つ）
+      setTimeout(() => {
+         console.log("🔍 MapComponent: 遅延後のhandleMapMove実行")
+         handleMapMove()
+      }, 100)
 
       return () => {
-         if (loadTimeout) {
-            clearTimeout(loadTimeout)
-         }
          map.off("moveend", handleMapMove)
          map.off("zoomend", handleMapMove)
       }
-   }, [map, mapStyleLoaded, loadNearbyPins])
+   }, [map, mapStyleLoaded]) // mapStyleLoadedの依存を追加
 
-   // 新しいピンが作成されたときに周辺ピンを再読み込み
+   // 新しいピンが作成されたときに再取得
    useEffect(() => {
       if (!lastCreatedPinId || !map || !mapStyleLoaded) return
 
       console.log(
-         "🔄 新しいピンが作成されました。周辺ピンを再読み込みします:",
+         "🔄 新しいピンが作成されました。ピンを再取得します:",
          lastCreatedPinId,
       )
 
-      // 即座に再読み込み（新ピンの表示を優先）
-      const immediateReload = async () => {
-         try {
-            const bounds = map.getBounds()
-            if (!bounds) return
-
-            const mapBounds: MapBounds = {
-               north: bounds.getNorth(),
-               south: bounds.getSouth(),
-               east: bounds.getEast(),
-               west: bounds.getWest(),
-            }
-
-            console.log("🔄 周辺ピン即座再読み込み実行:", {
-               bounds: mapBounds,
-               lastCreatedPinId,
-            })
-
-            await loadNearbyPins(mapBounds)
-         } catch (error) {
-            console.error("新ピン作成後の周辺ピン再読み込みエラー:", error)
-         }
-      }
-
-      // ⚠️ データベースの読み取り一貫性を確保するため、
-      // 新ピン作成後の周辺ピン検索を1秒遅延させる
-      console.log("⏰ 新ピン作成検知、1秒後に周辺ピン検索実行...")
+      // 1秒後に再取得（データベースの読み取り一貫性を確保）
       const reloadTimeout = setTimeout(() => {
-         console.log("🔄 遅延後の周辺ピン検索実行")
-         immediateReload()
+         refetchPins()
       }, 1000)
 
       // 新しいピンの位置にマップを移動
-      const { tempPins } = useSoundPinStore.getState()
-      const newPin =
-         pins.find((p) => p.id === lastCreatedPinId) ||
-         persistedPins.find((p) => p.id === lastCreatedPinId) ||
-         tempPins.find((p) => p.id === lastCreatedPinId)
+      const newPin = nearbyPins.find((p) => p.id === lastCreatedPinId)
       if (newPin && map) {
          console.log("🎯 新しいピンの位置にマップを移動:", {
             pinId: newPin.id,
@@ -790,19 +911,12 @@ export function useMapComponent({
       return () => {
          clearTimeout(reloadTimeout)
       }
-   }, [
-      lastCreatedPinId,
-      map,
-      mapStyleLoaded,
-      loadNearbyPins,
-      pins,
-      persistedPins,
-   ])
+   }, [lastCreatedPinId, map, mapStyleLoaded, refetchPins, nearbyPins])
 
-   // ピンの統合表示
+   // ピンの統合表示（nearbyPinsを使用）
    const allPins = useMemo(() => {
-      return mergeLocalAndPersistedPins()
-   }, [pins, persistedPins, tempPins, mergeLocalAndPersistedPins])
+      return nearbyPins || []
+   }, [nearbyPins])
 
    return {
       mapContainerRef,
@@ -811,7 +925,7 @@ export function useMapComponent({
       position,
       currentLighting,
       debugMode,
-      pins: allPins, // 統合されたピンを返す
+      pins: allPins, // React Queryから取得したピンを返す
       selectedPinId,
       permissionStatus,
       geolocateInitialized,
