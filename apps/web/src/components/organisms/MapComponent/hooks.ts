@@ -30,11 +30,7 @@
  */
 
 import { useDebugStore } from "@/store/useDebugStore"
-import {
-   type MapBounds,
-   type SoundPin,
-   useSoundPinStore,
-} from "@/store/useSoundPinStore"
+import { useSoundPinStore, type SoundPin } from "@/store/useSoundPinStore"
 import { useNearbyPins } from "@/hooks/useNearbyPins"
 import * as O from "fp-ts/Option"
 import { pipe } from "fp-ts/function"
@@ -66,6 +62,91 @@ import {
    selectBestPosition,
 } from "./utils/functional"
 import type { LightingConfig } from "./utils/sunCalculations"
+import { useQueryClient } from "@tanstack/react-query"
+import type { SoundPinAPI } from "@sonory/shared-types"
+
+export interface MapBounds {
+   north: number
+   south: number
+   east: number
+   west: number
+}
+
+/**
+ * APIピンをローカルピン形式に変換
+ * @param apiPin - APIピン
+ * @returns ローカルピン
+ */
+const convertApiPinToLocal = (apiPin: SoundPinAPI): SoundPin => {
+   return {
+      id: apiPin.id,
+      latitude: apiPin.location.lat,
+      longitude: apiPin.location.lng,
+      audioData: {
+         url: apiPin.audio.url,
+         recordedAt: new Date(apiPin.createdAt),
+         id: apiPin.id,
+         blob: new Blob(), // APIピンのblobは空
+      },
+      classificationResults: apiPin.aiAnalysis?.categories ? [{
+         label: apiPin.aiAnalysis.categories.topic,
+         confidence: apiPin.aiAnalysis.categories.confidence,
+      }] : [],
+      recordedAt: new Date(apiPin.createdAt),
+      primaryLabel: apiPin.aiAnalysis?.categories?.topic || "不明",
+      primaryConfidence: apiPin.aiAnalysis?.categories?.confidence || 0,
+      isPersisted: true,
+      timeTag: (apiPin.timeTag as "朝" | "昼" | "夕" | "夜") || undefined,
+      environment: "unknown", 
+      weather: apiPin.weather ? {
+         temperature: apiPin.weather.temperature,
+         condition: apiPin.weather.condition || "unknown",
+         windSpeed: apiPin.weather.windSpeed,
+         humidity: apiPin.weather.humidity,
+      } : undefined,
+   }
+}
+
+/**
+    * 周辺ピンを統合するフック
+    * @param bounds - マップの境界
+    * @returns 統合されたピン
+ */
+export const useIntegratedPins = (bounds: MapBounds | null) => {
+   const { pins: localPins, persistedPins, tempPins } = useSoundPinStore()
+   
+   // 周辺ピンを取得するフックを使用
+   const nearbyPinsResult = useNearbyPins({
+      bounds: bounds || { north: 0, south: 0, east: 0, west: 0 },
+      limit: 50,
+      categories: undefined,
+   })
+
+   // APIピンをローカルピン形式に変換して統合
+   const allPins = useMemo(() => {
+      if (!bounds) return [...localPins, ...persistedPins, ...tempPins]
+      
+      // APIピンをローカルピン形式に変換
+      const convertedApiPins = nearbyPinsResult.pins.map(convertApiPinToLocal)
+      
+      // すべてのピンを統合
+      const combined = [...localPins, ...persistedPins, ...tempPins, ...convertedApiPins]
+      
+      // IDで重複を削除
+      const uniquePins = combined.filter(
+         (pin, index, array) => array.findIndex((p) => p.id === pin.id) === index
+      )
+      
+      return uniquePins
+   }, [localPins, persistedPins, tempPins, nearbyPinsResult.pins, bounds])
+
+   return {
+      pins: allPins,
+      isLoading: nearbyPinsResult.isLoading && !!bounds, // Only show loading if bounds exist
+      error: nearbyPinsResult.error,
+      refetch: nearbyPinsResult.refetch,
+   }
+}
 
 export type UseMapComponentProps = {
    /** 位置情報取得準備完了時のコールバック */
@@ -238,6 +319,9 @@ export function useMapComponent({
       lastCreatedPinId,
    } = useSoundPinStore()
 
+   // TanStack Query
+   const queryClient = useQueryClient()
+
    // カスタムフック
    const { position: customPosition, permissionStatus } =
       useBrowserGeolocation()
@@ -248,10 +332,9 @@ export function useMapComponent({
    const { 
       pins: nearbyPins, 
       isLoading: isLoadingNearbyPins, 
-      isError: isErrorNearbyPins,
       error: nearbyPinsError,
       refetch: refetchPins,
-   } = useNearbyPins(mapBounds)
+   } = useIntegratedPins(mapBounds)
 
    console.log("🔍 MapComponent: useNearbyPins呼び出し", {
       mapBounds,
@@ -260,7 +343,6 @@ export function useMapComponent({
       enabled: !!mapBounds,
       nearbyPinsCount: nearbyPins.length,
       isLoadingNearbyPins,
-      isErrorNearbyPins,
       nearbyPinsError: nearbyPinsError?.message,
       mapBoundsDetail: mapBounds ? {
          north: mapBounds.north.toFixed(4),
@@ -876,21 +958,16 @@ export function useMapComponent({
       }
    }, [map, mapStyleLoaded]) // mapStyleLoadedの依存を追加
 
-   // 新しいピンが作成されたときに再取得
+   // 新しいピンが作成されたときの処理を最適化
    useEffect(() => {
       if (!lastCreatedPinId || !map || !mapStyleLoaded) return
 
       console.log(
-         "🔄 新しいピンが作成されました。ピンを再取得します:",
+         "🔄 新しいピンが作成されました。楽観的更新を実行:",
          lastCreatedPinId,
       )
 
-      // 1秒後に再取得（データベースの読み取り一貫性を確保）
-      const reloadTimeout = setTimeout(() => {
-         refetchPins()
-      }, 1000)
-
-      // 新しいピンの位置にマップを移動
+      // 新しいピンの位置にマップを移動（即座に実行）
       const newPin = nearbyPins.find((p) => p.id === lastCreatedPinId)
       if (newPin && map) {
          console.log("🎯 新しいピンの位置にマップを移動:", {
@@ -908,10 +985,15 @@ export function useMapComponent({
          })
       }
 
-      return () => {
-         clearTimeout(reloadTimeout)
-      }
-   }, [lastCreatedPinId, map, mapStyleLoaded, refetchPins, nearbyPins])
+      // TanStack Queryのキャッシュを即座に無効化（遅延なし）
+      // 楽観的更新により、ピンは既に表示されているため、
+      // バックグラウンドでデータを同期するだけ
+      queryClient.invalidateQueries({ 
+         queryKey: ["nearby-pins"],
+         refetchType: "active" // アクティブなクエリのみ再取得
+      })
+
+   }, [lastCreatedPinId, map, mapStyleLoaded, nearbyPins, queryClient])
 
    // ピンの統合表示（nearbyPinsを使用）
    const allPins = useMemo(() => {
@@ -925,7 +1007,7 @@ export function useMapComponent({
       position,
       currentLighting,
       debugMode,
-      pins: allPins, // React Queryから取得したピンを返す
+      pins: nearbyPins, // React Queryから取得したピンを返す
       selectedPinId,
       permissionStatus,
       geolocateInitialized,
