@@ -26,8 +26,8 @@ const LocationDisplayComponent = function LocationDisplay({
    debugTimeOverride = null,
 }: LocationDisplayProps) {
    // 座標を丸めてキャッシュキーを生成（精度を下げてキャッシュヒット率を上げる）
-   const roundedLat = useMemo(() => latitude ? Math.round(latitude * 100) / 100 : null, [latitude])
-   const roundedLon = useMemo(() => longitude ? Math.round(longitude * 100) / 100 : null, [longitude])
+   const roundedLat = useMemo(() => latitude ? Math.round(latitude * 500) / 500 : null, [latitude])
+   const roundedLon = useMemo(() => longitude ? Math.round(longitude * 500) / 500 : null, [longitude])
 
    // 時間帯をチェック
    const isDarkTime = useMemo(() => {
@@ -42,8 +42,16 @@ const LocationDisplayComponent = function LocationDisplay({
 
    // クエリ関数を安定化
    const queryFn = useCallback(async () => {
+      if (!latitude || !longitude) return ""
+      
       const response = await fetch(
          `/api/geocoding/reverse?lat=${latitude}&lon=${longitude}&lang=en`,
+         {
+            headers: {
+               'Accept': 'application/json',
+               'Cache-Control': 'max-age=3600', // 1時間キャッシュ
+            },
+         }
       )
 
       if (!response.ok) {
@@ -62,20 +70,24 @@ const LocationDisplayComponent = function LocationDisplay({
    // enabledフラグを安定化
    const enabled = useMemo(() => !!(latitude && longitude), [latitude, longitude])
 
-   // React Queryで逆ジオコーディングを実行
+   // React Queryで逆ジオコーディングを実行（超積極的キャッシュ）
    const { data: locationName, isLoading, isError } = useQuery({
       queryKey,
       queryFn,
-      // 30分間キャッシュ
-      staleTime: 30 * 60 * 1000,
-      // 1時間キャッシュを保持
-      gcTime: 60 * 60 * 1000,
+      // 2時間キャッシュ（大幅延長）
+      staleTime: 2 * 60 * 60 * 1000,
+      // 4時間キャッシュを保持
+      gcTime: 4 * 60 * 60 * 1000,
       // 座標が有効な場合のみクエリを実行
       enabled,
-      // エラー時の再試行を1回に制限
-      retry: 1,
-      // ウィンドウフォーカス時の再取得を無効化
+      // エラー時の再試行を無効化
+      retry: false,
+      // 各種自動再取得を無効化
       refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
+      // ネットワークモード
+      networkMode: 'online',
    })
 
    // 時間帯に応じたスタイル
