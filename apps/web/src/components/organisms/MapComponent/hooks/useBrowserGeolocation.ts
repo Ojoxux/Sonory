@@ -24,7 +24,7 @@ const UPDATE_CONDITIONS = {
 } as const
 
 // 位置情報の監視オプション
-const WATCH_OPTIONS: PositionOptions = {
+const _WATCH_OPTIONS: PositionOptions = {
    enableHighAccuracy: false,
    timeout: 30000,
    maximumAge: 60000,
