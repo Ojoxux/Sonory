@@ -122,7 +122,7 @@ export class PinRepository {
                const coord2Hex = coordsHex.slice(16, 32)
 
                // デバッグモードでのみログ出力
-               if (process.env["NODE_ENV"] === "development") {
+               if (isDevelopment) {
                   this.logger.info(`Trying header length ${headerLength}`, {
                      headerLength,
                      coordsHex: coordsHex.slice(0, 32),
@@ -146,7 +146,7 @@ export class PinRepository {
                   coord1 <= 180
                ) {
                   bestResult = { lat: coord2, lng: coord1 }
-                  if (process.env["NODE_ENV"] === "development") {
+                  if (isDevelopment) {
                      this.logger.info(
                         `Found valid coordinates (lng,lat) with header length ${headerLength}`,
                         {
@@ -170,7 +170,7 @@ export class PinRepository {
                   coord2 <= 180
                ) {
                   bestResult = { lat: coord1, lng: coord2 }
-                  if (process.env["NODE_ENV"] === "development") {
+                  if (isDevelopment) {
                      this.logger.info(
                         `Found valid coordinates (lat,lng) with header length ${headerLength}`,
                         {
@@ -184,10 +184,11 @@ export class PinRepository {
                   break
                }
             } catch (error) {
-               if (process.env["NODE_ENV"] === "development") {
+               if (isDevelopment) {
                   this.logger.warn(`Header length ${headerLength} failed`, {
                      headerLength,
-                     error: error instanceof Error ? error.message : String(error),
+                     error:
+                        error instanceof Error ? error.message : String(error),
                      requestId: this.requestId,
                   })
                }
@@ -211,7 +212,7 @@ export class PinRepository {
             throw new Error(`Coordinates out of range: lat=${lat}, lng=${lng}`)
          }
 
-         if (process.env["NODE_ENV"] === "development") {
+         if (isDevelopment) {
             this.logger.info("Successfully parsed WKB coordinates", {
                lat,
                lng,
@@ -669,7 +670,7 @@ export class PinRepository {
    }
 
    /**
-    * Finds pins within specified bounds
+    * Finds pins within specified bounds using PostGIS spatial index
     * @param query - Query parameters
     * @returns Array of pins
     * @throws APIException on database error
@@ -678,26 +679,22 @@ export class PinRepository {
       try {
          this.logger.info("Finding pins within bounds", {
             bounds: query.bounds,
-            categories: query.categories,
             limit: query.limit,
             requestId: this.requestId,
          })
 
-         // Use simple bounding box query instead of complex PostGIS
-         let queryBuilder = this.supabase
-            .from("sound_pins")
-            .select()
-            .eq("status", "active")
-
-         // Apply category filter if provided
-         if (query.categories && query.categories.length > 0) {
-            queryBuilder = queryBuilder.in("ai_topic", query.categories)
-         }
-
-         // Apply limit
-         queryBuilder = queryBuilder.limit(query.limit ?? 50)
-
-         const { data: records, error } = await queryBuilder
+         // Use optimized PostGIS RPC function for maximum performance
+         const { data: records, error } = await this.supabase.rpc(
+            "find_pins_within_bounds",
+            {
+               north: query.bounds.north,
+               south: query.bounds.south,
+               east: query.bounds.east,
+               west: query.bounds.west,
+               max_results: query.limit ?? 50,
+               categories: query.categories || null,
+            },
+         )
 
          if (error) {
             this.logger.error("Database query error", {
@@ -707,84 +704,19 @@ export class PinRepository {
             throw error
          }
 
-         this.logger.info("Raw database results", {
-            totalRecords: records?.length || 0,
-            bounds: query.bounds,
-            requestId: this.requestId,
-         })
-
          if (!records || records.length === 0) {
-            this.logger.info("No records found in database", {
-               requestId: this.requestId,
-            })
             return []
          }
 
-         // Log each record for debugging
-         records.forEach((record, index) => {
-            this.logger.info(`Database record ${index}`, {
-               id: record.id,
-               location: record.location,
-               locationLength: record.location?.length,
-               locationPreview: record.location?.slice(0, 100),
-               latitude: record.latitude,
-               longitude: record.longitude,
-               status: record.status,
-               requestId: this.requestId,
-            })
-         })
-
-         // Filter by bounds in application code for now
-         const filteredRecords = records.filter((record, index) => {
-            try {
-               // Parse location data directly
-               const { lat, lng } = this.parseLocationData(record.location)
-
-               const isWithinBounds =
-                  lat >= query.bounds.south &&
-                  lat <= query.bounds.north &&
-                  lng >= query.bounds.west &&
-                  lng <= query.bounds.east
-
-               this.logger.info(
-                  `Record ${index} location parsed successfully`,
-                  {
-                     recordId: record.id,
-                     recordLat: lat,
-                     recordLng: lng,
-                     bounds: query.bounds,
-                     isWithinBounds,
-                     requestId: this.requestId,
-                  },
-               )
-
-               return isWithinBounds
-            } catch (error) {
-               this.logger.error(
-                  "CRITICAL: Error processing location data - excluding record",
-                  {
-                     recordId: record.id,
-                     location: record.location,
-                     locationLength: record.location?.length,
-                     locationPreview: record.location?.slice(0, 50),
-                     error:
-                        error instanceof Error ? error.message : String(error),
-                     stack: error instanceof Error ? error.stack : undefined,
-                     requestId: this.requestId,
-                  },
-               )
-               // Return false to exclude this record
-               return false
-            }
-         })
-
-         this.logger.info("Filtered results", {
-            totalRecords: records.length,
-            filteredCount: filteredRecords.length,
+         this.logger.info("Query completed", {
+            resultCount: records.length,
             requestId: this.requestId,
          })
 
-         return filteredRecords.map((record) => this.toDomainModel(record))
+         // Convert to domain models efficiently
+         return records.map((record: SoundPinRecord) =>
+            this.toDomainModel(record),
+         )
       } catch (error) {
          this.logger.error("Failed to find pins within bounds", {
             error: error instanceof Error ? error.message : String(error),
@@ -848,3 +780,7 @@ export class PinRepository {
       }
    }
 }
+
+// 環境変数の型安全なアクセス
+// biome-ignore lint/complexity/useLiteralKeys: TypeScript noPropertyAccessFromIndexSignature設定により必要
+const isDevelopment = process.env["NODE_ENV"] === "development"

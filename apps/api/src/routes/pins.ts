@@ -265,9 +265,19 @@ app.get("/nearby", validate("query", nearbyPinsSchema), async (c) => {
 
    const pins = await service.getNearbyPins(nearbyQuery)
 
+   // 積極的なキャッシュヘッダーを設定
+   c.header("Cache-Control", "public, s-maxage=120, stale-while-revalidate=300")
+   c.header("X-API-Version", "1.0")
+   c.header("X-Response-Time", Date.now().toString())
+
    return c.json({
       success: true,
       data: pins,
+      meta: {
+         count: pins.length,
+         bounds: nearbyQuery.bounds,
+         limit: nearbyQuery.limit,
+      },
    })
 })
 

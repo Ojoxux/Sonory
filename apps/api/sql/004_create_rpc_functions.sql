@@ -59,6 +59,85 @@ $$;
 GRANT EXECUTE ON FUNCTION find_nearby_pins TO authenticated;
 GRANT EXECUTE ON FUNCTION find_nearby_pins TO service_role;
 
+-- Create optimized function for finding pins within bounds using spatial index
+CREATE OR REPLACE FUNCTION find_pins_within_bounds(
+  north DOUBLE PRECISION,
+  south DOUBLE PRECISION,
+  east DOUBLE PRECISION,
+  west DOUBLE PRECISION,
+  max_results INTEGER DEFAULT 50,
+  categories TEXT[] DEFAULT NULL
+)
+RETURNS TABLE (
+  id UUID,
+  user_id UUID,
+  location TEXT,
+  audio_url TEXT,
+  audio_duration REAL,
+  audio_format VARCHAR(10),
+  weather_temperature REAL,
+  weather_condition VARCHAR(50),
+  weather_wind_speed REAL,
+  weather_humidity REAL,
+  time_tag VARCHAR(10),
+  ai_transcription TEXT,
+  ai_emotion VARCHAR(50),
+  ai_topic VARCHAR(100),
+  ai_language VARCHAR(10),
+  ai_confidence REAL,
+  ai_summary TEXT,
+  status VARCHAR(20),
+  title VARCHAR(200),
+  device_info TEXT,
+  created_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ,
+  deleted_at TIMESTAMPTZ
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    sp.id,
+    sp.user_id,
+    ST_AsText(sp.location::geometry) as location,
+    sp.audio_url,
+    sp.audio_duration,
+    sp.audio_format,
+    sp.weather_temperature,
+    sp.weather_condition,
+    sp.weather_wind_speed,
+    sp.weather_humidity,
+    sp.time_tag,
+    sp.ai_transcription,
+    sp.ai_emotion,
+    sp.ai_topic,
+    sp.ai_language,
+    sp.ai_confidence,
+    sp.ai_summary,
+    sp.status,
+    sp.title,
+    sp.device_info,
+    sp.created_at,
+    sp.updated_at,
+    sp.deleted_at
+  FROM sound_pins sp
+  WHERE 
+    sp.status = 'active'
+    AND sp.location && ST_MakeEnvelope(west, south, east, north, 4326)
+    AND ST_Within(sp.location::geometry, ST_MakeEnvelope(west, south, east, north, 4326))
+    AND (categories IS NULL OR sp.ai_topic = ANY(categories))
+  ORDER BY sp.created_at DESC
+  LIMIT max_results;
+END;
+$$;
+
+-- Grant execute permission
+GRANT EXECUTE ON FUNCTION find_pins_within_bounds TO authenticated;
+GRANT EXECUTE ON FUNCTION find_pins_within_bounds TO service_role;
+
 /**
  * Find nearby pins filtered by specific IDs
  * Used for location-based search with pre-filtered results
