@@ -11,13 +11,8 @@
  */
 
 import type mapboxgl from "mapbox-gl"
-import { useCallback, useEffect, useState, useRef } from "react"
-import {
-   applyNightLighting,
-   get3DTerrainConfig,
-   getAtmosphereConfig,
-   terrainSource,
-} from "../styles/mapStyles"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { applyNightLighting } from "../styles/mapStyles"
 import type {
    LocationData,
    MapboxExtendedMap,
@@ -65,9 +60,7 @@ function getLightPresetFromTime(
    debugTimeOverride: number | null,
 ): "day" | "dawn" | "dusk" | "night" {
    const currentHour =
-      debugTimeOverride !== null
-         ? debugTimeOverride
-         : new Date().getHours()
+      debugTimeOverride !== null ? debugTimeOverride : new Date().getHours()
 
    if (currentHour >= 8 && currentHour < 17) {
       return "day"
@@ -132,10 +125,10 @@ function setMapboxLightPreset(
             setStyleOptions,
          )
       }
-   } catch (error) {
+   } catch (_error) {
       // エラーを無視して続行
-                  }
-               }
+   }
+}
 
 export function useMapEnvironment({
    map,
@@ -179,7 +172,9 @@ export function useMapEnvironment({
             }
 
             const currentHour =
-               debugTimeOverride !== null ? debugTimeOverride : currentTime.getHours()
+               debugTimeOverride !== null
+                  ? debugTimeOverride
+                  : currentTime.getHours()
 
             // 時間ベースでlightPresetを決定
             const lightPreset = getLightPresetFromTime(debugTimeOverride)
@@ -189,19 +184,19 @@ export function useMapEnvironment({
 
             // 太陽の位置を計算（ライティング設定用のみ）
             let sunAltitude: number
-             if (position) {
-                const sunPosition = calculateSunPosition(
-                   currentTime,
+            if (position) {
+               const sunPosition = calculateSunPosition(
+                  currentTime,
                   position.latitude,
                   position.longitude,
                )
-                sunAltitude = sunPosition.altitude
-             } else {
-                // デフォルトの太陽高度（時間ベース）
-                sunAltitude = currentHour >= 6 && currentHour < 18 ? 45 : -20
+               sunAltitude = sunPosition.altitude
+            } else {
+               // デフォルトの太陽高度（時間ベース）
+               sunAltitude = currentHour >= 6 && currentHour < 18 ? 45 : -20
             }
 
-             // ライティング設定を取得
+            // ライティング設定を取得
             const lighting = getLightingConfig(sunAltitude)
 
             // 天候効果を適用
@@ -215,8 +210,8 @@ export function useMapEnvironment({
 
             // 3D地形を設定（初回のみ）
             if (!terrainInitializedRef.current) {
-            try {
-               if (!targetMap.getSource("mapbox-dem")) {
+               try {
+                  if (!targetMap.getSource("mapbox-dem")) {
                      targetMap.addSource("mapbox-dem", {
                         type: "raster-dem",
                         url: "mapbox://mapbox.mapbox-terrain-dem-v1",
@@ -224,15 +219,15 @@ export function useMapEnvironment({
                         maxzoom: 12, // 詳細度を下げて高速化
                      })
                   }
-                  
+
                   // 簡略化された地形設定
                   const terrainConfig = {
                      source: "mapbox-dem",
                      exaggeration: 1.2, // 固定値で高速化
-               }
-               mapboxHelpers.setTerrain(targetMap, terrainConfig)
+                  }
+                  mapboxHelpers.setTerrain(targetMap, terrainConfig)
                   terrainInitializedRef.current = true
-            } catch (terrainError) {
+               } catch (_terrainError) {
                   // 地形設定エラーを無視
                }
             }
@@ -245,7 +240,7 @@ export function useMapEnvironment({
                   "horizon-blend": 0.1,
                }
                mapboxHelpers.setFog(targetMap, fogConfig)
-            } catch (fogError) {
+            } catch (_fogError) {
                // フォグ設定エラーを無視
             }
 
@@ -253,20 +248,14 @@ export function useMapEnvironment({
             try {
                const isNightTime = currentHour >= 22 || currentHour < 4
                applyNightLighting(targetMap, isNightTime ? -20 : 45)
-            } catch (lightingError) {
+            } catch (_lightingError) {
                // 照明設定エラーを無視
             }
          } catch (error) {
             console.error("光と影の更新エラー:", error)
          }
       },
-      [
-         map,
-         mapStyleLoaded,
-         position,
-         debugTimeOverride,
-         mapboxHelpers,
-      ],
+      [map, mapStyleLoaded, position, debugTimeOverride, mapboxHelpers],
    )
 
    // 定期的に光と影を更新（頻度を下げる）
@@ -286,11 +275,14 @@ export function useMapEnvironment({
       setTimeout(checkStyleAndUpdate, 500)
 
       // 5分ごとに更新（頻度を下げる）
-      const interval = setInterval(() => {
-         if (map.isStyleLoaded()) {
-            updateLightingAndShadows(map)
-         }
-      }, 5 * 60 * 1000)
+      const interval = setInterval(
+         () => {
+            if (map.isStyleLoaded()) {
+               updateLightingAndShadows(map)
+            }
+         },
+         5 * 60 * 1000,
+      )
 
       return () => clearInterval(interval)
    }, [map, mapStyleLoaded, updateLightingAndShadows])

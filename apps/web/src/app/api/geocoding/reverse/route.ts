@@ -16,7 +16,23 @@ import { NextResponse } from "next/server"
  */
 
 // メモリキャッシュ（開発環境用）
-const memoryCache = new Map<string, { data: any; timestamp: number }>()
+interface CachedResult {
+   latitude: number
+   longitude: number
+   address: {
+      [key: string]: string | undefined
+      city?: string
+      town?: string
+      village?: string
+      county?: string
+      state?: string
+      country?: string
+   }
+   displayName: string
+   locationName: string
+}
+
+const memoryCache = new Map<string, { data: CachedResult; timestamp: number }>()
 const CACHE_DURATION = 48 * 60 * 60 * 1000
 const REQUEST_TIMEOUT = 1500
 
@@ -33,10 +49,14 @@ function createCacheKey(lat: number, lon: number, lang: string): string {
 /**
  * 超高速タイムアウト付きfetch
  */
-async function fetchWithTimeout(url: string, options: RequestInit, timeout: number): Promise<Response> {
+async function fetchWithTimeout(
+   url: string,
+   options: RequestInit,
+   timeout: number,
+): Promise<Response> {
    const controller = new AbortController()
    const timeoutId = setTimeout(() => controller.abort(), timeout)
-   
+
    try {
       const response = await fetch(url, {
          ...options,
@@ -51,10 +71,31 @@ async function fetchWithTimeout(url: string, options: RequestInit, timeout: numb
 /**
  * 複数APIのフォールバック戦略
  */
-async function fetchLocationData(latitude: number, longitude: number, lang: string): Promise<any> {
+interface LocationData {
+   address?: {
+      city?: string
+      town?: string
+      village?: string
+      county?: string
+      state?: string
+      country?: string
+   }
+   display_name?: string
+   locality?: string
+   principalSubdivision?: string
+   countryName?: string
+}
+
+async function fetchLocationData(
+   latitude: number,
+   longitude: number,
+   lang: string,
+): Promise<LocationData> {
    // 1. OpenStreetMap Nominatim（メイン）
    try {
-      const nominatimUrl = new URL("https://nominatim.openstreetmap.org/reverse")
+      const nominatimUrl = new URL(
+         "https://nominatim.openstreetmap.org/reverse",
+      )
       nominatimUrl.searchParams.set("format", "json")
       nominatimUrl.searchParams.set("lat", latitude.toString())
       nominatimUrl.searchParams.set("lon", longitude.toString())
@@ -64,13 +105,17 @@ async function fetchLocationData(latitude: number, longitude: number, lang: stri
       nominatimUrl.searchParams.set("extratags", "0")
       nominatimUrl.searchParams.set("namedetails", "0")
 
-      const response = await fetchWithTimeout(nominatimUrl.toString(), {
-         headers: {
-            "User-Agent": "Sonory-App/1.0 (https://sonory.app)",
-            "Accept": "application/json",
-            "Accept-Encoding": "gzip, deflate, br",
+      const response = await fetchWithTimeout(
+         nominatimUrl.toString(),
+         {
+            headers: {
+               "User-Agent": "Sonory-App/1.0 (https://sonory.app)",
+               Accept: "application/json",
+               "Accept-Encoding": "gzip, deflate, br",
+            },
          },
-      }, REQUEST_TIMEOUT)
+         REQUEST_TIMEOUT,
+      )
 
       if (response.ok) {
          return await response.json()
@@ -81,17 +126,23 @@ async function fetchLocationData(latitude: number, longitude: number, lang: stri
 
    // 2. フォールバック: BigDataCloud
    try {
-      const bigDataCloudUrl = new URL("https://api.bigdatacloud.net/data/reverse-geocode-client")
+      const bigDataCloudUrl = new URL(
+         "https://api.bigdatacloud.net/data/reverse-geocode-client",
+      )
       bigDataCloudUrl.searchParams.set("latitude", latitude.toString())
       bigDataCloudUrl.searchParams.set("longitude", longitude.toString())
       bigDataCloudUrl.searchParams.set("localityLanguage", lang)
 
-      const response = await fetchWithTimeout(bigDataCloudUrl.toString(), {
-         headers: {
-            "Accept": "application/json",
-            "Accept-Encoding": "gzip, deflate, br",
+      const response = await fetchWithTimeout(
+         bigDataCloudUrl.toString(),
+         {
+            headers: {
+               Accept: "application/json",
+               "Accept-Encoding": "gzip, deflate, br",
+            },
          },
-      }, REQUEST_TIMEOUT)
+         REQUEST_TIMEOUT,
+      )
 
       if (response.ok) {
          const data = await response.json()
@@ -105,7 +156,9 @@ async function fetchLocationData(latitude: number, longitude: number, lang: stri
                state: data.principalSubdivision,
                country: data.countryName,
             },
-            display_name: data.locality ? `${data.locality}, ${data.countryName}` : data.countryName,
+            display_name: data.locality
+               ? `${data.locality}, ${data.countryName}`
+               : data.countryName,
          }
       }
    } catch (error) {
@@ -162,14 +215,15 @@ export async function GET(
 
       // メモリキャッシュをチェック
       const cached = memoryCache.get(cacheKey)
-      if (cached && (now - cached.timestamp) < CACHE_DURATION) {
+      if (cached && now - cached.timestamp < CACHE_DURATION) {
          return NextResponse.json(cached.data, {
-         headers: {
-               "Cache-Control": "public, s-maxage=172800, stale-while-revalidate=345600", // 48時間キャッシュ
+            headers: {
+               "Cache-Control":
+                  "public, s-maxage=172800, stale-while-revalidate=345600", // 48時間キャッシュ
                "X-Cache": "HIT",
                "X-Cache-Key": cacheKey,
-         },
-      })
+            },
+         })
       }
 
       // APIから取得
@@ -196,9 +250,12 @@ export async function GET(
       memoryCache.set(cacheKey, { data: result, timestamp: now })
 
       // 古いキャッシュエントリを削除（メモリ管理）
-      if (memoryCache.size > 2000) { // キャッシュサイズを拡大
+      if (memoryCache.size > 2000) {
+         // キャッシュサイズを拡大
          const entries = Array.from(memoryCache.entries())
-         const oldEntries = entries.filter(([, value]) => (now - value.timestamp) > CACHE_DURATION)
+         const oldEntries = entries.filter(
+            ([, value]) => now - value.timestamp > CACHE_DURATION,
+         )
          for (const [key] of oldEntries) {
             memoryCache.delete(key)
          }
@@ -207,7 +264,8 @@ export async function GET(
       // 積極的なキャッシュヘッダーを設定
       return NextResponse.json(result, {
          headers: {
-            "Cache-Control": "public, s-maxage=172800, stale-while-revalidate=345600",
+            "Cache-Control":
+               "public, s-maxage=172800, stale-while-revalidate=345600",
             "X-Cache": "MISS",
             "X-Cache-Key": cacheKey,
          },
@@ -216,22 +274,27 @@ export async function GET(
       console.error("Reverse geocoding error:", error)
 
       // タイムアウトエラーの場合はフォールバック
-      if (error instanceof Error && error.name === 'AbortError') {
+      if (error instanceof Error && error.name === "AbortError") {
          return NextResponse.json(
             {
-               latitude: Number.parseFloat(request.nextUrl.searchParams.get("lat") || "0"),
-               longitude: Number.parseFloat(request.nextUrl.searchParams.get("lon") || "0"),
+               latitude: Number.parseFloat(
+                  request.nextUrl.searchParams.get("lat") || "0",
+               ),
+               longitude: Number.parseFloat(
+                  request.nextUrl.searchParams.get("lon") || "0",
+               ),
                address: {},
                displayName: "Location",
                locationName: "Unknown Location",
             },
-            { 
+            {
                status: 200,
                headers: {
-                  "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200", // 1時間キャッシュ
+                  "Cache-Control":
+                     "public, s-maxage=3600, stale-while-revalidate=7200", // 1時間キャッシュ
                   "X-Cache": "TIMEOUT-FALLBACK",
                },
-            }
+            },
          )
       }
 

@@ -1,9 +1,12 @@
 "use client"
 
-import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query"
-import { useCallback, useEffect, useMemo, useRef } from "react"
 import type { SoundPinAPI } from "@sonory/shared-types"
-
+import {
+   keepPreviousData,
+   useQuery,
+   useQueryClient,
+} from "@tanstack/react-query"
+import { useCallback, useEffect, useMemo, useRef } from "react"
 
 interface MapBounds {
    north: number
@@ -44,9 +47,9 @@ const roundBounds = (bounds: MapBounds): MapBounds => {
 const generateAdjacentBounds = (bounds: MapBounds): MapBounds[] => {
    const latDiff = bounds.north - bounds.south
    const lngDiff = bounds.east - bounds.west
-   
+
    const adjacent: MapBounds[] = []
-   
+
    // Generate 8 adjacent areas (north, south, east, west, and 4 corners)
    const offsets = [
       { lat: latDiff, lng: 0 }, // North
@@ -58,7 +61,7 @@ const generateAdjacentBounds = (bounds: MapBounds): MapBounds[] => {
       { lat: -latDiff, lng: lngDiff }, // Southeast
       { lat: -latDiff, lng: -lngDiff }, // Southwest
    ]
-   
+
    for (const offset of offsets) {
       adjacent.push({
          north: bounds.north + offset.lat,
@@ -67,7 +70,7 @@ const generateAdjacentBounds = (bounds: MapBounds): MapBounds[] => {
          west: bounds.west + offset.lng,
       })
    }
-   
+
    return adjacent
 }
 
@@ -80,13 +83,13 @@ const pendingRequests = new Map<string, Promise<SoundPinAPI[]>>()
 const fetchPinsFromAPI = async (
    bounds: MapBounds,
    limit = 50,
-   categories?: string[]
+   categories?: string[],
 ): Promise<SoundPinAPI[]> => {
-         const params = new URLSearchParams({
-            north: bounds.north.toString(),
-            south: bounds.south.toString(),
-            east: bounds.east.toString(),
-            west: bounds.west.toString(),
+   const params = new URLSearchParams({
+      north: bounds.north.toString(),
+      south: bounds.south.toString(),
+      east: bounds.east.toString(),
+      west: bounds.west.toString(),
       limit: limit.toString(),
    })
 
@@ -97,10 +100,13 @@ const fetchPinsFromAPI = async (
    }
 
    const url = `/api/pins/nearby?${params}`
-   
+
    // Request deduplication - return existing promise if same request is pending
    if (pendingRequests.has(url)) {
-      return pendingRequests.get(url)!
+      const existingRequest = pendingRequests.get(url)
+      if (existingRequest) {
+         return existingRequest
+      }
    }
 
    // AbortController for timeout
@@ -112,9 +118,9 @@ const fetchPinsFromAPI = async (
          const response = await fetch(url, {
             signal: controller.signal,
             headers: {
-               'Accept': 'application/json',
-               'Cache-Control': 'max-age=120', // 2分間キャッシュ
-               'Accept-Encoding': 'gzip, deflate, br',
+               Accept: "application/json",
+               "Cache-Control": "max-age=120", // 2分間キャッシュ
+               "Accept-Encoding": "gzip, deflate, br",
             },
          })
 
@@ -133,9 +139,9 @@ const fetchPinsFromAPI = async (
 
    // Store the promise for deduplication
    pendingRequests.set(url, requestPromise)
-   
+
    return requestPromise
-         }
+}
 
 /**
  * Hook for fetching nearby pins with ultra-optimized caching and prefetching
@@ -146,14 +152,14 @@ export const useNearbyPins = ({
    categories,
 }: UseNearbyPinsOptions): UseNearbyPinsResult => {
    const queryClient = useQueryClient()
-   
+
    // Round bounds for better cache hits
    const roundedBounds = useMemo(() => roundBounds(bounds), [bounds])
-   
+
    // Generate cache key
    const queryKey = useMemo(
       () => ["pins", "nearby", roundedBounds, limit, categories],
-      [roundedBounds, limit, categories]
+      [roundedBounds, limit, categories],
    )
 
    // Track prefetch status to avoid duplicate prefetches
@@ -171,7 +177,7 @@ export const useNearbyPins = ({
       retry: 1, // リトライ回数をさらに削減
       retryDelay: 300, // リトライ遅延をさらに短縮
       placeholderData: keepPreviousData,
-      networkMode: 'online',
+      networkMode: "online",
       // Enable background refetch for better UX
       refetchInterval: 10 * 60 * 1000, // 10分間隔でバックグラウンド更新
       refetchIntervalInBackground: false,
@@ -180,9 +186,9 @@ export const useNearbyPins = ({
    // Ultra-aggressive prefetching with intelligent deduplication
    const prefetchAdjacentAreas = useCallback(async () => {
       const adjacentBounds = generateAdjacentBounds(roundedBounds)
-      
+
       // Filter out already prefetched areas
-      const boundsToPreftch = adjacentBounds.filter(bound => {
+      const boundsToPreftch = adjacentBounds.filter((bound) => {
          const key = JSON.stringify(bound)
          return !prefetchStatusRef.current.has(key)
       })
@@ -190,9 +196,9 @@ export const useNearbyPins = ({
       if (boundsToPreftch.length === 0) return
 
       // Mark as prefetching
-      boundsToPreftch.forEach(bound => {
+      for (const bound of boundsToPreftch) {
          prefetchStatusRef.current.add(JSON.stringify(bound))
-      })
+      }
 
       // Batch prefetch requests with smaller batches for better performance
       const batchSize = 2 // Smaller batch size for faster response
@@ -201,35 +207,42 @@ export const useNearbyPins = ({
 
          // Process batch in parallel
          const prefetchPromises = batch.map(async (adjacentBound) => {
-            const adjacentKey = ["pins", "nearby", adjacentBound, limit, categories]
-            
+            const adjacentKey = [
+               "pins",
+               "nearby",
+               adjacentBound,
+               limit,
+               categories,
+            ]
+
             // Only prefetch if not already cached or stale
             const existingData = queryClient.getQueryData(adjacentKey)
-            
+
             if (!existingData) {
                return queryClient.prefetchQuery({
                   queryKey: adjacentKey,
-                  queryFn: () => fetchPinsFromAPI(adjacentBound, limit, categories),
+                  queryFn: () =>
+                     fetchPinsFromAPI(adjacentBound, limit, categories),
                   staleTime: 5 * 60 * 1000,
                   gcTime: 20 * 60 * 1000,
                })
             }
             return Promise.resolve()
          })
-         
+
          await Promise.allSettled(prefetchPromises)
-         
+
          // Minimal delay between batches
          if (i + batchSize < boundsToPreftch.length) {
-            await new Promise(resolve => setTimeout(resolve, 25))
+            await new Promise((resolve) => setTimeout(resolve, 25))
          }
       }
 
       // Clean up prefetch status after some time
       setTimeout(() => {
-         boundsToPreftch.forEach(bound => {
+         for (const bound of boundsToPreftch) {
             prefetchStatusRef.current.delete(JSON.stringify(bound))
-         })
+         }
       }, 60000) // 1分後にクリーンアップ
    }, [roundedBounds, limit, categories, queryClient])
 
@@ -258,4 +271,4 @@ export const useNearbyPins = ({
       error: query.error,
       refetch: query.refetch,
    }
-} 
+}

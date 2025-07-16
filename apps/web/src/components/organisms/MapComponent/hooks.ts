@@ -29,9 +29,11 @@
  * ```
  */
 
-import { useDebugStore } from "@/store/useDebugStore"
-import { useSoundPinStore, type SoundPin } from "@/store/useSoundPinStore"
 import { useNearbyPins } from "@/hooks/useNearbyPins"
+import { useDebugStore } from "@/store/useDebugStore"
+import { type SoundPin, useSoundPinStore } from "@/store/useSoundPinStore"
+import type { SoundPinAPI } from "@sonory/shared-types"
+import { useQueryClient } from "@tanstack/react-query"
 import * as O from "fp-ts/Option"
 import { pipe } from "fp-ts/function"
 import mapboxgl from "mapbox-gl"
@@ -46,9 +48,9 @@ import {
 import { useBrowserGeolocation } from "./hooks/useBrowserGeolocation"
 import { useLocationIntegration } from "./hooks/useLocationIntegration"
 import { useLocationStorage } from "./hooks/useLocationStorage"
-import { useMapboxInitialization } from "./hooks/useMapboxInitialization"
 import { useMapControls } from "./hooks/useMapControls"
 import { useMapEnvironment } from "./hooks/useMapEnvironment"
+import { useMapboxInitialization } from "./hooks/useMapboxInitialization"
 import type {
    GeoJSONLineStringFeature,
    LocationData,
@@ -62,8 +64,6 @@ import {
    selectBestPosition,
 } from "./utils/functional"
 import type { LightingConfig } from "./utils/sunCalculations"
-import { useQueryClient } from "@tanstack/react-query"
-import type { SoundPinAPI } from "@sonory/shared-types"
 
 export interface MapBounds {
    north: number
@@ -88,33 +88,39 @@ const convertApiPinToLocal = (apiPin: SoundPinAPI): SoundPin => {
          id: apiPin.id,
          blob: new Blob(), // APIピンのblobは空
       },
-      classificationResults: apiPin.aiAnalysis?.categories ? [{
-         label: apiPin.aiAnalysis.categories.topic,
-         confidence: apiPin.aiAnalysis.categories.confidence,
-      }] : [],
+      classificationResults: apiPin.aiAnalysis?.categories
+         ? [
+              {
+                 label: apiPin.aiAnalysis.categories.topic,
+                 confidence: apiPin.aiAnalysis.categories.confidence,
+              },
+           ]
+         : [],
       recordedAt: new Date(apiPin.createdAt),
       primaryLabel: apiPin.aiAnalysis?.categories?.topic || "不明",
       primaryConfidence: apiPin.aiAnalysis?.categories?.confidence || 0,
       isPersisted: true,
       timeTag: (apiPin.timeTag as "朝" | "昼" | "夕" | "夜") || undefined,
-      environment: "unknown", 
-      weather: apiPin.weather ? {
-         temperature: apiPin.weather.temperature,
-         condition: apiPin.weather.condition || "unknown",
-         windSpeed: apiPin.weather.windSpeed,
-         humidity: apiPin.weather.humidity,
-      } : undefined,
+      environment: "unknown",
+      weather: apiPin.weather
+         ? {
+              temperature: apiPin.weather.temperature,
+              condition: apiPin.weather.condition || "unknown",
+              windSpeed: apiPin.weather.windSpeed,
+              humidity: apiPin.weather.humidity,
+           }
+         : undefined,
    }
 }
 
 /**
-    * 周辺ピンを統合するフック
-    * @param bounds - マップの境界
-    * @returns 統合されたピン
+ * 周辺ピンを統合するフック
+ * @param bounds - マップの境界
+ * @returns 統合されたピン
  */
 export const useIntegratedPins = (bounds: MapBounds | null) => {
    const { pins: localPins, persistedPins, tempPins } = useSoundPinStore()
-   
+
    // 周辺ピンを取得するフックを使用
    const nearbyPinsResult = useNearbyPins({
       bounds: bounds || { north: 0, south: 0, east: 0, west: 0 },
@@ -125,18 +131,24 @@ export const useIntegratedPins = (bounds: MapBounds | null) => {
    // APIピンをローカルピン形式に変換して統合
    const allPins = useMemo(() => {
       if (!bounds) return [...localPins, ...persistedPins, ...tempPins]
-      
+
       // APIピンをローカルピン形式に変換
       const convertedApiPins = nearbyPinsResult.pins.map(convertApiPinToLocal)
-      
+
       // すべてのピンを統合
-      const combined = [...localPins, ...persistedPins, ...tempPins, ...convertedApiPins]
-      
+      const combined = [
+         ...localPins,
+         ...persistedPins,
+         ...tempPins,
+         ...convertedApiPins,
+      ]
+
       // IDで重複を削除
       const uniquePins = combined.filter(
-         (pin, index, array) => array.findIndex((p) => p.id === pin.id) === index
+         (pin, index, array) =>
+            array.findIndex((p) => p.id === pin.id) === index,
       )
-      
+
       return uniquePins
    }, [localPins, persistedPins, tempPins, nearbyPinsResult.pins, bounds])
 
@@ -313,11 +325,7 @@ export function useMapComponent({
       debugTimeOverride,
       setDebugTimeOverride,
    } = useDebugStore()
-   const {
-      selectedPinId,
-      selectPin,
-      lastCreatedPinId,
-   } = useSoundPinStore()
+   const { selectedPinId, selectPin, lastCreatedPinId } = useSoundPinStore()
 
    // TanStack Query
    const queryClient = useQueryClient()
@@ -329,11 +337,10 @@ export function useMapComponent({
       useLocationStorage()
 
    // React Queryで周辺ピンを取得
-   const { 
-      pins: nearbyPins, 
-      isLoading: isLoadingNearbyPins, 
+   const {
+      pins: nearbyPins,
+      isLoading: isLoadingNearbyPins,
       error: nearbyPinsError,
-      refetch: refetchPins,
    } = useIntegratedPins(mapBounds)
 
    console.log("🔍 MapComponent: useNearbyPins呼び出し", {
@@ -344,12 +351,14 @@ export function useMapComponent({
       nearbyPinsCount: nearbyPins.length,
       isLoadingNearbyPins,
       nearbyPinsError: nearbyPinsError?.message,
-      mapBoundsDetail: mapBounds ? {
-         north: mapBounds.north.toFixed(4),
-         south: mapBounds.south.toFixed(4),
-         east: mapBounds.east.toFixed(4),
-         west: mapBounds.west.toFixed(4),
-      } : null,
+      mapBoundsDetail: mapBounds
+         ? {
+              north: mapBounds.north.toFixed(4),
+              south: mapBounds.south.toFixed(4),
+              east: mapBounds.east.toFixed(4),
+              west: mapBounds.west.toFixed(4),
+           }
+         : null,
    })
 
    // mapBoundsの状態を詳しく監視
@@ -438,7 +447,7 @@ export function useMapComponent({
    )
 
    // Mapbox初期化
-   const { initializeMap } = useMapboxInitialization()
+   useMapboxInitialization()
 
    // 環境設定
    const { currentLighting, updateLightingAndShadows } = useMapEnvironment({
@@ -466,6 +475,7 @@ export function useMapComponent({
    // マップ初期化（一度だけ実行、依存関係は意図的に除外）
    // 注意: この useEffect は意図的に依存関係を空にしています
    // 依存関係を追加するとマップが何度も再初期化されて問題を起こすためです
+   // biome
    useEffect(() => {
       if (!mapContainerRef.current || mapInitializedRef.current) return
 
@@ -637,7 +647,10 @@ export function useMapComponent({
                         east: bounds.getEast(),
                         west: bounds.getWest(),
                      }
-                     console.log("🔍 MapComponent: スタイルロード時の境界設定", newBounds)
+                     console.log(
+                        "🔍 MapComponent: スタイルロード時の境界設定",
+                        newBounds,
+                     )
                      setMapBounds(newBounds)
                   }
                }, 100)
@@ -867,7 +880,10 @@ export function useMapComponent({
 
       let lastBounds: MapBounds | null = null
 
-      const isSignificantChange = (oldBounds: MapBounds | null, newBounds: MapBounds): boolean => {
+      const isSignificantChange = (
+         oldBounds: MapBounds | null,
+         newBounds: MapBounds,
+      ): boolean => {
          if (!oldBounds) return true
 
          const threshold = 0.001 // 約100mの変化
@@ -885,7 +901,7 @@ export function useMapComponent({
             mapLoaded: map?.loaded(),
             mapIsStyleLoaded: map?.isStyleLoaded(),
          })
-         
+
          const bounds = map.getBounds()
          if (!bounds) {
             console.log("🔍 MapComponent: マップ境界が取得できません", {
@@ -911,12 +927,14 @@ export function useMapComponent({
                east: newBounds.east.toFixed(4),
                west: newBounds.west.toFixed(4),
             },
-            lastBounds: lastBounds ? {
-               north: lastBounds.north.toFixed(4),
-               south: lastBounds.south.toFixed(4),
-               east: lastBounds.east.toFixed(4),
-               west: lastBounds.west.toFixed(4),
-            } : null,
+            lastBounds: lastBounds
+               ? {
+                    north: lastBounds.north.toFixed(4),
+                    south: lastBounds.south.toFixed(4),
+                    east: lastBounds.east.toFixed(4),
+                    west: lastBounds.west.toFixed(4),
+                 }
+               : null,
          })
 
          // 変化が小さい場合はスキップ
@@ -931,7 +949,7 @@ export function useMapComponent({
                south: newBounds.south.toFixed(4),
                east: newBounds.east.toFixed(4),
                west: newBounds.west.toFixed(4),
-            }
+            },
          })
 
          lastBounds = newBounds
@@ -945,7 +963,7 @@ export function useMapComponent({
 
       // マップとスタイルが準備できたらすぐに初回境界を設定
       console.log("🔍 MapComponent: マップとスタイルが準備完了、境界を設定")
-      
+
       // 少し遅延を入れてから境界を設定（Mapboxの完全な初期化を待つ）
       setTimeout(() => {
          console.log("🔍 MapComponent: 遅延後のhandleMapMove実行")
@@ -988,15 +1006,14 @@ export function useMapComponent({
       // TanStack Queryのキャッシュを即座に無効化（遅延なし）
       // 楽観的更新により、ピンは既に表示されているため、
       // バックグラウンドでデータを同期するだけ
-      queryClient.invalidateQueries({ 
+      queryClient.invalidateQueries({
          queryKey: ["nearby-pins"],
-         refetchType: "active" // アクティブなクエリのみ再取得
+         refetchType: "active", // アクティブなクエリのみ再取得
       })
-
    }, [lastCreatedPinId, map, mapStyleLoaded, nearbyPins, queryClient])
 
    // ピンの統合表示（nearbyPinsを使用）
-   const allPins = useMemo(() => {
+   const _allPins = useMemo(() => {
       return nearbyPins || []
    }, [nearbyPins])
 

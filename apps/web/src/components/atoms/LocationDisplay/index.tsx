@@ -1,7 +1,7 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
-import { memo, useMemo, useCallback } from "react"
+import { memo, useCallback, useMemo } from "react"
 import type { LocationDisplayProps } from "./type"
 
 /**
@@ -26,32 +26,42 @@ const LocationDisplayComponent = function LocationDisplay({
    debugTimeOverride = null,
 }: LocationDisplayProps) {
    // 座標を丸めてキャッシュキーを生成（精度を下げてキャッシュヒット率を上げる）
-   const roundedLat = useMemo(() => latitude ? Math.round(latitude * 500) / 500 : null, [latitude])
-   const roundedLon = useMemo(() => longitude ? Math.round(longitude * 500) / 500 : null, [longitude])
+   const roundedLat = useMemo(
+      () => (latitude ? Math.round(latitude * 500) / 500 : null),
+      [latitude],
+   )
+   const roundedLon = useMemo(
+      () => (longitude ? Math.round(longitude * 500) / 500 : null),
+      [longitude],
+   )
 
    // 時間帯をチェック
    const isDarkTime = useMemo(() => {
       const EVENING_START_HOUR = 17
       const MORNING_END_HOUR = 5
-      const hour = debugTimeOverride !== null ? debugTimeOverride : new Date().getHours()
+      const hour =
+         debugTimeOverride !== null ? debugTimeOverride : new Date().getHours()
       return hour >= EVENING_START_HOUR || hour < MORNING_END_HOUR
    }, [debugTimeOverride])
 
    // クエリキーを安定化
-   const queryKey = useMemo(() => ["location", roundedLat, roundedLon], [roundedLat, roundedLon])
+   const queryKey = useMemo(
+      () => ["location", roundedLat, roundedLon],
+      [roundedLat, roundedLon],
+   )
 
    // クエリ関数を安定化
    const queryFn = useCallback(async () => {
       if (!latitude || !longitude) return ""
-      
+
       const response = await fetch(
          `/api/geocoding/reverse?lat=${latitude}&lon=${longitude}&lang=en`,
          {
             headers: {
-               'Accept': 'application/json',
-               'Cache-Control': 'max-age=3600', // 1時間キャッシュ
+               Accept: "application/json",
+               "Cache-Control": "max-age=3600", // 1時間キャッシュ
             },
-         }
+         },
       )
 
       if (!response.ok) {
@@ -68,10 +78,17 @@ const LocationDisplayComponent = function LocationDisplay({
    }, [latitude, longitude])
 
    // enabledフラグを安定化
-   const enabled = useMemo(() => !!(latitude && longitude), [latitude, longitude])
+   const enabled = useMemo(
+      () => !!(latitude && longitude),
+      [latitude, longitude],
+   )
 
    // React Queryで逆ジオコーディングを実行（超積極的キャッシュ）
-   const { data: locationName, isLoading, isError } = useQuery({
+   const {
+      data: locationName,
+      isLoading,
+      isError,
+   } = useQuery({
       queryKey,
       queryFn,
       // 2時間キャッシュ（大幅延長）
@@ -87,15 +104,24 @@ const LocationDisplayComponent = function LocationDisplay({
       refetchOnMount: false,
       refetchOnReconnect: false,
       // ネットワークモード
-      networkMode: 'online',
+      networkMode: "online",
    })
 
    // 時間帯に応じたスタイル
-   const textColorClass = useMemo(() => isDarkTime ? "text-white" : "text-gray-900", [isDarkTime])
-   const borderColorClass = useMemo(() => isDarkTime ? "border-white" : "border-gray-900", [isDarkTime])
+   const textColorClass = useMemo(
+      () => (isDarkTime ? "text-white" : "text-gray-900"),
+      [isDarkTime],
+   )
+   const borderColorClass = useMemo(
+      () => (isDarkTime ? "border-white" : "border-gray-900"),
+      [isDarkTime],
+   )
 
    // 位置情報がない場合は何も表示しない
-   const hasValidPosition = useMemo(() => !!(latitude && longitude), [latitude, longitude])
+   const hasValidPosition = useMemo(
+      () => !!(latitude && longitude),
+      [latitude, longitude],
+   )
 
    if (!hasValidPosition) {
       return null
