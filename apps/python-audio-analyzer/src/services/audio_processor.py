@@ -60,7 +60,7 @@ class AudioProcessor:
     # YAMNetの仕様
     TARGET_SAMPLE_RATE = 16000  # Hz
     MAX_DURATION = 30.0  # 秒（長すぎる音声の制限）
-    MIN_DURATION = 9.9  # 秒（短すぎる音声の制限、タイマー精度を考慮）
+    MIN_DURATION = 9.0  # 秒（短すぎる音声の制限、タイマー精度を考慮）
 
     # サポートする音声フォーマット
     SUPPORTED_FORMATS = {".wav", ".mp3", ".webm", ".m4a", ".flac", ".ogg"}
@@ -134,6 +134,9 @@ class AudioProcessor:
             except Exception as e:
                 logger.error("Unexpected error processing audio from URL", error=str(e))
                 raise RuntimeError(f"Audio processing failed: {e}")
+        
+        # この行に到達することはないが、型チェッカーのために追加
+        raise RuntimeError("Unexpected end of retry loop")
 
     async def process_audio_from_bytes(
         self, audio_bytes: bytes, filename_hint: Optional[str] = None
@@ -233,7 +236,7 @@ class AudioProcessor:
             with sf.SoundFile(str(file_path)) as f:
                 original_metadata = AudioMetadata(
                     duration=len(waveform) / original_sr,
-                    sample_rate=original_sr,
+                    sample_rate=int(original_sr),
                     channels=f.channels,
                     format=file_path.suffix.lower(),
                     file_size=file_path.stat().st_size,
@@ -244,7 +247,7 @@ class AudioProcessor:
 
             # YAMNet用に前処理
             processed_waveform, processing_info = self._preprocess_for_yamnet(
-                waveform, original_sr
+                waveform, int(original_sr)
             )
 
             result = ProcessedAudio(

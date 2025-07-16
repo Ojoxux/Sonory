@@ -20,23 +20,10 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
     sys.path.insert(0, current_dir)
 
-try:
-    # Relative imports for package mode
-    from .api.routes import router as api_router, http_exception_handler
-    from .models.yamnet_wrapper import YAMNetManager
-    from .services.analyzer import AudioAnalyzer
-except ImportError:
-    # Absolute imports for direct execution (Windows環境で修正)
-    try:
-        from api.routes import router as api_router, http_exception_handler
-        from models.yamnet_wrapper import YAMNetManager
-        from services.analyzer import AudioAnalyzer
-    except ImportError:
-        # 最後の手段：sys.pathを使用
-        sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
-        from api.routes import router as api_router, http_exception_handler
-        from models.yamnet_wrapper import YAMNetManager
-        from services.analyzer import AudioAnalyzer
+# モジュールインポート
+from .api.routes import router as api_router, http_exception_handler
+from .models.yamnet_wrapper import YAMNetManager
+from .services.analyzer import AudioAnalyzer
 
 
 # Configure structured logging
