@@ -122,7 +122,6 @@ export const ClusterBadge = memo<ClusterBadgeProps>(function ClusterBadge({
                ${currentVariant.shadow}flex cursor-pointer items-center justify-center rounded-full border-2 border-white font-bold text-white backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:shadow-xl active:scale-95 ${className}
             `}
             onClick={handleClick}
-            role="button"
             tabIndex={0}
             aria-label={`${count}個のピンが集まったクラスタ`}
             onKeyDown={handleKeyDown}
@@ -137,12 +136,12 @@ export const ClusterBadge = memo<ClusterBadgeProps>(function ClusterBadge({
             }}
          >
             {/* アイコンと数字のレイアウト */}
-            <div className="flex items-center justify-center gap-1 pt-2">
+            <div className="absolute inset-0 flex items-center justify-center gap-1">
                <HiMiniSpeakerWave
                   className={`${currentSize.icon} flex-shrink-0`}
                   aria-hidden="true"
                />
-               <span className={`${currentSize.text} font-bold leading-tight`}>
+               <span className={`${currentSize.text} font-bold leading-none`}>
                   {displayText}
                </span>
             </div>

@@ -24,7 +24,7 @@ const UPDATE_CONDITIONS = {
 } as const
 
 // 位置情報の監視オプション
-const WATCH_OPTIONS: PositionOptions = {
+const _WATCH_OPTIONS: PositionOptions = {
    enableHighAccuracy: false,
    timeout: 30000,
    maximumAge: 60000,
@@ -91,6 +91,7 @@ export function useBrowserGeolocation() {
    const [error, setError] = useState<GeolocationPositionError | null>(null)
    const [permissionStatus, setPermissionStatus] = useState<string>("pending")
    const lastPositionRef = useRef<Position | null>(null)
+   const subscriberRef = useRef<((pos: Position | null) => void) | null>(null)
 
    useEffect(() => {
       // シングルトンインスタンスの初期化
@@ -123,64 +124,81 @@ export function useBrowserGeolocation() {
             }
          }
 
-         // 位置情報取得失敗時のコールバック
-         const handleError = (error: GeolocationPositionError) => {
+         // エラー時のコールバック
+         const handleError = (err: GeolocationPositionError) => {
             if (!geolocationInstance) return
-
-            // タイムアウトエラーは無視
-            if (error.code === error.TIMEOUT) return
-
-            geolocationInstance.error = error
-            console.error("位置情報の取得エラー:", error.message)
-
-            if (error.code === error.PERMISSION_DENIED) {
-               setPermissionStatus("denied")
-               console.warn(
-                  "位置情報へのアクセスが拒否されました。ブラウザの設定で許可してください。",
-               )
-            } else if (error.code === error.POSITION_UNAVAILABLE) {
-               console.warn(
-                  "現在位置を取得できませんでした。GPS信号が弱い可能性があります。",
-               )
-            }
+            geolocationInstance.error = err
+            console.error("位置情報取得エラー:", err.message)
          }
 
-         // 位置情報を継続的に監視
-         geolocationInstance.watchId = navigator.geolocation.watchPosition(
-            handleSuccess,
-            handleError,
-            WATCH_OPTIONS,
-         )
+         // 位置情報の監視を開始
+         if ("geolocation" in navigator) {
+            geolocationInstance.watchId = navigator.geolocation.watchPosition(
+               handleSuccess,
+               handleError,
+               {
+                  enableHighAccuracy: true,
+                  maximumAge: 30000,
+                  timeout: 27000,
+               },
+            )
+         }
       }
 
-      // サブスクライバーの追加
-      const subscriber = (newPosition: Position | null) => {
-         setPosition(newPosition)
-         setError(geolocationInstance?.error || null)
+      // このコンポーネント用のサブスクライバーを登録
+      const subscriber = (pos: Position | null) => {
+         setPosition(pos)
+         setError(null)
       }
+      subscriberRef.current = subscriber
       geolocationInstance.subscribers.add(subscriber)
 
-      // 初期位置の設定
+      // 既存の位置情報があれば設定
       if (geolocationInstance.position) {
          setPosition(geolocationInstance.position)
       }
 
-      // クリーンアップ
-      return () => {
-         if (geolocationInstance) {
-            geolocationInstance.subscribers.delete(subscriber)
+      if (geolocationInstance.error) {
+         setError(geolocationInstance.error)
+      }
 
-            // 最後のサブスクライバーが削除された場合、監視を停止
-            if (
-               geolocationInstance.subscribers.size === 0 &&
-               geolocationInstance.watchId
-            ) {
-               navigator.geolocation.clearWatch(geolocationInstance.watchId)
+      // 権限状態を確認
+      if ("permissions" in navigator) {
+         navigator.permissions
+            .query({ name: "geolocation" as PermissionName })
+            .then((result) => {
+               setPermissionStatus(result.state)
+            })
+            .catch(() => {
+               // 権限APIがサポートされていない場合
+               setPermissionStatus("prompt")
+            })
+      }
+
+      // クリーンアップ関数
+      return () => {
+         // サブスクライバーを削除
+         if (geolocationInstance && subscriberRef.current) {
+            geolocationInstance.subscribers.delete(subscriberRef.current)
+            subscriberRef.current = null
+
+            // 最後のサブスクライバーの場合は監視を停止
+            if (geolocationInstance.subscribers.size === 0) {
+               if (
+                  geolocationInstance.watchId !== null &&
+                  "geolocation" in navigator
+               ) {
+                  navigator.geolocation.clearWatch(geolocationInstance.watchId)
+               }
                geolocationInstance = null
             }
          }
       }
    }, [])
 
-   return { position, error, permissionStatus }
+   return {
+      position,
+      error,
+      permissionStatus,
+   }
 }

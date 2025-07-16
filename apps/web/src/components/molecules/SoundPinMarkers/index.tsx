@@ -428,7 +428,7 @@ export function SoundPinMarkers({
       updateMarkersIncremental,
    ])
 
-   // ピンデータ変更時の更新
+   // ピンデータ変更時の更新（依存配列を最適化）
    useEffect(() => {
       console.log("🔄 ピンデータ変更検知:", {
          pinsCount: stablePins.length,
@@ -437,26 +437,12 @@ export function SoundPinMarkers({
          existingMarkers: clusterMarkersRef.current.size,
       })
       debouncedUpdateMarkers()
-   }, [debouncedUpdateMarkers, stablePins.length]) // ピン数の変更も明示的に監視
+   }, [stablePins, mapStyleLoaded]) // 依存配列を簡素化
 
    // 選択状態変更時の軽量更新
    useEffect(() => {
       updateSelectedMarkers()
-   }, [updateSelectedMarkers])
-
-   // 新しいピンが作成されたときの強制更新
-   useEffect(() => {
-      if (!map || !mapStyleLoaded) return
-
-      console.log("🆕 新しいピン作成を検知、マーカーを強制更新:", {
-         pinsCount: stablePins.length,
-         mapReady: !!map,
-         styleLoaded: mapStyleLoaded,
-      })
-
-      // 新しいピンが作成されたときは強制的にマーカーを更新
-      debouncedUpdateMarkers()
-   }, [stablePins.length, map, mapStyleLoaded, debouncedUpdateMarkers])
+   }, [selectedPinId]) // 依存配列を最適化
 
    // ズームイベントの最適化
    useEffect(() => {
@@ -472,7 +458,7 @@ export function SoundPinMarkers({
       return () => {
          map.off("zoomend", handleZoomEnd)
       }
-   }, [map, mapStyleLoaded, debouncedUpdateMarkers])
+   }, [map, mapStyleLoaded]) // debouncedUpdateMarkersを依存配列から除外
 
    // クリーンアップ
    useEffect(() => {

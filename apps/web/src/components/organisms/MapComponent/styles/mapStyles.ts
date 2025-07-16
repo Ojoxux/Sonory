@@ -13,7 +13,8 @@ export const terrainSource = {
    type: "raster-dem" as const,
    url: "mapbox://mapbox.mapbox-terrain-dem-v1",
    tileSize: 512,
-   maxzoom: 14,
+   maxzoom: 10, // 最大ズームレベルを下げて高速化
+   minzoom: 0,
 }
 
 /**
@@ -22,45 +23,34 @@ export const terrainSource = {
 export function get3DTerrainConfig(): Record<string, unknown> {
    return {
       source: "mapbox-dem",
-      exaggeration: ["interpolate", ["linear"], ["zoom"], 0, 1, 15, 1.5],
+      exaggeration: 1.0, // 地形の誇張を控えめ
    }
 }
 
 /**
- * 大気効果の設定
+ * 環境光の設定を取得
  */
 export function getAtmosphereConfig(
    lighting: LightingConfig,
 ): Record<string, unknown> {
    return {
-      color: lighting.fogColor,
-      "high-color": lighting.ambientColor,
-      "horizon-blend": lighting.fogDensity,
+      "star-intensity": 0.0, // 星を無効化して軽量化
       "space-color": lighting.ambientColor,
-      "star-intensity": lighting.sunIntensity < 0.1 ? 0.8 : 0,
+      "horizon-color": lighting.fogColor,
+      "fog-color": lighting.fogColor,
+      "fog-ground-blend": 0.5,
    }
 }
 
 /**
  * 夜間の照明効果を適用
- * 時間ベースの判定に対応（lightPreset設定と整合性を保つ）
  */
 export function applyNightLighting(
    _map: mapboxgl.Map,
    sunAltitudeOrTimeBasedValue: number,
 ): void {
-   // 時間ベースの値を受け取る場合:
-   // -20: 夜間（22時-4時）
-   // 45: 昼間（8時-17時）
-   // 10: 薄明（その他）
+   // 最小限の処理のみ実行
    const _IS_NIGHT = sunAltitudeOrTimeBasedValue < 0
-
-   // lightPreset設定と整合性を保つためのログ（開発環境のみ）
-   if (process.env.NODE_ENV === "development") {
-      // TODO: 開発環境でのログ出力を実装
-   }
-
    // Standard Styleが自動的に夜間の照明を処理するため、
-   // 追加のカスタマイズは最小限に留める
-   // 必要に応じて追加の夜間効果をここに実装
+   // 追加のカスタマイズは実装しない
 }

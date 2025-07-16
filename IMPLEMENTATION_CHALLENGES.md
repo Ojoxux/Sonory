@@ -131,6 +131,190 @@ private parseIEEE754Double(hex: string): number {
 
 ---
 
+## 🚨 最新課題：TanStack Query導入によるピン表示問題
+
+### 状況
+パフォーマンス改善のため、従来のuseEffectベースのピン取得をTanStack Queryに置き換えたところ、マップピンが全く表示されなくなった。APIは正常に動作し、データも取得できているのに、なぜかピンが0件になってしまう。
+
+### 心理的プロセス
+```
+😊 「TanStack Queryでパフォーマンス改善だ！」
+😕 「あれ、ピンが表示されない...」
+🤔 「APIは200で返ってるのに...」
+😰 「useNearbyPinsで0件？なぜ？」
+🔍 「mapBoundsがnullのまま？」
+😵 「データ構造が違う？」
+💡 「バックエンドとフロントエンドの期待値が違った！」
+🎉 「やっと13件のピンが表示された！」
+```
+
+### 根本問題
+1. **mapBoundsの初期化タイミング問題**: マップとスタイルの準備完了を待たずにクエリが実行される
+2. **データ構造の不整合**: バックエンドから返されるデータ構造とフロントエンドの期待値が異なる
+3. **TanStack Queryの条件付き実行**: `enabled`条件が満たされずクエリが実行されない
+
+### 技術的詳細
+
+#### 🚫 問題のログ
+```javascript
+// useNearbyPins: フック開始
+{bounds: null, enabled: false, boundsExists: false, enabledAndBounds: false}
+
+// useNearbyPins: APIレスポンス  
+{success: true, dataLength: 1, rawData: Array(1)}
+
+// useNearbyPins: 変換されたAPIピン
+{apiPinsLength: 0, apiPins: Array(0)}  // ★ここで0件になる
+
+// useNearbyPins: 最終的なピン
+{queryEnabled: false, queryStatus: 'error', totalPins: 0}
+```
+
+#### 🔍 原因分析
+
+**問題1: mapBoundsの初期化タイミング**
+```typescript
+// 問題のあったコード
+useEffect(() => {
+   if (!map) return  // mapStyleLoadedを待っていない
+   
+   // マップが準備完了していない状態でhandleMapMoveを実行
+   handleMapMove()
+}, [map]) // mapStyleLoadedが依存配列にない
+```
+
+**問題2: データ構造の不整合**
+```typescript
+// フロントエンドが期待していた構造
+{
+  latitude: number,
+  longitude: number,
+  audio_url: string,
+  created_at: string
+}
+
+// バックエンドが実際に返していた構造
+{
+  location: { lat: number, lng: number },
+  audio: { url: string },
+  createdAt: string,
+  aiAnalysis: object
+}
+```
+
+#### ✅ 段階的解決プロセス
+
+**Step 1: mapBounds初期化の修正**
+```typescript
+// 修正後のコード
+useEffect(() => {
+   console.log("🔍 MapComponent: 境界管理useEffect呼び出し", {
+      mapExists: !!map,
+      mapStyleLoaded,
+      mapLoaded: map?.loaded(),
+      mapIsStyleLoaded: map?.isStyleLoaded(),
+   })
+
+   if (!map || !mapStyleLoaded) {
+      console.log("🔍 MapComponent: マップまたはスタイルが未準備")
+      return
+   }
+
+   // マップとスタイルが準備完了した後に境界を設定
+   setTimeout(() => {
+      console.log("🔍 MapComponent: 遅延後のhandleMapMove実行")
+      handleMapMove()
+   }, 100)
+}, [map, mapStyleLoaded]) // mapStyleLoadedを依存配列に追加
+```
+
+**Step 2: データ変換処理の修正**
+```typescript
+// 修正前（期待していた構造）
+const transformed = {
+   id: pinData.id,
+   latitude: pinData.latitude,        // ❌ undefined
+   longitude: pinData.longitude,      // ❌ undefined
+   audioData: {
+      url: pinData.audio_url,         // ❌ undefined
+      recordedAt: new Date(pinData.created_at), // ❌ undefined
+   }
+}
+
+// 修正後（実際の構造に合わせる）
+const transformed = {
+   id: pinData.id,
+   latitude: pinData.location.lat,    // ✅ 正しい
+   longitude: pinData.location.lng,   // ✅ 正しい
+   audioData: {
+      url: pinData.audio.url,         // ✅ 正しい
+      recordedAt: new Date(pinData.createdAt), // ✅ 正しい
+   }
+}
+```
+
+**Step 3: デバッグログの強化**
+```typescript
+// APIレスポンスの詳細確認
+console.log("🔍 useNearbyPins: APIレスポンス", {
+   success: data.success,
+   dataLength: data.data?.length || 0,
+   rawData: data.data,
+   firstItem: data.data?.[0] ? {
+      id: data.data[0].id,
+      location: data.data[0].location,
+      audio: data.data[0].audio,
+      createdAt: data.data[0].createdAt,
+      allKeys: Object.keys(data.data[0]),
+   } : null,
+})
+
+// 変換処理の詳細確認
+console.log(`🔍 useNearbyPins: ピン${index}変換開始`, {
+   id: pinData.id,
+   location: pinData.location,
+   audio: pinData.audio,
+   createdAt: pinData.createdAt,
+})
+```
+
+#### 🎯 最終的な成功ログ
+```javascript
+// 🔍 MapComponent: 境界管理useEffect呼び出し
+{mapExists: true, mapStyleLoaded: true, mapLoaded: true}
+
+// 🔍 MapComponent: 遅延後のhandleMapMove実行
+// 🔍 MapComponent: 境界を更新 {newBounds: {...}}
+
+// 🔍 useNearbyPins: フック開始
+{bounds: {...}, enabled: true, boundsExists: true, enabledAndBounds: true}
+
+// 🔍 useNearbyPins: APIレスポンス
+{success: true, dataLength: 13, rawData: Array(13)}
+
+// 🔍 useNearbyPins: 変換されたAPIピン
+{apiPinsLength: 13, apiPins: Array(13)}  // ★成功！
+
+// 🔍 useNearbyPins: 最終的なピン
+{queryEnabled: true, queryStatus: 'success', totalPins: 13}
+```
+
+### 学習ポイント
+1. **TanStack Queryの条件付き実行**: `enabled`パラメータの重要性を理解
+2. **マップライブラリの初期化**: スタイル読み込み完了を確実に待つ必要性
+3. **データ契約の重要性**: フロントエンドとバックエンドの期待値を明確にする
+4. **段階的デバッグ**: ログを活用して問題を特定する手法
+5. **非同期処理の複雑さ**: 複数の非同期処理の依存関係を正しく管理する
+
+### パフォーマンス改善効果
+TanStack Query導入により以下の改善を実現：
+- **キャッシュ機能**: 同じ範囲のピンを再取得する際のAPI呼び出しを削減
+- **バックグラウンド更新**: ユーザー体験を損なわずにデータを最新に保つ
+- **重複リクエストの防止**: 同じクエリの並行実行を自動的に防止
+- **エラーハンドリング**: 自動リトライや詳細なエラー状態管理
+
+---
+
 ## 🔧 具体的な問題と解決策
 
 ### 1. Next.js → API Gateway 404エラー
@@ -396,21 +580,22 @@ npm run stop:all
 ## 📊 問題パターン分析
 
 ### 発生タイミング別
-- **初期設定** (30%): 環境変数、依存関係、プロキシ設定
-- **サービス統合** (25%): API通信、データフロー、認証  
+- **初期設定** (25%): 環境変数、依存関係、プロキシ設定
+- **サービス統合** (20%): API通信、データフロー、認証  
 - **データ永続化** (25%): PostGISバイナリ、座標系、データベース
-- **AI処理最適化** (20%): モデル実装、結果後処理
+- **AI処理最適化** (15%): モデル実装、結果後処理
+- **パフォーマンス改善** (15%): TanStack Query導入、状態管理最適化
 
 ### 影響度別
-- **🔴 Critical**: PostGISバイナリ解析、プロキシ設定、環境変数 → アプリ全体停止
-- **🟡 Major**: 音声処理、AI分析 → 機能制限
-- **🟢 Minor**: ログ出力、UI調整 → UX影響
+- **🔴 Critical**: PostGISバイナリ解析、プロキシ設定、環境変数、TanStack Query初期化 → アプリ全体停止
+- **🟡 Major**: 音声処理、AI分析、データ構造不整合 → 機能制限
+- **🟢 Minor**: ログ出力、UI調整、パフォーマンス微調整 → UX影響
 
 ### 解決難易度別  
 - **😅 Easy**: 環境変数、依存関係 → 設定ファイル修正
-- **🤔 Medium**: プロキシ設定、形式変換 → コード修正
-- **😰 Hard**: PostGISバイナリ解析、AI後処理 → 専門知識 + 実装
-- **🤯 Nightmare**: 座標系・バイナリ形式 → 仕様調査 + 試行錯誤
+- **🤔 Medium**: プロキシ設定、形式変換、TanStack Query設定 → コード修正
+- **😰 Hard**: PostGISバイナリ解析、AI後処理、データ構造不整合 → 専門知識 + 実装
+- **🤯 Nightmare**: 座標系・バイナリ形式、非同期処理の依存関係 → 仕様調査 + 試行錯誤
 
 ---
 
@@ -458,9 +643,15 @@ ps aux | grep -E "(next|wrangler|uvicorn)" | grep -v grep
 # API直接テスト
 curl -X POST "http://localhost:8787/api/audio/upload" -F "audio=@test.webm"
 curl "http://localhost:8000/api/v1/analyze/audio" -d '{"audio_url":"..."}'
+curl "http://localhost:8787/api/pins/nearby?north=37.93&south=37.92&east=139.05&west=139.04"
 
 # PostGISデータ確認
 psql -h localhost -U postgres -d sonory -c "SELECT ST_AsText(location) FROM sound_pins LIMIT 1;"
+
+# TanStack Query状態確認（ブラウザDevTools）
+# React DevTools → Components → useQuery状態
+# Network Tab → API呼び出し状況
+# Console → カスタムログ出力
 
 # セキュリティ・依存関係チェック
 npm audit
@@ -513,6 +704,7 @@ async function parseLocation(wkbHex: string) {
 4. **外部ツール活用**: curl、DevTools、ps/lsof、psql
 5. **最小再現**: 問題を最小構成で再現
 6. **バイナリデータ**: 16進ダンプで実際の内容を確認
+7. **データ契約確認**: フロントエンドとバックエンドの期待値を明確にする
 
 ### PostGISバイナリ解析の教訓
 - **仕様書だけでは不十分**: 実際のデータで検証が必要
@@ -528,13 +720,17 @@ async function parseLocation(wkbHex: string) {
 - **環境差分カオス**: サービスごとに違う設定方法
 - **デバッグ困難**: どこで止まってるか分からない
 - **データ形式の罠**: 標準形式でも実装詳細は複雑
+- **非同期処理の複雑さ**: 複数の非同期処理の依存関係管理が困難
+- **状態管理の落とし穴**: TanStack Queryなどの新しいライブラリ導入時の学習コスト
 
 ### 成功の秘訣
 - **ツールを信じる**: エラーメッセージ・デバッガ・audit結果
 - **自動化投資**: 手作業は必ずミスる  
 - **記録重要**: 同じ問題で二度詰まらない
 - **段階的構築**: 複雑さを受け入れて、確実に積み上げる
-- **専門知識の蓄積**: PostGIS、座標系、バイナリ形式の理解
+- **専門知識の蓄積**: PostGIS、座標系、バイナリ形式、TanStack Queryの理解
+- **データ契約の明確化**: フロントエンドとバックエンドの期待値を文書化
+- **ログ駆動開発**: 詳細なログで問題を早期発見・特定
 
 ---
 

@@ -42,17 +42,7 @@
    },
    "overrides": [
       {
-         "include": ["*.tsx", "*.ts"],
-         "linter": {
-            "rules": {
-               "correctness": {
-                  "useExhaustiveDependencies": "off"
-               }
-            }
-         }
-      },
-      {
-         "include": ["next.config.ts"],
+         "include": ["src/app/api/**/*.ts"],
          "linter": {
             "rules": {
                "style": {
@@ -62,30 +52,7 @@
          }
       },
       {
-         "include": ["src/app/api/**/*.ts"],
-         "linter": {
-            "rules": {
-               "style": {
-                  "useNamingConvention": {
-                     "level": "error",
-                     "options": {
-                        "strictCase": false,
-                        "conventions": [
-                           {
-                              "selector": {
-                                 "kind": "function"
-                              },
-                              "formats": ["CONSTANT_CASE", "PascalCase"]
-                           }
-                        ]
-                     }
-                  }
-               }
-            }
-         }
-      },
-      {
-         "include": ["src/components/organisms/MapComponent/hooks.ts"],
+         "include": ["*.tsx", "*.ts"],
          "linter": {
             "rules": {
                "correctness": {

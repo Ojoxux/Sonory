@@ -8,9 +8,171 @@ import { NextResponse } from "next/server"
 /**
  * 逆ジオコーディングAPI Route
  *
- * @description OpenStreetMap Nominatim APIへのプロキシとして機能し、
- * CORSエラーを回避しながら座標から住所情報を取得します。
+ * @description 複数のフォールバック戦略による高速化
+ * - 超積極的なキャッシュ戦略
+ * - 短縮タイムアウト
+ * - 複数APIのフォールバック
+ * - 座標の粗い丸め処理でキャッシュヒット率最大化
  */
+
+// メモリキャッシュ（開発環境用）
+interface CachedResult {
+   latitude: number
+   longitude: number
+   address: {
+      [key: string]: string | undefined
+      city?: string
+      town?: string
+      village?: string
+      county?: string
+      state?: string
+      country?: string
+   }
+   displayName: string
+   locationName: string
+}
+
+const memoryCache = new Map<string, { data: CachedResult; timestamp: number }>()
+const CACHE_DURATION = 48 * 60 * 60 * 1000
+const REQUEST_TIMEOUT = 1500
+
+/**
+ * 座標を粗く丸めてキャッシュキーを生成（キャッシュヒット率最大化）
+ */
+function createCacheKey(lat: number, lon: number, lang: string): string {
+   // 約500m精度で丸める（キャッシュヒット率を最大化）
+   const roundedLat = Math.round(lat * 200) / 200
+   const roundedLon = Math.round(lon * 200) / 200
+   return `${roundedLat},${roundedLon},${lang}`
+}
+
+/**
+ * 超高速タイムアウト付きfetch
+ */
+async function fetchWithTimeout(
+   url: string,
+   options: RequestInit,
+   timeout: number,
+): Promise<Response> {
+   const controller = new AbortController()
+   const timeoutId = setTimeout(() => controller.abort(), timeout)
+
+   try {
+      const response = await fetch(url, {
+         ...options,
+         signal: controller.signal,
+      })
+      return response
+   } finally {
+      clearTimeout(timeoutId)
+   }
+}
+
+/**
+ * 複数APIのフォールバック戦略
+ */
+interface LocationData {
+   address?: {
+      city?: string
+      town?: string
+      village?: string
+      county?: string
+      state?: string
+      country?: string
+   }
+   display_name?: string
+   locality?: string
+   principalSubdivision?: string
+   countryName?: string
+}
+
+async function fetchLocationData(
+   latitude: number,
+   longitude: number,
+   lang: string,
+): Promise<LocationData> {
+   // 1. OpenStreetMap Nominatim（メイン）
+   try {
+      const nominatimUrl = new URL(
+         "https://nominatim.openstreetmap.org/reverse",
+      )
+      nominatimUrl.searchParams.set("format", "json")
+      nominatimUrl.searchParams.set("lat", latitude.toString())
+      nominatimUrl.searchParams.set("lon", longitude.toString())
+      nominatimUrl.searchParams.set("accept-language", lang)
+      nominatimUrl.searchParams.set("zoom", "10") // 詳細度を下げて高速化
+      nominatimUrl.searchParams.set("addressdetails", "1")
+      nominatimUrl.searchParams.set("extratags", "0")
+      nominatimUrl.searchParams.set("namedetails", "0")
+
+      const response = await fetchWithTimeout(
+         nominatimUrl.toString(),
+         {
+            headers: {
+               "User-Agent": "Sonory-App/1.0 (https://sonory.app)",
+               Accept: "application/json",
+               "Accept-Encoding": "gzip, deflate, br",
+            },
+         },
+         REQUEST_TIMEOUT,
+      )
+
+      if (response.ok) {
+         return await response.json()
+      }
+   } catch (error) {
+      console.warn("Nominatim API failed, trying fallback:", error)
+   }
+
+   // 2. フォールバック: BigDataCloud
+   try {
+      const bigDataCloudUrl = new URL(
+         "https://api.bigdatacloud.net/data/reverse-geocode-client",
+      )
+      bigDataCloudUrl.searchParams.set("latitude", latitude.toString())
+      bigDataCloudUrl.searchParams.set("longitude", longitude.toString())
+      bigDataCloudUrl.searchParams.set("localityLanguage", lang)
+
+      const response = await fetchWithTimeout(
+         bigDataCloudUrl.toString(),
+         {
+            headers: {
+               Accept: "application/json",
+               "Accept-Encoding": "gzip, deflate, br",
+            },
+         },
+         REQUEST_TIMEOUT,
+      )
+
+      if (response.ok) {
+         const data = await response.json()
+         // Nominatim形式に変換
+         return {
+            address: {
+               city: data.city || data.locality,
+               town: data.locality,
+               village: data.locality,
+               county: data.principalSubdivision,
+               state: data.principalSubdivision,
+               country: data.countryName,
+            },
+            display_name: data.locality
+               ? `${data.locality}, ${data.countryName}`
+               : data.countryName,
+         }
+      }
+   } catch (error) {
+      console.warn("BigDataCloud API failed:", error)
+   }
+
+   // 3. フォールバック: 軽量な地域推定
+   return {
+      address: {
+         country: "Unknown",
+      },
+      display_name: "Unknown Location",
+   }
+}
 
 export async function GET(
    request: NextRequest,
@@ -47,27 +209,25 @@ export async function GET(
          )
       }
 
-      // OpenStreetMap Nominatim APIを呼び出し
-      const nominatimUrl = new URL(
-         "https://nominatim.openstreetmap.org/reverse",
-      )
-      nominatimUrl.searchParams.set("format", "json")
-      nominatimUrl.searchParams.set("lat", lat)
-      nominatimUrl.searchParams.set("lon", lon)
-      nominatimUrl.searchParams.set("accept-language", lang)
-      nominatimUrl.searchParams.set("zoom", "10") // 市区町村レベルの詳細度
+      // キャッシュキーを生成
+      const cacheKey = createCacheKey(latitude, longitude, lang)
+      const now = Date.now()
 
-      const response = await fetch(nominatimUrl.toString(), {
-         headers: {
-            "User-Agent": "Sonory-App/1.0 (https://sonory.app)", // 適切なUser-Agentを設定
-         },
-      })
-
-      if (!response.ok) {
-         throw new Error(`Nominatim API error: ${response.status}`)
+      // メモリキャッシュをチェック
+      const cached = memoryCache.get(cacheKey)
+      if (cached && now - cached.timestamp < CACHE_DURATION) {
+         return NextResponse.json(cached.data, {
+            headers: {
+               "Cache-Control":
+                  "public, s-maxage=172800, stale-while-revalidate=345600", // 48時間キャッシュ
+               "X-Cache": "HIT",
+               "X-Cache-Key": cacheKey,
+            },
+         })
       }
 
-      const data = await response.json()
+      // APIから取得
+      const data = await fetchLocationData(latitude, longitude, lang)
 
       // レスポンスデータの構造化
       const result = {
@@ -86,15 +246,57 @@ export async function GET(
             "Unknown Location",
       }
 
-      // キャッシュヘッダーを設定（1時間キャッシュ）
+      // メモリキャッシュに保存
+      memoryCache.set(cacheKey, { data: result, timestamp: now })
+
+      // 古いキャッシュエントリを削除（メモリ管理）
+      if (memoryCache.size > 2000) {
+         // キャッシュサイズを拡大
+         const entries = Array.from(memoryCache.entries())
+         const oldEntries = entries.filter(
+            ([, value]) => now - value.timestamp > CACHE_DURATION,
+         )
+         for (const [key] of oldEntries) {
+            memoryCache.delete(key)
+         }
+      }
+
+      // 積極的なキャッシュヘッダーを設定
       return NextResponse.json(result, {
          headers: {
             "Cache-Control":
-               "public, s-maxage=3600, stale-while-revalidate=86400",
+               "public, s-maxage=172800, stale-while-revalidate=345600",
+            "X-Cache": "MISS",
+            "X-Cache-Key": cacheKey,
          },
       })
    } catch (error) {
       console.error("Reverse geocoding error:", error)
+
+      // タイムアウトエラーの場合はフォールバック
+      if (error instanceof Error && error.name === "AbortError") {
+         return NextResponse.json(
+            {
+               latitude: Number.parseFloat(
+                  request.nextUrl.searchParams.get("lat") || "0",
+               ),
+               longitude: Number.parseFloat(
+                  request.nextUrl.searchParams.get("lon") || "0",
+               ),
+               address: {},
+               displayName: "Location",
+               locationName: "Unknown Location",
+            },
+            {
+               status: 200,
+               headers: {
+                  "Cache-Control":
+                     "public, s-maxage=3600, stale-while-revalidate=7200", // 1時間キャッシュ
+                  "X-Cache": "TIMEOUT-FALLBACK",
+               },
+            },
+         )
+      }
 
       return NextResponse.json(
          {
@@ -106,6 +308,6 @@ export async function GET(
    }
 }
 
-// レート制限のためのオプション設定
-export const runtime = "nodejs"
+// Edge Runtimeで高速化
+export const runtime = "edge"
 export const dynamic = "force-dynamic"
