@@ -4,6 +4,8 @@ Sonory Audio Analyzer - YAMNet-based audio classification service
 Main FastAPI application entry point.
 """
 
+import os
+import sys
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
@@ -11,19 +13,14 @@ import structlog
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-import sys
-import os
-
-# Windows環境でのパス問題を解決
-# srcディレクトリをパスに追加（uvicorn起動時にも有効）
+# Windows環境でのパス問題を解決 - srcディレクトリをパスに追加（uvicorn起動時にも有効）
 current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
     sys.path.insert(0, current_dir)
 
-# モジュールインポート
-from .api.routes import router as api_router, http_exception_handler
-from .models.yamnet_wrapper import YAMNetManager
-from .services.analyzer import AudioAnalyzer
+from .api.routes import router as api_router, http_exception_handler  # noqa: E402
+from .models.yamnet_wrapper import YAMNetManager  # noqa: E402
+from .services.analyzer import AudioAnalyzer  # noqa: E402
 
 
 # Configure structured logging
