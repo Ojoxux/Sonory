@@ -398,6 +398,19 @@ export class PinRepository {
    private toDomainModel(record: SoundPinRecord): SoundPinAPI {
       const { lat, lng } = this.parseLocationData(record.location)
 
+      // DEBUG: データベースから取得したレコードの内容をログ出力
+      if (isDevelopment) {
+         this.logger.info("Database record to domain model conversion", {
+            recordId: record.id,
+            title: record.title,
+            aiTopic: record.ai_topic,
+            aiEmotion: record.ai_emotion,
+            aiConfidence: record.ai_confidence,
+            status: record.status,
+            requestId: this.requestId,
+         })
+      }
+
       return {
          id: record.id,
          ...(record.user_id ? { userId: record.user_id } : {}),
@@ -427,22 +440,17 @@ export class PinRepository {
               }
             : {}),
          ...(record.time_tag ? { timeTag: record.time_tag } : {}),
-         ...(record.ai_transcription
-            ? {
-                 aiAnalysis: {
-                    transcription: record.ai_transcription,
-                    categories: {
-                       emotion: record.ai_emotion || "",
-                       topic: record.ai_topic || "",
-                       language: record.ai_language || "",
-                       confidence: record.ai_confidence || 0,
-                    },
-                    ...(record.ai_summary
-                       ? { summary: record.ai_summary }
-                       : {}),
-                 },
-              }
-            : {}),
+         // AI分析結果を追加（未分析の場合はデフォルト値）
+         aiAnalysis: {
+            transcription: record.ai_transcription || "",
+            categories: {
+               emotion: record.ai_emotion || "neutral",
+               topic: record.ai_topic || "unknown",
+               language: record.ai_language || "ja",
+               confidence: record.ai_confidence || 0,
+            },
+            ...(record.ai_summary ? { summary: record.ai_summary } : {}),
+         },
          status: record.status,
          ...(record.title ? { title: record.title } : {}),
          ...(record.device_info
