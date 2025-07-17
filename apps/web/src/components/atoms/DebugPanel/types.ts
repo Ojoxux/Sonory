@@ -1,5 +1,7 @@
 import type { LocationData } from "@/components/organisms/MapComponent/type"
 import type { LightingConfig } from "@/components/organisms/MapComponent/utils/sunCalculations"
+import type { UseRealtimeReturn } from "@/hooks/useRealtime"
+import type { SoundPin } from "@/store/useSoundPinStore"
 
 export type DebugPanelProps = {
    /** 位置情報データ */
@@ -20,6 +22,14 @@ export type DebugPanelProps = {
    onTimeChange: (time: number | null) => void
    /** ライティング更新のコールバック */
    onUpdateLighting: () => void
+   /** マップインスタンス */
+   map?: mapboxgl.Map | null
+   /** マップスタイル読み込み状態 */
+   mapStyleLoaded?: boolean
+   /** 音声ピンデータ */
+   pins?: SoundPin[]
+   /** リアルタイム接続状態 */
+   realtime?: UseRealtimeReturn
 }
 
 export type DebugLog = {
