@@ -349,7 +349,7 @@ async def http_exception_handler(request: Request, exc: Exception):
         status_code = 500
         detail = str(exc)
         error_code = "INTERNAL_ERROR"
-    
+
     error_response = ErrorResponse(
         error=error_code,
         message=detail,

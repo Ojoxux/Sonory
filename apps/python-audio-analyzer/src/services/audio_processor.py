@@ -134,7 +134,7 @@ class AudioProcessor:
             except Exception as e:
                 logger.error("Unexpected error processing audio from URL", error=str(e))
                 raise RuntimeError(f"Audio processing failed: {e}")
-        
+
         # この行に到達することはないが、型チェッカーのために追加
         raise RuntimeError("Unexpected end of retry loop")
 
