@@ -238,15 +238,21 @@ export const PWAInstallPrompt = memo(function PWAInstallPrompt({
 
    return (
       <div className={`${CSS_CLASSES.CONTAINER_BASE} ${className}`}>
-         <button
-            type="button"
-            ref={promptRef}
+         <div
+            ref={promptRef as unknown as React.RefObject<HTMLDivElement>}
             onClick={handlePromptClick}
             className={getPromptContainerClassName(
                isDebugActive,
                isVisible,
                isExpanded,
             )}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+               if (e.key === "Enter" || e.key === " ") {
+                  handlePromptClick()
+               }
+            }}
             style={{
                boxShadow: "0 4px 30px rgba(0, 0, 0, 0.2)",
             }}
@@ -265,7 +271,7 @@ export const PWAInstallPrompt = memo(function PWAInstallPrompt({
                   <CollapsedContent isDebugActive={isDebugActive} />
                )}
             </div>
-         </button>
+         </div>
       </div>
    )
 })
