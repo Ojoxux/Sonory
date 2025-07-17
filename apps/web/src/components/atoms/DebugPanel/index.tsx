@@ -34,9 +34,15 @@ export function DebugPanel({
    debugTimeOverride,
    onTimeChange,
    onUpdateLighting,
+   map,
+   mapStyleLoaded,
+   pins,
+   realtime,
 }: DebugPanelProps): ReactElement {
    const [isExpanded, setIsExpanded] = useState(false)
-   const [selectedTab, setSelectedTab] = useState<"main" | "yamnet">("main")
+   const [selectedTab, setSelectedTab] = useState<"main" | "yamnet" | "map">(
+      "main",
+   )
 
    const { handleTimeChange, handlePWADebugShow, handlePWADebugHide } =
       useDebugPanel({
@@ -100,6 +106,19 @@ export function DebugPanel({
                   }`}
                >
                   Main
+               </button>
+               <button
+                  type="button"
+                  onClick={() => {
+                     setSelectedTab("map")
+                  }}
+                  className={`rounded px-2 py-1 text-xs transition-colors ${
+                     selectedTab === "map"
+                        ? "bg-blue-500/50 text-white"
+                        : "text-gray-300 hover:bg-white/10"
+                  }`}
+               >
+                  Map
                </button>
                <button
                   type="button"
@@ -312,6 +331,87 @@ ${
                         <div>Shift+G: 位置情報再取得</div>
                         <div>Shift+R: キャッシュクリア&再取得</div>
                      </div>
+                  </div>
+               )}
+
+               {/* Mapタブ */}
+               {selectedTab === "map" && (
+                  <div className="pointer-events-auto max-h-80 space-y-2 overflow-y-auto">
+                     {/* マップ状態 */}
+                     <div className="grid grid-cols-2 gap-2">
+                        <div className="rounded bg-white/5 p-2">
+                           <div className="text-gray-400">🗺️ マップ</div>
+                           <div
+                              className={
+                                 map ? "text-green-400" : "text-red-400"
+                              }
+                           >
+                              {map ? "✅ 読み込み済み" : "❌ 未読み込み"}
+                           </div>
+                        </div>
+                        <div className="rounded bg-white/5 p-2">
+                           <div className="text-gray-400">🎨 スタイル</div>
+                           <div
+                              className={
+                                 mapStyleLoaded
+                                    ? "text-green-400"
+                                    : "text-yellow-400"
+                              }
+                           >
+                              {mapStyleLoaded
+                                 ? "✅ 読み込み済み"
+                                 : "⏳ 読み込み中"}
+                           </div>
+                        </div>
+                     </div>
+
+                     {/* ピンデータ状態 */}
+                     <div className="rounded bg-white/5 p-2">
+                        <div className="text-gray-400">📍 ピン数</div>
+                        <div className="text-white">{pins?.length || 0}</div>
+                        {pins && pins.length > 0 && (
+                           <div className="mt-2 space-y-1">
+                              <div className="text-gray-400 text-xs">
+                                 最新ピン:
+                              </div>
+                              {pins.slice(0, 3).map((pin) => (
+                                 <div key={pin.id} className="text-xs">
+                                    • {pin.id.slice(0, 8)}... (
+                                    {pin.isPersisted ? "DB" : "Local"})
+                                 </div>
+                              ))}
+                           </div>
+                        )}
+                     </div>
+
+                     {/* リアルタイム接続状態 */}
+                     {realtime && (
+                        <div className="rounded bg-white/5 p-2">
+                           <div className="text-gray-400">
+                              🔄 リアルタイム接続
+                           </div>
+                           <div
+                              className={
+                                 realtime.isConnected
+                                    ? "text-green-400"
+                                    : "text-red-400"
+                              }
+                           >
+                              {realtime.isConnected
+                                 ? "🟢 Connected"
+                                 : "🔴 Disconnected"}
+                           </div>
+                           <div className="mt-1 text-xs">
+                              <div>Status: {realtime.connectionStatus}</div>
+                              <div>Unread: {realtime.unreadCount}</div>
+                              {realtime.connectionError && (
+                                 <div className="text-red-300">
+                                    Error: {realtime.connectionError}
+                                 </div>
+                              )}
+                           </div>
+                        </div>
+                     )}
                   </div>
                )}
 

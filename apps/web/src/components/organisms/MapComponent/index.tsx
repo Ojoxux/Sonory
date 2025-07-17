@@ -157,26 +157,6 @@ export function MapComponent({
             onPinSelect={handlePinSelect}
          />
 
-         {/* デバッグ: ピンデータの状態確認 */}
-         {process.env.NODE_ENV === "development" && (
-            <div className="fixed top-20 right-4 z-50 max-w-xs rounded bg-black bg-opacity-75 p-2 text-white text-xs">
-               <div>📍 ピン数: {pins.length}</div>
-               <div>🗺️ マップ: {map ? "✅" : "❌"}</div>
-               <div>🎨 スタイル: {mapStyleLoaded ? "✅" : "❌"}</div>
-               {pins.length > 0 && (
-                  <div className="mt-2 text-xs">
-                     <div>最新ピン:</div>
-                     {pins.slice(0, 3).map((pin) => (
-                        <div key={pin.id} className="text-xs">
-                           • {pin.id.slice(0, 8)}... (
-                           {pin.isPersisted ? "DB" : "Local"})
-                        </div>
-                     ))}
-                  </div>
-               )}
-            </div>
-         )}
-
          {/* ユーザーマーカー */}
          <UserMarker map={map} position={position} />
 
@@ -200,24 +180,11 @@ export function MapComponent({
                debugTimeOverride={debugTimeOverride}
                onTimeChange={setDebugTimeOverride}
                onUpdateLighting={updateLightingAndShadows}
+               map={map}
+               mapStyleLoaded={mapStyleLoaded}
+               pins={pins}
+               realtime={realtime}
             />
-         )}
-
-         {/* リアルタイム接続状態表示（デバッグ用） */}
-         {debugMode && (
-            <div className="fixed bottom-4 left-4 z-50 rounded bg-black bg-opacity-75 p-2 text-white text-xs">
-               <div>
-                  Realtime:{" "}
-                  {realtime.isConnected ? "🟢 Connected" : "🔴 Disconnected"}
-               </div>
-               <div>Status: {realtime.connectionStatus}</div>
-               <div>Unread: {realtime.unreadCount}</div>
-               {realtime.connectionError && (
-                  <div className="text-red-300">
-                     Error: {realtime.connectionError}
-                  </div>
-               )}
-            </div>
          )}
 
          {/* 音声ピン再生 */}
