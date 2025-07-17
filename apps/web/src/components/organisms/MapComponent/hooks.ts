@@ -368,8 +368,27 @@ export function useMapComponent({
       toggleDebugMode,
       debugTimeOverride,
       setDebugTimeOverride,
+      setDebugMode,
    } = useDebugStore()
-   const { selectedPinId, selectPin, lastCreatedPinId } = useSoundPinStore()
+
+   // HACK: 初期化時にdebugModeをfalseに強制設定 (デバッグモードがデフォルトで出てしまうため)
+   useEffect(() => {
+      setDebugMode(false)
+      if (process.env.NODE_ENV === "development") {
+         console.log("[MapComponent] debugModeをfalseにリセット")
+      }
+   }, [])
+
+   const {
+      pins,
+      persistedPins,
+      tempPins,
+      selectedPinId,
+      selectPin,
+      lastCreatedPinId,
+      loadNearbyPins,
+      mergeLocalAndPersistedPins,
+   } = useSoundPinStore()
 
    // TanStack Query
    const queryClient = useQueryClient()
