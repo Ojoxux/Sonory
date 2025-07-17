@@ -26,15 +26,6 @@ interface PythonAnalysisResult {
 }
 
 /**
- * Python YAMNet分析リクエスト
- */
-interface PythonAnalysisRequest {
-   audio_url: string
-   top_k?: number
-   max_retries?: number
-}
-
-/**
  * 音声ファイル処理サービス
  *
  * @description
@@ -364,7 +355,7 @@ export class AudioService extends BaseService {
          })
 
          // Python YAMNetサービスにリクエスト
-         const analysisRequest: PythonAnalysisRequest = {
+         const analysisRequest = {
             audio_url: audioUrl,
             top_k: topK,
             max_retries: 3,
