@@ -11,12 +11,8 @@ from pathlib import Path
 import structlog
 from pydantic import BaseModel, Field
 
-try:
-    from ..models.yamnet_wrapper import YAMNetManager
-    from .audio_processor import AudioProcessor, ProcessedAudio, AudioMetadata
-except ImportError:
-    from models.yamnet_wrapper import YAMNetManager
-    from services.audio_processor import AudioProcessor, ProcessedAudio, AudioMetadata
+from ..models.yamnet_wrapper import YAMNetManager
+from .audio_processor import AudioProcessor, ProcessedAudio, AudioMetadata
 
 logger = structlog.get_logger(__name__)
 
@@ -283,7 +279,7 @@ class AudioAnalyzer:
             # 結果を構造化
             classifications = [
                 ClassificationResult(
-                    label=result["label"], confidence=result["confidence"]
+                    label=str(result["label"]), confidence=float(result["confidence"])
                 )
                 for result in japanese_results
             ]

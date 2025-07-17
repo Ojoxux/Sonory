@@ -193,6 +193,10 @@ app.post("/upload", async (c) => {
                      headers: {
                         "Content-Type": "application/json",
                      },
+                     body: JSON.stringify({
+                        audioUrl: uploadResult.audioUrl,
+                        topK: 5,
+                     }),
                   },
                )
 

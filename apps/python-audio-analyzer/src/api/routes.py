@@ -12,10 +12,7 @@ from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Request, D
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, HttpUrl, validator
 
-try:
-    from ..services.analyzer import AudioAnalyzer, AnalysisResult
-except ImportError:
-    from services.analyzer import AudioAnalyzer, AnalysisResult
+from ..services.analyzer import AudioAnalyzer, AnalysisResult
 
 logger = structlog.get_logger(__name__)
 
@@ -286,10 +283,6 @@ async def health_check(
             details=health_details,
         )
 
-        # 健全でない場合は503を返す
-        if health_details["status"] != "healthy":
-            return JSONResponse(status_code=503, content=response.dict())
-
         return response
 
     except Exception as e:
@@ -302,7 +295,7 @@ async def health_check(
             details={"error": str(e)},
         )
 
-        return JSONResponse(status_code=503, content=error_response.dict())
+        raise HTTPException(status_code=503, detail=error_response.dict())
 
 
 @router.get(
@@ -337,28 +330,39 @@ async def get_analysis_stats(
 
 
 # エラーハンドラー（FastAPIアプリに追加される）
-async def http_exception_handler(request: Request, exc: HTTPException):
+async def http_exception_handler(request: Request, exc: Exception):
     """
     HTTPExceptionの共通エラーハンドリング
 
     Args:
         request: FastAPIリクエストオブジェクト
-        exc: HTTPException
+        exc: Exception
 
     Returns:
         構造化されたエラーレスポンス
     """
+    if isinstance(exc, HTTPException):
+        status_code = exc.status_code
+        detail = exc.detail
+        error_code = f"HTTP_{status_code}"
+    else:
+        status_code = 500
+        detail = str(exc)
+        error_code = "INTERNAL_ERROR"
+
     error_response = ErrorResponse(
-        error=f"HTTP_{exc.status_code}",
-        message=exc.detail,
+        error=error_code,
+        message=detail,
+        details=None,
         request_id=getattr(request.state, "request_id", None),
     )
 
     logger.error(
-        "HTTP exception occurred",
-        status_code=exc.status_code,
-        detail=exc.detail,
+        "Exception occurred",
+        status_code=status_code,
+        detail=detail,
         request_id=error_response.request_id,
+        exception_type=type(exc).__name__,
     )
 
-    return JSONResponse(status_code=exc.status_code, content=error_response.dict())
+    return JSONResponse(status_code=status_code, content=error_response.dict())

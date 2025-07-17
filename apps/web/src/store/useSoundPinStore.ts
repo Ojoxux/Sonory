@@ -698,14 +698,77 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
                   location: { lat: number; lng: number }
                   audio: { url: string; duration: number; format: string }
                   title?: string
-                  timeTag?: string
-                  weather?: unknown
-                  aiAnalysis?: {
-                     classifications?: unknown[]
-                     categories?: { confidence?: number; topic?: string }
+                  timeTag?: "朝" | "昼" | "夕" | "夜"
+                  weather?: {
+                     temperature: number
+                     condition: string
+                     windSpeed?: number
+                     humidity?: number
                   }
+                  aiAnalysis?: {
+                     transcription: string
+                     categories: {
+                        confidence: number
+                        topic: string
+                        emotion: string
+                        language: string
+                     }
+                     summary?: string
+                  }
+                  status: "active" | "processing" | "deleted" | "reported"
                   createdAt: string
                }
+
+               // デバッグ: データベースから取得したピンデータの内容をログ出力
+               if (process.env.NODE_ENV === "development") {
+                  console.log("🔍 Converting DB pin to SoundPin:", {
+                     pinId: pin.id,
+                     dbTitle: pin.title,
+                     aiAnalysis: pin.aiAnalysis,
+                     primaryResult: pin.aiAnalysis?.categories,
+                  })
+               }
+
+               // 分類結果を構築
+               const classificationResults = []
+
+               // 1. titleフィールドから分類結果を取得（最優先）
+               if (
+                  pin.title &&
+                  pin.title !== "音声ピン" &&
+                  pin.title.trim() !== ""
+               ) {
+                  classificationResults.push({
+                     label: pin.title,
+                     confidence: pin.aiAnalysis?.categories?.confidence || 0.8, // デフォルトで80%の信頼度
+                     category: "other" as const,
+                  })
+               }
+               // 2. aiAnalysisのtopicから分類結果を取得
+               else if (
+                  pin.aiAnalysis?.categories?.topic &&
+                  pin.aiAnalysis.categories.topic !== "unknown"
+               ) {
+                  classificationResults.push({
+                     label: pin.aiAnalysis.categories.topic,
+                     confidence: pin.aiAnalysis.categories.confidence || 0,
+                     category: "other" as const,
+                  })
+               }
+               // 3. どちらもない場合は「未分類」
+               else {
+                  classificationResults.push({
+                     label: "未分類",
+                     confidence: 0,
+                     category: "other" as const,
+                  })
+               }
+
+               // primaryLabelとenvironmentを決定
+               const primaryLabel =
+                  pin.title || pin.aiAnalysis?.categories?.topic || "音声ピン"
+               const environment =
+                  pin.title || pin.aiAnalysis?.categories?.topic || "unknown"
 
                return {
                   id: pin.id,
@@ -717,15 +780,15 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
                      recordedAt: new Date(pin.createdAt),
                      id: pin.id,
                   },
-                  classificationResults: pin.aiAnalysis?.classifications || [],
+                  classificationResults,
                   recordedAt: new Date(pin.createdAt),
-                  primaryLabel: pin.title || "音声ピン",
+                  primaryLabel,
                   primaryConfidence:
-                     pin.aiAnalysis?.categories?.confidence || 0,
+                     pin.aiAnalysis?.categories?.confidence || 0.8,
                   isPersisted: true,
                   weather: pin.weather,
                   timeTag: pin.timeTag,
-                  environment: pin.aiAnalysis?.categories?.topic || "unknown",
+                  environment,
                }
             },
          )

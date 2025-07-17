@@ -9,7 +9,7 @@ import asyncio
 import logging
 import os
 import tempfile
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
@@ -272,15 +272,19 @@ class YAMNetClassifier:
             
             # 非同期でモデルを読み込み
             loop = asyncio.get_event_loop()
-            self.model = await loop.run_in_executor(
+            model = await loop.run_in_executor(
                 None, self._load_model_with_retry
             )
+            self.model = model
             
             # クラス名を読み込み
-            class_map_path = self.model.class_map_path().numpy()
-            self.class_names = await loop.run_in_executor(
-                None, self._load_class_names, class_map_path.decode('utf-8')
-            )
+            if self.model is not None:
+                class_map_path = self.model.class_map_path().numpy()
+                class_map_str = class_map_path.decode('utf-8')
+                class_names_result = await loop.run_in_executor(
+                    None, lambda: self._load_class_names(class_map_str)
+                )
+                self.class_names = class_names_result
             
             self._initialized = True
             logger.info(
@@ -293,7 +297,7 @@ class YAMNetClassifier:
             logger.error("Failed to initialize YAMNet model", error=str(e))
             raise RuntimeError(f"YAMNet initialization failed: {e}")
     
-    def _load_model_with_retry(self):
+    def _load_model_with_retry(self) -> Any:
         """モデルを再試行機能付きで読み込み"""
         max_retries = 3
         for attempt in range(max_retries):
@@ -490,7 +494,7 @@ class YAMNetClassifier:
         self,
         class_names: List[str],
         scores: np.ndarray
-    ) -> List[Dict[str, float]]:
+    ) -> List[Dict[str, Any]]:
         """
         AudioSetクラスを日本語カテゴリに変換
         
@@ -576,7 +580,14 @@ class YAMNetClassifier:
         ]
         
         # 正規化後の合計を確認（デバッグ用）
-        normalized_total = sum(r["confidence"] for r in result)
+        confidence_values = []
+        for r in result:
+            conf = r["confidence"]
+            if isinstance(conf, (int, float)):
+                confidence_values.append(float(conf))
+            else:
+                confidence_values.append(0.0)
+        normalized_total = sum(confidence_values)
         
         logger.info(
             "Japanese classification results",
@@ -811,4 +822,4 @@ class YAMNetManager:
         if self.classifier:
             await self.classifier.cleanup()
         self._initialized = False
-        logger.info("YAMNetManager cleanup completed") 
+        logger.info("YAMNetManager cleanup completed")
