@@ -113,13 +113,22 @@ export function PinAudioPlayer({
             if (Number.isFinite(audioDuration) && audioDuration > 0) {
                setDuration(audioDuration)
                setAudioLoadingStatus("ready")
+               console.log("✅ PinAudioPlayer: 音声読み込み成功", {
+                  audioUrl,
+                  duration: audioDuration,
+                  readyState: audio.readyState,
+               })
             } else {
                // durationが無効な場合は、デフォルト値を設定
                setDuration(10) // 10秒のデフォルト値
                setAudioLoadingStatus("ready")
                console.warn(
-                  "音声のdurationが無効です。デフォルト値を使用します:",
-                  audioDuration,
+                  "⚠️ PinAudioPlayer: 音声のdurationが無効です。デフォルト値を使用します:",
+                  {
+                     audioUrl,
+                     audioDuration,
+                     defaultDuration: 10,
+                  },
                )
             }
          }
@@ -179,9 +188,15 @@ export function PinAudioPlayer({
 
          // 音声読み込みエラー時の処理
          audio.onerror = (error) => {
-            console.error("音声読み込みエラー:", error)
+            console.error("🚨 PinAudioPlayer: 音声読み込みエラー:", {
+               error,
+               audioUrl,
+               audioSrc: audio.src,
+               audioReadyState: audio.readyState,
+               audioNetworkState: audio.networkState,
+            })
             setAudioLoadingStatus("error")
-            setAudioLoadError("音声の読み込みに失敗しました")
+            setAudioLoadError(`音声の読み込みに失敗しました: ${audioUrl}`)
          }
 
          setAudioElement(audio)
@@ -267,21 +282,49 @@ export function PinAudioPlayer({
    // ピンが変更されたときに音声を読み込み
    useEffect(() => {
       if (pin?.audioData?.url) {
-         loadAudio(pin.audioData.url)
-      }
+         console.log("🎵 PinAudioPlayer: 音声読み込み開始", {
+            pinId: pin.id,
+            audioUrl: pin.audioData.url,
+            isPersisted: pin.isPersisted,
+            primaryLabel: pin.primaryLabel,
+            environment: pin.environment,
+            classificationResults: pin.classificationResults,
+         })
 
+         loadAudio(pin.audioData.url)
+      } else {
+         console.warn("⚠️ PinAudioPlayer: 音声URLが見つかりません", {
+            pin: pin
+               ? {
+                    id: pin.id,
+                    hasAudioData: !!pin.audioData,
+                    audioDataUrl: pin.audioData?.url,
+                    primaryLabel: pin.primaryLabel,
+                    environment: pin.environment,
+                 }
+               : null,
+         })
+      }
+   }, [pin?.audioData?.url, loadAudio])
+
+   // audioElementのクリーンアップ
+   useEffect(() => {
       return () => {
-         // クリーンアップ
          if (animationFrameRef.current) {
             cancelAnimationFrame(animationFrameRef.current)
             animationFrameRef.current = null
          }
          if (audioElement) {
+            // エラーハンドラーを削除してからクリーンアップ
+            audioElement.onerror = null
+            audioElement.onended = null
+            audioElement.onloadedmetadata = null
+            audioElement.ontimeupdate = null
             audioElement.pause()
             audioElement.src = ""
          }
       }
-   }, [pin, loadAudio])
+   }, [audioElement])
 
    // コンポーネントがアンマウントされるときのクリーンアップ
    useEffect(() => {
@@ -291,6 +334,11 @@ export function PinAudioPlayer({
             animationFrameRef.current = null
          }
          if (audioElement) {
+            // エラーハンドラーを削除してからクリーンアップ
+            audioElement.onerror = null
+            audioElement.onended = null
+            audioElement.onloadedmetadata = null
+            audioElement.ontimeupdate = null
             audioElement.pause()
             audioElement.src = ""
          }
@@ -368,7 +416,29 @@ export function PinAudioPlayer({
                      音声分類結果
                   </h3>
 
-                  {pin.classificationResults.length > 0 && (
+                  {/* デバッグ情報 */}
+                  {process.env.NODE_ENV === "development" && (
+                     <div className="mb-4 rounded-lg border border-purple-500/30 bg-purple-500/20 p-3 text-xs">
+                        <div className="mb-2 font-medium text-purple-300">
+                           デバッグ情報:
+                        </div>
+                        <div className="space-y-1 text-purple-200">
+                           <div>Pin ID: {pin.id}</div>
+                           <div>Primary Label: {pin.primaryLabel}</div>
+                           <div>Environment: {pin.environment}</div>
+                           <div>
+                              Classification Results:{" "}
+                              {JSON.stringify(
+                                 pin.classificationResults,
+                                 null,
+                                 2,
+                              )}
+                           </div>
+                        </div>
+                     </div>
+                  )}
+
+                  {pin.classificationResults.length > 0 ? (
                      <div className="mb-4 space-y-2">
                         {pin.classificationResults.map((result, index) => (
                            <motion.div
@@ -389,7 +459,9 @@ export function PinAudioPlayer({
                                        : "text-neutral-200"
                                  }`}
                               >
-                                 {result.label}
+                                 {result.label === "unknown"
+                                    ? "未分類"
+                                    : result.label}
                               </span>
                               <span
                                  className={`text-sm ${
@@ -402,6 +474,23 @@ export function PinAudioPlayer({
                               </span>
                            </motion.div>
                         ))}
+                     </div>
+                  ) : (
+                     <div className="mb-4">
+                        <motion.div
+                           initial={{ opacity: 0, x: -20 }}
+                           animate={{ opacity: 1, x: 0 }}
+                           className="flex items-center justify-between rounded-lg border border-yellow-500/30 bg-yellow-500/20 p-3 backdrop-blur-sm"
+                        >
+                           <span className="font-medium text-yellow-300">
+                              {pin.environment === "unknown"
+                                 ? "未分類"
+                                 : pin.environment}
+                           </span>
+                           <span className="text-sm text-yellow-400">
+                              {Math.round(pin.primaryConfidence * 100)}%
+                           </span>
+                        </motion.div>
                      </div>
                   )}
 
