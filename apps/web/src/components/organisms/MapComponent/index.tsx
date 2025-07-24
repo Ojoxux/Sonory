@@ -5,11 +5,11 @@ import "mapbox-gl/dist/mapbox-gl.css"
 import { DebugPanel } from "@/components/atoms/DebugPanel"
 import { SoundPinMarkers } from "@/components/molecules/SoundPinMarkers"
 import { UserMarker } from "@/components/molecules/UserMarker"
-import NotificationCenter from "@/components/organisms/NotificationCenter"
 import { PinAudioPlayer } from "@/components/organisms/PinAudioPlayer"
 import { useMapRealtime } from "@/hooks/useRealtime"
 import type { MapBounds, SoundPin } from "@/store/useSoundPinStore"
 import { useCallback, useEffect, useState } from "react"
+import NotificationCenter from "../NotificationCenter"
 import { useMapComponent } from "./hooks"
 import type { MapComponentProps } from "./type"
 
@@ -100,17 +100,20 @@ export function MapComponent({
    /**
     * ピン選択時の処理（音声再生対応）
     */
-   const handlePinSelect = (pinId: string | null): void => {
-      selectPin(pinId)
+   const handlePinSelect = useCallback(
+      (pinId: string | null): void => {
+         selectPin(pinId)
 
-      if (pinId) {
-         // 選択されたピンを見つけて音声再生用に設定
-         const selectedPin = pins.find((pin) => pin.id === pinId)
-         if (selectedPin?.isPersisted && selectedPin.audioData?.url) {
-            setPlayingPin(selectedPin)
+         if (pinId) {
+            // 選択されたピンを見つけて音声再生用に設定
+            const selectedPin = pins.find((pin) => pin.id === pinId)
+            if (selectedPin?.isPersisted && selectedPin.audioData?.url) {
+               setPlayingPin(selectedPin)
+            }
          }
-      }
-   }
+      },
+      [pins, selectPin],
+   )
 
    /**
     * 音声再生を閉じる
