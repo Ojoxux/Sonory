@@ -9,7 +9,6 @@ import { PinAudioPlayer } from "@/components/organisms/PinAudioPlayer"
 import { useMapRealtime } from "@/hooks/useRealtime"
 import type { MapBounds, SoundPin } from "@/store/useSoundPinStore"
 import { useCallback, useEffect, useState } from "react"
-import NotificationCenter from "../NotificationCenter"
 import { useMapComponent } from "./hooks"
 import type { MapComponentProps } from "./type"
 
@@ -123,27 +122,6 @@ export function MapComponent({
       selectPin(null)
    }
 
-   /**
-    * 通知からのピンクリック処理
-    */
-   const handleNotificationPinClick = useCallback(
-      (pinId: string): void => {
-         // ピンを選択
-         handlePinSelect(pinId)
-
-         // 該当ピンの位置に地図を移動
-         const targetPin = pins.find((pin) => pin.id === pinId)
-         if (targetPin && map) {
-            map.flyTo({
-               center: [targetPin.longitude, targetPin.latitude],
-               zoom: 16,
-               duration: 1000,
-            })
-         }
-      },
-      [pins, map],
-   )
-
    return (
       <>
          <div
@@ -163,13 +141,14 @@ export function MapComponent({
          {/* ユーザーマーカー */}
          <UserMarker map={map} position={position} />
 
-         {/* リアルタイム通知センター */}
+         {/* リアルタイム通知センター
          <NotificationCenter
             position="top"
             maxNotifications={3}
             autoHideDuration={5000}
             onPinClick={handleNotificationPinClick}
          />
+		 */}
 
          {/* デバッグ情報表示 */}
          {debugMode && (
