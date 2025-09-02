@@ -132,6 +132,8 @@ export function SoundPinMarkers({
                      variant={iconVariant}
                      onClick={handleClick}
                      animated={true}
+                     primaryLabel={pin.primaryLabel}
+                     primaryConfidence={pin.primaryConfidence}
                   />,
                )
             } else {
