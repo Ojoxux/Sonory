@@ -206,12 +206,7 @@ export function SoundPinIcon({
 
    const currentSize = sizeConfig[size as keyof typeof sizeConfig]
    const currentVariant = variantConfig[variant as keyof typeof variantConfig]
-
-   // 信頼度に応じた透明度を計算
-   const confidenceOpacity =
-      primaryConfidence !== undefined
-         ? Math.max(0.3, Math.min(1.0, primaryConfidence)) // 0.3-1.0の範囲
-         : 1.0
+   
 
    return (
       <div className="relative">
@@ -222,10 +217,7 @@ export function SoundPinIcon({
             className={`relative z-10 flex items-center justify-center ${currentSize.container}
                ${currentVariant.bg}
                ${currentVariant.shadow} ${currentVariant.border} cursor-pointer touch-manipulation rounded-full transition-all duration-300 hover:scale-110 active:scale-95 ${className}
-            `}
-            style={{
-               opacity: confidenceOpacity,
-            }}
+            `}            
             whileHover={animated ? { scale: 1.1 } : {}}
             whileTap={animated ? { scale: 0.95 } : {}}
             aria-label={`音声録音地点: ${primaryLabel || "未分類"}`}
