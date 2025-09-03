@@ -13,15 +13,15 @@ function getClassificationStyle(primaryLabel?: string) {
 
    // 車両・交通関連
    if (
-      label.includes("車") ||
+      label.includes("車の音") ||
       label.includes("car") ||
       label.includes("vehicle") ||
-      label.includes("バイク") ||
+      label.includes("バイクの音") ||
       label.includes("motorcycle") ||
       label.includes("bike") ||
-      label.includes("トラック") ||
+      label.includes("トラックの音") ||
       label.includes("truck") ||
-      label.includes("バス") ||
+      label.includes("バスの音") ||
       label.includes("bus")
    ) {
       return {
@@ -31,11 +31,11 @@ function getClassificationStyle(primaryLabel?: string) {
 
    // 鉄道関連
    if (
-      label.includes("電車") ||
+      label.includes("電車の音") ||
       label.includes("train") ||
-      label.includes("列車") ||
-      label.includes("鉄道") ||
-      label.includes("railway")
+      label.includes("Rail transport") ||
+      label.includes("Train horn") ||
+      label.includes("Railroad car, train wagon")
    ) {
       return {
          iconName: "MapPin_RailwayRelated",
@@ -72,16 +72,20 @@ function getClassificationStyle(primaryLabel?: string) {
 
    // 自然音
    if (
-      label.includes("鳥") ||
-      label.includes("bird") ||
-      label.includes("自然") ||
-      label.includes("nature") ||
-      label.includes("雨") ||
+      label.includes("鳥の鳴き声") ||
+      label.includes("bird") ||      
+      label.includes("Chirp, tweet") ||
+      label.includes("雨音") ||
       label.includes("rain") ||
-      label.includes("風") ||
+      label.includes("風の音") ||
       label.includes("wind") ||
-      label.includes("森") ||
-      label.includes("forest")
+      label.includes("Wind noise (microphone)") ||
+      label.includes("水の音") ||
+      label.includes("Water") ||
+      label.includes("Stream") ||
+      label.includes("雷の音") ||
+      label.includes("Thunder") ||
+      label.includes("Thunderstorm")
    ) {
       return {
          iconName: "MapPin_NatureSounds",
