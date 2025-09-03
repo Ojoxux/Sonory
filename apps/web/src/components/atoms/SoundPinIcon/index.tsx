@@ -73,7 +73,7 @@ function getClassificationStyle(primaryLabel?: string) {
    // 自然音
    if (
       label.includes("鳥の鳴き声") ||
-      label.includes("bird") ||      
+      label.includes("bird") ||
       label.includes("Chirp, tweet") ||
       label.includes("雨音") ||
       label.includes("rain") ||
