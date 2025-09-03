@@ -206,7 +206,6 @@ export function SoundPinIcon({
 
    const currentSize = sizeConfig[size as keyof typeof sizeConfig]
    const currentVariant = variantConfig[variant as keyof typeof variantConfig]
-   
 
    return (
       <div className="relative">
@@ -217,7 +216,7 @@ export function SoundPinIcon({
             className={`relative z-10 flex items-center justify-center ${currentSize.container}
                ${currentVariant.bg}
                ${currentVariant.shadow} ${currentVariant.border} cursor-pointer touch-manipulation rounded-full transition-all duration-300 hover:scale-110 active:scale-95 ${className}
-            `}            
+            `}
             whileHover={animated ? { scale: 1.1 } : {}}
             whileTap={animated ? { scale: 0.95 } : {}}
             aria-label={`音声録音地点: ${primaryLabel || "未分類"}`}
