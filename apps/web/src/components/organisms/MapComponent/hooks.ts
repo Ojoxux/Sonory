@@ -354,6 +354,7 @@ export function useMapComponent({
    const userInteractionRef = useRef<boolean>(false)
    const lastInteractionTimeRef = useRef<number>(0)
    const userInteractionHandlerRef = useRef<(() => void) | null>(null)
+   const handledCreatedPinIdRef = useRef<string | null>(null)
 
    // 状態管理
    const [map, setMap] = useState<mapboxgl.Map | null>(null)
@@ -1033,6 +1034,11 @@ export function useMapComponent({
    useEffect(() => {
       if (!lastCreatedPinId || !map || !mapStyleLoaded) return
 
+      // 同じピンIDに対する重複flyToを防止
+      if (handledCreatedPinIdRef.current === lastCreatedPinId) {
+         return
+      }
+
       console.log(
          "🔄 新しいピンが作成されました。楽観的更新を実行:",
          lastCreatedPinId,
@@ -1045,7 +1051,6 @@ export function useMapComponent({
             pinId: newPin.id,
             location: { lat: newPin.latitude, lng: newPin.longitude },
          })
-
          map.flyTo({
             center: [newPin.longitude, newPin.latitude],
             zoom: 18,
@@ -1054,6 +1059,9 @@ export function useMapComponent({
             essential: true,
             duration: 1000,
          })
+
+         // このIDは処理済みとして記録
+         handledCreatedPinIdRef.current = lastCreatedPinId
       }
 
       // TanStack Queryのキャッシュを即座に無効化（遅延なし）
