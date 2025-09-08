@@ -1,13 +1,28 @@
 import type { ReactElement } from "react"
+import type { SoundIconName } from "./types"
 
+/**
+ * SVGアイコンコンポーネントのプロパティ型定義
+ */
 interface SvgIconProps {
-   iconName: string
+   /** アイコン名 */
+   iconName: SoundIconName
+   /** 追加のCSSクラス */
    className?: string
+   /** アイコンのサイズ */
    size?: "small" | "medium" | "large"
 }
 
 /**
  * SVGアイコンを表示するコンポーネント
+ *
+ * @description
+ * 音声ピンに表示するSVGアイコンを管理します。
+ *
+ * @param iconName - 表示するアイコン名
+ * @param className - 追加のCSSクラス
+ * @param size - アイコンのサイズ
+ * @returns SVGアイコン要素
  */
 export function SvgIcon({
    iconName,
