@@ -2,8 +2,9 @@
 
 import { motion } from "framer-motion"
 import type { ReactElement } from "react"
-import { HiSpeakerWave } from "react-icons/hi2"
+import { SvgIcon } from "./SvgIcon"
 import type { SoundPinIconProps } from "./types"
+import { useSoundPinIcon } from "./useSoundPinIcon"
 
 /**
  * 音声ピン用のアイコンコンポーネント
@@ -11,18 +12,23 @@ import type { SoundPinIconProps } from "./types"
  * @description
  * 音声録音地点を表すマップピンアイコン。
  * 音波をモチーフにしたデザインで、美しいアニメーション効果を含みます。
+ * 音分類結果に応じてアイコンと色が変化します。
  *
  * @param size - アイコンのサイズ（'small' | 'medium' | 'large'）
  * @param variant - デザインバリエーション（'default' | 'active' | 'analyzing'）
  * @param className - 追加のCSSクラス
  * @param onClick - クリック時のコールバック関数
  * @param animated - アニメーション効果の有効/無効
+ * @param primaryLabel - 音分類の主要ラベル
+ * @param primaryConfidence - 音分類の信頼度
  *
  * @example
  * ```tsx
  * <SoundPinIcon
  *   size="medium"
  *   variant="default"
+ *   primaryLabel="車の音"
+ *   primaryConfidence={0.85}
  *   onClick={() => console.log('ピンがクリックされました')}
  *   animated={true}
  * />
@@ -34,48 +40,16 @@ export function SoundPinIcon({
    className = "",
    onClick,
    animated = true,
+   primaryLabel,
+   primaryConfidence,
 }: SoundPinIconProps): ReactElement {
-   const sizeConfig = {
-      small: {
-         container: "w-8 h-8",
-         icon: "w-3 h-3",
-         ripple: "w-12 h-12",
-      },
-      medium: {
-         container: "w-10 h-10",
-         icon: "w-4 h-4",
-         ripple: "w-16 h-16",
-      },
-      large: {
-         container: "w-12 h-12",
-         icon: "w-5 h-5",
-         ripple: "w-20 h-20",
-      },
-   } as const
+   // フックから設定と関数を取得
+   const { getClassificationStyle, getCurrentSize, getCurrentVariant } =
+      useSoundPinIcon()
+   const classificationStyle = getClassificationStyle(primaryLabel)
 
-   const variantConfig = {
-      default: {
-         bg: "bg-gradient-to-br from-blue-500 to-blue-600",
-         border: "border-blue-300",
-         shadow: "shadow-lg shadow-blue-500/25",
-         icon: "text-white",
-      },
-      active: {
-         bg: "bg-gradient-to-br from-green-500 to-green-600",
-         border: "border-green-300",
-         shadow: "shadow-lg shadow-green-500/25",
-         icon: "text-white",
-      },
-      analyzing: {
-         bg: "bg-gradient-to-br from-orange-500 to-orange-600",
-         border: "border-orange-300",
-         shadow: "shadow-lg shadow-orange-500/25",
-         icon: "text-white",
-      },
-   } as const
-
-   const currentSize = sizeConfig[size as keyof typeof sizeConfig]
-   const currentVariant = variantConfig[variant as keyof typeof variantConfig]
+   const currentSize = getCurrentSize(size)
+   const currentVariant = getCurrentVariant(variant)
 
    return (
       <div className="relative">
@@ -85,22 +59,23 @@ export function SoundPinIcon({
             onClick={onClick}
             className={`relative z-10 flex items-center justify-center ${currentSize.container}
                ${currentVariant.bg}
-               ${currentVariant.shadow} border-2 ${currentVariant.border} cursor-pointer touch-manipulation rounded-full transition-all duration-300 hover:scale-110 hover:shadow-xl active:scale-95 ${className}
+               ${currentVariant.shadow} ${currentVariant.border} cursor-pointer touch-manipulation rounded-full transition-all duration-300 hover:scale-110 active:scale-95 ${className}
             `}
             whileHover={animated ? { scale: 1.1 } : {}}
             whileTap={animated ? { scale: 0.95 } : {}}
-            aria-label="音声録音地点"
+            aria-label={`音声録音地点: ${primaryLabel || "未分類"}`}
          >
-            {/* 音波アイコン */}
-            <HiSpeakerWave
-               className={`${currentSize.icon} ${currentVariant.icon}`}
-               aria-hidden="true"
+            {/* SVGアイコンを表示 */}
+            <SvgIcon
+               iconName={classificationStyle.iconName}
+               size={size}
+               className={currentVariant.icon}
             />
 
             {/* 分析中のパルス効果 */}
             {variant === "analyzing" && animated && (
                <motion.div
-                  className="absolute inset-0 rounded-full bg-white/20"
+                  className="absolute inset-0 rounded-full bg-orange-200/30"
                   animate={{
                      scale: [1, 1.2, 1],
                      opacity: [0.5, 0, 0.5],
