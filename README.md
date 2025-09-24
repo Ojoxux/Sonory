@@ -123,7 +123,7 @@ sonory/                               # プロジェクトルート（モノレ�
 
 ## 💻 Technical Stack
 
-- **フレームワーク**: Next.js 15.3.2 (Turbopack使用)
+- **フレームワーク**: Next.js 15.5.4 (Turbopack使用)
 - **UI**: React 19 + Tailwind CSS v4
 - **PWA**: next-pwa（サービスワーカー、オフライン対応）
 - **音声処理**: MediaRecorder API + wavesurfer.js
