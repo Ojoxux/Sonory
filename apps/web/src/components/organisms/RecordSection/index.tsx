@@ -2,8 +2,10 @@
 
 import { FloatingIndicator } from "@/components/atoms/FloatingIndicator"
 import { RecordButton } from "@/components/molecules/RecordButton"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useMediaRecorder } from "./hooks/useMediaRecorder"
+import { useInferenceStore } from "@/store/useInferenceStore"
+import { useRecorderStore } from "@/store/useRecorderStore"
 import type { RecordSectionProps } from "./type"
 
 /**
@@ -92,6 +94,8 @@ export function useRecordSection() {
    >("idle")
    const [remainingTime, setRemainingTime] = useState(10)
    const { startRecording, stopRecording, isRecording } = useMediaRecorder()
+   const { startInference, isInferring } = useInferenceStore()
+   const { audioData } = useRecorderStore()
 
    const handleClick = async (): Promise<void> => {
       if (!isRecording) {
@@ -116,17 +120,32 @@ export function useRecordSection() {
             clearInterval(timer)
             setStatus("processing")
             await stopRecording()
-            setStatus("completed")
-            setTimeout(() => setStatus("idle"), 3000) // 完了表示後、アイドル状態に戻す
+            // 音分析が完了するまで待機
+            // stopRecording後にaudioDataが設定されるのを待つ
          }, 10000)
       } else {
          // 手動停止
          setStatus("processing")
          await stopRecording()
-         setStatus("completed")
-         setTimeout(() => setStatus("idle"), 3000)
+         // 音分析が完了するまで待機
+         // stopRecording後にaudioDataが設定されるのを待つ
       }
    }
+
+   // audioDataが設定されたら音分析を開始
+   useEffect(() => {
+      if (audioData && status === "processing") {
+         startInference(audioData)
+      }
+   }, [audioData, status, startInference])
+
+   // 音分析が完了したらcompletedにする
+   useEffect(() => {
+      if (status === "processing" && !isInferring && audioData) {
+         setStatus("completed")
+         setTimeout(() => setStatus("idle"), 3000) // 完了表示後、アイドル状態に戻す
+      }
+   }, [status, isInferring, audioData])
 
    return {
       status,
