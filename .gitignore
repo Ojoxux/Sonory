@@ -36,6 +36,7 @@ apps/*/*.tsbuildinfo
 .env.production
 .env.test
 .env.*.local
+.env.docker
 
 # パッケージ・アプリケーションレベルの環境ファイル
 packages/*/.env
@@ -191,3 +192,12 @@ Dockerfile.prod
 # =============================================================================
 
 .serena
+
+# =============================================================================
+# Docker Secrets
+# =============================================================================
+secrets/*.txt
+secrets/*.key
+secrets/*.pem
+!secrets/.gitkeep
+!secrets/README.md
