@@ -425,12 +425,7 @@ export class PinService extends BaseService {
          status: "active" as const,
 
          // AI分析フィールド（初期値はnull、後で更新）
-         ai_transcription: null,
-         ai_emotion: null,
-         ai_topic: null,
-         ai_language: null,
-         ai_confidence: null,
-         ai_summary: null,
+         ai_analysis_result: null,
 
          // 天気情報（任意）
          weather_temperature: request.weather?.temperature ?? null,
@@ -512,14 +507,17 @@ export class PinService extends BaseService {
          ...(request.status ? { status: request.status } : {}),
          ...(request.aiAnalysis
             ? {
-                 ai_transcription: request.aiAnalysis.transcription,
-                 ai_emotion: request.aiAnalysis.categories.emotion,
-                 ai_topic: request.aiAnalysis.categories.topic,
-                 ai_language: request.aiAnalysis.categories.language,
-                 ai_confidence: request.aiAnalysis.categories.confidence,
-                 ...(request.aiAnalysis.summary
-                    ? { ai_summary: request.aiAnalysis.summary }
-                    : {}),
+                 ai_analysis_result: {
+                    transcription: request.aiAnalysis.transcription,
+                    emotion: request.aiAnalysis.categories.emotion,
+                    topic: request.aiAnalysis.categories.topic,
+                    language: request.aiAnalysis.categories.language,
+                    confidence: request.aiAnalysis.categories.confidence,
+                    ...(request.aiAnalysis.summary
+                       ? { summary: request.aiAnalysis.summary }
+                       : {}),
+                    analyzed_at: new Date().toISOString(),
+                 },
               }
             : {}),
       }
