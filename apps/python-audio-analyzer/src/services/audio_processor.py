@@ -376,7 +376,7 @@ class AudioProcessor:
             logger.warning(
                 "Audio detected as silence",
                 max_amplitude=float(np.max(np.abs(waveform))),
-                duration=float(len(waveform) / sample_rate)
+                duration=float(len(waveform) / metadata.sample_rate)
             )
             # 無音として特別な処理を行うが、エラーにはしない
             # 後続の処理で無音用の分類結果を返す
