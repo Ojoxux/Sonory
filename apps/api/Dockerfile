@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # Hono API Dockerfile (Node.js Runtime)
 # Use specific version for security
-FROM node:20.18-alpine3.20 AS base
+FROM node:22-alpine3.21 AS base
 
 # Install dependencies only when needed
 FROM base AS deps
