@@ -347,6 +347,15 @@ export class AudioService extends BaseService {
       const timeout =
          Number.parseInt(this.env.PYTHON_AUDIO_ANALYZER_TIMEOUT, 10) || 30000
 
+      // 環境変数チェック
+      if (!pythonServiceUrl) {
+         throw new APIException(
+            ERROR_CODES.AI_SERVICE_UNAVAILABLE,
+            "Python Audio Analyzer service URL not configured",
+            503,
+         )
+      }
+
       try {
          this.log("info", "Starting Python YAMNet analysis", {
             audioUrl,

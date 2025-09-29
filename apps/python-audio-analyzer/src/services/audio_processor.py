@@ -68,7 +68,6 @@ class AudioProcessor:
     def __init__(self, timeout: float = 30.0):
         """
         AudioProcessorを初期化
-
         Args:
             timeout: HTTP音声取得のタイムアウト（秒）
         """
@@ -373,8 +372,14 @@ class AudioProcessor:
                 max_duration=self.MAX_DURATION,
             )
 
-        if np.all(waveform == 0):
-            raise ValueError("Audio waveform contains only silence")
+        if np.all(waveform == 0) or np.max(np.abs(waveform)) < 0.001:
+            logger.warning(
+                "Audio detected as silence",
+                max_amplitude=float(np.max(np.abs(waveform))),
+                duration=float(len(waveform) / metadata.sample_rate),
+            )
+            # 無音として特別な処理を行うが、エラーにはしない
+            # 後続の処理で無音用の分類結果を返す
 
         if np.any(np.isnan(waveform)) or np.any(np.isinf(waveform)):
             raise ValueError("Audio waveform contains invalid values (NaN or Inf)")

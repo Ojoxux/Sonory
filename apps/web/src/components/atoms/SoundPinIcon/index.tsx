@@ -63,7 +63,11 @@ export function SoundPinIcon({
             `}
             whileHover={animated ? { scale: 1.1 } : {}}
             whileTap={animated ? { scale: 0.95 } : {}}
-            aria-label={`音声録音地点: ${primaryLabel || "未分類"}`}
+            aria-label={`音声録音地点: ${primaryLabel || "未分類"}${
+               primaryConfidence != null
+                  ? ` (信頼度: ${(primaryConfidence * 100).toFixed(0)}%)`
+                  : ""
+            }`}
          >
             {/* SVGアイコンを表示 */}
             <SvgIcon

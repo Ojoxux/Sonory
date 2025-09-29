@@ -40,57 +40,93 @@
 
 ## 🚀 Getting Started
 
-詳しいセットアップ手順は[SETUP.md](./SETUP.md)をご覧ください。
-
 ### 必要条件
 
-- Node.js 20.0.0以上
-- npm 10.0.0以上
+- Docker 20.0.0以上
+- Docker Compose v2以上
+- [Task](https://taskfile.dev/) (推奨)
 - Git
 
 ### 環境構築
 
-1. リポジトリのクローン
+1. **リポジトリのクローン**
 
 ```bash
 git clone https://github.com/Ojoxux/Sonory.git
 cd Sonory
 ```
 
-2. 依存パッケージのインストール
+2. **Docker環境のセットアップ**
 
 ```bash
-npm install
+# BuildKitを有効化（セキュアビルドのため）
+export DOCKER_BUILDKIT=1
+export COMPOSE_DOCKER_CLI_BUILD=1
+
+# シークレットファイルの設定
+./setup-secrets.sh
+
+# Docker用環境変数ファイルの作成
+cp .env.example .env
+# 必要な環境変数を設定してください
 ```
 
-3. 共有パッケージのビルド
+3. **開発環境の起動**
 
 ```bash
-# Turborepoで全パッケージをビルド（推奨）
-npm run build
+# 全サービス起動
+task sonory:up
+
+# 起動確認
+task sonory:status
 ```
 
-> **重要**: このプロジェクトはモノレポ構成のため、初回セットアップ時は必ずビルドを実行してください。これにより`@sonory/shared-types`などの内部パッケージが正しく解決されます。
+開発環境が起動したら、[http://localhost:3000](http://localhost:3000) でアクセスできます。
 
-4. 環境変数の設定
+## 🛠 Development Tools
 
-各アプリケーションごとに環境変数の設定が必要です。詳細は[SETUP.md](./SETUP.md)をご確認ください。
-
-**最低限必要な環境変数：**
-- **apps/web**: `NEXT_PUBLIC_MAPBOX_TOKEN`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- **apps/api**: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_KEY`
-- **apps/python-audio-analyzer**: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`
-
-5. 開発サーバーの起動
+### よく使うコマンド
 
 ```bash
-# 全サービス同時起動（推奨）
-npm run start:all
+# サービス管理
+task sonory:up           # 全サービス起動
+task sonory:down         # 停止
+task sonory:rebuild      # 再ビルド
+task sonory:status       # ステータス確認
+task sonory:logs         # ログ確認
+
+# 開発ツール
+task sonory:test         # 全サービステスト実行
+
+# メンテナンス
+task sonory:clean        # クリーンアップ
+task sonory:install      # 依存関係インストール
 ```
 
-開発サーバーが起動したら、[http://localhost:3000](http://localhost:3000) でアクセスできます。
+### Docker設定ファイル
 
-> **詳細な開発用スクリプト**: [NPM_SCRIPTS_GUIDE.md](./NPM_SCRIPTS_GUIDE.md)をご覧ください
+- `docker-compose.yml` - メイン設定
+- `docker-compose.dev.yml` - 開発環境用オーバーライド
+- `docker-compose.secrets.yml` - シークレット管理
+- `docker-compose.prod.yml` - 本番環境用設定
+
+#### よくある問題
+
+**BuildKitエラーが発生する場合:**
+```bash
+# BuildKitが無効になっている可能性
+export DOCKER_BUILDKIT=1
+export COMPOSE_DOCKER_CLI_BUILD=1
+```
+
+**ビルドキャッシュをクリアしたい場合:**
+```bash
+# 全体的なクリーンアップ
+task sonory:clean
+
+# Docker システム全体のクリーンアップ
+docker system prune -a
+```
 
 ## 🗂 Project Structure
 
@@ -105,19 +141,27 @@ sonory/                               # プロジェクトルート（モノレ�
 │   │   │   │   ├── molecules/       # atomsの組み合わせ
 │   │   │   │   └── organisms/       # 複雑な機能を持つコンポーネント
 │   │   │   └── store/               # 状態管理（Zustand）
-│   │   └── public/                  # 静的ファイル（PWA用アイコンなど）
-│   ├── api/                         # Cloudflare Workers API
+│   │   ├── public/                  # 静的ファイル（PWA用アイコンなど）
+│   │   └── Dockerfile               # Next.js用Docker設定
+│   ├── api/                         # Hono API (Node.js Runtime)
 │   │   ├── src/
+│   │   │   ├── config/              # 設定ファイル（シークレット管理）
 │   │   │   ├── routes/              # APIルート
 │   │   │   ├── services/            # ビジネスロジック
 │   │   │   └── middleware/          # ミドルウェア
-│   │   └── sql/                     # データベーススキーマ
+│   │   ├── Dockerfile               # API用Docker設定
+│   │   └── tsconfig-paths.json      # TSパスエイリアス設定
 │   └── python-audio-analyzer/       # Python音声分析サービス
-│       └── src/                     # FastAPI + YAMNet
+│       ├── src/                     # FastAPI + YAMNet
+│       └── Dockerfile               # Python用Docker設定
 ├── packages/                        # 共有パッケージ
 │   ├── shared-types/                # 共有型定義
 │   ├── utils/                       # 共有ユーティリティ
 │   └── config/                      # 共有設定
+├── secrets/                         # Docker Secrets（gitignore済み）
+├── docker-compose.yml               # メインDocker Compose設定
+├── docker-compose.*.yml             # 環境別設定ファイル
+├── Taskfile.yml                     # Task自動化設定
 └── turbo.json                       # Turborepo設定
 ```
 
@@ -133,34 +177,41 @@ sonory/                               # プロジェクトルート（モノレ�
 - **状態管理**: Zustand 5.0.5
 - **リンター/フォーマッター**: Biome 1.9.4
 - **型システム**: TypeScript 5
+- **コンテナ化**: Docker + Docker Compose
+- **APIランタイム**: Hono (Node.js) + FastAPI (Python)
+- **自動化**: Task (Taskfile) + Turborepo
 
-## 🛠 Development Tools
+### 個別サービス管理
 
-### 全体管理
 ```bash
-npm run start:all        # 全サービス起動（Python + API + Web）
-npm run start:backend    # バックエンドのみ（Python + API）
-npm run stop:all         # 全サービス停止
-npm run build            # 全パッケージビルド
-npm run lint             # 全プロジェクトリント
-npm run type-check       # 全プロジェクト型チェック
+# 個別サービス起動
+task sonory:web:up       # Webサービスのみ
+task sonory:api:up       # APIサービスのみ  
+task sonory:python:up    # Python APIサービスのみ
+
+# 個別ログ確認
+task sonory:logs:web     # Webログ
+task sonory:logs:api     # APIログ
+task sonory:logs:python  # Python APIログ
+
 ```
 
-### 個別アプリケーション
+### 個別アプリケーション詳細
 - **フロントエンド**: [apps/web/README.md](apps/web/README.md)
 - **API**: [apps/api/README.md](apps/api/README.md)  
 - **Python音声分析**: [apps/python-audio-analyzer/README.md](apps/python-audio-analyzer/README.md)
 
-Huskyとlint-stagedを使用して、コミット前に自動的にリントとフォーマットが実行されます。
-
 ## 🏗 Build and Deploy
 
 ```bash
-# 本番用ビルド
-npm run build
+# 本番環境起動
+task sonory:prod
 
-# ビルド結果の確認
-cd apps/web && npm run start  # 本番環境起動
+# テスト環境起動（軽量版）
+task sonory:test
+
+# 全体クリーンアップ
+task sonory:clean
 ```
 
 ## 📝 Development Guidelines

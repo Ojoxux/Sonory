@@ -1,16 +1,22 @@
+# syntax=docker/dockerfile:1
 # Multi-stage build for Python audio analyzer
-FROM python:3.11-slim as base
+# Use specific version for security
+FROM python:3.12-slim AS base
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    NUMBA_CACHE_DIR=/tmp/numba_cache \
+    LIBROSA_CACHE_DIR=/tmp/librosa_cache \
+    TFHUB_CACHE_DIR=/app/tf_hub_cache
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     libsndfile1 \
     ffmpeg \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Create app user
@@ -19,8 +25,13 @@ RUN groupadd -r app && useradd -r -g app app
 # Set work directory
 WORKDIR /app
 
+# Create cache directories with proper permissions
+RUN mkdir -p /tmp/numba_cache /tmp/librosa_cache /app/tf_hub_cache && \
+    chmod 777 /tmp/numba_cache /tmp/librosa_cache && \
+    chmod 755 /app/tf_hub_cache
+
 # Development stage
-FROM base as development
+FROM base AS development
 
 # Install development dependencies
 RUN apt-get update && apt-get install -y \
@@ -36,7 +47,7 @@ RUN pip install -e .[dev]
 COPY . .
 
 # Change ownership to app user
-RUN chown -R app:app /app
+RUN chown -R app:app /app /tmp/numba_cache /tmp/librosa_cache
 USER app
 
 # Expose port
@@ -46,7 +57,7 @@ EXPOSE 8000
 CMD ["uvicorn", "src.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
 
 # Production stage
-FROM base as production
+FROM base AS production
 
 # Copy requirements and install dependencies (production only)
 COPY pyproject.toml ./
@@ -56,7 +67,7 @@ RUN pip install .
 COPY src/ ./src/
 
 # Create non-root user and change ownership
-RUN chown -R app:app /app
+RUN chown -R app:app /app /tmp/numba_cache /tmp/librosa_cache
 USER app
 
 # Expose port

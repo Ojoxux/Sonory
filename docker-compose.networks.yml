@@ -1,0 +1,55 @@
+version: '3.8'
+
+# Network isolation configuration
+# This separates services into different network segments for security
+
+networks:
+  # Frontend network - for web-facing services
+  frontend:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+  
+  # Backend network - for internal API communication
+  backend:
+    driver: bridge
+    internal: true  # No external access
+    ipam:
+      config:
+        - subnet: 172.21.0.0/24
+  
+  # Cache network - for Redis isolation
+  cache:
+    driver: bridge
+    internal: true  # No external access
+    ipam:
+      config:
+        - subnet: 172.22.0.0/24
+
+services:
+  # Next.js Web Application
+  web:
+    networks:
+      - frontend
+      - backend
+
+  # Hono API (Node.js Runtime)
+  api:
+    networks:
+      - frontend
+      - backend
+      - cache
+
+  # Python Audio Analyzer
+  python-api:
+    networks:
+      - backend
+      - cache
+
+  # Redis - isolated in cache network only
+  redis:
+    networks:
+      - cache
+    # Remove external port exposure in production
+    ports: []

@@ -1,5 +1,5 @@
-import { APIException, ERROR_CODES } from "@/middleware/error"
-import type { AppContext, AppMiddleware } from "@/types/api"
+import type { AppContext, AppMiddleware } from "../types/api"
+import { APIException, ERROR_CODES } from "./error"
 
 /**
  * レート制限設定

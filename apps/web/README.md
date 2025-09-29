@@ -1,39 +1,40 @@
 # Sonory Web App
 
-Next.js + Chakra UIで構築されたSonoryのフロントエンドアプリケーションです。
-
 ## 🚀 セットアップ
 
 ### 1. 依存関係のインストール
 
 ```bash
-npm install
+cd apps/web && npm install
 ```
 
 ### 2. 環境変数の設定
 
-`.env.local`ファイルを作成して必要な環境変数を設定してください。
+`.env`ファイルを作成して必要な環境変数を設定してください。
 
 ```bash
-cp .env.example .env.local
+cp .env.example .env
 ```
 
-### 3. 開発サーバーの起動
+### 3. 開発環境の起動
 
 ```bash
-npm run dev
+
+# webサービス単体起動
+task sonory:web:up
+
+# プロジェクトルートから
+task sonory:up         # 全サービス起動
+task sonory:logs:web   # Webアプリログ確認
+task sonory:down       # 停止
 ```
 
 ## 🔧 利用可能なコマンド
 
-基本的な開発コマンド：
+Docker環境での開発コマンドは以下のコマンドで確認できます。
 ```bash
-npm run dev              # 開発サーバー起動
-npm run build            # 本番ビルド
-npm run start            # 本番サーバー起動
+task --list
 ```
-
-詳細なコマンドについては [NPM_SCRIPT_GUIDE.md](./NPM_SCRIPT_GUIDE.md) を参照してください。
 
 ## 📱 PWA機能
 
@@ -44,12 +45,13 @@ npm run start            # 本番サーバー起動
 
 ## 🏗️ 技術スタック
 
-- **Next.js 14** - App Router + TypeScript
-- **Chakra UI** - アクセシブルなUIコンポーネント
+- **Next.js 15** - App Router + TypeScript（Docker環境対応）
+- **Tailwind CSS v4** - ユーティリティファーストCSS
 - **PWA** - next-pwa によるサービスワーカー
 - **Map** - Mapbox GL JS による地図表示
 - **Audio** - Web Audio API による音声録音・再生
 - **Realtime** - Supabase Realtime による同期
+- **Docker** - コンテナ化開発環境
 
 ## 📁 ディレクトリ構造
 
@@ -66,6 +68,8 @@ src/
 ├── store/              # Zustand状態管理
 ├── types/              # TypeScript型定義
 └── utils/              # ユーティリティ関数
+Dockerfile                # Docker設定
+docker-entrypoint-dev.sh  # Docker開発環境用エントリーポイント
 ```
 
 ## 🎯 主要機能

@@ -29,10 +29,13 @@ const nextConfig: NextConfig = {
    },
    // 👇 開発環境でのAPI プロキシ設定
    async rewrites() {
+      const apiBaseUrl = (
+         process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8787"
+      ).replace(/\/$/, "")
       return [
          {
             source: "/api/:path*",
-            destination: "http://localhost:8787/api/:path*",
+            destination: `${apiBaseUrl}/api/:path*`,
          },
       ]
    },
