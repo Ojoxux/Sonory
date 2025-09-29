@@ -5,18 +5,23 @@
    "type": "module",
    "scripts": {
       "dev": "wrangler dev",
-      "build": "tsc",
+      "dev:node": "node --watch dist/index.js",
+      "build": "tsc && tsc-alias -p tsconfig-paths.json --resolve-full-paths",
       "deploy": "wrangler deploy",
       "lint": "biome check .",
-      "lint:check": "biome check .",
-      "format": "biome format . --write",
+      "lint:fix": "biome check --fix --unsafe .",
+      "format": "biome format .",
+      "format:fix": "biome format . --write",
       "type-check": "tsc --noEmit",
+      "validate": "npm run lint && npm run type-check",
       "test": "vitest",
       "test:watch": "vitest --watch",
+      "precommit": "npm run lint:fix && npm run format:fix",
       "clean": "rm -rf dist .wrangler"
    },
    "dependencies": {
       "@cloudflare/workers-types": "^4.20241218.0",
+      "@hono/node-server": "^1.19.4",
       "@hono/zod-validator": "^0.5.0",
       "@sonory/shared-types": "file:../../packages/shared-types",
       "@sonory/utils": "file:../../packages/utils",
@@ -27,6 +32,7 @@
    "devDependencies": {
       "@biomejs/biome": "1.9.4",
       "@types/node": "^20",
+      "tsc-alias": "^1.8.16",
       "typescript": "^5",
       "vitest": "^3.2.4",
       "wrangler": "^4.40.0"

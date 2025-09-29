@@ -178,60 +178,58 @@ app.post("/upload", async (c) => {
 
       const pin = await service.createPin(pinData)
 
-      // 非同期でAI分析を実行
+      // 非同期でAI分析を実行（Node.js環境）
       console.log("🤖 AI分析を非同期で開始:", pin.id)
-      c.executionCtx.waitUntil(
-         (async (): Promise<void> => {
-            try {
-               // 少し待機してからAI分析を実行
-               await new Promise((resolve) => setTimeout(resolve, 1000))
+      ;(async (): Promise<void> => {
+         try {
+            // 少し待機してからAI分析を実行
+            await new Promise((resolve) => setTimeout(resolve, 1000))
 
-               const analysisResponse = await fetch(
-                  `http://localhost:8787/api/audio/${uploadResult.audioId}/analyze`,
-                  {
-                     method: "POST",
-                     headers: {
-                        "Content-Type": "application/json",
-                     },
-                     body: JSON.stringify({
-                        audioUrl: uploadResult.audioUrl,
-                        topK: 5,
-                     }),
+            const analysisResponse = await fetch(
+               `http://localhost:8787/api/audio/${uploadResult.audioId}/analyze`,
+               {
+                  method: "POST",
+                  headers: {
+                     "Content-Type": "application/json",
                   },
-               )
+                  body: JSON.stringify({
+                     audioUrl: uploadResult.audioUrl,
+                     topK: 5,
+                  }),
+               },
+            )
 
-               if (analysisResponse.ok) {
-                  const analysisResult = (await analysisResponse.json()) as {
-                     success: boolean
-                     data?: {
-                        transcription: string
-                        categories: {
-                           emotion: string
-                           topic: string
-                           language: string
-                           confidence: number
-                        }
-                        summary?: string
+            if (analysisResponse.ok) {
+               const analysisResult = (await analysisResponse.json()) as {
+                  success: boolean
+                  data?: {
+                     transcription: string
+                     categories: {
+                        emotion: string
+                        topic: string
+                        language: string
+                        confidence: number
                      }
-                  }
-
-                  if (analysisResult.success && analysisResult.data) {
-                     // 分析結果でピンを更新
-                     await service.updatePin(pin.id, {
-                        aiAnalysis: analysisResult.data,
-                     })
-
-                     console.log("✅ AI分析完了・ピン更新:", {
-                        pinId: pin.id,
-                        analysis: analysisResult.data,
-                     })
+                     summary?: string
                   }
                }
-            } catch (error) {
-               console.error("❌ AI分析エラー:", error)
+
+               if (analysisResult.success && analysisResult.data) {
+                  // 分析結果でピンを更新
+                  await service.updatePin(pin.id, {
+                     aiAnalysis: analysisResult.data,
+                  })
+
+                  console.log("✅ AI分析完了・ピン更新:", {
+                     pinId: pin.id,
+                     analysis: analysisResult.data,
+                  })
+               }
             }
-         })(),
-      )
+         } catch (error) {
+            console.error("❌ AI分析エラー:", error)
+         }
+      })()
 
       return c.json({
          success: true,
