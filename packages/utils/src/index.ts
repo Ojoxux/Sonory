@@ -1,11 +1,11 @@
 // バリデーション関連
-export * from "./validation"
+export * from "./validation.js"
 
 // 地理空間関連
-export * from "./geo"
+export * from "./geo.js"
 
 // 音声処理関連
-export * from "./audio"
+export * from "./audio.js"
 
 // URL関連
-export * from "./url"
+export * from "./url.js"

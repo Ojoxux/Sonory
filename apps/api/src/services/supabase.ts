@@ -1,6 +1,7 @@
 import { ERROR_CODES } from "@sonory/shared-types"
 import { createClient } from "@supabase/supabase-js"
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { getSecureSupabaseConfig } from "../config/secrets"
 import type { Env } from "../index"
 import { APIException } from "../middleware/error"
 
@@ -30,25 +31,42 @@ let supabaseClient: SupabaseClient | null = null
 let _adminClient: SupabaseClient | null = null
 
 /**
- * 環境変数からSupabase設定を取得
+ * セキュアなSupabase設定を取得
  *
- * @param env - Cloudflare Workers環境変数
+ * @param env - Cloudflare Workers環境変数（フォールバック用）
  * @returns Supabase設定オブジェクト
- * @throws APIException 必須の環境変数が未設定の場合
+ * @throws APIException 必須の設定が未設定の場合
  */
-export function getSupabaseConfig(env: Env): SupabaseConfig {
-   const url = env.SUPABASE_URL
-   const anonKey = env.SUPABASE_ANON_KEY
-   const serviceKey = env.SUPABASE_SERVICE_KEY
+export function getSupabaseConfig(env?: Env): SupabaseConfig {
+   // Node.js環境ではDocker Secretsを優先使用
+   if (typeof process !== "undefined" && process.env) {
+      try {
+         const secureConfig = getSecureSupabaseConfig()
+         console.log("✅ Supabase設定をDocker Secretsから取得しました")
+         return secureConfig
+      } catch (error) {
+         console.warn(
+            "⚠️ Docker Secretsからの読み取りに失敗、フォールバックを使用:",
+            error,
+         )
+      }
+   }
+
+   // フォールバック: Cloudflare Workers環境変数または環境変数
+   const url = env?.SUPABASE_URL ?? process.env.SUPABASE_URL
+   const anonKey = env?.SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY
+   const serviceKey =
+      env?.SUPABASE_SERVICE_KEY ?? process.env.SUPABASE_SERVICE_KEY
 
    if (!url || !anonKey) {
       throw new APIException(
          ERROR_CODES.INTERNAL_SERVER_ERROR,
-         "Supabase configuration missing",
+         "Supabase configuration missing: SUPABASE_URL and SUPABASE_ANON_KEY are required",
          500,
       )
    }
 
+   console.log("⚠️ Supabase設定を環境変数から取得しました（本番環境では非推奨）")
    return { url, anonKey, serviceKey } as const
 }
 
@@ -58,10 +76,12 @@ export function getSupabaseConfig(env: Env): SupabaseConfig {
  * @param env - Cloudflare Workers環境変数
  * @returns Supabaseクライアントインスタンス
  */
-export function getSupabaseClient(env: Env): SupabaseClient {
+export function getSupabaseClient(env?: Env): SupabaseClient {
    if (!supabaseClient) {
       const config = getSupabaseConfig(env)
-      supabaseClient = createClient(config.url, config.anonKey, {
+      // サーバーサイドではservice_roleキーを使用してRPC関数にアクセス
+      const key = config.serviceKey || config.anonKey
+      supabaseClient = createClient(config.url, key, {
          auth: {
             persistSession: false, // Workers環境ではセッション永続化不可
             autoRefreshToken: false,
@@ -78,27 +98,37 @@ export function getSupabaseClient(env: Env): SupabaseClient {
 /**
  * Supabase管理クライアントを取得
  *
- * @param env - Cloudflare Workers環境変数
+ * @param env - Cloudflare Workers環境変数（フォールバック用）
  * @returns Supabase管理クライアント
  */
-export function getSupabaseAdmin(env: Env): SupabaseClient {
-   if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_KEY) {
-      console.error("❌ Supabase環境変数が設定されていません:", {
-         hasUrl: !!env.SUPABASE_URL,
-         hasKey: !!env.SUPABASE_SERVICE_KEY,
-      })
-      throw new Error("Supabase configuration is missing")
+export function getSupabaseAdmin(env?: Env): SupabaseClient {
+   // まずセキュアな設定取得を試行
+   const config = getSupabaseConfig(env)
+
+   if (!config.serviceKey) {
+      throw new APIException(
+         ERROR_CODES.INTERNAL_SERVER_ERROR,
+         "Service key is required for admin client but not available",
+         500,
+      )
    }
 
    console.log("🔄 Supabase管理クライアントを初期化:", {
-      url: env.SUPABASE_URL,
-      keyLength: env.SUPABASE_SERVICE_KEY.length,
+      url: config.url,
+      keyLength: config.serviceKey.length,
+      source:
+         typeof process !== "undefined"
+            ? "Docker Secrets/Environment"
+            : "Cloudflare Workers",
    })
 
-   return createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, {
+   return createClient(config.url, config.serviceKey, {
       auth: {
          autoRefreshToken: false,
          persistSession: false,
+      },
+      global: {
+         fetch: fetch.bind(globalThis),
       },
    })
 }

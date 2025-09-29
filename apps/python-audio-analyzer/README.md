@@ -1,44 +1,25 @@
-# Python Audio Analyzer
-
-YAMNet（TensorFlow Hub）を使用したSonoryの音声分析APIです。
+# Sonory AI Audio Analyzer(YAMNet, TensorFlow Hub)
 
 ## 🚀 セットアップ
 
-### 1. 依存関係のインストール
+### 1. 開発環境の起動
 
 ```bash
-npm install
-```
+# AI音分類サービス単体起動
+task sonory:python:up
 
-### 2. Python環境のセットアップ
-
-```bash
-# Python仮想環境作成・有効化
-python -m venv .venv
-source .venv/bin/activate  # Linux/Mac
-# または
-.venv\Scripts\activate     # Windows
-
-# Python依存関係インストール
-pip install -e .[dev]
-```
-
-### 3. 開発サーバーの起動
-
-```bash
-npm run python:dev
+# プロジェクトルートから
+task sonory:up           # 全サービス起動
+task sonory:logs:python  # Python APIログ確認
+task sonory:down         # 停止
 ```
 
 ## 🔧 利用可能なコマンド
 
-基本的な開発コマンド：
+Docker環境での開発コマンドは以下のコマンドで確認できます。
 ```bash
-npm run python:dev       # 開発サーバー起動
-npm run python:install   # Python依存関係インストール
-npm run python:test      # テスト実行
+task --list
 ```
-
-詳細なコマンドについては [NPM_SCRIPT_GUIDE.md](./NPM_SCRIPT_GUIDE.md) を参照してください。
 
 ## 🤖 AI分析機能
 
@@ -77,8 +58,8 @@ npm run python:test      # テスト実行
 
 - **FastAPI** - 高性能なPython WebAPI
 - **TensorFlow Hub** - YAMNetモデル
-- **Uvicorn** - ASGIサーバー
-- **Docker** - コンテナ化
+- **Uvicorn** - ASGIサーバー（Docker環境）
+- **Docker** - コンテナ化環境
 - **Pytest** - テストフレームワーク
 - **Ruff** - 高速リンター・フォーマッター
 
@@ -94,6 +75,7 @@ src/
 └── services/
     ├── analyzer.py      # 音声分析サービス
     └── audio_processor.py # 音声処理
+Dockerfile               # Docker設定
 ```
 
 ## 🌐 APIエンドポイント
@@ -101,19 +83,6 @@ src/
 - `POST /analyze` - 音声ファイル分析
 - `GET /health` - ヘルスチェック
 - `GET /models/info` - モデル情報取得
-
-## 🐳 Docker利用
-
-```bash
-# 開発環境
-docker-compose -f docker-compose.dev.yml up
-
-# 本番環境
-docker-compose up
-
-# イメージ再ビルド
-docker-compose build --no-cache
-```
 
 ## 🧪 テスト
 
@@ -154,7 +123,3 @@ pip install -e .[dev]
 - [YAMNet ドキュメント](https://tfhub.dev/google/yamnet/1)
 - [FastAPI ドキュメント](https://fastapi.tiangolo.com/)
 - [TensorFlow Hub](https://tfhub.dev/)
-
-## 🤝 コントリビューション
-
-このサービスはSonoryモノレポの一部です。確立された開発ワークフローとコーディング標準に従ってください。

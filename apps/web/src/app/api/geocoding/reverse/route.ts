@@ -5,6 +5,9 @@ import type {
 import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
 
+// Node.js Runtimeを使用（外部API接続のため）
+export const runtime = "nodejs"
+
 /**
  * 逆ジオコーディングAPI Route
  *
@@ -105,6 +108,8 @@ async function fetchLocationData(
       nominatimUrl.searchParams.set("extratags", "0")
       nominatimUrl.searchParams.set("namedetails", "0")
 
+      console.log("🌍 Trying Nominatim API:", nominatimUrl.toString())
+
       const response = await fetchWithTimeout(
          nominatimUrl.toString(),
          {
@@ -118,10 +123,20 @@ async function fetchLocationData(
       )
 
       if (response.ok) {
-         return await response.json()
+         const data = await response.json()
+         console.log("✅ Nominatim API success:", data.display_name)
+         return data
       }
+      console.warn(
+         "❌ Nominatim API HTTP error:",
+         response.status,
+         response.statusText,
+      )
    } catch (error) {
-      console.warn("Nominatim API failed, trying fallback:", error)
+      console.warn(
+         "❌ Nominatim API failed, trying fallback:",
+         error instanceof Error ? error.message : error,
+      )
    }
 
    // 2. フォールバック: BigDataCloud
@@ -132,6 +147,8 @@ async function fetchLocationData(
       bigDataCloudUrl.searchParams.set("latitude", latitude.toString())
       bigDataCloudUrl.searchParams.set("longitude", longitude.toString())
       bigDataCloudUrl.searchParams.set("localityLanguage", lang)
+
+      console.log("🌍 Trying BigDataCloud API:", bigDataCloudUrl.toString())
 
       const response = await fetchWithTimeout(
          bigDataCloudUrl.toString(),
@@ -146,6 +163,10 @@ async function fetchLocationData(
 
       if (response.ok) {
          const data = await response.json()
+         console.log(
+            "✅ BigDataCloud API success:",
+            data.locality || data.countryName,
+         )
          // Nominatim形式に変換
          return {
             address: {
@@ -161,11 +182,20 @@ async function fetchLocationData(
                : data.countryName,
          }
       }
+      console.warn(
+         "❌ BigDataCloud API HTTP error:",
+         response.status,
+         response.statusText,
+      )
    } catch (error) {
-      console.warn("BigDataCloud API failed:", error)
+      console.warn(
+         "❌ BigDataCloud API failed:",
+         error instanceof Error ? error.message : error,
+      )
    }
 
    // 3. フォールバック: 軽量な地域推定
+   console.warn("⚠️ All geocoding APIs failed, using fallback")
    return {
       address: {
          country: "Unknown",
@@ -308,6 +338,4 @@ export async function GET(
    }
 }
 
-// Edge Runtimeで高速化
-export const runtime = "edge"
 export const dynamic = "force-dynamic"

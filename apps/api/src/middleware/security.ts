@@ -1,4 +1,4 @@
-import type { AppMiddleware } from "@/types/api"
+import type { AppMiddleware } from "../types/api"
 
 /**
  * セキュリティヘッダーミドルウェア

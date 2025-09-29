@@ -1,5 +1,5 @@
-import type { Env } from "@/index"
 import type { Context as HonoContext, MiddlewareHandler } from "hono"
+import type { Env } from "../index"
 
 export type { Env }
 

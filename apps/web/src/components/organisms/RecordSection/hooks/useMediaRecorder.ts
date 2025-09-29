@@ -79,6 +79,11 @@ export function useMediaRecorder() {
 
          // データ取得イベント
          mediaRecorder.ondataavailable = (event: BlobEvent): void => {
+            console.log("📊 MediaRecorder data available:", {
+               size: event.data.size,
+               type: event.data.type,
+               chunksCount: chunksRef.current.length + 1,
+            })
             if (event.data.size > 0) {
                chunksRef.current.push(event.data)
             }
@@ -105,6 +110,18 @@ export function useMediaRecorder() {
             const audioBlob = new Blob(chunksRef.current, {
                type: mediaRecorder.mimeType,
             })
+
+            console.log("🎤 最終録音データ:", {
+               chunks: chunksRef.current.length,
+               totalSize: audioBlob.size,
+               mimeType: audioBlob.type,
+               duration: elapsedTime,
+            })
+
+            // 音声データの検証
+            if (audioBlob.size < 1000) {
+               console.warn("⚠️ 録音データが小さすぎます（1KB未満）")
+            }
 
             const audioUrl = URL.createObjectURL(audioBlob)
             const audioData: AudioData = {
@@ -136,8 +153,8 @@ export function useMediaRecorder() {
          // 録音開始時刻を記録
          recordingStartTimeRef.current = performance.now()
 
-         // 録音開始
-         mediaRecorder.start(100) // 100msごとにデータを取得
+         // 録音開始（1秒ごとにデータを取得）
+         mediaRecorder.start(1000) // 1000msごとにデータを取得
          setIsRecording(true)
          storeStartRecording()
 
@@ -183,7 +200,7 @@ export function useMediaRecorder() {
          setIsRecording(false)
          throw error
       }
-   }, [setAudioData, storeStartRecording])
+   }, [setAudioData, storeStartRecording, isRecording])
 
    /**
     * 録音を停止します

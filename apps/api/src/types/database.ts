@@ -17,18 +17,22 @@ export interface SoundPinRecord {
    weather_wind_speed: number | null
    weather_humidity: number | null
    time_tag: "朝" | "昼" | "夕" | "夜" | null
-   ai_transcription: string | null
-   ai_emotion: string | null
-   ai_topic: string | null
-   ai_language: string | null
-   ai_confidence: number | null
-   ai_summary: string | null
    status: "active" | "processing" | "deleted" | "reported"
    title: string | null
    device_info: string | null
    created_at: string
    updated_at: string
    deleted_at: string | null
+   ai_analysis_result: {
+      transcription?: string
+      emotion?: string
+      topic?: string
+      language?: string
+      confidence?: number
+      summary?: string
+      classifications?: string[]
+      analyzed_at?: string
+   } | null
 }
 
 /**
