@@ -6,6 +6,13 @@ Main FastAPI application entry point.
 
 import os
 import sys
+
+# librosaとNumbaのキャッシュ問題を解決するための環境変数設定
+# NumbaのJITは有効にしつつ、キャッシュディレクトリのみ設定
+os.environ.setdefault('NUMBA_CACHE_DIR', '/tmp/numba_cache')
+os.environ.setdefault('LIBROSA_CACHE_DIR', '/tmp/librosa_cache')
+# Numbaのキャッシュ関連の警告を抑制
+os.environ.setdefault('NUMBA_DISABLE_PERFORMANCE_WARNINGS', '1')
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
