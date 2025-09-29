@@ -1,26 +1,26 @@
-# Docker Secrets Directory
+# Docker Secrets用ディレクトリ
 
-This directory is used to store sensitive secrets for Docker Compose.
+このディレクトリは、Docker Compose 用の機密情報（シークレット）を安全に管理するためのものです。
 
-## Setup Instructions
+## セットアップ手順
 
-1. Create the following files with your actual secret values:
-   - `supabase_service_key.txt` - Your Supabase service role key
-   - `supabase_anon_key.txt` - Your Supabase anonymous key
+1. 以下のファイルを実際のシークレット値で作成してください:
+   - `supabase_service_key.txt` … Supabase サービスロールキー
+   - `supabase_anon_key.txt` … Supabase 匿名キー
 
-2. Set appropriate permissions:
+2. ファイルの権限を適切に設定します:
    ```bash
    chmod 600 secrets/*.txt
    ```
 
-3. Use with Docker Compose:
+3. Docker Compose で利用する場合:
    ```bash
    docker-compose -f docker-compose.yml -f docker-compose.secrets.yml up
    ```
 
-## Security Notes
+## セキュリティに関する注意
 
-- **NEVER** commit actual secret files to Git
-- Only `.gitkeep` and this README should be in version control
-- Add `secrets/*.txt` to `.gitignore`
-- Use strong, unique values for production environments
+- **絶対に** シークレットファイルを Git にコミットしないでください
+- バージョン管理には `.gitkeep` とこの README のみを含めてください
+- `secrets/*.txt` を `.gitignore` に必ず追加してください
+- 本番環境では十分に強力でユニークな値を使用してください
