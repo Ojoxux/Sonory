@@ -2,10 +2,10 @@
 
 import { FloatingIndicator } from "@/components/atoms/FloatingIndicator"
 import { RecordButton } from "@/components/molecules/RecordButton"
-import { useState, useEffect } from "react"
-import { useMediaRecorder } from "./hooks/useMediaRecorder"
 import { useInferenceStore } from "@/store/useInferenceStore"
 import { useRecorderStore } from "@/store/useRecorderStore"
+import { useEffect, useState } from "react"
+import { useMediaRecorder } from "./hooks/useMediaRecorder"
 import type { RecordSectionProps } from "./type"
 
 /**
