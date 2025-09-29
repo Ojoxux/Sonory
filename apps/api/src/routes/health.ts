@@ -1,6 +1,6 @@
-import { logger } from "@/utils/logger"
 import type { APIResponse } from "@sonory/shared-types"
 import { Hono } from "hono"
+import { logger } from "../utils/logger"
 
 interface HealthCheckResponse {
    status: "healthy" | "degraded" | "unhealthy"
