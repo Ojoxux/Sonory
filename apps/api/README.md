@@ -1,51 +1,77 @@
 # Sonory API
 
-Cloudflare Workers + Honoで構築されたSonoryのバックエンドAPIです。
-
 ## 🚀 セットアップ
 
 ### 1. 依存関係のインストール
 
 ```bash
-npm install
+cd apps/api && npm install
 ```
 
 ### 2. 環境変数の設定
 
-`.env.example`を参考に`.env`ファイルを作成してください。
+APIサービスは2つの環境で動作します：
 
+#### Docker環境（開発環境）
 ```bash
-cp .env.example .env
+# env.exampleを参考に.envファイルを作成
+cp env.example .env
+# 実際のSupabaseキーを設定してください
 ```
 
-### 3. 開発サーバーの起動
+#### Cloudflare Workers（本番環境）
+```bash
+# .dev.varsファイルが既に存在します
+# 本番環境ではCloudflare Workersの環境変数として設定
+```
+
+### 3. 開発環境の起動
 
 ```bash
-npm run dev
+# プロジェクトルートから
+task sonory:up        # 全サービス起動
+task sonory:logs:api  # APIログ確認
+task sonory:down      # 停止
 ```
 
 ## 📁 ディレクトリ構造
 
 ```
 src/
+├── config/         # 設定ファイル（シークレット管理）
 ├── routes/         # APIルート定義
 ├── services/       # ビジネスロジック
 ├── middleware/     # ミドルウェア
+├── repositories/   # データアクセス層
 ├── utils/          # ユーティリティ
 ├── types/          # 型定義
 └── index.ts        # エントリーポイント
+Dockerfile          # Docker設定
+tsconfig-paths.json # TSパスエイリアス設定
 ```
 
 ## 🔧 利用可能なコマンド
 
-基本的な開発コマンド：
+Docker環境での開発コマンド：
 ```bash
-npm run dev              # 開発サーバー起動
-npm run build            # ビルド
-npm run deploy           # Cloudflare Workersへデプロイ
-```
+# 全サービス起動
+task sonory:up           # 全サービス起動
+task sonory:rebuild      # リビルド
 
-詳細なコマンドについては [NPM_SCRIPT_GUIDE.md](./NPM_SCRIPT_GUIDE.md) を参照してください。
+# APIサービス単体
+task sonory:api:up       # APIサービスのみ起動
+
+# ログ・監視
+task sonory:logs:api     # APIログ確認
+task sonory:status       # 全サービス状況確認
+
+# 開発ツール（サービス内で実行）
+npm run lint             # リント実行
+npm run lint:fix         # リント自動修正
+npm run type-check       # 型チェック実行
+npm run validate         # リント + 型チェック
+npm run test             # テスト実行
+```
 
 ## 🌐 APIエンドポイント
 
@@ -73,8 +99,10 @@ npm run deploy           # Cloudflare Workersへデプロイ
 
 ## 🏗️ 技術スタック
 
-- **Cloudflare Workers** - エッジコンピューティング環境
+- **Node.js** - サーバーランタイム（Docker環境）
+- **Cloudflare Workers** - 本番環境ランタイム
 - **Hono** - 軽量Webフレームワーク
 - **TypeScript** - 型安全な開発
 - **Supabase** - データベース・ストレージ
-- **Python Audio Analyzer (YAMNet)** - AI音声分類 
+- **Docker** - コンテナ化環境（開発用）
+- **Python Audio Analyzer (YAMNet)** - AI音声分類（マイクロサービス） 
