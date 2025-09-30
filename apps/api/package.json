@@ -6,12 +6,15 @@
    "scripts": {
       "dev": "wrangler dev",
       "dev:node": "node --watch dist/index.js",
+      "generate-types": "wrangler types",
+      "prebuild": "npm run generate-types",
       "build": "tsc && tsc-alias -p tsconfig-paths.json --resolve-full-paths",
       "deploy": "wrangler deploy",
       "lint": "biome check .",
       "lint:fix": "biome check --fix --unsafe .",
       "format": "biome format .",
       "format:fix": "biome format . --write",
+      "pretype-check": "npm run generate-types",
       "type-check": "tsc --noEmit",
       "validate": "npm run lint && npm run type-check",
       "test": "vitest",
@@ -20,7 +23,6 @@
       "clean": "rm -rf dist .wrangler"
    },
    "dependencies": {
-      "@cloudflare/workers-types": "^4.20241218.0",
       "@hono/node-server": "^1.19.4",
       "@hono/zod-validator": "^0.5.0",
       "@sonory/shared-types": "file:../../packages/shared-types",
@@ -31,6 +33,7 @@
    },
    "devDependencies": {
       "@biomejs/biome": "1.9.4",
+      "@cloudflare/workers-types": "^4.20241218.0",
       "@types/node": "^20",
       "tsc-alias": "^1.8.16",
       "typescript": "^5",

@@ -4,6 +4,7 @@
 # Cloudflare Workers固有
 .wrangler/
 .dev.vars
+worker-configuration.d.ts
 
 # Wrangler固有の環境変数
 wrangler.toml.backup 

@@ -4,7 +4,7 @@
       "target": "ES2022",
       "module": "ESNext",
       "lib": ["ES2022"],
-      "types": ["@cloudflare/workers-types", "node"],
+      "types": ["./worker-configuration.d.ts", "node"],
       "jsx": "react-jsx",
       "moduleResolution": "node",
       "allowImportingTsExtensions": false,
