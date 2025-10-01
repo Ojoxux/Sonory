@@ -12,7 +12,11 @@ import { logger } from "./utils/logger"
 
 // Node.js環境での環境変数設定（Docker環境用）
 // Workers環境では実行されない（navigatorが存在する）
-if (typeof navigator === "undefined" && typeof process !== "undefined" && process.env.NODE_ENV !== "production") {
+if (
+   typeof navigator === "undefined" &&
+   typeof process !== "undefined" &&
+   process.env.NODE_ENV !== "production"
+) {
    // Docker環境では強制的にpython-apiコンテナを使用
    if (
       !process.env.PYTHON_AUDIO_ANALYZER_URL ||
@@ -204,7 +208,11 @@ export default {
  * Workers環境ではこのコードは実行されません
  * Workers環境判定: navigatorが存在する = Workers環境
  */
-if (typeof navigator === "undefined" && typeof process !== "undefined" && process.env.NODE_ENV !== "test") {
+if (
+   typeof navigator === "undefined" &&
+   typeof process !== "undefined" &&
+   process.env.NODE_ENV !== "test"
+) {
    const { serve } = await import("@hono/node-server")
 
    const port = Number(process.env.PORT) || 8787
