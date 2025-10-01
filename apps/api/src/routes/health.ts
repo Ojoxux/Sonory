@@ -45,6 +45,11 @@ healthRoutes.get("/", async (c) => {
 
       if (!dbError) {
          dbStatus = "connected"
+      } else {
+         logger.error("Database connection error", {
+            error: dbError.message,
+            code: dbError.code,
+         })
       }
 
       // ストレージ接続確認
@@ -54,6 +59,10 @@ healthRoutes.get("/", async (c) => {
 
       if (!storageError) {
          storageStatus = "connected"
+      } else {
+         logger.error("Storage connection error", {
+            error: storageError.message,
+         })
       }
    } catch (error) {
       logger.error("Health check service error", {
