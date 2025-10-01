@@ -1,25 +1,25 @@
 {
-	"extends": "../../packages/config/tsconfig.base.json",
-	"compilerOptions": {
-		"target": "ES2022",
-		"module": "ESNext",
-		"lib": ["ES2022"],
-		"types": ["./worker-configuration.d.ts", "node"],
-		"jsx": "react-jsx",
-		"moduleResolution": "node",
-		"allowImportingTsExtensions": false,
-		"noPropertyAccessFromIndexSignature": false,
-		"moduleDetection": "force",
-		"resolveJsonModule": true,
-		"strict": true,
-		"skipLibCheck": true,
-		"noEmit": false,
-		"outDir": "dist",
-		"rootDir": "src",
-		"baseUrl": ".",
-		"esModuleInterop": true,
-		"allowSyntheticDefaultImports": true
-	},
-	"include": ["src/**/*"],
-	"exclude": ["node_modules", "dist", ".wrangler"]
+   "extends": "../../packages/config/tsconfig.base.json",
+   "compilerOptions": {
+      "target": "ES2022",
+      "module": "ESNext",
+      "lib": ["ES2022"],
+      "types": ["./worker-configuration.d.ts", "node"],
+      "jsx": "react-jsx",
+      "moduleResolution": "node",
+      "allowImportingTsExtensions": false,
+      "noPropertyAccessFromIndexSignature": false,
+      "moduleDetection": "force",
+      "resolveJsonModule": true,
+      "strict": true,
+      "skipLibCheck": true,
+      "noEmit": false,
+      "outDir": "dist",
+      "rootDir": "src",
+      "baseUrl": ".",
+      "esModuleInterop": true,
+      "allowSyntheticDefaultImports": true
+   },
+   "include": ["src/**/*"],
+   "exclude": ["node_modules", "dist", ".wrangler"]
 }
