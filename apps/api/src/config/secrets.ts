@@ -193,6 +193,27 @@ export function getSecureSupabaseConfig(): SecureSupabaseConfig {
 }
 
 /**
+ * Cloudflare Workers環境でのSupabase設定を取得
+ *
+ * @description
+ * Workers環境では環境変数から直接取得（wrangler secret putで設定された値）
+ *
+ * @param env - Cloudflare Workers環境変数
+ * @returns Supabase設定
+ */
+export function getWorkersSupabaseConfig(env: {
+   SUPABASE_URL: string
+   SUPABASE_ANON_KEY: string
+   SUPABASE_SERVICE_KEY?: string
+}): SecureSupabaseConfig {
+   return {
+      url: env.SUPABASE_URL,
+      anonKey: env.SUPABASE_ANON_KEY,
+      ...(env.SUPABASE_SERVICE_KEY && { serviceKey: env.SUPABASE_SERVICE_KEY }),
+   }
+}
+
+/**
  * シークレットキャッシュをクリア（テスト用）
  */
 export function clearSecretCache(): void {
