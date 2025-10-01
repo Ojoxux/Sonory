@@ -26,9 +26,9 @@ services:
       - web_next:/app/apps/web/.next
     depends_on:
       api:
-        condition: service_healthy
+        condition: service_started
       python-api:
-        condition: service_healthy
+        condition: service_started
     networks:
       - sonory-network
     restart: unless-stopped
@@ -61,23 +61,23 @@ services:
       target: development
     ports:
       - "8787:8787"
+    env_file:
+      - ./apps/api/.env
     environment:
       - NODE_ENV=development
-      - SUPABASE_URL=${SUPABASE_URL}
       - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000}
       - PYTHON_AUDIO_ANALYZER_URL=${PYTHON_AUDIO_ANALYZER_URL:-http://python-api:8000}
       - PYTHON_AUDIO_ANALYZER_TIMEOUT=${PYTHON_AUDIO_ANALYZER_TIMEOUT:-30000}
-    volumes:
-      - ./apps/api:/app/apps/api
-      - ./packages:/app/packages
-      - /app/node_modules
+    # No volumes for development - use image's node_modules
+    # volumes:
+    #   - ./apps/api/src:/app/apps/api/src
     depends_on:
       python-api:
-        condition: service_healthy
+        condition: service_started
     networks:
       - sonory-network
     restart: unless-stopped
-    command: sh -c "cd /app && npm run build --prefix apps/api && npm run dev:node --prefix apps/api"
+    command: sh -c "cd /app && node apps/api/dist/index.js"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8787/api/health"]
       interval: 30s

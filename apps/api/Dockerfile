@@ -58,15 +58,11 @@ WORKDIR /app
 # Install curl for health checks
 RUN apk add --no-cache curl
 
-# Install all dependencies including dev dependencies
-COPY package*.json ./
-COPY turbo.json ./
-COPY apps/api/package*.json ./apps/api/
-COPY packages/ ./packages/
-RUN npm ci
-
-# Copy source code
+# Copy all source code first
 COPY . .
+
+# Install all dependencies including dev dependencies (this will also build shared-types and utils)
+RUN npm ci
 
 # Build the API (development stage)
 WORKDIR /app/apps/api

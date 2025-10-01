@@ -1,0 +1,17 @@
+# Supabase設定（必須）
+# プロジェクトのURLとキーを設定してください
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_KEY=your-service-key
+
+# CORS設定
+# 開発環境のフロントエンドURL
+CORS_ORIGIN=http://localhost:3000
+
+# Python Audio Analyzer (YAMNet)
+# Docker環境ではコンテナ名を使用
+PYTHON_AUDIO_ANALYZER_URL=http://python-api:8000
+PYTHON_AUDIO_ANALYZER_TIMEOUT=30000
+
+# 環境設定
+ENVIRONMENT=development
