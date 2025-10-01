@@ -3,28 +3,55 @@ main = "src/index.ts"
 compatibility_date = "2024-12-18"
 compatibility_flags = ["nodejs_compat"]
 
-# 環境変数の定義（実際の値は.envまたはsecretsで管理）
+# 本番環境設定（機密情報はwrangler secret putで管理）
+[env.production]
+name = "sonory-api-production"
+
 [env.production.vars]
 ENVIRONMENT = "production"
 PYTHON_AUDIO_ANALYZER_URL = "https://python-audio-analyzer.onrender.com"
 PYTHON_AUDIO_ANALYZER_TIMEOUT = "30000"
 
+# 本番環境の機密情報は以下のコマンドで設定:
+# wrangler secret put SUPABASE_URL --env production
+# wrangler secret put SUPABASE_ANON_KEY --env production
+# wrangler secret put SUPABASE_SERVICE_KEY --env production
+
+# ステージング環境設定
+[env.staging]
+name = "sonory-api-staging"
+
+[env.staging.vars]
+ENVIRONMENT = "staging"
+PYTHON_AUDIO_ANALYZER_URL = "https://python-audio-analyzer.onrender.com"
+PYTHON_AUDIO_ANALYZER_TIMEOUT = "30000"
+
+# ステージング環境の機密情報は以下のコマンドで設定:
+# wrangler secret put SUPABASE_URL --env staging
+# wrangler secret put SUPABASE_ANON_KEY --env staging
+# wrangler secret put SUPABASE_SERVICE_KEY --env staging
+
+# 開発環境設定（機密性の低い開発用キーのみ平文で設定）
+[env.development]
+name = "sonory-api-development"
+
 [env.development.vars]
 ENVIRONMENT = "development"
 PYTHON_AUDIO_ANALYZER_URL = "http://localhost:8000"
 PYTHON_AUDIO_ANALYZER_TIMEOUT = "30000"
+# 開発環境のSupabase設定は.dev.varsファイルで管理
 
-# KVネームスペース（必要に応じて）
+# KVネームスペース（Phase 4以降で使用予定）
 # [[kv_namespaces]]
 # binding = "CACHE"
 # id = "your-kv-namespace-id"
 
-# R2バケット（必要に応じて）
+# R2バケット（Phase 3以降で使用予定）
 # [[r2_buckets]]
 # binding = "AUDIO_STORAGE"
 # bucket_name = "sonory-audio"
 
-# Durable Objects（必要に応じて）
+# Durable Objects（Phase 4以降で使用予定）
 # [[durable_objects.bindings]]
 # name = "RATE_LIMITER"
 # class_name = "RateLimiter"
