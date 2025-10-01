@@ -136,11 +136,89 @@ export class AudioService extends BaseService {
    }
 
    /**
-    * Deletes an audio file from Supabase Storage
+    * Supabase Storageへの直接アップロード用の署名付きURLを生成
+    * この方法はCloudflare Workers向けに最適化（Workersで大きなファイルを扱わない）
     *
-    * @param filePath - Path of the file to delete
-    * @returns True if deletion was successful
-    * @throws APIException on deletion error
+    * @param fileName - アップロードするファイル名
+    * @param userId - ユーザーID（整理用、任意）
+    * @returns 署名付きアップロードURLとメタデータ
+    */
+   async generateUploadUrl(
+      fileName: string,
+      userId?: string,
+   ): Promise<{
+      uploadUrl: string
+      filePath: string
+      expiresAt: string
+      maxFileSize: number
+   }> {
+      try {
+         // ファイルパスを生成
+         const filePath = this.generateFilePath(fileName, userId)
+
+         this.log("info", "Generating presigned upload URL", {
+            fileName,
+            filePath,
+         })
+
+         // 署名付きアップロードURLを作成（有効期限1時間）
+         const { data, error } = await this.supabaseClient.storage
+            .from(this.bucketName)
+            .createSignedUploadUrl(filePath)
+
+         if (error) {
+            this.log("error", "Failed to create presigned URL", {
+               error: error.message,
+               filePath,
+            })
+            throw new APIException(
+               ERROR_CODES.STORAGE_ERROR,
+               `Failed to generate upload URL: ${error.message}`,
+               500,
+            )
+         }
+
+         // 有効期限を計算（現在時刻から1時間後）
+         const expiresAt = new Date(Date.now() + 3600 * 1000).toISOString()
+
+         const result = {
+            uploadUrl: data.signedUrl,
+            filePath: filePath,
+            expiresAt: expiresAt,
+            maxFileSize: this.maxFileSize,
+         }
+
+         this.log("info", "Presigned upload URL generated successfully", {
+            filePath,
+            expiresAt,
+         })
+
+         return result
+      } catch (error) {
+         this.log("error", "Failed to generate presigned upload URL", {
+            fileName,
+            error: error instanceof Error ? error.message : String(error),
+         })
+
+         if (error instanceof APIException) {
+            throw error
+         }
+
+         throw new APIException(
+            ERROR_CODES.STORAGE_ERROR,
+            "Failed to generate upload URL",
+            500,
+            error instanceof Error ? { message: error.message } : undefined,
+         )
+      }
+   }
+
+   /**
+    * Supabase Storageから音声ファイルを削除
+    *
+    * @param filePath - 削除するファイルのパス
+    * @returns 削除が成功した場合はtrue
+    * @throws 削除エラー時はAPIException
     */
    async deleteAudio(filePath: string): Promise<boolean> {
       try {
@@ -189,13 +267,13 @@ export class AudioService extends BaseService {
    }
 
    /**
-    * Validates audio file before upload
+    * アップロード前に音声ファイルをバリデーション
     *
-    * @param file - File to validate
-    * @throws APIException if validation fails
+    * @param file - バリデーションするファイル
+    * @throws バリデーション失敗時はAPIException
     */
    private validateAudioFile(file: File): void {
-      // Check file size
+      // ファイルサイズをチェック
       if (file.size > this.maxFileSize) {
          throw new APIException(
             ERROR_CODES.AUDIO_TOO_LARGE,
@@ -204,7 +282,7 @@ export class AudioService extends BaseService {
          )
       }
 
-      // Check file format
+      // ファイルフォーマットをチェック
       const format = this.detectAudioFormat(file)
       if (!this.allowedFormats.includes(format)) {
          throw new APIException(
@@ -214,7 +292,7 @@ export class AudioService extends BaseService {
          )
       }
 
-      // Check file content (basic MIME type validation)
+      // ファイル内容をチェック（基本的なMIMEタイプ検証）
       if (!file.type.startsWith("audio/")) {
          throw new APIException(
             ERROR_CODES.INVALID_AUDIO_FORMAT,
@@ -225,10 +303,10 @@ export class AudioService extends BaseService {
    }
 
    /**
-    * Detects audio format from file
+    * ファイルから音声フォーマットを検出
     *
-    * @param file - File to analyze
-    * @returns Detected audio format
+    * @param file - 解析するファイル
+    * @returns 検出された音声フォーマット
     */
    private detectAudioFormat(file: File): "webm" | "mp3" | "wav" {
       const type = file.type.toLowerCase()
@@ -243,21 +321,21 @@ export class AudioService extends BaseService {
          return "mp3"
       if (type.includes("wav") || name.endsWith(".wav")) return "wav"
 
-      // Fallback based on file extension
+      // 拡張子によるフォールバック
       const extension = name.split(".").pop()
       if (extension === "webm") return "webm"
       if (extension === "mp3") return "mp3"
       if (extension === "wav") return "wav"
 
-      return "webm" // Default fallback
+      return "webm" // デフォルトのフォールバック
    }
 
    /**
-    * Generates organized file path
+    * 整理されたファイルパスを生成
     *
-    * @param fileName - File name
-    * @param userId - User ID for organization
-    * @returns Generated file path
+    * @param fileName - ファイル名
+    * @param userId - ユーザーID（整理用）
+    * @returns 生成されたファイルパス
     */
    private generateFilePath(fileName: string, userId?: string): string {
       const date = new Date()
@@ -268,11 +346,11 @@ export class AudioService extends BaseService {
    }
 
    /**
-    * Generates file name
+    * ファイル名を生成
     *
-    * @param file - File being uploaded
-    * @param userId - User ID for organization
-    * @returns Generated file name
+    * @param file - アップロードするファイル
+    * @param userId - ユーザーID（整理用）
+    * @returns 生成されたファイル名
     */
    private generateFileName(file: File, userId?: string): string {
       const timestamp = Date.now()
@@ -284,32 +362,32 @@ export class AudioService extends BaseService {
    }
 
    /**
-    * Extracts metadata from audio file
+    * 音声ファイルからメタデータを抽出
     *
-    * @param file - File to analyze
-    * @returns Basic metadata
+    * @param file - 解析するファイル
+    * @returns 基本的なメタデータ
     */
    private async extractMetadata(file: File): Promise<AudioMetadata> {
-      // Basic metadata extraction
-      // Note: Duration extraction in Workers environment is limited
-      // Consider implementing advanced metadata extraction as needed
+      // 基本的なメタデータ抽出
+      // 注意: Workers環境ではdurationの抽出は制限あり
+      // 必要に応じて高度なメタデータ抽出を実装検討
 
       return {
          id: file.name,
          filename: file.name,
          size: file.size,
          format: this.extractFormat(file),
-         duration: 0, // implement audio duration detection when needed
-         url: "", // URL should be provided by caller
+         duration: 0, // 必要に応じて音声長検出を実装
+         url: "", // URLは呼び出し元で指定
          uploadedAt: new Date().toISOString(),
       }
    }
 
    /**
-    * Extracts audio format from file
+    * ファイルから音声フォーマットを抽出
     *
-    * @param file - File to analyze
-    * @returns Extracted audio format
+    * @param file - 解析するファイル
+    * @returns 抽出された音声フォーマット
     */
    private extractFormat(
       file: File,
