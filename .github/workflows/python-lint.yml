@@ -6,10 +6,16 @@ on:
     paths:
       - 'apps/python-audio-analyzer/**'
       - '.github/workflows/python-lint.yml'
+    paths-ignore:
+      - 'apps/web/**'
+      - 'apps/api/**'
   pull_request:
     paths:
       - 'apps/python-audio-analyzer/**'
       - '.github/workflows/python-lint.yml'
+    paths-ignore:
+      - 'apps/web/**'
+      - 'apps/api/**'
 
 jobs:
   lint-and-test:
