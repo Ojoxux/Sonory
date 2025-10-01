@@ -9,8 +9,56 @@ import { AudioService } from "../services/audio.service"
 const app = new Hono<{ Bindings: Env }>()
 
 /**
+ * POST /api/audio/upload-url
+ * @description Presigned URLを生成して直接Supabase Storageにアップロード
+ * @tags Audio
+ * @param {string} fileName - アップロードするファイル名
+ * @param {string} [userId] - ユーザーID（オプション）
+ * @returns {object} Presigned URLと関連情報
+ */
+app.post("/upload-url", rateLimits.default, async (c) => {
+   const audioService = new AudioService(
+      c as unknown as Context<{ Bindings: Env }>,
+   )
+
+   try {
+      const body = await c.req.json()
+      const fileName = body.fileName
+      const userId = body.userId
+
+      // ファイル名が存在しない場合はエラースロー
+      if (!fileName) {
+         throw new APIException(
+            ERROR_CODES.INVALID_AUDIO_FORMAT,
+            "File name is required",
+            400,
+         )
+      }
+
+      // Presigned URL生成
+      const result = await audioService.generateUploadUrl(fileName, userId)
+
+      return c.json({
+         success: true,
+         data: result,
+      })
+   } catch (error) {
+      if (error instanceof APIException) {
+         throw error
+      }
+
+      throw new APIException(
+         ERROR_CODES.STORAGE_ERROR,
+         "Failed to generate upload URL",
+         500,
+         error instanceof Error ? { message: error.message } : undefined,
+      )
+   }
+})
+
+/**
  * POST /api/audio/upload
- * @description 音声ファイルをアップロード
+ * @description 音声ファイルをアップロード（従来の直接アップロード方式）
  * @tags Audio
  * @param {File} file - アップロードする音声ファイル（FormData）
  * @param {string} [userId] - ユーザーID（オプション）
@@ -74,36 +122,38 @@ app.post("/upload", rateLimits.audioUpload, async (c) => {
 })
 
 /**
- * DELETE /api/audio/:audioId
+ * DELETE /api/audio/:filePath
  * @description 音声ファイルを削除
  * @tags Audio
- * @param {string} audioId - 削除する音声ファイルのID
- * @returns {boolean} 削除成功可否
+ * @param {string} filePath - 削除する音声ファイルのパス（URLエンコード済み）
+ * @returns {object} 削除結果
  */
-app.delete("/:audioId", rateLimits.default, async (c) => {
+app.delete("/:filePath{.+}", rateLimits.default, async (c) => {
    const audioService = new AudioService(
       c as unknown as Context<{ Bindings: Env }>,
    )
-   const audioId = c.req.param("audioId")
+   const encodedFilePath = c.req.param("filePath")
 
    try {
-      if (!audioId) {
+      if (!encodedFilePath) {
          throw new APIException(
             ERROR_CODES.INVALID_AUDIO_FORMAT,
-            "Audio ID is required",
+            "File path is required",
             400,
          )
       }
 
-      // TODO: 実際のファイルパス取得ロジックを実装
-      // 現在は簡易的な実装
-      const filePath = audioId
+      // URLデコードしてファイルパスを取得
+      const filePath = decodeURIComponent(encodedFilePath)
 
       const success = await audioService.deleteAudio(filePath)
 
       return c.json({
          success: true,
-         data: { deleted: success },
+         data: {
+            deleted: success,
+            deletedPath: filePath,
+         },
       })
    } catch (error) {
       if (error instanceof APIException) {
