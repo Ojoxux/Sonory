@@ -11,7 +11,12 @@ import pinsRoutes from "./routes/pins"
 import { logger } from "./utils/logger"
 
 // Node.js環境での環境変数設定（Docker環境用）
-if (typeof process !== "undefined" && process.env.NODE_ENV !== "production") {
+// Workers環境では実行されない（navigatorが存在する）
+if (
+   typeof navigator === "undefined" &&
+   typeof process !== "undefined" &&
+   process.env.NODE_ENV !== "production"
+) {
    // Docker環境では強制的にpython-apiコンテナを使用
    if (
       !process.env.PYTHON_AUDIO_ANALYZER_URL ||
@@ -72,8 +77,9 @@ app.use("*", timing())
 app.use("*", honoLogger())
 
 // Node.js環境でのenv設定
+// Workers環境ではスキップ（c.envは自動的に設定される）
 app.use("*", async (c, next) => {
-   if (typeof process !== "undefined") {
+   if (typeof navigator === "undefined" && typeof process !== "undefined") {
       // Docker Secretsを使用してセキュアに設定を取得
       try {
          const supabaseConfig = getSecureSupabaseConfig()
@@ -197,8 +203,16 @@ export default {
 
 /**
  * Node.js環境での起動
+ *
+ * @description
+ * Workers環境ではこのコードは実行されません
+ * Workers環境判定: navigatorが存在する = Workers環境
  */
-if (typeof process !== "undefined" && process.env.NODE_ENV !== "test") {
+if (
+   typeof navigator === "undefined" &&
+   typeof process !== "undefined" &&
+   process.env.NODE_ENV !== "test"
+) {
    const { serve } = await import("@hono/node-server")
 
    const port = Number(process.env.PORT) || 8787
