@@ -26,6 +26,76 @@ interface PythonAnalysisResult {
 }
 
 /**
+ * 分析ジョブのステータス型
+ */
+type AnalysisJobStatus = "queued" | "processing" | "completed" | "failed"
+
+/**
+ * 分析ジョブの結果型
+ */
+interface AnalysisJobResult {
+   jobId: string
+   status: AnalysisJobStatus
+   estimatedDuration?: string
+   statusUrl: string
+}
+
+/**
+ * 分析ジョブステータスレスポンス型
+ */
+interface AnalysisJobStatusResponse {
+   jobId: string
+   status: AnalysisJobStatus
+   result?: PythonAnalysisResult
+   error?: {
+      message: string
+      code?: string
+   }
+   createdAt: string
+   startedAt?: string
+   completedAt?: string
+   retryCount: number
+}
+
+/**
+ * Supabase Queues (pgmq) のメッセージ型
+ */
+interface QueueMessage {
+   audioId: string
+   audioUrl: string
+   retryCount?: number
+   metadata?: Record<string, unknown>
+}
+
+/**
+ * Supabase Queuesから読み取ったメッセージ型
+ */
+interface QueueReadMessage {
+   msg_id: number
+   read_ct: number
+   enqueued_at: string
+   vt: string
+   message: QueueMessage
+}
+
+/**
+ * 分析結果テーブルのレコード型
+ */
+interface AnalysisResultRecord {
+   message_id: number
+   audio_id: string
+   status: AnalysisJobStatus
+   result: PythonAnalysisResult | null
+   error_message: string | null
+   error_code: string | null
+   retry_count: number
+   created_at: string
+   started_at: string | null
+   completed_at: string | null
+   metadata: Record<string, unknown> | null
+}
+
+/**
  * 音声ファイル処理サービス
  *
  * @description
@@ -37,6 +107,9 @@ export class AudioService extends BaseService {
    private readonly maxFileSize = 10 * 1024 * 1024 // 10MB
    private readonly maxDuration = 600 // 10 minutes
    private readonly allowedFormats = ["webm", "mp3", "wav"] as const
+   private readonly queueName = "audio-analysis"
+   private readonly maxRetries = 3
+   private readonly visibilityTimeout = 60 // 60秒
 
    protected getServiceName(): string {
       return "AudioService"
@@ -408,6 +481,379 @@ export class AudioService extends BaseService {
       }
 
       return formatMap[extension] || "webm"
+   }
+
+   /**
+    * 音声分析ジョブをSupabase Queuesに投入（非同期）
+    * Cloudflare Workersの30秒制限に対応した非同期処理
+    *
+    * @param audioId - 分析対象の音声ID
+    * @param audioUrl - 分析対象の音声URL（公開アクセス可能）
+    * @returns 分析ジョブの情報
+    */
+   async scheduleAnalysis(
+      audioId: string,
+      audioUrl: string,
+   ): Promise<AnalysisJobResult> {
+      try {
+         this.log("info", "Scheduling audio analysis job", {
+            audioId,
+            audioUrl,
+         })
+
+         // Supabase Queuesにメッセージを送信
+         const message: QueueMessage = {
+            audioId,
+            audioUrl,
+            retryCount: 0,
+         }
+
+         // queue_nameに指定されたキューにメッセージを追加する
+         // sleep_secondsはオプショナルで表示されるまでの秒数を指定できる
+         const { data, error } = await this.supabaseClient.rpc("queue_send", {
+            queue_name: this.queueName,
+            message: message,
+            sleep_seconds: 0,
+         })
+
+         if (error) {
+            this.log("error", "Failed to send message to queue", {
+               error: error.message,
+               audioId,
+            })
+            throw new APIException(
+               ERROR_CODES.AI_ANALYSIS_FAILED,
+               `Failed to schedule analysis: ${error.message}`,
+               500,
+            )
+         }
+
+         const messageId = data as number
+         const statusUrl = `/api/audio/${audioId}/analysis/${messageId}/status`
+
+         this.log("info", "Analysis job scheduled successfully", {
+            messageId,
+            audioId,
+            statusUrl,
+         })
+
+         return {
+            jobId: String(messageId),
+            status: "queued",
+            estimatedDuration: "15-30 seconds",
+            statusUrl,
+         }
+      } catch (error) {
+         this.log("error", "Failed to schedule analysis job", {
+            audioId,
+            error: error instanceof Error ? error.message : String(error),
+         })
+
+         if (error instanceof APIException) {
+            throw error
+         }
+
+         throw new APIException(
+            ERROR_CODES.AI_ANALYSIS_FAILED,
+            "Failed to schedule audio analysis",
+            500,
+            error instanceof Error ? { message: error.message } : undefined,
+         )
+      }
+   }
+
+   /**
+    * 分析ジョブのステータスを取得
+    *
+    * @param messageId - Supabase QueuesのメッセージID
+    * @returns ジョブのステータスと結果
+    */
+   async getAnalysisStatus(
+      messageId: string,
+   ): Promise<AnalysisJobStatusResponse> {
+      try {
+         this.log("info", "Fetching analysis job status", { messageId })
+
+         const messageIdNum = Number.parseInt(messageId, 10)
+
+         if (Number.isNaN(messageIdNum)) {
+            throw new APIException(
+               ERROR_CODES.AI_ANALYSIS_FAILED,
+               "Invalid message ID",
+               400,
+            )
+         }
+
+         // 分析結果テーブルから結果を取得
+         const { data: result } = await this.supabaseClient
+            .from("analysis_results")
+            .select("*")
+            .eq("message_id", messageIdNum)
+            .maybeSingle()
+
+         // 結果が存在する場合（処理済み）
+         if (result) {
+            const analysisResult = result as AnalysisResultRecord
+
+            const response: AnalysisJobStatusResponse = {
+               jobId: String(analysisResult.message_id),
+               status: analysisResult.status,
+               createdAt: analysisResult.created_at,
+               retryCount: analysisResult.retry_count,
+            }
+
+            // オプショナルなフィールドを条件付きで追加
+            if (analysisResult.started_at) {
+               response.startedAt = analysisResult.started_at
+            }
+            if (analysisResult.completed_at) {
+               response.completedAt = analysisResult.completed_at
+            }
+
+            // 完了時は結果を含める
+            if (
+               analysisResult.status === "completed" &&
+               analysisResult.result
+            ) {
+               response.result = analysisResult.result
+            }
+
+            // エラー時はエラー情報を含める
+            if (
+               analysisResult.status === "failed" &&
+               analysisResult.error_message
+            ) {
+               response.error = {
+                  message: analysisResult.error_message,
+               }
+               if (analysisResult.error_code) {
+                  response.error.code = analysisResult.error_code
+               }
+            }
+
+            this.log("info", "Analysis job status fetched from results table", {
+               messageId,
+               status: analysisResult.status,
+            })
+
+            return response
+         }
+
+         // 結果がない場合、キューにメッセージが残っているか確認
+         // NOTE: pgmq_public.readはクライアント側から直接呼び出せないため、
+         // 結果テーブルにレコードがない場合は"queued"として扱う
+         this.log("info", "Analysis job still in queue", { messageId })
+
+         return {
+            jobId: messageId,
+            status: "queued",
+            createdAt: new Date().toISOString(),
+            retryCount: 0,
+         }
+      } catch (error) {
+         this.log("error", "Failed to fetch analysis job status", {
+            messageId,
+            error: error instanceof Error ? error.message : String(error),
+         })
+
+         if (error instanceof APIException) {
+            throw error
+         }
+
+         throw new APIException(
+            ERROR_CODES.AI_ANALYSIS_FAILED,
+            "Failed to fetch analysis status",
+            500,
+            error instanceof Error ? { message: error.message } : undefined,
+         )
+      }
+   }
+
+   /**
+    * キューから分析ジョブを取得して実行（Worker/Cron用）
+    * この関数は定期的に実行され、キュー内のジョブを処理します
+    *
+    * @returns 処理されたジョブの数
+    */
+   async processAnalysisQueue(): Promise<number> {
+      try {
+         this.log("info", "Starting analysis queue processing")
+
+         // queue_nameに指定されたキューからメッセージを読み取る
+         // sleep_secondsはオプショナルで表示されるまでの秒数を指定できる
+         // nは読み取るメッセージの最大数を指定できる
+         const { data: messages, error } = await this.supabaseClient.rpc(
+            "queue_read",
+            {
+               queue_name: this.queueName,
+               sleep_seconds: this.visibilityTimeout,
+               n: 3,
+            },
+         )
+
+         if (error) {
+            this.log("error", "Failed to read messages from queue", {
+               error: error.message,
+            })
+            return 0
+         }
+
+         if (!messages || messages.length === 0) {
+            this.log("info", "No messages found in queue")
+            return 0
+         }
+
+         const queueMessages = messages as QueueReadMessage[]
+         let processedCount = 0
+
+         // 各メッセージを並行処理
+         await Promise.all(
+            queueMessages.map(async (msg) => {
+               try {
+                  await this.executeAnalysisJob(msg)
+                  processedCount++
+               } catch (error) {
+                  this.log("error", "Failed to execute analysis job", {
+                     messageId: msg.msg_id,
+                     error:
+                        error instanceof Error ? error.message : String(error),
+                  })
+               }
+            }),
+         )
+
+         this.log("info", "Analysis queue processing completed", {
+            processedCount,
+            totalMessages: queueMessages.length,
+         })
+
+         return processedCount
+      } catch (error) {
+         this.log("error", "Analysis queue processing failed", {
+            error: error instanceof Error ? error.message : String(error),
+         })
+         return 0
+      }
+   }
+
+   /**
+    * 個別の分析ジョブを実行
+    *
+    * @param queueMessage - 実行するキューメッセージ
+    */
+   private async executeAnalysisJob(
+      queueMessage: QueueReadMessage,
+   ): Promise<void> {
+      const messageId = queueMessage.msg_id
+      const message = queueMessage.message
+      const retryCount = message.retryCount || 0
+
+      try {
+         // 分析結果テーブルに処理中レコードを挿入
+         await this.supabaseClient.from("analysis_results").upsert({
+            message_id: messageId,
+            audio_id: message.audioId,
+            status: "processing",
+            retry_count: retryCount,
+            started_at: new Date().toISOString(),
+         })
+
+         this.log("info", "Executing analysis job", {
+            messageId,
+            audioId: message.audioId,
+            audioUrl: message.audioUrl,
+         })
+
+         // Python YAMNet分析を実行
+         const analysisResult = await this.analyzeAudioWithPython(
+            message.audioUrl,
+            5,
+         )
+
+         // 分析結果を更新
+         await this.supabaseClient
+            .from("analysis_results")
+            .update({
+               status: "completed",
+               result: analysisResult,
+               completed_at: new Date().toISOString(),
+            })
+            .eq("message_id", messageId)
+
+         // キューからメッセージを削除
+         await this.supabaseClient.rpc("queue_delete", {
+            queue_name: this.queueName,
+            message_id: messageId,
+         })
+
+         this.log("info", "Analysis job completed successfully", {
+            messageId,
+            audioId: message.audioId,
+         })
+      } catch (error) {
+         const errorMessage =
+            error instanceof Error ? error.message : String(error)
+         const errorCode =
+            error instanceof APIException
+               ? error.code
+               : ERROR_CODES.AI_ANALYSIS_FAILED
+
+         this.log("error", "Analysis job execution failed", {
+            messageId,
+            error: errorMessage,
+            retryCount,
+         })
+
+         // リトライ可能かチェック
+         const canRetry = retryCount < this.maxRetries
+
+         if (canRetry) {
+            // メッセージを再キュー（リトライカウント増加）
+            const retryMessage: QueueMessage = {
+               ...message,
+               retryCount: retryCount + 1,
+            }
+
+            await this.supabaseClient.rpc("queue_send", {
+               queue_name: this.queueName,
+               message: retryMessage,
+               sleep_seconds: 10, // 10秒後に再試行
+            })
+
+            // 元のメッセージを削除
+            await this.supabaseClient.rpc("queue_delete", {
+               queue_name: this.queueName,
+               message_id: messageId,
+            })
+
+            this.log("info", "Analysis job re-queued for retry", {
+               messageId,
+               retryCount: retryCount + 1,
+            })
+         } else {
+            // 最大リトライ回数に達したら失敗として記録
+            await this.supabaseClient.from("analysis_results").upsert({
+               message_id: messageId,
+               audio_id: message.audioId,
+               status: "failed",
+               error_message: errorMessage,
+               error_code: errorCode,
+               retry_count: retryCount,
+               completed_at: new Date().toISOString(),
+            })
+
+            // キューからメッセージを削除
+            await this.supabaseClient.rpc("queue_delete", {
+               queue_name: this.queueName,
+               message_id: messageId,
+            })
+
+            this.log("error", "Analysis job failed after max retries", {
+               messageId,
+               retryCount,
+            })
+         }
+      }
    }
 
    /**
