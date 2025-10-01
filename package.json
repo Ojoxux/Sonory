@@ -2,7 +2,7 @@
 	"name": "sonory-monorepo",
 	"version": "0.1.0",
 	"private": true,
-	"workspaces": ["apps/web", "apps/python-audio-analyzer", "packages/*"],
+	"workspaces": ["apps/web", "apps/api", "packages/*"],
 	"scripts": {
 		"build": "turbo build",
 		"dev": "turbo dev",

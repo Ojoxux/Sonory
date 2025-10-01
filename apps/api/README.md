@@ -2,10 +2,33 @@
 
 ## 🚀 セットアップ
 
-### 1. 依存関係のインストール
+### Docker環境での開発（推奨）
 
 ```bash
-cd apps/api && npm install
+# プロジェクトルートから実行
+task sonory:api:up  # APIサービス起動（Python APIも自動起動）
+
+# または全サービス起動
+task sonory:up      # Web + API + Python API 全て起動
+```
+
+Docker環境では以下が自動的に実行されます：
+- 依存関係のインストール
+- 型定義の生成（`wrangler types`）
+- TypeScriptのビルド
+
+### ローカル環境でのセットアップ（オプション）
+
+以下の場合にローカルセットアップが必要です：
+- **VSCodeなどのIDEで型補完を効かせたい場合**
+- **トラブルシューティング時**
+
+#### 1. 依存関係のインストールと型定義生成
+
+```bash
+cd apps/api
+npm install
+npm run generate-types  # Cloudflare Workers用の型定義を生成
 ```
 
 ### 2. 環境変数の設定
@@ -29,9 +52,9 @@ cp env.example .env
 
 ```bash
 # プロジェクトルートから
-task sonory:up        # 全サービス起動
+task sonory:api:up    # APIサービス起動
 task sonory:logs:api  # APIログ確認
-task sonory:down      # 停止
+task sonory:down      # 全サービス停止
 ```
 
 ## 📁 ディレクトリ構造
@@ -52,23 +75,22 @@ tsconfig-paths.json # TSパスエイリアス設定
 
 ## 🔧 利用可能なコマンド
 
-Docker環境での開発コマンド：
+### Docker環境での開発
+プロジェクトルートで以下のコマンドを実行してください：
+
 ```bash
-# 全サービス起動
-task sonory:up           # 全サービス起動
-task sonory:rebuild      # リビルド
+# 利用可能なTaskコマンドの一覧表示
+task --list
+```
 
-# APIサービス単体
-task sonory:api:up       # APIサービスのみ起動
+### コンテナ内での開発ツール
+APIコンテナ内で以下のコマンドが利用できます：
 
-# ログ・監視
-task sonory:logs:api     # APIログ確認
-task sonory:status       # 全サービス状況確認
-
-# 開発ツール（サービス内で実行）
+```bash
+npm run generate-types   # Cloudflare Workers用型定義生成
+npm run build            # ビルド（型生成込み）
 npm run lint             # リント実行
-npm run lint:fix         # リント自動修正
-npm run type-check       # 型チェック実行
+npm run type-check       # 型チェック（型生成込み）
 npm run validate         # リント + 型チェック
 npm run test             # テスト実行
 ```
@@ -103,6 +125,7 @@ npm run test             # テスト実行
 - **Cloudflare Workers** - 本番環境ランタイム
 - **Hono** - 軽量Webフレームワーク
 - **TypeScript** - 型安全な開発
+- **Wrangler** - Cloudflare Workers開発ツール（型定義生成）
 - **Supabase** - データベース・ストレージ
 - **Docker** - コンテナ化環境（開発用）
 - **Python Audio Analyzer (YAMNet)** - AI音声分類（マイクロサービス） 
