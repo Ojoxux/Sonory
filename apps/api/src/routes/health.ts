@@ -1,15 +1,17 @@
 import type { APIResponse } from "@sonory/shared-types"
 import { Hono } from "hono"
+import type { Env } from "../index"
+import { getSupabaseAdmin } from "../services/supabase"
 import { logger } from "../utils/logger"
 
 interface HealthCheckResponse {
-   status: "healthy" | "degraded" | "unhealthy"
+   status: "healthy" | "degraded" | "unhealthy" // healthy: 正常, degraded: 警告, unhealthy: 異常
    timestamp: string
    version: string
    services: {
-      database: "connected" | "disconnected"
-      storage: "connected" | "disconnected"
-      ai: "available" | "unavailable"
+      database: "connected" | "disconnected" // connected: 接続済み, disconnected: 未接続
+      storage: "connected" | "disconnected" // connected: 接続済み, disconnected: 未接続
+      ai: "available" | "unavailable" // available: 利用可能, unavailable: 利用不可
    }
    uptime: number
 }
@@ -21,13 +23,53 @@ const startTime = Date.now()
  * ヘルスチェックルート
  * @description システムの健全性を確認するエンドポイント
  */
-export const healthRoutes = new Hono()
+export const healthRoutes = new Hono<{ Bindings: Env }>()
 
 /**
  * GET /health
- * @description 基本的なヘルスチェック
+ * @description 基本的なヘルスチェック（実際のSupabase接続確認付き）
  */
-healthRoutes.get("/", (c) => {
+healthRoutes.get("/", async (c) => {
+   // Supabase接続確認
+   let dbStatus: "connected" | "disconnected" = "disconnected"
+   let storageStatus: "connected" | "disconnected" = "disconnected"
+
+   try {
+      const supabase = getSupabaseAdmin(c.env)
+
+      // データベース接続確認（シンプルなクエリ）
+      const { error: dbError } = await supabase
+         .from("sound_pins")
+         .select("id")
+         .limit(1)
+
+      if (!dbError) {
+         dbStatus = "connected"
+      } else {
+         logger.error("Database connection error", {
+            error: dbError.message,
+            code: dbError.code,
+         })
+      }
+
+      // ストレージ接続確認
+      const { error: storageError } = await supabase.storage
+         .from("sonory-audio")
+         .list("", { limit: 1 })
+
+      if (!storageError) {
+         storageStatus = "connected"
+      } else {
+         logger.error("Storage connection error", {
+            error: storageError.message,
+         })
+      }
+   } catch (error) {
+      logger.error("Health check service error", {
+         error: error instanceof Error ? error.message : String(error),
+      })
+   }
+
    const response: APIResponse<HealthCheckResponse> = {
       success: true,
       data: {
@@ -35,8 +77,8 @@ healthRoutes.get("/", (c) => {
          timestamp: new Date().toISOString(),
          version: "0.1.0",
          services: {
-            database: "connected",
-            storage: "connected",
+            database: dbStatus,
+            storage: storageStatus,
             ai: "available",
          },
          uptime: Date.now() - startTime,
@@ -46,6 +88,7 @@ healthRoutes.get("/", (c) => {
    logger.debug("Health check performed", {
       requestId: c.get("requestId"),
       uptime: response.data.uptime,
+      services: response.data.services,
    })
 
    return c.json(response)

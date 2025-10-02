@@ -5,10 +5,11 @@
    "type": "module",
    "scripts": {
       "dev": "wrangler dev",
-      "dev:node": "node --watch dist/index.js",
       "prebuild": "npm run generate-types",
       "build": "tsc && tsc-alias -p tsconfig-paths.json --resolve-full-paths",
       "deploy": "wrangler deploy",
+      "deploy:staging": "wrangler deploy --env staging",
+      "deploy:production": "wrangler deploy --env production",
       "generate-types": "wrangler types",
       "pretype-check": "npm run generate-types",
       "lint": "biome check .",
@@ -23,7 +24,6 @@
       "clean": "rm -rf dist .wrangler"
    },
    "dependencies": {
-      "@hono/node-server": "^1.19.4",
       "@hono/zod-validator": "^0.5.0",
       "@sonory/shared-types": "file:../../packages/shared-types",
       "@sonory/utils": "file:../../packages/utils",

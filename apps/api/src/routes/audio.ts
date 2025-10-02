@@ -9,8 +9,56 @@ import { AudioService } from "../services/audio.service"
 const app = new Hono<{ Bindings: Env }>()
 
 /**
+ * POST /api/audio/upload-url
+ * @description Presigned URLを生成して直接Supabase Storageにアップロード
+ * @tags Audio
+ * @param {string} fileName - アップロードするファイル名
+ * @param {string} [userId] - ユーザーID（オプション）
+ * @returns {object} Presigned URLと関連情報
+ */
+app.post("/upload-url", rateLimits.default, async (c) => {
+   const audioService = new AudioService(
+      c as unknown as Context<{ Bindings: Env }>,
+   )
+
+   try {
+      const body = await c.req.json()
+      const fileName = body.fileName
+      const userId = body.userId
+
+      // ファイル名が存在しない場合はエラースロー
+      if (!fileName) {
+         throw new APIException(
+            ERROR_CODES.INVALID_AUDIO_FORMAT,
+            "File name is required",
+            400,
+         )
+      }
+
+      // Presigned URL生成
+      const result = await audioService.generateUploadUrl(fileName, userId)
+
+      return c.json({
+         success: true,
+         data: result,
+      })
+   } catch (error) {
+      if (error instanceof APIException) {
+         throw error
+      }
+
+      throw new APIException(
+         ERROR_CODES.STORAGE_ERROR,
+         "Failed to generate upload URL",
+         500,
+         error instanceof Error ? { message: error.message } : undefined,
+      )
+   }
+})
+
+/**
  * POST /api/audio/upload
- * @description 音声ファイルをアップロード
+ * @description 音声ファイルをアップロード（従来の直接アップロード方式）
  * @tags Audio
  * @param {File} file - アップロードする音声ファイル（FormData）
  * @param {string} [userId] - ユーザーID（オプション）
@@ -74,36 +122,38 @@ app.post("/upload", rateLimits.audioUpload, async (c) => {
 })
 
 /**
- * DELETE /api/audio/:audioId
+ * DELETE /api/audio/:filePath
  * @description 音声ファイルを削除
  * @tags Audio
- * @param {string} audioId - 削除する音声ファイルのID
- * @returns {boolean} 削除成功可否
+ * @param {string} filePath - 削除する音声ファイルのパス（URLエンコード済み）
+ * @returns {object} 削除結果
  */
-app.delete("/:audioId", rateLimits.default, async (c) => {
+app.delete("/:filePath{.+}", rateLimits.default, async (c) => {
    const audioService = new AudioService(
       c as unknown as Context<{ Bindings: Env }>,
    )
-   const audioId = c.req.param("audioId")
+   const encodedFilePath = c.req.param("filePath")
 
    try {
-      if (!audioId) {
+      if (!encodedFilePath) {
          throw new APIException(
             ERROR_CODES.INVALID_AUDIO_FORMAT,
-            "Audio ID is required",
+            "File path is required",
             400,
          )
       }
 
-      // TODO: 実際のファイルパス取得ロジックを実装
-      // 現在は簡易的な実装
-      const filePath = audioId
+      // URLデコードしてファイルパスを取得
+      const filePath = decodeURIComponent(encodedFilePath)
 
       const success = await audioService.deleteAudio(filePath)
 
       return c.json({
          success: true,
-         data: { deleted: success },
+         data: {
+            deleted: success,
+            deletedPath: filePath,
+         },
       })
    } catch (error) {
       if (error instanceof APIException) {
@@ -169,11 +219,12 @@ app.get("/:audioId/metadata", rateLimits.default, async (c) => {
 
 /**
  * POST /api/audio/:audioId/analyze
- * @description 音声ファイルをPython YAMNetで分析
+ * @description 音声分析ジョブを非同期で投入（Cloudflare Workers 30秒制限対応）
  * @tags Audio
  * @param {string} audioId - 分析する音声ファイルのID
- * @param {object} [options] - 分析オプション
- * @returns {AIAnalysisResult} AI分析結果
+ * @param {object} body - リクエストボディ
+ * @param {string} body.audioUrl - 分析対象の音声URL（公開アクセス可能）
+ * @returns {object} ジョブ投入結果とステータスURL
  */
 app.post("/:audioId/analyze", rateLimits.default, async (c) => {
    const audioService = new AudioService(
@@ -190,9 +241,8 @@ app.post("/:audioId/analyze", rateLimits.default, async (c) => {
          )
       }
 
-      // リクエストボディから分析オプションを取得
+      // リクエストボディから音声URLを取得
       const body = await c.req.json().catch(() => ({}))
-      const topK = body.topK || 5
       const audioUrl = body.audioUrl
 
       if (!audioUrl) {
@@ -203,40 +253,29 @@ app.post("/:audioId/analyze", rateLimits.default, async (c) => {
          )
       }
 
-      // Python YAMNetサービスで音声分析を実行
-      const pythonAnalysisResult = await audioService.analyzeAudioWithPython(
-         audioUrl,
-         topK,
-      )
+      // 非同期分析ジョブを投入
+      const jobResult = await audioService.scheduleAnalysis(audioId, audioUrl)
 
-      // 分析結果を統一形式に変換
-      const analysisResult = {
-         transcription: "YAMNet音響分類完了",
-         categories: {
-            emotion: "N/A",
-            topic: pythonAnalysisResult.classifications[0]?.label || "環境音",
-            language: "N/A",
-            confidence:
-               pythonAnalysisResult.classifications[0]?.confidence || 0.0,
-         },
-         summary: `検出された音: ${
-            pythonAnalysisResult.classifications[0]?.label || "不明"
-         } (信頼度: ${Math.round(
-            (pythonAnalysisResult.classifications[0]?.confidence || 0) * 100,
-         )}%)`,
-         environment:
-            pythonAnalysisResult.environment?.primary_type || "unknown",
-         allClassifications: pythonAnalysisResult.classifications || [],
-         environmentDetails: pythonAnalysisResult.environment || {},
-         performanceMetrics: pythonAnalysisResult.performance_metrics || {},
+      // 開発環境では即座にキュー処理を実行（自動処理）
+      const env = c.env as Env
+      const isDevelopment =
+         env.ENVIRONMENT === "development" || !env.ENVIRONMENT
+
+      // 本番環境では Cloudflare Cron Trigger で /api/audio/internal/process-queue を定期実行する
+      if (isDevelopment) {
+         console.log("🔧 開発環境: 同期的にキュー処理を実行します")
+         await new Promise((resolve) => setTimeout(resolve, 500))
+         try {
+            const processedCount = await audioService.processAnalysisQueue()
+            console.log("✅ キュー処理完了", { processedCount })
+         } catch (error) {
+            console.error("❌ 自動キュー処理エラー:", error)
+         }
       }
-
-      // TODO: データベースに分析結果を保存
-      // await saveAnalysisResult(audioId, analysisResult)
 
       return c.json({
          success: true,
-         data: analysisResult,
+         data: jobResult,
       })
    } catch (error) {
       if (error instanceof APIException) {
@@ -245,7 +284,96 @@ app.post("/:audioId/analyze", rateLimits.default, async (c) => {
 
       throw new APIException(
          ERROR_CODES.AI_ANALYSIS_FAILED,
-         "Failed to analyze audio",
+         "Failed to schedule audio analysis",
+         500,
+         error instanceof Error ? { message: error.message } : undefined,
+      )
+   }
+})
+
+/**
+ * GET /api/audio/:audioId/analysis/:jobId/status
+ * @description 分析ジョブのステータスと結果を取得
+ * @tags Audio
+ * @param {string} audioId - 音声ファイルのID
+ * @param {string} jobId - 分析ジョブのID
+ * @returns {object} ジョブステータスと分析結果
+ */
+app.get("/:audioId/analysis/:jobId/status", rateLimits.default, async (c) => {
+   const audioService = new AudioService(
+      c as unknown as Context<{ Bindings: Env }>,
+   )
+   const audioId = c.req.param("audioId")
+   const jobId = c.req.param("jobId")
+
+   try {
+      if (!audioId) {
+         throw new APIException(
+            ERROR_CODES.INVALID_AUDIO_FORMAT,
+            "Audio ID is required",
+            400,
+         )
+      }
+
+      if (!jobId) {
+         throw new APIException(
+            ERROR_CODES.INVALID_AUDIO_FORMAT,
+            "Job ID is required",
+            400,
+         )
+      }
+
+      // 分析ジョブのステータスを取得
+      const jobStatus = await audioService.getAnalysisStatus(jobId)
+
+      return c.json({
+         success: true,
+         data: jobStatus,
+      })
+   } catch (error) {
+      if (error instanceof APIException) {
+         throw error
+      }
+
+      throw new APIException(
+         ERROR_CODES.AI_ANALYSIS_FAILED,
+         "Failed to get analysis status",
+         500,
+         error instanceof Error ? { message: error.message } : undefined,
+      )
+   }
+})
+
+/**
+ * POST /api/audio/internal/process-queue
+ * @description キューから分析ジョブを取得して処理（内部用・Cron Trigger用）
+ * @tags Internal
+ * @returns {object} 処理結果
+ */
+app.post("/internal/process-queue", async (c) => {
+   const audioService = new AudioService(
+      c as unknown as Context<{ Bindings: Env }>,
+   )
+
+   try {
+      // キューから分析ジョブを処理
+      const processedCount = await audioService.processAnalysisQueue()
+
+      return c.json({
+         success: true,
+         data: {
+            processedCount,
+            message: `Processed ${processedCount} analysis jobs`,
+         },
+      })
+   } catch (error) {
+      if (error instanceof APIException) {
+         throw error
+      }
+
+      throw new APIException(
+         ERROR_CODES.AI_ANALYSIS_FAILED,
+         "Failed to process analysis queue",
          500,
          error instanceof Error ? { message: error.message } : undefined,
       )

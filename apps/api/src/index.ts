@@ -2,37 +2,12 @@ import { Hono } from "hono"
 import { logger as honoLogger } from "hono/logger"
 import { requestId } from "hono/request-id"
 import { timing } from "hono/timing"
-import { getSecureSupabaseConfig } from "./config/secrets"
 import { getCorsMiddleware } from "./middleware/cors"
 import { errorHandler } from "./middleware/error"
 import audioRoutes from "./routes/audio"
 import { healthRoutes } from "./routes/health"
 import pinsRoutes from "./routes/pins"
 import { logger } from "./utils/logger"
-
-// Node.js環境での環境変数設定（Docker環境用）
-if (typeof process !== "undefined" && process.env.NODE_ENV !== "production") {
-   // Docker環境では強制的にpython-apiコンテナを使用
-   if (
-      !process.env.PYTHON_AUDIO_ANALYZER_URL ||
-      process.env.PYTHON_AUDIO_ANALYZER_URL.includes("localhost")
-   ) {
-      process.env.PYTHON_AUDIO_ANALYZER_URL = "http://python-api:8000"
-   }
-   process.env.PYTHON_AUDIO_ANALYZER_TIMEOUT =
-      process.env.PYTHON_AUDIO_ANALYZER_TIMEOUT || "30000"
-
-   // デバッグ出力
-   console.log("🔧 Environment Variables (Docker override):")
-   console.log(
-      "  PYTHON_AUDIO_ANALYZER_URL:",
-      process.env.PYTHON_AUDIO_ANALYZER_URL,
-   )
-   console.log(
-      "  PYTHON_AUDIO_ANALYZER_TIMEOUT:",
-      process.env.PYTHON_AUDIO_ANALYZER_TIMEOUT,
-   )
-}
 
 /**
  * Cloudflare Workers環境変数の型定義
@@ -70,52 +45,6 @@ const app = new Hono<{ Bindings: Env }>()
 app.use("*", requestId())
 app.use("*", timing())
 app.use("*", honoLogger())
-
-// Node.js環境でのenv設定
-app.use("*", async (c, next) => {
-   if (typeof process !== "undefined") {
-      // Docker Secretsを使用してセキュアに設定を取得
-      try {
-         const supabaseConfig = getSecureSupabaseConfig()
-
-         c.env = {
-            ENVIRONMENT:
-               (process.env.ENVIRONMENT as "development" | "production") ||
-               "development",
-            CORS_ORIGIN: process.env.CORS_ORIGIN,
-            SUPABASE_URL: supabaseConfig.url,
-            SUPABASE_ANON_KEY: supabaseConfig.anonKey,
-            SUPABASE_SERVICE_KEY: supabaseConfig.serviceKey,
-            PYTHON_AUDIO_ANALYZER_URL:
-               process.env.PYTHON_AUDIO_ANALYZER_URL || "",
-            PYTHON_AUDIO_ANALYZER_TIMEOUT:
-               process.env.PYTHON_AUDIO_ANALYZER_TIMEOUT || "30000",
-         } as Env
-      } catch (error) {
-         // セキュア設定の取得に失敗した場合はエラーログを出力
-         console.error("❌ Failed to load secure configuration:", error)
-         // フォールバック: 環境変数から直接読み取り（警告付き）
-         console.warn(
-            "⚠️ Falling back to environment variables - this is not secure for production",
-         )
-         c.env = {
-            ENVIRONMENT:
-               (process.env.ENVIRONMENT as "development" | "production") ||
-               "development",
-            CORS_ORIGIN: process.env.CORS_ORIGIN,
-            SUPABASE_URL: process.env.SUPABASE_URL || "",
-            SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY || "",
-            SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY,
-            PYTHON_AUDIO_ANALYZER_URL:
-               process.env.PYTHON_AUDIO_ANALYZER_URL || "",
-            PYTHON_AUDIO_ANALYZER_TIMEOUT:
-               process.env.PYTHON_AUDIO_ANALYZER_TIMEOUT || "30000",
-         } as Env
-      }
-   }
-   await next()
-})
-
 app.use("*", errorHandler)
 
 // CORS設定（環境変数から取得）
@@ -192,20 +121,75 @@ app.notFound((c) => {
  * Cloudflare Workersエクスポート
  */
 export default {
-   fetch: app.fetch,
-}
+   async fetch(request: Request, env: Env, ctx: ExecutionContext) {
+      return app.fetch(request, env, ctx)
+   },
+   async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
+      const environment = env.ENVIRONMENT ?? "production"
 
-/**
- * Node.js環境での起動
- */
-if (typeof process !== "undefined" && process.env.NODE_ENV !== "test") {
-   const { serve } = await import("@hono/node-server")
+      if (environment === "development") {
+         logger.debug("Scheduled queue processing skipped", {
+            environment,
+         })
+         return
+      }
 
-   const port = Number(process.env.PORT) || 8787
-   console.log(`🚀 Server is running on http://localhost:${port}`)
+      const request = new Request(
+         "https://scheduled.sonory.internal/api/audio/internal/process-queue",
+         {
+            method: "POST",
+            headers: {
+               "x-sonory-scheduled": "true",
+               "x-sonory-cron": event.cron ?? "",
+               "x-sonory-scheduled-time": new Date(
+                  event.scheduledTime,
+               ).toISOString(),
+            },
+         },
+      )
 
-   serve({
-      fetch: app.fetch,
-      port,
-   })
+      ctx.waitUntil(
+         (async () => {
+            try {
+               const response = await app.fetch(request, env, ctx)
+
+               if (!response.ok) {
+                  const errorBody = await response
+                     .text()
+                     .catch(() => "<unavailable>")
+
+                  logger.error("Scheduled queue processing failed", {
+                     environment,
+                     status: response.status,
+                     errorBody,
+                  })
+                  return
+               }
+
+               const result = (await response.json().catch(() => null)) as {
+                  data?: {
+                     processedCount?: number
+                  }
+               } | null
+               const processedCount = result?.data?.processedCount
+
+               logger.info("Scheduled queue processing completed", {
+                  environment,
+                  processedCount,
+               })
+            } catch (error) {
+               logger.error("Scheduled queue processing threw an error", {
+                  environment,
+                  error:
+                     error instanceof Error
+                        ? {
+                             message: error.message,
+                             stack: error.stack,
+                          }
+                        : String(error),
+               })
+            }
+         })(),
+      )
+   },
 }

@@ -38,6 +38,24 @@ let _adminClient: SupabaseClient | null = null
  * @throws APIException 必須の設定が未設定の場合
  */
 export function getSupabaseConfig(env?: Env): SupabaseConfig {
+   // Cloudflare Workers環境（navigatorが存在する）では環境変数から直接取得
+   if (typeof navigator !== "undefined") {
+      const url = env?.SUPABASE_URL
+      const anonKey = env?.SUPABASE_ANON_KEY
+      const serviceKey = env?.SUPABASE_SERVICE_KEY
+
+      if (!url || !anonKey) {
+         throw new APIException(
+            ERROR_CODES.INTERNAL_SERVER_ERROR,
+            "Supabase configuration missing: SUPABASE_URL and SUPABASE_ANON_KEY are required",
+            500,
+         )
+      }
+
+      console.log("✅ Supabase設定をWorkers環境変数から取得しました")
+      return { url, anonKey, serviceKey } as const
+   }
+
    // Node.js環境ではDocker Secretsを優先使用
    if (typeof process !== "undefined" && process.env) {
       try {
@@ -52,11 +70,11 @@ export function getSupabaseConfig(env?: Env): SupabaseConfig {
       }
    }
 
-   // フォールバック: Cloudflare Workers環境変数または環境変数
-   const url = env?.SUPABASE_URL ?? process.env.SUPABASE_URL
-   const anonKey = env?.SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY
+   // フォールバック: 環境変数
+   const url = env?.SUPABASE_URL ?? process?.env.SUPABASE_URL
+   const anonKey = env?.SUPABASE_ANON_KEY ?? process?.env.SUPABASE_ANON_KEY
    const serviceKey =
-      env?.SUPABASE_SERVICE_KEY ?? process.env.SUPABASE_SERVICE_KEY
+      env?.SUPABASE_SERVICE_KEY ?? process?.env.SUPABASE_SERVICE_KEY
 
    if (!url || !anonKey) {
       throw new APIException(
