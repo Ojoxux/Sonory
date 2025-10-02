@@ -8,6 +8,9 @@ compatibility_flags = ["nodejs_compat"]
 name = "sonory-api-production"
 workers_dev = true
 
+[env.production.triggers]
+crons = ["* * * * *"]
+
 [env.production.vars]
 ENVIRONMENT = "production"
 PYTHON_AUDIO_ANALYZER_URL = "https://python-audio-analyzer.onrender.com"
@@ -21,6 +24,9 @@ PYTHON_AUDIO_ANALYZER_TIMEOUT = "30000"
 # ステージング環境設定
 [env.staging]
 name = "sonory-api-staging"
+
+[env.staging.triggers]
+crons = ["* * * * *"]
 
 [env.staging.vars]
 ENVIRONMENT = "staging"
