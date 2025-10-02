@@ -6,6 +6,10 @@ compatibility_flags = ["nodejs_compat"]
 # 本番環境設定（機密情報はwrangler secret putで管理）
 [env.production]
 name = "sonory-api-production"
+workers_dev = true
+
+[env.production.triggers]
+crons = ["* * * * *"]
 
 [env.production.vars]
 ENVIRONMENT = "production"
@@ -20,6 +24,9 @@ PYTHON_AUDIO_ANALYZER_TIMEOUT = "30000"
 # ステージング環境設定
 [env.staging]
 name = "sonory-api-staging"
+
+[env.staging.triggers]
+crons = ["* * * * *"]
 
 [env.staging.vars]
 ENVIRONMENT = "staging"

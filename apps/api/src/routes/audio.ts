@@ -256,6 +256,23 @@ app.post("/:audioId/analyze", rateLimits.default, async (c) => {
       // 非同期分析ジョブを投入
       const jobResult = await audioService.scheduleAnalysis(audioId, audioUrl)
 
+      // 開発環境では即座にキュー処理を実行（自動処理）
+      const env = c.env as Env
+      const isDevelopment =
+         env.ENVIRONMENT === "development" || !env.ENVIRONMENT
+
+      // 本番環境では Cloudflare Cron Trigger で /api/audio/internal/process-queue を定期実行する
+      if (isDevelopment) {
+         console.log("🔧 開発環境: 同期的にキュー処理を実行します")
+         await new Promise((resolve) => setTimeout(resolve, 500))
+         try {
+            const processedCount = await audioService.processAnalysisQueue()
+            console.log("✅ キュー処理完了", { processedCount })
+         } catch (error) {
+            console.error("❌ 自動キュー処理エラー:", error)
+         }
+      }
+
       return c.json({
          success: true,
          data: jobResult,

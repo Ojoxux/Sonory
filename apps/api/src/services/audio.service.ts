@@ -162,10 +162,24 @@ export class AudioService extends BaseService {
             )
          }
 
-         // 公開URLを取得
-         const { data: urlData } = this.supabaseClient.storage
-            .from(this.bucketName)
-            .getPublicUrl(filePath)
+         // 署名付きURL（Signed URL）を生成（プライベートバケット対応）
+         // 有効期限: 1時間（3600秒）
+         const { data: urlData, error: urlError } =
+            await this.supabaseClient.storage
+               .from(this.bucketName)
+               .createSignedUrl(filePath, 3600)
+
+         if (urlError || !urlData) {
+            this.log("error", "Failed to create signed URL", {
+               error: urlError?.message || "Unknown error",
+               filePath,
+            })
+            throw new APIException(
+               ERROR_CODES.STORAGE_ERROR,
+               `Failed to create signed URL: ${urlError?.message || "Unknown error"}`,
+               500,
+            )
+         }
 
          // メタデータを構築
          const metadata: AudioMetadata = {
@@ -174,13 +188,13 @@ export class AudioService extends BaseService {
             size: file.size,
             format: this.extractFormat(file),
             duration: 0, // 実際の長さは後で更新
-            url: urlData.publicUrl,
+            url: urlData.signedUrl,
             uploadedAt: new Date().toISOString(),
          }
 
          const result: AudioUploadResult = {
             audioId: data.id || filePath,
-            audioUrl: urlData.publicUrl,
+            audioUrl: urlData.signedUrl,
             metadata,
          }
 
@@ -501,10 +515,46 @@ export class AudioService extends BaseService {
             audioUrl,
          })
 
+         // audioUrlからファイルパスを抽出して新しいSigned URLを生成
+         // これにより、古いSigned URLの有効期限切れを回避
+         let analysisAudioUrl = audioUrl
+         try {
+            // URLからファイルパスを抽出（例: /storage/v1/object/sign/sonory-audio/... から sonory-audio/... を取得）
+            const urlObj = new URL(audioUrl)
+            const pathMatch = urlObj.pathname.match(
+               /\/object\/(?:sign|public)\/([^?]+)/,
+            )
+            if (pathMatch?.[1]) {
+               const filePath = pathMatch[1].replace(`${this.bucketName}/`, "")
+
+               // 新しいSigned URLを生成（有効期限: 2時間）
+               const { data: signedData, error: signedError } =
+                  await this.supabaseClient.storage
+                     .from(this.bucketName)
+                     .createSignedUrl(filePath, 7200) // 2時間
+
+               if (!signedError && signedData) {
+                  analysisAudioUrl = signedData.signedUrl
+                  this.log("info", "Generated fresh signed URL for analysis", {
+                     originalUrl: audioUrl,
+                     newUrl: analysisAudioUrl,
+                  })
+               }
+            }
+         } catch (urlError) {
+            // URLパースに失敗した場合は元のURLを使用
+            this.log("warn", "Failed to refresh signed URL, using original", {
+               error:
+                  urlError instanceof Error
+                     ? urlError.message
+                     : String(urlError),
+            })
+         }
+
          // Supabase Queuesにメッセージを送信
          const message: QueueMessage = {
             audioId,
-            audioUrl,
+            audioUrl: analysisAudioUrl,
             retryCount: 0,
          }
 

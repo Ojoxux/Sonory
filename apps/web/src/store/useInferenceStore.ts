@@ -113,58 +113,120 @@ async function uploadAudioToStorage(audioData: AudioData): Promise<string> {
  *
  * @description
  * Python YAMNetサービスへのAPI呼び出しを実行
+ * ジョブを投入し、ステータスをポーリングして結果を取得
  */
 async function callBackendAnalysis(
    audioData: AudioData,
    audioUrl: string,
 ): Promise<InferenceResult[]> {
    try {
-      // API Gateway経由でPython YAMNet分析を実行
-      const response = await fetch(`/api/audio/${audioData.id}/analyze`, {
-         method: "POST",
-         headers: {
-            "Content-Type": "application/json",
-         },
-         body: JSON.stringify({
-            audioUrl: audioUrl, // アップロード後のURLを使用
-            topK: 5,
-         }),
+      // Step 1: 分析ジョブを投入
+      console.log("🔄 分析ジョブを投入中...", {
+         audioId: audioData.id,
+         audioUrl,
       })
+      const scheduleResponse = await fetch(
+         `/api/audio/${audioData.id}/analyze`,
+         {
+            method: "POST",
+            headers: {
+               "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+               audioUrl: audioUrl,
+               topK: 5,
+            }),
+         },
+      )
 
-      if (!response.ok) {
-         const errorData = await response.json().catch(() => ({}))
+      if (!scheduleResponse.ok) {
+         const errorData = await scheduleResponse.json().catch(() => ({}))
          throw new Error(
-            `API分析失敗: ${response.status} ${response.statusText} - ${
+            `ジョブ投入失敗: ${scheduleResponse.status} ${scheduleResponse.statusText} - ${
                errorData.error?.message || "不明なエラー"
             }`,
          )
       }
 
-      const analysisResult = await response.json()
+      const scheduleResult = await scheduleResponse.json()
 
-      if (!analysisResult.success || !analysisResult.data) {
-         throw new Error("分析結果の形式が正しくありません")
+      if (!scheduleResult.success || !scheduleResult.data?.jobId) {
+         throw new Error("ジョブ投入結果が不正です")
       }
 
-      // Python YAMNet分析結果を統一形式に変換
-      const classifications: InferenceResult[] = (
-         analysisResult.data.allClassifications || []
+      const { jobId } = scheduleResult.data
+      console.log("✅ ジョブ投入成功:", { jobId })
+
+      // Step 2: ジョブステータスをポーリング
+      console.log("⏳ 分析結果を待機中...")
+      const maxAttempts = 60 // 最大60回（60秒）
+      const pollInterval = 1000 // 1秒間隔
+
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+         await new Promise((resolve) => setTimeout(resolve, pollInterval))
+
+         const statusResponse = await fetch(
+            `/api/audio/${audioData.id}/analysis/${jobId}/status`,
+            {
+               method: "GET",
+            },
+         )
+
+         if (!statusResponse.ok) {
+            const errorData = await statusResponse.json().catch(() => ({}))
+            throw new Error(
+               `ステータス取得失敗: ${statusResponse.status} ${statusResponse.statusText} - ${
+                  errorData.error?.message || "不明なエラー"
+               }`,
+            )
+         }
+
+         const statusResult = await statusResponse.json()
+
+         if (!statusResult.success || !statusResult.data) {
+            throw new Error("ステータス結果が不正です")
+         }
+
+         const { status, result, error } = statusResult.data
+
+         console.log(`📊 ステータス確認 (${attempt}/${maxAttempts}):`, status)
+
+         // 完了した場合
+         if (status === "completed" && result) {
+            console.log("✅ 分析完了:", result)
+
+            // Python YAMNet分析結果を統一形式に変換
+            const classifications: InferenceResult[] = (
+               result.classifications || []
+            )
+               .slice(0, 5)
+               .map((classification: APIClassification) => ({
+                  label: classification.label || "不明",
+                  confidence: classification.confidence || 0,
+               }))
+
+            if (classifications.length === 0) {
+               throw new Error("分析結果が空でした")
+            }
+
+            return classifications
+         }
+
+         // 失敗した場合
+         if (status === "failed") {
+            throw new Error(`分析失敗: ${error?.message || "不明なエラー"}`)
+         }
+
+         // queued または processing の場合は次のポーリングへ
+      }
+
+      // タイムアウト
+      throw new Error(
+         `分析タイムアウト: ${maxAttempts}秒経過してもジョブが完了しませんでした`,
       )
-         .slice(0, 5) // 上位5件に制限
-         .map((classification: APIClassification) => ({
-            label: classification.label || "不明",
-            confidence: classification.confidence || 0,
-         }))
-
-      // 結果が空の場合はフォールバックを使用
-      if (classifications.length === 0) {
-         throw new Error("分析結果が空でした - フォールバックを使用")
-      }
-
-      return classifications
    } catch (error) {
       console.warn("⚠️ バックエンドAPI呼び出し失敗:", error)
-      throw error // エラーを上位に伝播してフォールバック処理を実行
+      throw error
    }
 }
 
