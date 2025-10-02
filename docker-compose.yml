@@ -16,7 +16,7 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=http://host.docker.internal:8787
+      - NEXT_PUBLIC_API_URL=http://api:8787
       - NEXT_PUBLIC_PYTHON_API_URL=http://python-api:8000
       - NEXT_PUBLIC_MAPBOX_TOKEN=${NEXT_PUBLIC_MAPBOX_TOKEN}
     volumes:
@@ -105,9 +105,9 @@ services:
       context: ./apps/python-audio-analyzer
       dockerfile: Dockerfile
       target: development
-    # Expose port for Wrangler Workers (running on host) to access
-    ports:
-      - "8000:8000"
+    # No external port exposure - internal network only
+    expose:
+      - "8000"
     env_file:
       - ./apps/python-audio-analyzer/.env
     environment:
