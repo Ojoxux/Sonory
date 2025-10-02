@@ -121,17 +121,23 @@ async function callBackendAnalysis(
 ): Promise<InferenceResult[]> {
    try {
       // Step 1: 分析ジョブを投入
-      console.log("🔄 分析ジョブを投入中...", { audioId: audioData.id, audioUrl })
-      const scheduleResponse = await fetch(`/api/audio/${audioData.id}/analyze`, {
-         method: "POST",
-         headers: {
-            "Content-Type": "application/json",
-         },
-         body: JSON.stringify({
-            audioUrl: audioUrl,
-            topK: 5,
-         }),
+      console.log("🔄 分析ジョブを投入中...", {
+         audioId: audioData.id,
+         audioUrl,
       })
+      const scheduleResponse = await fetch(
+         `/api/audio/${audioData.id}/analyze`,
+         {
+            method: "POST",
+            headers: {
+               "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+               audioUrl: audioUrl,
+               topK: 5,
+            }),
+         },
+      )
 
       if (!scheduleResponse.ok) {
          const errorData = await scheduleResponse.json().catch(() => ({}))
@@ -208,9 +214,7 @@ async function callBackendAnalysis(
 
          // 失敗した場合
          if (status === "failed") {
-            throw new Error(
-               `分析失敗: ${error?.message || "不明なエラー"}`,
-            )
+            throw new Error(`分析失敗: ${error?.message || "不明なエラー"}`)
          }
 
          // queued または processing の場合は次のポーリングへ
