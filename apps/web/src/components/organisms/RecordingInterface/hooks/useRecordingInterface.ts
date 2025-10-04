@@ -1,7 +1,7 @@
 "use client"
 
 import type { PanInfo } from "framer-motion"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useEffectEvent, useRef, useState } from "react"
 import { useRecorderStore } from "../../../../store/useRecorderStore"
 // 実際のMediaRecorder APIを使用
 import { useMediaRecorder } from "../../RecordSection/hooks/useMediaRecorder"
@@ -107,10 +107,13 @@ export function useRecordingInterface(
    // 展開状態が変更されたときに親コンポーネントに通知
    // isExpandedとstatusはhookの内部ロジックに密接に関連しており、親に持ち上げるのは過度に複雑
    // 親が展開状態を知る必要がある場合（例：他のUIの調整）にこのコールバックが使用される
+   const onExpandedChangeEvent = useEffectEvent((expanded: boolean) => {
+      onExpandedChange?.(expanded)
+   })
+
    useEffect(() => {
-      // eslint-disable-next-line react-you-might-not-need-an-effect/no-pass-live-state-to-parent
-      onExpandedChange?.(isExpanded && status !== "idle")
-   }, [isExpanded, status, onExpandedChange])
+      onExpandedChangeEvent(isExpanded && status !== "idle")
+   }, [isExpanded, status])
 
    // 録音完了後、audioDataが設定されたら再生画面を表示
    useEffect(() => {
