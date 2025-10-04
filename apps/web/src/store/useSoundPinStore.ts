@@ -376,8 +376,6 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
             lastCreatedPinId: tempPin.id, // 一時ピンのIDを設定（即座の表示更新のため）
          }))
 
-         let response: Response
-
          // 常に /api/pins/upload エンドポイントを使用
          console.log("🔄 音声ファイルをアップロード")
 
@@ -414,7 +412,7 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
          )
 
          // アップロードエンドポイントを使用
-         response = await fetch("/api/pins/upload", {
+         const response = await fetch("/api/pins/upload", {
             method: "POST",
             body: formData,
          })
