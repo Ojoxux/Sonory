@@ -444,13 +444,7 @@ export function SoundPinMarkers({
 
       // 選択状態変更時は常に更新（見た目が変わるため）
       updateMarkersIncremental(newClusters)
-   }, [
-      selectedPinId,
-      map,
-      mapStyleLoaded,
-      stablePins,
-      updateMarkersIncremental,
-   ])
+   }, [map, mapStyleLoaded, stablePins, updateMarkersIncremental])
 
    // ズームイベントの最適化
    useEffect(() => {
