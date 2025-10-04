@@ -44,6 +44,8 @@
 
 - Docker 20.0.0以上
 - Docker Compose v2以上
+- Node.js 18以上
+- npm 9以上
 - [Task](https://taskfile.dev/) (推奨)
 - Git
 
