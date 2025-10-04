@@ -75,15 +75,31 @@ cp .env.example .env
 
 3. **開発環境の起動**
 
+APIサービスはCloudflare Workersで動作するため、DockerとWranglerの2つを起動する必要があります。
+
+**ターミナル1: Docker Compose（Web + Python API）**
 ```bash
-# 全サービス起動
+# Web + Python APIサービスを起動
 task sonory:up
 
 # 起動確認
 task sonory:status
 ```
 
-開発環境が起動したら、[http://localhost:3000](http://localhost:3000) でアクセスできます。
+**ターミナル2: Cloudflare Workers（API）**
+```bash
+# APIディレクトリに移動
+cd apps/api
+
+# 依存関係のインストール（初回のみ）
+npm install
+
+# API開発サーバー起動
+npm run dev
+```
+
+開発環境が起動したら、[http://localhost:3000](http://localhost:3000) でSonory-Webにアクセスできます。
+API: [http://localhost:8787](http://localhost:8787)
 
 ## 🛠 Development Tools
 
