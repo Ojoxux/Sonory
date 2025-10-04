@@ -186,13 +186,14 @@ sonory/                               # プロジェクトルート（モノレ�
 ```bash
 # 個別サービス起動
 task sonory:web:up       # Webサービスのみ
-task sonory:api:up       # APIサービスのみ  
 task sonory:python:up    # Python APIサービスのみ
 
 # 個別ログ確認
 task sonory:logs:web     # Webログ
-task sonory:logs:api     # APIログ
 task sonory:logs:python  # Python APIログ
+
+# API (Cloudflare Workers)
+cd apps/api && npm run dev  # API開発サーバー起動 (localhost:8787)
 
 ```
 
