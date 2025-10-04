@@ -11,7 +11,13 @@
  */
 
 import type mapboxgl from "mapbox-gl"
-import { useCallback, useEffect, useRef, useState } from "react"
+import {
+   useCallback,
+   useEffect,
+   useEffectEvent,
+   useRef,
+   useState,
+} from "react"
 import type {
    LocationData,
    MapboxExtendedMap,
@@ -271,13 +277,17 @@ export function useMapEnvironment({
    )
 
    // 定期的に光と影を更新（頻度を下げる）
+   const updateEvent = useEffectEvent((mapInstance: mapboxgl.Map) => {
+      updateLightingAndShadows(mapInstance)
+   })
+
    useEffect(() => {
       if (!map || !mapStyleLoaded) return
 
       // スタイルが完全に読み込まれるまで待機
       const checkStyleAndUpdate = () => {
          if (map.isStyleLoaded()) {
-            updateLightingAndShadows(map)
+            updateEvent(map)
          } else {
             setTimeout(checkStyleAndUpdate, 200)
          }
@@ -290,14 +300,14 @@ export function useMapEnvironment({
       const interval = setInterval(
          () => {
             if (map.isStyleLoaded()) {
-               updateLightingAndShadows(map)
+               updateEvent(map)
             }
          },
          5 * 60 * 1000,
       )
 
       return () => clearInterval(interval)
-   }, [map, mapStyleLoaded, updateLightingAndShadows])
+   }, [map, mapStyleLoaded])
 
    // デバッグ時間が変更された時に即座に更新
    useEffect(() => {
@@ -305,14 +315,14 @@ export function useMapEnvironment({
 
       const updateWithStyleCheck = () => {
          if (map.isStyleLoaded()) {
-            updateLightingAndShadows(map)
+            updateEvent(map)
          } else {
             setTimeout(updateWithStyleCheck, 200)
          }
       }
 
       setTimeout(updateWithStyleCheck, 1000)
-   }, [map, mapStyleLoaded, updateLightingAndShadows])
+   }, [map, mapStyleLoaded])
 
    return {
       currentLighting,
