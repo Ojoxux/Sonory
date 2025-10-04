@@ -81,7 +81,7 @@ npm run dev
 
 # APIエンドポイント確認
 curl http://localhost:8787/api/health
-curl http://localhost:8787/api/pins/nearby
+curl "http://localhost:8787/api/pins/nearby?north=35.7&south=35.6&east=139.8&west=139.7&limit=10"
 ```
 
 ### 本番デプロイ前チェック
