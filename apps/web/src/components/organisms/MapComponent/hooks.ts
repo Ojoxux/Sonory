@@ -126,29 +126,25 @@ export function useMapComponent({
    const userInteractionHandlerRef = useRef<(() => void) | null>(null)
    const handledCreatedPinIdRef = useRef<string | null>(null)
 
-   // 状態管理
-   const [map, setMap] = useState<mapboxgl.Map | null>(null)
-   const [mapStyleLoaded, setMapStyleLoaded] = useState<boolean>(false)
-   const [geolocateInitialized, setGeolocateInitialized] =
-      useState<boolean>(false)
-   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null)
+   // カスタムフック: 状態管理
+   const {
+      map,
+      setMap,
+      mapStyleLoaded,
+      setMapStyleLoaded,
+      mapBounds,
+      setMapBounds,
+      geolocateInitialized,
+      setGeolocateInitialized,
+   } = useMapState()
 
-   // ストア
+   // カスタムフック: デバッグ機能
    const {
       debugMode,
       toggleDebugMode,
       debugTimeOverride,
       setDebugTimeOverride,
-      setDebugMode,
-   } = useDebugStore()
-
-   // HACK: 初期化時にdebugModeをfalseに強制設定 (デバッグモードがデフォルトで出てしまうため)
-   useEffect(() => {
-      setDebugMode(false)
-      if (process.env.NODE_ENV === "development") {
-         console.log("[MapComponent] debugModeをfalseにリセット")
-      }
-   }, [setDebugMode])
+   } = useMapDebug()
 
    const { selectedPinId, selectPin, lastCreatedPinId } = useSoundPinStore()
 
