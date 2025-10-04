@@ -198,33 +198,8 @@ export function useMapComponent({
       mapIsStyleLoaded: map?.isStyleLoaded(),
    })
 
-   // 通知関数
-   const createNotification = useCallback(
-      (message: string, type: "success" | "error" | "warning") =>
-         ({
-            message,
-            type,
-            timestamp: Date.now(),
-         }) as const,
-      [],
-   )
-
-   // 副作用を実行する関数（分離された副作用）
-   const executeNotification = useCallback(
-      (_notification: ReturnType<typeof createNotification>) => {
-         // HACK: 将来的にはtoast通知などに拡張可能
-      },
-      [],
-   )
-
-   // 通知の実行
-   const showNotification = useCallback(
-      (message: string, type: "success" | "error" | "warning") => {
-         const notification = createNotification(message, type)
-         executeNotification(notification)
-      },
-      [createNotification, executeNotification],
-   )
+   // カスタムフック: 通知機能
+   const { showNotification } = useMapNotifications()
 
    // 位置情報統合
    const {
