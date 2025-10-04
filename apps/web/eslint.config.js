@@ -30,7 +30,7 @@ export default defineConfig([
          },
       },
       rules: {
-         // 必要だったらルールを追加していく
+         // TypeScript関連のルール（Biomeと重複しないもののみ）
          "@typescript-eslint/no-unused-vars": [
             "warn",
             {
@@ -39,6 +39,17 @@ export default defineConfig([
             },
          ],
          "@typescript-eslint/no-explicit-any": "warn",
+
+         // フォーマット関連のルールを無効化（Biomeに任せる）
+         semi: "off",
+         quotes: "off",
+         indent: "off",
+         "comma-dangle": "off",
+         "@typescript-eslint/semi": "off",
+         "@typescript-eslint/quotes": "off",
+         "@typescript-eslint/indent": "off",
+         "@typescript-eslint/comma-dangle": "off",
+         "@typescript-eslint/member-delimiter-style": "off",
       },
    },
 
