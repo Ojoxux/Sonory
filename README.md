@@ -178,7 +178,7 @@ sonory/                               # プロジェクトルート（モノレ�
 - **リンター/フォーマッター**: Biome 1.9.4
 - **型システム**: TypeScript 5
 - **コンテナ化**: Docker + Docker Compose
-- **APIランタイム**: Hono (Node.js) + FastAPI (Python)
+- **APIランタイム**: Hono (Cloudflare Workers) + FastAPI (Python)
 - **自動化**: Task (Taskfile) + Turborepo
 
 ### 個別サービス管理
