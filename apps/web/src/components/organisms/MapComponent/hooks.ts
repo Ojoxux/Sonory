@@ -29,41 +29,33 @@
  * ```
  */
 
-import { useNearbyPins } from "@/hooks/useNearbyPins"
-import { useDebugStore } from "@/store/useDebugStore"
-import { type SoundPin, useSoundPinStore } from "@/store/useSoundPinStore"
-import type { SoundPinAPI } from "@sonory/shared-types"
+import { useSoundPinStore } from "@/store/useSoundPinStore"
 import { useQueryClient } from "@tanstack/react-query"
 import * as O from "fp-ts/Option"
 import { pipe } from "fp-ts/function"
 import mapboxgl from "mapbox-gl"
-import {
-   type RefObject,
-   useCallback,
-   useEffect,
-   useMemo,
-   useRef,
-   useState,
-} from "react"
+import { useCallback, useEffect, useMemo, useRef } from "react"
 import { useBrowserGeolocation } from "./hooks/useBrowserGeolocation"
 import { useLocationIntegration } from "./hooks/useLocationIntegration"
 import { useLocationStorage } from "./hooks/useLocationStorage"
 import { useMapControls } from "./hooks/useMapControls"
+import { useMapDebug } from "./hooks/useMapDebug"
 import { useMapEnvironment } from "./hooks/useMapEnvironment"
+import { useMapNotifications } from "./hooks/useMapNotifications"
+import { useMapState } from "./hooks/useMapState"
 import { useMapboxInitialization } from "./hooks/useMapboxInitialization"
-import type {
-   GeoJSONLineStringFeature,
-   LocationData,
-   MapboxExtendedMap,
-   MapboxMapOptions,
-   MapboxNonStandardMethods,
-} from "./type"
+import type { LocationData } from "./type"
 import {
-   fromNullable,
-   isValidPosition,
-   selectBestPosition,
+	fromNullable,
+	isValidPosition,
+	selectBestPosition,
 } from "./utils/functional"
-import type { LightingConfig } from "./utils/sunCalculations"
+import { mapboxHelpers } from "./utils/mapboxHelpers"
+import { convertApiPinToLocal } from "./utils/pinConverters"
+import type {
+	UseMapComponentProps,
+	UseMapComponentReturn,
+} from "./types"
 
 export interface MapBounds {
    north: number
