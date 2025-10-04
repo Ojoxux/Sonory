@@ -23,13 +23,6 @@ const UPDATE_CONDITIONS = {
    TIME_THRESHOLD: 30000, // ミリ秒
 } as const
 
-// 位置情報の監視オプション
-const _WATCH_OPTIONS: PositionOptions = {
-   enableHighAccuracy: false,
-   timeout: 30000,
-   maximumAge: 60000,
-} as const
-
 /**
  * 2点間の距離を計算（メートル単位）
  * ハーバーサイン公式を使用
@@ -87,8 +80,12 @@ function shouldUpdatePosition(
  * @returns 現在位置と取得エラー
  */
 export function useBrowserGeolocation() {
-   const [position, setPosition] = useState<Position | null>(null)
-   const [error, setError] = useState<GeolocationPositionError | null>(null)
+   const [position, setPosition] = useState<Position | null>(
+      () => geolocationInstance?.position ?? null,
+   )
+   const [error, setError] = useState<GeolocationPositionError | null>(
+      () => geolocationInstance?.error ?? null,
+   )
    const [permissionStatus, setPermissionStatus] = useState<string>("pending")
    const lastPositionRef = useRef<Position | null>(null)
    const subscriberRef = useRef<((pos: Position | null) => void) | null>(null)
@@ -152,15 +149,6 @@ export function useBrowserGeolocation() {
       }
       subscriberRef.current = subscriber
       geolocationInstance.subscribers.add(subscriber)
-
-      // 既存の位置情報があれば設定
-      if (geolocationInstance.position) {
-         setPosition(geolocationInstance.position)
-      }
-
-      if (geolocationInstance.error) {
-         setError(geolocationInstance.error)
-      }
 
       // 権限状態を確認
       if ("permissions" in navigator) {

@@ -378,7 +378,7 @@ export function useMapComponent({
       if (process.env.NODE_ENV === "development") {
          console.log("[MapComponent] debugModeをfalseにリセット")
       }
-   }, [])
+   }, [setDebugMode])
 
    const { selectedPinId, selectPin, lastCreatedPinId } = useSoundPinStore()
 
@@ -530,6 +530,7 @@ export function useMapComponent({
    // マップ初期化（一度だけ実行、依存関係は意図的に除外）
    // 注意: この useEffect は意図的に依存関係を空にしています
    // 依存関係を追加するとマップが何度も再初期化されて問題を起こすためです
+   // biome-ignore lint/correctness/useExhaustiveDependencies: マップは一度だけ初期化する必要がある
    useEffect(() => {
       if (!mapContainerRef.current || mapInitializedRef.current) return
 
@@ -767,6 +768,9 @@ export function useMapComponent({
             }
          })
 
+         // mapのインスタンス化にはDOM要素が必要で、useStateの初期値では不可能
+         // また、mapは他のuseEffectの依存配列に含まれており、再レンダリングのトリガーとして機能する必要がある
+         // eslint-disable-next-line react-you-might-not-need-an-effect/no-initialize-state
          setMap(mapInstance)
          mapInitializedRef.current = true
          console.log("🔍 MapComponent: マップインスタンス設定完了")
@@ -832,6 +836,8 @@ export function useMapComponent({
    }, []) // 依存関係を空にして一度だけ実行
 
    // 位置情報が取得できたらマップの中心を移動（ユーザー操作を考慮）
+   // positionは外部のhooksから来ており、その変更に反応する必要があるため、useEffectが適切
+   /* eslint-disable react-you-might-not-need-an-effect/no-event-handler */
    useEffect(() => {
       if (!map || !position || !mapStyleLoaded) return
 
@@ -905,6 +911,7 @@ export function useMapComponent({
          updatePath([])
       }
    }, [map, position, mapStyleLoaded])
+   /* eslint-enable react-you-might-not-need-an-effect/no-event-handler */
 
    // マップ境界の管理とピン取得
    useEffect(() => {
@@ -1072,11 +1079,6 @@ export function useMapComponent({
          refetchType: "active", // アクティブなクエリのみ再取得
       })
    }, [lastCreatedPinId, map, mapStyleLoaded, nearbyPins, queryClient])
-
-   // ピンの統合表示（nearbyPinsを使用）
-   const _allPins = useMemo(() => {
-      return nearbyPins || []
-   }, [nearbyPins])
 
    return {
       mapContainerRef,

@@ -26,7 +26,7 @@ export function usePinAudioPlayer(
    )
    const [currentTime, setCurrentTime] = useState<number>(0)
    const [duration, setDuration] = useState<number>(0)
-   const [isMounted, setIsMounted] = useState(false)
+   const isMounted = true
    const progressBarRef = useRef<HTMLDivElement>(null)
    const animationFrameRef = useRef<number | null>(null)
 
@@ -243,12 +243,6 @@ export function usePinAudioPlayer(
       stopAudio()
       onClose()
    }, [stopAudio, onClose])
-
-   // コンポーネントがマウントされたかどうかを追跡
-   useEffect(() => {
-      setIsMounted(true)
-      return () => setIsMounted(false)
-   }, [])
 
    // ピンが変更されたときに音声を読み込み
    useEffect(() => {
