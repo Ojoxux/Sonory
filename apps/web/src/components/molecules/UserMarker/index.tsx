@@ -13,7 +13,7 @@
 
 "use client"
 
-import type { LocationData } from "@/components/organisms/MapComponent/type"
+import type { LocationData } from "@/components/organisms/MapComponent/mapbox.types"
 import mapboxgl from "mapbox-gl"
 import { useCallback, useEffect, useRef } from "react"
 

@@ -1,4 +1,4 @@
-import type { LocationData } from "@/components/organisms/MapComponent/type"
+import type { LocationData } from "@/components/organisms/MapComponent/mapbox.types"
 import type { LightingConfig } from "@/components/organisms/MapComponent/utils/sunCalculations"
 import type { UseRealtimeReturn } from "@/hooks/useRealtime"
 import type { SoundPin } from "@/store/useSoundPinStore"

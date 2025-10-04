@@ -13,7 +13,7 @@
 
 import type mapboxgl from "mapbox-gl"
 import { useCallback, useState } from "react"
-import type { LocationData } from "../type"
+import type { LocationData } from "../mapbox.types"
 
 export type UseMapGeolocationProps = {
    /** Mapboxのgeolocationコントロール */

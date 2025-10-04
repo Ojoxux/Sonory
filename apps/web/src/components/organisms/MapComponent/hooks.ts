@@ -30,132 +30,41 @@
  */
 
 import { useNearbyPins } from "@/hooks/useNearbyPins"
-import { useDebugStore } from "@/store/useDebugStore"
-import { type SoundPin, useSoundPinStore } from "@/store/useSoundPinStore"
-import type { SoundPinAPI } from "@sonory/shared-types"
+import { useSoundPinStore } from "@/store/useSoundPinStore"
 import { useQueryClient } from "@tanstack/react-query"
 import * as O from "fp-ts/Option"
 import { pipe } from "fp-ts/function"
 import mapboxgl from "mapbox-gl"
-import {
-   type RefObject,
-   useCallback,
-   useEffect,
-   useMemo,
-   useRef,
-   useState,
-} from "react"
+import { useEffect, useMemo, useRef } from "react"
 import { useBrowserGeolocation } from "./hooks/useBrowserGeolocation"
 import { useLocationIntegration } from "./hooks/useLocationIntegration"
 import { useLocationStorage } from "./hooks/useLocationStorage"
 import { useMapControls } from "./hooks/useMapControls"
+import { useMapDebug } from "./hooks/useMapDebug"
 import { useMapEnvironment } from "./hooks/useMapEnvironment"
+import { useMapNotifications } from "./hooks/useMapNotifications"
+import { useMapState } from "./hooks/useMapState"
 import { useMapboxInitialization } from "./hooks/useMapboxInitialization"
 import type {
    GeoJSONLineStringFeature,
    LocationData,
-   MapboxExtendedMap,
    MapboxMapOptions,
-   MapboxNonStandardMethods,
-} from "./type"
+} from "./mapbox.types"
+import type {
+   MapBounds,
+   UseMapComponentProps,
+   UseMapComponentReturn,
+} from "./types"
 import {
    fromNullable,
    isValidPosition,
    selectBestPosition,
 } from "./utils/functional"
-import type { LightingConfig } from "./utils/sunCalculations"
+import { mapboxHelpers } from "./utils/mapboxHelpers"
+import { convertApiPinToLocal } from "./utils/pinConverters"
 
-export interface MapBounds {
-   north: number
-   south: number
-   east: number
-   west: number
-}
-
-/**
- * APIピンをローカルピン形式に変換
- * @param apiPin - APIピン
- * @returns ローカルピン
- */
-const convertApiPinToLocal = (apiPin: SoundPinAPI): SoundPin => {
-   // デバッグ: APIピンの変換処理をログ出力
-   if (process.env.NODE_ENV === "development") {
-      console.log("🔄 Converting API pin to local format:", {
-         pinId: apiPin.id,
-         title: apiPin.title,
-         aiTopic: apiPin.aiAnalysis?.categories?.topic,
-         aiConfidence: apiPin.aiAnalysis?.categories?.confidence,
-      })
-   }
-
-   // 分類結果を構築
-   const classificationResults = []
-
-   // 1. titleフィールドから分類結果を取得（最優先）
-   if (
-      apiPin.title &&
-      apiPin.title !== "音声ピン" &&
-      apiPin.title.trim() !== ""
-   ) {
-      classificationResults.push({
-         label: apiPin.title,
-         confidence: apiPin.aiAnalysis?.categories?.confidence || 0.8, // デフォルトで80%の信頼度
-         category: "other" as const,
-      })
-   }
-   // 2. aiAnalysisのtopicから分類結果を取得
-   else if (
-      apiPin.aiAnalysis?.categories?.topic &&
-      apiPin.aiAnalysis.categories.topic !== "unknown"
-   ) {
-      classificationResults.push({
-         label: apiPin.aiAnalysis.categories.topic,
-         confidence: apiPin.aiAnalysis.categories.confidence || 0,
-         category: "other" as const,
-      })
-   }
-   // 3. どちらもない場合は「未分類」
-   else {
-      classificationResults.push({
-         label: "未分類",
-         confidence: 0,
-         category: "other" as const,
-      })
-   }
-
-   // primaryLabelとenvironmentを決定
-   const primaryLabel =
-      apiPin.title || apiPin.aiAnalysis?.categories?.topic || "音声ピン"
-   const environment =
-      apiPin.title || apiPin.aiAnalysis?.categories?.topic || "unknown"
-
-   return {
-      id: apiPin.id,
-      latitude: apiPin.location.lat,
-      longitude: apiPin.location.lng,
-      audioData: {
-         url: apiPin.audio.url,
-         recordedAt: new Date(apiPin.createdAt),
-         id: apiPin.id,
-         blob: new Blob(), // APIピンのblobは空
-      },
-      classificationResults,
-      recordedAt: new Date(apiPin.createdAt),
-      primaryLabel,
-      primaryConfidence: apiPin.aiAnalysis?.categories?.confidence || 0.8,
-      isPersisted: true,
-      timeTag: (apiPin.timeTag as "朝" | "昼" | "夕" | "夜") || undefined,
-      environment,
-      weather: apiPin.weather
-         ? {
-              temperature: apiPin.weather.temperature,
-              condition: apiPin.weather.condition || "unknown",
-              windSpeed: apiPin.weather.windSpeed,
-              humidity: apiPin.weather.humidity,
-           }
-         : undefined,
-   }
-}
+// 型をre-export
+export type { MapBounds } from "./types"
 
 /**
  * 周辺ピンを統合するフック
@@ -204,140 +113,6 @@ export const useIntegratedPins = (bounds: MapBounds | null) => {
    }
 }
 
-export type UseMapComponentProps = {
-   /** 位置情報取得準備完了時のコールバック */
-   onGeolocationReady?: (attemptGeolocation: () => void) => void
-   /** 位置に戻る機能準備完了時のコールバック */
-   onReturnToLocationReady?: (returnToLocation: () => void) => void
-   /** マップ回転時のコールバック */
-   onBearingChange?: (bearing: number) => void
-}
-
-export type UseMapComponentReturn = {
-   /** マップコンテナのref */
-   mapContainerRef: RefObject<HTMLDivElement | null>
-   /** Mapboxマップインスタンス */
-   map: mapboxgl.Map | null
-   /** マップスタイルの読み込み状態 */
-   mapStyleLoaded: boolean
-   /** 統合された位置情報 */
-   position: LocationData | null
-   /** 現在のライティング設定 */
-   currentLighting: LightingConfig | null
-   /** デバッグモードの状態 */
-   debugMode: boolean
-   /** 音声ピンの配列 */
-   pins: SoundPin[]
-   /** 選択中のピンID */
-   selectedPinId: string | null
-   /** 位置情報の権限状態 */
-   permissionStatus: string
-   /** 位置情報取得の初期化状態 */
-   geolocateInitialized: boolean
-   /** 位置情報取得の試行状態 */
-   geolocateAttempted: boolean
-   /** デバッグ時間のオーバーライド値 */
-   debugTimeOverride: number | null
-   /** Mapboxから取得した位置情報かどうか */
-   isMapboxPosition: boolean
-   /** ピン選択関数 */
-   selectPin: (pinId: string | null) => void
-   /** デバッグ時間設定関数 */
-   setDebugTimeOverride: (time: number | null) => void
-   /** ライティング更新関数 */
-   updateLightingAndShadows: () => void
-}
-
-/**
- * Mapboxの非標準メソッド用の型安全な検証（純粋関数）
- */
-const supportsMethod = <T extends object>(obj: T, method: string): boolean =>
-   method in obj &&
-   typeof (obj as Record<string, unknown>)[method] === "function"
-
-/**
- * Mapboxの非標準メソッドを安全に呼び出すためのヘルパー関数群（fpで安全に呼び出す）
- */
-const createMapboxHelpers = (): MapboxNonStandardMethods => ({
-   setConfigProperty: (map, namespace, property, value) =>
-      pipe(supportsMethod(map, "setConfigProperty"), (isSupported) => {
-         if (isSupported && map.isStyleLoaded()) {
-            try {
-               const extendedMap = map as MapboxExtendedMap
-               if (extendedMap.setConfigProperty) {
-                  extendedMap.setConfigProperty(namespace, property, value)
-               }
-            } catch (error) {
-               if (process.env.NODE_ENV === "development") {
-                  console.warn("⚠️ setConfigProperty実行エラー:", error)
-               }
-            }
-         } else if (process.env.NODE_ENV === "development") {
-            console.warn(
-               "⚠️ setConfigProperty: スタイル未読み込みまたは非サポート",
-            )
-         }
-      }),
-
-   setTerrain: (map, config) =>
-      pipe(supportsMethod(map, "setTerrain"), (isSupported) => {
-         if (isSupported && map.isStyleLoaded()) {
-            try {
-               const extendedMap = map as MapboxExtendedMap
-               if (extendedMap.setTerrain) {
-                  extendedMap.setTerrain(config)
-               }
-            } catch (error) {
-               if (process.env.NODE_ENV === "development") {
-                  console.warn("⚠️ setTerrain実行エラー:", error)
-               }
-               // 他のヘルパーメソッドと統一してエラーを再スローしない
-            }
-         } else if (process.env.NODE_ENV === "development") {
-            console.warn("⚠️ setTerrain: スタイル未読み込みまたは非サポート")
-         }
-      }),
-
-   setLight: (map, config) =>
-      pipe(supportsMethod(map, "setLight"), (isSupported) => {
-         if (isSupported && map.isStyleLoaded()) {
-            try {
-               const extendedMap = map as MapboxExtendedMap
-               if (extendedMap.setLight) {
-                  extendedMap.setLight(config)
-               }
-            } catch (error) {
-               if (process.env.NODE_ENV === "development") {
-                  console.warn("⚠️ setLight実行エラー:", error)
-               }
-            }
-         } else if (process.env.NODE_ENV === "development") {
-            console.warn("⚠️ setLight: スタイル未読み込みまたは非サポート")
-         }
-      }),
-
-   setFog: (map, config) =>
-      pipe(supportsMethod(map, "setFog"), (isSupported) => {
-         if (isSupported && map.isStyleLoaded()) {
-            try {
-               const extendedMap = map as MapboxExtendedMap
-               if (extendedMap.setFog) {
-                  extendedMap.setFog(config)
-               }
-            } catch (error) {
-               if (process.env.NODE_ENV === "development") {
-                  console.warn("⚠️ setFog実行エラー:", error)
-               }
-            }
-         } else if (process.env.NODE_ENV === "development") {
-            console.warn("⚠️ setFog: スタイル未読み込みまたは非サポート")
-         }
-      }),
-})
-
-// Mapboxヘルパーのインスタンス（イミュータブル）
-const mapboxHelpers = createMapboxHelpers()
-
 /**
  * MapComponent統合管理フック
  */
@@ -356,29 +131,25 @@ export function useMapComponent({
    const userInteractionHandlerRef = useRef<(() => void) | null>(null)
    const handledCreatedPinIdRef = useRef<string | null>(null)
 
-   // 状態管理
-   const [map, setMap] = useState<mapboxgl.Map | null>(null)
-   const [mapStyleLoaded, setMapStyleLoaded] = useState<boolean>(false)
-   const [geolocateInitialized, setGeolocateInitialized] =
-      useState<boolean>(false)
-   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null)
+   // カスタムフック: 状態管理
+   const {
+      map,
+      setMap,
+      mapStyleLoaded,
+      setMapStyleLoaded,
+      mapBounds,
+      setMapBounds,
+      geolocateInitialized,
+      setGeolocateInitialized,
+   } = useMapState()
 
-   // ストア
+   // カスタムフック: デバッグ機能
    const {
       debugMode,
       toggleDebugMode,
       debugTimeOverride,
       setDebugTimeOverride,
-      setDebugMode,
-   } = useDebugStore()
-
-   // HACK: 初期化時にdebugModeをfalseに強制設定 (デバッグモードがデフォルトで出てしまうため)
-   useEffect(() => {
-      setDebugMode(false)
-      if (process.env.NODE_ENV === "development") {
-         console.log("[MapComponent] debugModeをfalseにリセット")
-      }
-   }, [setDebugMode])
+   } = useMapDebug()
 
    const { selectedPinId, selectPin, lastCreatedPinId } = useSoundPinStore()
 
@@ -427,33 +198,8 @@ export function useMapComponent({
       mapIsStyleLoaded: map?.isStyleLoaded(),
    })
 
-   // 通知関数
-   const createNotification = useCallback(
-      (message: string, type: "success" | "error" | "warning") =>
-         ({
-            message,
-            type,
-            timestamp: Date.now(),
-         }) as const,
-      [],
-   )
-
-   // 副作用を実行する関数（分離された副作用）
-   const executeNotification = useCallback(
-      (_notification: ReturnType<typeof createNotification>) => {
-         // HACK: 将来的にはtoast通知などに拡張可能
-      },
-      [],
-   )
-
-   // 通知の実行
-   const showNotification = useCallback(
-      (message: string, type: "success" | "error" | "warning") => {
-         const notification = createNotification(message, type)
-         executeNotification(notification)
-      },
-      [createNotification, executeNotification],
-   )
+   // カスタムフック: 通知機能
+   const { showNotification } = useMapNotifications()
 
    // 位置情報統合
    const {
@@ -770,7 +516,6 @@ export function useMapComponent({
 
          // mapのインスタンス化にはDOM要素が必要で、useStateの初期値では不可能
          // また、mapは他のuseEffectの依存配列に含まれており、再レンダリングのトリガーとして機能する必要がある
-         // eslint-disable-next-line react-you-might-not-need-an-effect/no-initialize-state
          setMap(mapInstance)
          mapInitializedRef.current = true
          console.log("🔍 MapComponent: マップインスタンス設定完了")
@@ -837,7 +582,6 @@ export function useMapComponent({
 
    // 位置情報が取得できたらマップの中心を移動（ユーザー操作を考慮）
    // positionは外部のhooksから来ており、その変更に反応する必要があるため、useEffectが適切
-   /* eslint-disable react-you-might-not-need-an-effect/no-event-handler */
    useEffect(() => {
       if (!map || !position || !mapStyleLoaded) return
 
@@ -911,7 +655,6 @@ export function useMapComponent({
          updatePath([])
       }
    }, [map, position, mapStyleLoaded])
-   /* eslint-enable react-you-might-not-need-an-effect/no-event-handler */
 
    // マップ境界の管理とピン取得
    useEffect(() => {
@@ -1035,7 +778,7 @@ export function useMapComponent({
          map.off("moveend", handleMapMove)
          map.off("zoomend", handleMapMove)
       }
-   }, [map, mapStyleLoaded]) // mapStyleLoadedの依存を追加
+   }, [map, mapStyleLoaded, setMapBounds]) // mapStyleLoadedの依存を追加
 
    // 新しいピンが作成されたときの処理を最適化
    useEffect(() => {

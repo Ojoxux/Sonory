@@ -7,6 +7,8 @@ import {
    sendNewPinNotification,
 } from "@/utils/notifications"
 import { useCallback, useEffect, useRef } from "react"
+// TODO: Next.js が React 19 の useEffectEvent に対応したら削除する
+import { useEffectEvent } from "use-effect-event"
 
 /**
  * リアルタイム統合フックのオプション型定義
@@ -242,23 +244,31 @@ export function useRealtime(
    )
 
    // 自動接続
+   const connectEvent = useEffectEvent(() => {
+      debugLog("自動接続実行")
+      connect().catch((error) => {
+         debugLog("自動接続失敗:", error)
+      })
+   })
+
    useEffect(() => {
       if (autoConnect && !isConnected && connectionStatus === "disconnected") {
-         debugLog("自動接続実行")
-         connect().catch((error) => {
-            debugLog("自動接続失敗:", error)
-         })
+         connectEvent()
       }
-   }, [autoConnect, isConnected, connectionStatus, connect, debugLog])
+   }, [autoConnect, isConnected, connectionStatus])
 
    // 自動通知権限要求
+   const requestPermissionEvent = useEffectEvent(() => {
+      requestPermission().catch((error) => {
+         debugLog("自動通知権限要求失敗:", error)
+      })
+   })
+
    useEffect(() => {
       if (autoRequestPermission && isConnected) {
-         requestPermission().catch((error) => {
-            debugLog("自動通知権限要求失敗:", error)
-         })
+         requestPermissionEvent()
       }
-   }, [autoRequestPermission, isConnected, requestPermission, debugLog])
+   }, [autoRequestPermission, isConnected])
 
    // 新しい通知の処理
    useEffect(() => {
@@ -281,14 +291,18 @@ export function useRealtime(
    }, [recentNotifications])
 
    // クリーンアップ
+   const disconnectEvent = useEffectEvent(() => {
+      debugLog("クリーンアップ: 接続切断")
+      disconnect()
+   })
+
    useEffect(() => {
       return () => {
          if (isConnected) {
-            debugLog("クリーンアップ: 接続切断")
-            disconnect()
+            disconnectEvent()
          }
       }
-   }, [isConnected, disconnect, debugLog])
+   }, [isConnected])
 
    return {
       isConnected,

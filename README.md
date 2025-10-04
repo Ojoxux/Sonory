@@ -44,6 +44,8 @@
 
 - Docker 20.0.0以上
 - Docker Compose v2以上
+- Node.js 18以上
+- npm 9以上
 - [Task](https://taskfile.dev/) (推奨)
 - Git
 
@@ -73,15 +75,31 @@ cp .env.example .env
 
 3. **開発環境の起動**
 
+APIサービスはCloudflare Workersで動作するため、DockerとWranglerの2つを起動する必要があります。
+
+**ターミナル1: Docker Compose（Web + Python API）**
 ```bash
-# 全サービス起動
+# Web + Python APIサービスを起動
 task sonory:up
 
 # 起動確認
 task sonory:status
 ```
 
-開発環境が起動したら、[http://localhost:3000](http://localhost:3000) でアクセスできます。
+**ターミナル2: Cloudflare Workers（API）**
+```bash
+# APIディレクトリに移動
+cd apps/api
+
+# 依存関係のインストール（初回のみ）
+npm install
+
+# API開発サーバー起動
+npm run dev
+```
+
+開発環境が起動したら、[http://localhost:3000](http://localhost:3000) でSonory-Webにアクセスできます。
+API: [http://localhost:8787](http://localhost:8787)
 
 ## 🛠 Development Tools
 
@@ -143,13 +161,13 @@ sonory/                               # プロジェクトルート（モノレ�
 │   │   │   └── store/               # 状態管理（Zustand）
 │   │   ├── public/                  # 静的ファイル（PWA用アイコンなど）
 │   │   └── Dockerfile               # Next.js用Docker設定
-│   ├── api/                         # Hono API (Node.js Runtime)
+│   ├── api/                         # Hono API (Cloudflare Workers)
 │   │   ├── src/
 │   │   │   ├── config/              # 設定ファイル（シークレット管理）
 │   │   │   ├── routes/              # APIルート
 │   │   │   ├── services/            # ビジネスロジック
 │   │   │   └── middleware/          # ミドルウェア
-│   │   ├── Dockerfile               # API用Docker設定
+│   │   ├── wrangler.toml            # Cloudflare Workers設定
 │   │   └── tsconfig-paths.json      # TSパスエイリアス設定
 │   └── python-audio-analyzer/       # Python音声分析サービス
 │       ├── src/                     # FastAPI + YAMNet
@@ -178,7 +196,7 @@ sonory/                               # プロジェクトルート（モノレ�
 - **リンター/フォーマッター**: Biome 1.9.4
 - **型システム**: TypeScript 5
 - **コンテナ化**: Docker + Docker Compose
-- **APIランタイム**: Hono (Node.js) + FastAPI (Python)
+- **APIランタイム**: Hono (Cloudflare Workers) + FastAPI (Python)
 - **自動化**: Task (Taskfile) + Turborepo
 
 ### 個別サービス管理
@@ -186,13 +204,14 @@ sonory/                               # プロジェクトルート（モノレ�
 ```bash
 # 個別サービス起動
 task sonory:web:up       # Webサービスのみ
-task sonory:api:up       # APIサービスのみ  
 task sonory:python:up    # Python APIサービスのみ
 
 # 個別ログ確認
 task sonory:logs:web     # Webログ
-task sonory:logs:api     # APIログ
 task sonory:logs:python  # Python APIログ
+
+# API (Cloudflare Workers)
+cd apps/api && npm run dev  # API開発サーバー起動 (localhost:8787)
 
 ```
 
