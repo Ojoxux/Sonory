@@ -125,8 +125,11 @@ function setMapboxLightPreset(
             setStyleOptions,
          )
       }
-   } catch {
-      // エラーを無視して続行
+   } catch (error) {
+      if (process.env.NODE_ENV === "development") {
+         console.warn("⚠️ setStyle実行エラー:", error)
+      }
+      // エラーが発生しても続行
    }
 }
 
@@ -227,8 +230,11 @@ export function useMapEnvironment({
                   }
                   mapboxHelpers.setTerrain(targetMap, terrainConfig)
                   terrainInitializedRef.current = true
-               } catch {
-                  // 地形設定エラーを無視
+               } catch (error) {
+                  if (process.env.NODE_ENV === "development") {
+                     console.warn("⚠️ 地形設定エラー:", error)
+                  }
+                  // 地形設定エラーが発生しても続行
                }
             }
 
@@ -240,16 +246,22 @@ export function useMapEnvironment({
                   "horizon-blend": 0.1,
                }
                mapboxHelpers.setFog(targetMap, fogConfig)
-            } catch {
-               // フォグ設定エラーを無視
+            } catch (error) {
+               if (process.env.NODE_ENV === "development") {
+                  console.warn("⚠️ フォグ設定エラー:", error)
+               }
+               // フォグ設定エラーが発生しても続行
             }
 
             // 時間ベースで夜間の照明効果を適用
             try {
                const isNightTime = currentHour >= 22 || currentHour < 4
                applyNightLighting(targetMap, isNightTime ? -20 : 45)
-            } catch {
-               // 照明設定エラーを無視
+            } catch (error) {
+               if (process.env.NODE_ENV === "development") {
+                  console.warn("⚠️ 照明設定エラー:", error)
+               }
+               // 照明設定エラーが発生しても続行
             }
          } catch (error) {
             console.error("光と影の更新エラー:", error)
