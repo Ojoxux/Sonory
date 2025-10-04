@@ -53,52 +53,6 @@ services:
         max-file: "3"
         labels: "service=web,environment=development"
 
-  # Hono API (Node.js Runtime)
-  api:
-    build:
-      context: .
-      dockerfile: ./apps/api/Dockerfile
-      target: development
-    ports:
-      - "8787:8787"
-    env_file:
-      - ./apps/api/.env
-    environment:
-      - NODE_ENV=development
-      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000}
-      - PYTHON_AUDIO_ANALYZER_URL=${PYTHON_AUDIO_ANALYZER_URL:-http://python-api:8000}
-      - PYTHON_AUDIO_ANALYZER_TIMEOUT=${PYTHON_AUDIO_ANALYZER_TIMEOUT:-30000}
-    # No volumes for development - use image's node_modules
-    # volumes:
-    #   - ./apps/api/src:/app/apps/api/src
-    depends_on:
-      python-api:
-        condition: service_started
-    networks:
-      - sonory-network
-    restart: unless-stopped
-    command: sh -c "cd /app && node apps/api/dist/index.js"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8787/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    deploy:
-      resources:
-        limits:
-          cpus: '0.8'
-          memory: 512M
-        reservations:
-          cpus: '0.3'
-          memory: 256M
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-        labels: "service=api,environment=development"
-
   # Python Audio Analyzer (FastAPI)
   python-api:
     build:
