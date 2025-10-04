@@ -105,7 +105,10 @@ export function useRecordingInterface(
    }, [status])
 
    // 展開状態が変更されたときに親コンポーネントに通知
+   // isExpandedとstatusはhookの内部ロジックに密接に関連しており、親に持ち上げるのは過度に複雑
+   // 親が展開状態を知る必要がある場合（例：他のUIの調整）にこのコールバックが使用される
    useEffect(() => {
+      // eslint-disable-next-line react-you-might-not-need-an-effect/no-pass-live-state-to-parent
       onExpandedChange?.(isExpanded && status !== "idle")
    }, [isExpanded, status, onExpandedChange])
 
