@@ -435,7 +435,6 @@ export function SoundPinMarkers({
    }, [map, stablePins, mapStyleLoaded, debouncedUpdateMarkers])
 
    // 選択状態変更時の軽量更新
-   // biome-ignore lint/correctness/useExhaustiveDependencies: selectedPinIdの変更時にマーカーの見た目を更新する必要がある
    useEffect(() => {
       if (!map || !mapStyleLoaded) return
 

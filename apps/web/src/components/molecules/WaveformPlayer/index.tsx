@@ -458,7 +458,6 @@ export function WaveformPlayer({
          wavesurferRef.current?.unAll?.()
          wavesurferRef.current?.destroy()
          destroyWaveSurfer().catch((error) => {
-             
             console.warn("WaveSurfer cleanup error:", error)
          })
       }
