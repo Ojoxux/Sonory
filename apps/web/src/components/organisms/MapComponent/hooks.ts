@@ -57,12 +57,8 @@ import type {
 	UseMapComponentReturn,
 } from "./types"
 
-export interface MapBounds {
-   north: number
-   south: number
-   east: number
-   west: number
-}
+// 型定義は types.ts に移動
+export type { MapBounds } from "./types"
 
 /**
  * APIピンをローカルピン形式に変換
