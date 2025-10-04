@@ -458,7 +458,7 @@ export function WaveformPlayer({
          wavesurferRef.current?.unAll?.()
          wavesurferRef.current?.destroy()
          destroyWaveSurfer().catch((error) => {
-            // eslint-disable-next-line no-console
+             
             console.warn("WaveSurfer cleanup error:", error)
          })
       }
