@@ -49,7 +49,7 @@ import type {
    GeoJSONLineStringFeature,
    LocationData,
    MapboxMapOptions,
-} from "./type"
+} from "./mapbox.types"
 import type {
    MapBounds,
    UseMapComponentProps,
