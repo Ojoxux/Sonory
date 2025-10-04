@@ -125,7 +125,7 @@ function setMapboxLightPreset(
             setStyleOptions,
          )
       }
-   } catch (_error) {
+   } catch {
       // エラーを無視して続行
    }
 }
@@ -227,7 +227,7 @@ export function useMapEnvironment({
                   }
                   mapboxHelpers.setTerrain(targetMap, terrainConfig)
                   terrainInitializedRef.current = true
-               } catch (_terrainError) {
+               } catch {
                   // 地形設定エラーを無視
                }
             }
@@ -240,7 +240,7 @@ export function useMapEnvironment({
                   "horizon-blend": 0.1,
                }
                mapboxHelpers.setFog(targetMap, fogConfig)
-            } catch (_fogError) {
+            } catch {
                // フォグ設定エラーを無視
             }
 
@@ -248,7 +248,7 @@ export function useMapEnvironment({
             try {
                const isNightTime = currentHour >= 22 || currentHour < 4
                applyNightLighting(targetMap, isNightTime ? -20 : 45)
-            } catch (_lightingError) {
+            } catch {
                // 照明設定エラーを無視
             }
          } catch (error) {
