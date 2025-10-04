@@ -58,11 +58,12 @@ import {
 import { mapboxHelpers } from "./utils/mapboxHelpers"
 import { convertApiPinToLocal } from "./utils/pinConverters"
 import type {
+	MapBounds,
 	UseMapComponentProps,
 	UseMapComponentReturn,
 } from "./types"
 
-// 型定義は types.ts に移動
+// 型をre-export
 export type { MapBounds } from "./types"
 
 /**
