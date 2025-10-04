@@ -29,7 +29,8 @@
  * ```
  */
 
-import { useSoundPinStore } from "@/store/useSoundPinStore"
+import { useNearbyPins } from "@/hooks/useNearbyPins"
+import { type SoundPin, useSoundPinStore } from "@/store/useSoundPinStore"
 import { useQueryClient } from "@tanstack/react-query"
 import * as O from "fp-ts/Option"
 import { pipe } from "fp-ts/function"
