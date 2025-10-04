@@ -3,6 +3,8 @@
  */
 
 import { useCallback, useEffect, useState } from "react"
+// TODO: Next.js が React 19 の useEffectEvent に対応したら削除する
+import { useEffectEvent } from "use-effect-event"
 
 /** アニメーション遅延時間（ミリ秒） */
 const ANIMATION_DELAYS = {
@@ -235,9 +237,8 @@ export function useDebugEventListeners(
    setIsVisible: (value: boolean) => void,
    setIsExpanded: (value: boolean) => void,
 ): void {
-   useEffect(() => {
-      // デバッグメニューからの表示イベント
-      const handleDebugShow = (e: CustomEvent<DebugEventDetail>): void => {
+   const handleDebugShowEvent = useEffectEvent(
+      (e: CustomEvent<DebugEventDetail>) => {
          setIsDebugActive(true)
          setShowPrompt(true)
          setIsVisible(true)
@@ -248,33 +249,38 @@ export function useDebugEventListeners(
                setIsExpanded(true)
             }, ANIMATION_DELAYS.DEBUG_EXPAND)
          }
+      },
+   )
+
+   const handleDebugHideEvent = useEffectEvent(() => {
+      setIsExpanded(false)
+      setIsVisible(false)
+      setTimeout(() => {
+         setShowPrompt(false)
+         setIsDebugActive(false)
+      }, ANIMATION_DELAYS.CLOSE_ANIMATION)
+   })
+
+   useEffect(() => {
+      // デバッグメニューからの表示イベント
+      const handleDebugShow = (e: Event): void => {
+         handleDebugShowEvent(e as CustomEvent<DebugEventDetail>)
       }
 
       // デバッグメニューからの非表示イベント
       const handleDebugHide = (): void => {
-         setIsExpanded(false)
-         setIsVisible(false)
-         setTimeout(() => {
-            setShowPrompt(false)
-            setIsDebugActive(false)
-         }, ANIMATION_DELAYS.CLOSE_ANIMATION)
+         handleDebugHideEvent()
       }
 
       // イベントリスナーの登録
-      window.addEventListener(
-         EVENT_NAMES.PWA_DEBUG_SHOW,
-         handleDebugShow as EventListener,
-      )
+      window.addEventListener(EVENT_NAMES.PWA_DEBUG_SHOW, handleDebugShow)
       window.addEventListener(EVENT_NAMES.PWA_DEBUG_HIDE, handleDebugHide)
 
       return () => {
-         window.removeEventListener(
-            EVENT_NAMES.PWA_DEBUG_SHOW,
-            handleDebugShow as EventListener,
-         )
+         window.removeEventListener(EVENT_NAMES.PWA_DEBUG_SHOW, handleDebugShow)
          window.removeEventListener(EVENT_NAMES.PWA_DEBUG_HIDE, handleDebugHide)
       }
-   }, [setIsDebugActive, setShowPrompt, setIsVisible, setIsExpanded])
+   }, [])
 }
 
 /**
@@ -301,6 +307,32 @@ export function usePWAInstallEventListeners(
    setIsInstalled: (value: boolean) => void,
    checkIfInstalled: () => boolean,
 ): void {
+   const handleBeforeInstallPromptEvent = useEffectEvent((e: Event) => {
+      e.preventDefault()
+      setDeferredPrompt(e as BeforeInstallPromptEvent)
+
+      if (autoShow && !debugMode) {
+         // まず小さい表示で出現
+         setShowPrompt(true)
+         setIsVisible(true)
+
+         // 通常モードでは少し遅らせて展開（Dynamic Island風）
+         setTimeout(() => {
+            setIsExpanded(true)
+         }, ANIMATION_DELAYS.NORMAL_EXPAND)
+      }
+   })
+
+   const handleAppInstalledEvent = useEffectEvent(() => {
+      setIsExpanded(false)
+      setIsVisible(false)
+      setTimeout(() => {
+         setIsInstalled(true)
+         setShowPrompt(false)
+         onInstallSuccess?.()
+      }, ANIMATION_DELAYS.CLOSE_ANIMATION)
+   })
+
    useEffect(() => {
       // PWAが既にインストール済みかチェック
       if (checkIfInstalled()) {
@@ -310,30 +342,12 @@ export function usePWAInstallEventListeners(
 
       // beforeinstallprompt イベントをリッスン
       const handleBeforeInstallPrompt = (e: Event): void => {
-         e.preventDefault()
-         setDeferredPrompt(e as BeforeInstallPromptEvent)
-
-         if (autoShow && !debugMode) {
-            // まず小さい表示で出現
-            setShowPrompt(true)
-            setIsVisible(true)
-
-            // 通常モードでは少し遅らせて展開（Dynamic Island風）
-            setTimeout(() => {
-               setIsExpanded(true)
-            }, ANIMATION_DELAYS.NORMAL_EXPAND)
-         }
+         handleBeforeInstallPromptEvent(e)
       }
 
       // appinstalled イベントをリッスン
       const handleAppInstalled = (): void => {
-         setIsExpanded(false)
-         setIsVisible(false)
-         setTimeout(() => {
-            setIsInstalled(true)
-            setShowPrompt(false)
-            onInstallSuccess?.()
-         }, ANIMATION_DELAYS.CLOSE_ANIMATION)
+         handleAppInstalledEvent()
       }
 
       window.addEventListener(
@@ -352,15 +366,5 @@ export function usePWAInstallEventListeners(
             handleAppInstalled,
          )
       }
-   }, [
-      autoShow,
-      debugMode,
-      onInstallSuccess,
-      setDeferredPrompt,
-      setShowPrompt,
-      setIsVisible,
-      setIsExpanded,
-      setIsInstalled,
-      checkIfInstalled,
-   ])
+   }, [checkIfInstalled, setIsInstalled])
 }

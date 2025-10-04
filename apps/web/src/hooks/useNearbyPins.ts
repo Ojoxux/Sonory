@@ -7,6 +7,8 @@ import {
    useQueryClient,
 } from "@tanstack/react-query"
 import { useCallback, useEffect, useMemo, useRef } from "react"
+// TODO: Next.js が React 19 の useEffectEvent に対応したら削除する
+import { useEffectEvent } from "use-effect-event"
 
 interface MapBounds {
    north: number
@@ -247,15 +249,20 @@ export const useNearbyPins = ({
    }, [roundedBounds, limit, categories, queryClient])
 
    // Prefetch adjacent areas when bounds change (with minimal debouncing)
+   const prefetchEvent = useEffectEvent(() => {
+      const timer = setTimeout(() => {
+         prefetchAdjacentAreas().catch(console.error)
+      }, 100) // Reduced debounce time
+      return () => clearTimeout(timer)
+   })
+
    useEffect(() => {
       // Only prefetch if main query is successful
       if (query.isSuccess) {
-         const timer = setTimeout(() => {
-            prefetchAdjacentAreas().catch(console.error)
-         }, 100) // Reduced debounce time
-         return () => clearTimeout(timer)
+         const cleanup = prefetchEvent()
+         return cleanup
       }
-   }, [prefetchAdjacentAreas, query.isSuccess])
+   }, [query.isSuccess])
 
    // Cleanup pending requests on unmount
    useEffect(() => {
