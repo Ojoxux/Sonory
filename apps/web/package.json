@@ -2,12 +2,17 @@
    "name": "@sonory/web",
    "version": "0.1.0",
    "private": true,
+   "type": "module",
    "scripts": {
       "dev": "next dev --turbopack --port 3000",
       "build": "next build",
       "start": "next start",
-      "lint": "biome check .",
-      "lint:fix": "biome check --fix --unsafe .",
+      "lint": "npm run lint:biome && npm run lint:eslint",
+      "lint:biome": "biome check .",
+      "lint:eslint": "eslint .",
+      "lint:fix": "npm run lint:biome:fix && npm run lint:eslint:fix",
+      "lint:biome:fix": "biome check --fix --unsafe .",
+      "lint:eslint:fix": "eslint . --fix",
       "format": "biome format .",
       "format:fix": "biome format . --write",
       "type-check": "tsc --noEmit",
@@ -38,6 +43,7 @@
    },
    "devDependencies": {
       "@biomejs/biome": "1.9.4",
+      "@eslint/js": "^9.36.0",
       "@tailwindcss/postcss": "^4",
       "@types/mapbox__mapbox-gl-geocoder": "^5.0.0",
       "@types/mapbox-gl": "^3.4.1",
@@ -45,7 +51,11 @@
       "@types/react": "^19",
       "@types/react-dom": "^19",
       "@types/uuid": "^10.0.0",
+      "eslint": "^9.36.0",
+      "eslint-plugin-react-you-might-not-need-an-effect": "^0.5.5",
+      "globals": "^16.4.0",
       "tailwindcss": "^4",
-      "typescript": "^5"
+      "typescript": "^5",
+      "typescript-eslint": "^8.45.0"
    }
 }

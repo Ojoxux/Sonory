@@ -194,14 +194,10 @@ export function AudioPlayback({
             setAnalysisMessage("結果を生成中...")
          }, 6000)
 
-         // AI分析を実行（タイムアウト付き）
+         // AI分析を実行
+         // MEMO: startInferenceが完了するまで待機する
          try {
-            const inferencePromise = startInference(audioData)
-            const timeoutPromise = new Promise((_, reject) =>
-               setTimeout(() => reject(new Error("AI分析タイムアウト")), 15000),
-            )
-
-            await Promise.race([inferencePromise, timeoutPromise])
+            await startInference(audioData)
          } catch (inferenceError) {
             console.warn(
                "⚠️ AI分析に失敗しました。フォールバック結果を使用します:",
