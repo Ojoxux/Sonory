@@ -1,6 +1,12 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import {
+   useCallback,
+   useEffect,
+   useEffectEvent,
+   useRef,
+   useState,
+} from "react"
 import { MdPause, MdPlayArrow } from "react-icons/md"
 import WaveSurfer from "wavesurfer.js"
 import type { AudioData } from "../../../store/types"
@@ -139,6 +145,14 @@ export function WaveformPlayer({
     * - 音声データの有効性チェック
     * - イベントリスナー登録
     */
+   const onReadyEvent = useEffectEvent(() => {
+      onReady?.()
+   })
+
+   const onFinishEvent = useEffectEvent(() => {
+      onFinish?.()
+   })
+
    const initializeWaveSurfer = useCallback(async (): Promise<void> => {
       const myInitId = ++initIdRef.current
 
@@ -237,7 +251,7 @@ export function WaveformPlayer({
                }, 50)
             }
 
-            onReady?.()
+            onReadyEvent()
             wavesurfer.play() // 再生を ready イベント内で確実に実行
          })
 
@@ -263,7 +277,7 @@ export function WaveformPlayer({
                      setIsPlaying(false)
                      wavesurfer.seekTo(0) // 再生位置を先頭に
                      setCurrentTime(0) // UI上の時間もリセット
-                     onFinish?.() // 親コンポーネントに終了を通知
+                     onFinishEvent() // 親コンポーネントに終了を通知
                   }
                } else {
                   animationFrameRef.current = requestAnimationFrame(updateTime)
@@ -290,7 +304,7 @@ export function WaveformPlayer({
                   setIsPlaying(false)
                   wavesurfer.seekTo(0) // 再生位置を先頭に
                   setCurrentTime(0) // UI上の時間もリセット
-                  onFinish?.() // 親コンポーネントに終了を通知
+                  onFinishEvent() // 親コンポーネントに終了を通知
                }
             }
          })
@@ -369,15 +383,7 @@ export function WaveformPlayer({
          setError(error)
          setIsLoading(false)
       }
-   }, [
-      audioData,
-      height,
-      waveColor,
-      progressColor,
-      onReady,
-      onFinish,
-      destroyWaveSurfer,
-   ])
+   }, [audioData, height, waveColor, progressColor, destroyWaveSurfer])
 
    /**
     * 再生/一時停止を切り替え
