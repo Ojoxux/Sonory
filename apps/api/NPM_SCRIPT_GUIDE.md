@@ -4,17 +4,13 @@
 
 ### 環境変数セットアップ（初回のみ）
 ```bash
-# ルートディレクトリで実行
-npm run setup:env
+# .dev.vars.example をコピー
+cp .dev.vars.example .dev.vars
 
-# 生成されたテンプレートファイルをコピー
-cp .dev.vars.template .dev.vars
-
-# .dev.vars を編集して実際の値を設定
+# .dev.vars を編集して実際の値を設定してください
 # - SUPABASE_URL
 # - SUPABASE_ANON_KEY
 # - SUPABASE_SERVICE_KEY
-# - PYTHON_AUDIO_ANALYZER_URL
 ```
 
 ### 基本コマンド
@@ -71,10 +67,8 @@ npm run clean            # ビルド成果物削除（dist, .wrangler）
 
 ### 開発環境起動
 ```bash
-# 初回セットアップ
-npm run setup:env
-cp .dev.vars.template .dev.vars
-# .dev.vars を編集して環境変数を設定
+# 初回セットアップ（上記の環境変数セットアップ参照）
+# .dev.vars を作成して環境変数を設定
 
 # 開発サーバー起動
 npm run dev
