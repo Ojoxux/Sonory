@@ -4,7 +4,7 @@
    "private": true,
    "type": "module",
    "scripts": {
-      "dev": "wrangler dev",
+      "dev": "wrangler dev --port 8787",
       "prebuild": "npm run generate-types",
       "build": "tsc && tsc-alias -p tsconfig-paths.json --resolve-full-paths",
       "deploy": "wrangler deploy",
