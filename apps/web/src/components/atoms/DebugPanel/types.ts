@@ -1,46 +1,46 @@
-import type { LocationData } from "@/components/organisms/MapComponent/type"
-import type { LightingConfig } from "@/components/organisms/MapComponent/utils/sunCalculations"
-import type { UseRealtimeReturn } from "@/hooks/useRealtime"
-import type { SoundPin } from "@/store/useSoundPinStore"
+import type { LocationData } from "@/components/organisms/MapComponent/mapbox.types";
+import type { LightingConfig } from "@/components/organisms/MapComponent/utils/sunCalculations";
+import type { UseRealtimeReturn } from "@/hooks/useRealtime";
+import type { SoundPin } from "@/store/useSoundPinStore";
 
 export type DebugPanelProps = {
-   /** 位置情報データ */
-   position: LocationData | null
-   /** 位置情報の権限状態 */
-   permissionStatus: string
-   /** 現在のライティング設定 */
-   currentLighting: LightingConfig | null
-   /** Mapboxから取得した位置情報かどうか */
-   isMapboxPosition: boolean
-   /** 位置情報取得の初期化状態 */
-   geolocateInitialized: boolean
-   /** 位置情報取得の試行状態 */
-   geolocateAttempted: boolean
-   /** デバッグ時間のオーバーライド値 */
-   debugTimeOverride: number | null
-   /** 時間変更時のコールバック */
-   onTimeChange: (time: number | null) => void
-   /** ライティング更新のコールバック */
-   onUpdateLighting: () => void
-   /** マップインスタンス */
-   map?: mapboxgl.Map | null
-   /** マップスタイル読み込み状態 */
-   mapStyleLoaded?: boolean
-   /** 音声ピンデータ */
-   pins?: SoundPin[]
-   /** リアルタイム接続状態 */
-   realtime?: UseRealtimeReturn
-}
+	/** 位置情報データ */
+	position: LocationData | null;
+	/** 位置情報の権限状態 */
+	permissionStatus: string;
+	/** 現在のライティング設定 */
+	currentLighting: LightingConfig | null;
+	/** Mapboxから取得した位置情報かどうか */
+	isMapboxPosition: boolean;
+	/** 位置情報取得の初期化状態 */
+	geolocateInitialized: boolean;
+	/** 位置情報取得の試行状態 */
+	geolocateAttempted: boolean;
+	/** デバッグ時間のオーバーライド値 */
+	debugTimeOverride: number | null;
+	/** 時間変更時のコールバック */
+	onTimeChange: (time: number | null) => void;
+	/** ライティング更新のコールバック */
+	onUpdateLighting: () => void;
+	/** マップインスタンス */
+	map?: mapboxgl.Map | null;
+	/** マップスタイル読み込み状態 */
+	mapStyleLoaded?: boolean;
+	/** 音声ピンデータ */
+	pins?: SoundPin[];
+	/** リアルタイム接続状態 */
+	realtime?: UseRealtimeReturn;
+};
 
 export type DebugLog = {
-   id: string
-   level: "info" | "warn" | "error"
-   message: string
-   timestamp: string
-}
+	id: string;
+	level: "info" | "warn" | "error";
+	message: string;
+	timestamp: string;
+};
 
 export type PerformanceData = {
-   memoryUsage: number
-   lastAIProcessingTime: number
-   frameRate: number
-}
+	memoryUsage: number;
+	lastAIProcessingTime: number;
+	frameRate: number;
+};
