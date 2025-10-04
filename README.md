@@ -143,13 +143,13 @@ sonory/                               # プロジェクトルート（モノレ�
 │   │   │   └── store/               # 状態管理（Zustand）
 │   │   ├── public/                  # 静的ファイル（PWA用アイコンなど）
 │   │   └── Dockerfile               # Next.js用Docker設定
-│   ├── api/                         # Hono API (Node.js Runtime)
+│   ├── api/                         # Hono API (Cloudflare Workers)
 │   │   ├── src/
 │   │   │   ├── config/              # 設定ファイル（シークレット管理）
 │   │   │   ├── routes/              # APIルート
 │   │   │   ├── services/            # ビジネスロジック
 │   │   │   └── middleware/          # ミドルウェア
-│   │   ├── Dockerfile               # API用Docker設定
+│   │   ├── wrangler.toml            # Cloudflare Workers設定
 │   │   └── tsconfig-paths.json      # TSパスエイリアス設定
 │   └── python-audio-analyzer/       # Python音声分析サービス
 │       ├── src/                     # FastAPI + YAMNet
