@@ -767,6 +767,9 @@ export function useMapComponent({
             }
          })
 
+         // mapのインスタンス化にはDOM要素が必要で、useStateの初期値では不可能
+         // また、mapは他のuseEffectの依存配列に含まれており、再レンダリングのトリガーとして機能する必要がある
+         // eslint-disable-next-line react-you-might-not-need-an-effect/no-initialize-state
          setMap(mapInstance)
          mapInitializedRef.current = true
          console.log("🔍 MapComponent: マップインスタンス設定完了")
@@ -832,6 +835,8 @@ export function useMapComponent({
    }, []) // 依存関係を空にして一度だけ実行
 
    // 位置情報が取得できたらマップの中心を移動（ユーザー操作を考慮）
+   // positionは外部のhooksから来ており、その変更に反応する必要があるため、useEffectが適切
+   // eslint-disable-next-line react-you-might-not-need-an-effect/no-event-handler
    useEffect(() => {
       if (!map || !position || !mapStyleLoaded) return
 
@@ -1072,11 +1077,6 @@ export function useMapComponent({
          refetchType: "active", // アクティブなクエリのみ再取得
       })
    }, [lastCreatedPinId, map, mapStyleLoaded, nearbyPins, queryClient])
-
-   // ピンの統合表示（nearbyPinsを使用）
-   const _allPins = useMemo(() => {
-      return nearbyPins || []
-   }, [nearbyPins])
 
    return {
       mapContainerRef,
