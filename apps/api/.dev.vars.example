@@ -9,8 +9,8 @@ SUPABASE_SERVICE_KEY=your-service-key
 CORS_ORIGIN=http://localhost:3000
 
 # Python Audio Analyzer (YAMNet)
-# Docker環境ではコンテナ名を使用
-PYTHON_AUDIO_ANALYZER_URL=http://python-api:8000
+# ローカル開発環境用
+PYTHON_AUDIO_ANALYZER_URL=http://localhost:8000
 PYTHON_AUDIO_ANALYZER_TIMEOUT=30000
 
 # 環境設定
