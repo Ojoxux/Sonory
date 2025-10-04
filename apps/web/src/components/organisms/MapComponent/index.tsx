@@ -10,7 +10,7 @@ import { useMapRealtime } from "@/hooks/useRealtime"
 import type { MapBounds, SoundPin } from "@/store/useSoundPinStore"
 import { useCallback, useEffect, useState } from "react"
 import { useMapComponent } from "./hooks"
-import type { MapComponentProps } from "./type"
+import type { MapComponentProps } from "./mapbox.types"
 
 /**
  * Mapbox GLを使用したマップコンポーネント
