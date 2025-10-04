@@ -6,7 +6,13 @@ import {
    useQuery,
    useQueryClient,
 } from "@tanstack/react-query"
-import { useCallback, useEffect, useMemo, useRef } from "react"
+import {
+   useCallback,
+   useEffect,
+   useEffectEvent,
+   useMemo,
+   useRef,
+} from "react"
 
 interface MapBounds {
    north: number
@@ -247,15 +253,20 @@ export const useNearbyPins = ({
    }, [roundedBounds, limit, categories, queryClient])
 
    // Prefetch adjacent areas when bounds change (with minimal debouncing)
+   const prefetchEvent = useEffectEvent(() => {
+      const timer = setTimeout(() => {
+         prefetchAdjacentAreas().catch(console.error)
+      }, 100) // Reduced debounce time
+      return () => clearTimeout(timer)
+   })
+
    useEffect(() => {
       // Only prefetch if main query is successful
       if (query.isSuccess) {
-         const timer = setTimeout(() => {
-            prefetchAdjacentAreas().catch(console.error)
-         }, 100) // Reduced debounce time
-         return () => clearTimeout(timer)
+         const cleanup = prefetchEvent()
+         return cleanup
       }
-   }, [prefetchAdjacentAreas, query.isSuccess])
+   }, [query.isSuccess])
 
    // Cleanup pending requests on unmount
    useEffect(() => {
