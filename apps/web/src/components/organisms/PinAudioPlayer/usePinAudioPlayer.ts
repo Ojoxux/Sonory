@@ -1,5 +1,11 @@
 import type { SoundPin } from "@/store/useSoundPinStore"
-import { useCallback, useEffect, useRef, useState } from "react"
+import {
+   useCallback,
+   useEffect,
+   useEffectEvent,
+   useRef,
+   useState,
+} from "react"
 import type {
    AudioLoadingStatus,
    PlaybackState,
@@ -239,10 +245,14 @@ export function usePinAudioPlayer(
    /**
     * 閉じるボタンのクリックハンドラー
     */
+   const onCloseEvent = useEffectEvent(() => {
+      onClose()
+   })
+
    const handleClose = useCallback((): void => {
       stopAudio()
-      onClose()
-   }, [stopAudio, onClose])
+      onCloseEvent()
+   }, [stopAudio])
 
    // ピンが変更されたときに音声を読み込み
    useEffect(() => {
