@@ -12,13 +12,13 @@
 
 import type mapboxgl from "mapbox-gl"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { applyNightLighting } from "../styles/mapStyles"
 import type {
    LocationData,
    MapboxExtendedMap,
    MapboxNonStandardMethods,
    MapboxSetStyleOptions,
-} from "../type"
+} from "../mapbox.types"
+import { applyNightLighting } from "../styles/mapStyles"
 import {
    type LightingConfig,
    type WeatherEffects,

@@ -9,7 +9,7 @@
  */
 
 import { useCallback, useEffect, useState } from "react"
-import type { LocationData } from "../type"
+import type { LocationData } from "../mapbox.types"
 
 const STORAGE_KEY = "sonory_last_position"
 const POSITION_EXPIRY_HOURS = 24
