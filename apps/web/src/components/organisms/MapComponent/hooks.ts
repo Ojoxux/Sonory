@@ -45,7 +45,11 @@ import { useMapEnvironment } from "./hooks/useMapEnvironment"
 import { useMapNotifications } from "./hooks/useMapNotifications"
 import { useMapState } from "./hooks/useMapState"
 import { useMapboxInitialization } from "./hooks/useMapboxInitialization"
-import type { LocationData } from "./type"
+import type {
+	GeoJSONLineStringFeature,
+	LocationData,
+	MapboxMapOptions,
+} from "./type"
 import {
 	fromNullable,
 	isValidPosition,
