@@ -85,7 +85,7 @@ src/
 ├── utils/          # ユーティリティ
 ├── types/          # 型定義
 └── index.ts        # エントリーポイント
-Dockerfile          # Docker設定
+wrangler.toml       # Cloudflare Workers設定
 tsconfig-paths.json # TSパスエイリアス設定
 ```
 
