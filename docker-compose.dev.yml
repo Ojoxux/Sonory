@@ -29,6 +29,4 @@ services:
 volumes:
   web_node_modules:
   web_next:
-  api_node_modules:
-  api_dist:
   python_venv:
