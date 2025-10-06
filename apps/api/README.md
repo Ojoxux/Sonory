@@ -1,29 +1,20 @@
 # Sonory API
 
+Cloudflare Workers上で動作するHono製APIサーバー
+
+## 🎯 技術スタック
+
+- **ランタイム**: Cloudflare Workers
+- **フレームワーク**: Hono v4.9.9
+- **言語**: TypeScript 5
+- **開発ツール**: Wrangler v4.40.0
+- **バリデーション**: Zod v3.25.28
+- **データベース**: Supabase (PostgreSQL + PostGIS)
+- **リンター/フォーマッター**: Biome 1.9.4
+
 ## 🚀 セットアップ
 
-### Docker環境での開発（推奨）
-
-```bash
-# プロジェクトルートから実行
-task sonory:api:up  # APIサービス起動（Python APIも自動起動）
-
-# または全サービス起動
-task sonory:up      # Web + API + Python API 全て起動
-```
-
-Docker環境では以下が自動的に実行されます：
-- 依存関係のインストール
-- 型定義の生成（`wrangler types`）
-- TypeScriptのビルド
-
-### ローカル環境でのセットアップ（オプション）
-
-以下の場合にローカルセットアップが必要です：
-- **VSCodeなどのIDEで型補完を効かせたい場合**
-- **トラブルシューティング時**
-
-#### 1. 依存関係のインストールと型定義生成
+### 1. 依存関係のインストール
 
 ```bash
 cd apps/api
@@ -35,26 +26,51 @@ npm run generate-types  # Cloudflare Workers用の型定義を生成
 
 APIサービスは2つの環境で動作します：
 
-#### Docker環境（開発環境）
+#### ローカル環境（Wrangler開発サーバー）
 ```bash
-# env.exampleを参考に.envファイルを作成
-cp env.example .env
+# .dev.vars.exampleを参考に.dev.varsファイルを作成
+cp .dev.vars.example .dev.vars
 # 実際のSupabaseキーを設定してください
 ```
 
-#### Cloudflare Workers（本番環境）
+#### Cloudflare Workers（ステージング・本番環境）
 ```bash
-# .dev.varsファイルが既に存在します
-# 本番環境ではCloudflare Workersの環境変数として設定
+# ステージング環境
+wrangler secret put SUPABASE_URL --env staging
+wrangler secret put SUPABASE_ANON_KEY --env staging
+wrangler secret put SUPABASE_SERVICE_KEY --env staging
+
+# 本番環境
+wrangler secret put SUPABASE_URL --env production
+wrangler secret put SUPABASE_ANON_KEY --env production
+wrangler secret put SUPABASE_SERVICE_KEY --env production
 ```
 
 ### 3. 開発環境の起動
 
+#### 方法A: 一括起動（推奨）
 ```bash
 # プロジェクトルートから
-task sonory:api:up    # APIサービス起動
-task sonory:logs:api  # APIログ確認
-task sonory:down      # 全サービス停止
+task sonory:up            # または task up
+# → Web + Python + API が全て起動します（Ctrl+Cで停止）
+
+# 別ターミナルでサービス状態確認
+task status
+
+# 全サービス停止
+task down
+```
+
+#### 方法B: 個別起動
+```bash
+# ターミナル1: Docker Composeサービス起動
+task sonory:web:up        # Next.js起動（ポート3000）
+task sonory:python:up     # Python Audio Analyzer起動（ポート8000）
+
+# ターミナル2: APIサーバー起動
+task sonory:api:dev       # Wrangler起動（ポート8787）
+# または直接実行
+cd apps/api && npm run dev
 ```
 
 ## 📁 ディレクトリ構造
@@ -75,24 +91,44 @@ tsconfig-paths.json # TSパスエイリアス設定
 
 ## 🔧 利用可能なコマンド
 
-### Docker環境での開発
-プロジェクトルートで以下のコマンドを実行してください：
+### 開発用コマンド
+`apps/api`ディレクトリで以下のコマンドを実行できます：
 
 ```bash
-# 利用可能なTaskコマンドの一覧表示
-task --list
-```
-
-### コンテナ内での開発ツール
-APIコンテナ内で以下のコマンドが利用できます：
-
-```bash
+npm run dev              # Wrangler開発サーバー起動（ポート8787）
 npm run generate-types   # Cloudflare Workers用型定義生成
 npm run build            # ビルド（型生成込み）
 npm run lint             # リント実行
 npm run type-check       # 型チェック（型生成込み）
 npm run validate         # リント + 型チェック
 npm run test             # テスト実行
+```
+
+### デプロイコマンド
+```bash
+# APIをCloudflare Workersにデプロイ
+npm run deploy:production    # 本番環境
+npm run deploy:staging       # ステージング環境
+
+# または Taskfileから
+task sonory:deploy:api           # 本番環境
+task sonory:deploy:api:staging   # ステージング環境
+
+# 全サービス一括デプロイ（プロジェクトルートから）
+task sonory:deploy           # Web + Python + API（本番）
+task sonory:deploy:staging   # Web + Python + API（ステージング）
+```
+
+### その他の便利なTaskコマンド
+```bash
+task sonory:install      # 全サービスの依存関係インストール
+task sonory:build        # 全サービスをビルド
+task sonory:lint         # 全サービスのLint実行
+task sonory:type-check   # 全サービスの型チェック実行
+task sonory:clean        # Dockerリソースのクリーンアップ
+
+# 利用可能な全コマンドを確認
+task --list
 ```
 
 ## 🌐 APIエンドポイント
@@ -118,14 +154,3 @@ npm run test             # テスト実行
 - `PUT /api/pins/:id` - ピン更新
 - `DELETE /api/pins/:id` - ピン削除
 - `POST /api/pins/:id/report` - 不適切コンテンツ報告
-
-## 🏗️ 技術スタック
-
-- **Node.js** - サーバーランタイム（Docker環境）
-- **Cloudflare Workers** - 本番環境ランタイム
-- **Hono** - 軽量Webフレームワーク
-- **TypeScript** - 型安全な開発
-- **Wrangler** - Cloudflare Workers開発ツール（型定義生成）
-- **Supabase** - データベース・ストレージ
-- **Docker** - コンテナ化環境（開発用）
-- **Python Audio Analyzer (YAMNet)** - AI音声分類（マイクロサービス） 
