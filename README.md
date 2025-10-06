@@ -75,31 +75,25 @@ cp .env.example .env
 
 3. **開発環境の起動**
 
-APIサービスはCloudflare Workersで動作するため、DockerとWranglerの2つを起動する必要があります。
+Sonoryは3つのサービスで構成されています：
+- **Web (Next.js)**: Docker Compose
+- **API (Wrangler)**: ローカルプロセス
+- **Python Audio Analyzer**: Docker Compose
 
-**ターミナル1: Docker Compose（Web + Python API）**
+**推奨: 一括起動**
 ```bash
-# Web + Python APIサービスを起動
-task sonory:up
+# プロジェクトルートから（初回のみ依存関係インストール）
+cd apps/api && npm install
 
-# 起動確認
-task sonory:status
+# 全サービス起動
+task sonory:up        # または task up
+# → Web + Python + API が全て起動します（Ctrl+Cで停止）
 ```
 
-**ターミナル2: Cloudflare Workers（API）**
-```bash
-# APIディレクトリに移動
-cd apps/api
-
-# 依存関係のインストール（初回のみ）
-npm install
-
-# API開発サーバー起動
-npm run dev
-```
-
-開発環境が起動したら、[http://localhost:3000](http://localhost:3000) でSonory-Webにアクセスできます。
-API: [http://localhost:8787](http://localhost:8787)
+開発環境が起動したら、以下にアクセスできます：
+- Web: [http://localhost:3000](http://localhost:3000)
+- API: [http://localhost:8787](http://localhost:8787)
+- Python Audio Analyzer: [http://localhost:8000](http://localhost:8000)
 
 ## 🛠 Development Tools
 
@@ -107,18 +101,34 @@ API: [http://localhost:8787](http://localhost:8787)
 
 ```bash
 # サービス管理
-task sonory:up           # 全サービス起動
-task sonory:down         # 停止
+task sonory:up           # 全サービス起動（または task up）
+task sonory:dev          # 開発モードでサービスを起動（Docker フォアグラウンド + API）
+task sonory:down         # 全サービス停止（または task down）
+task sonory:status       # ステータス確認（または task status）
 task sonory:rebuild      # 再ビルド
-task sonory:status       # ステータス確認
-task sonory:logs         # ログ確認
+
+# 個別サービス管理
+task sonory:web:up       # Webのみ起動
+task sonory:python:up    # Python Audio Analyzerのみ起動
+task sonory:api:up      # APIのみ起動
+
+# ログ確認
+task sonory:logs         # Docker Composeサービスログ（Web + Python）
+task sonory:logs:web     # Webログ
+task sonory:logs:python  # Python APIログ
+# 💡 APIログは task sonory:dev で統合表示、または起動ターミナルで確認
 
 # 開発ツール
-task sonory:test         # 全サービステスト実行
+task sonory:install      # 依存関係インストール
+task sonory:build        # 全サービスビルド
+task sonory:lint         # 全サービスLint実行
+task sonory:type-check   # 全サービス型チェック
 
 # メンテナンス
 task sonory:clean        # クリーンアップ
-task sonory:install      # 依存関係インストール
+
+# 利用可能な全コマンドを確認
+task --list
 ```
 
 ### Docker設定ファイル
@@ -199,21 +209,18 @@ sonory/                               # プロジェクトルート（モノレ�
 - **APIランタイム**: Hono (Cloudflare Workers) + FastAPI (Python)
 - **自動化**: Task (Taskfile) + Turborepo
 
-### 個別サービス管理
+### シェルアクセス
 
 ```bash
-# 個別サービス起動
-task sonory:web:up       # Webサービスのみ
-task sonory:python:up    # Python APIサービスのみ
+# Dockerコンテナのシェルを開く
+task sonory:shell:web       # Webコンテナ
+task sonory:shell:python    # Python APIコンテナ
 
-# 個別ログ確認
-task sonory:logs:web     # Webログ
-task sonory:logs:python  # Python APIログ
-
-# API (Cloudflare Workers)
-cd apps/api && npm run dev  # API開発サーバー起動 (localhost:8787)
-
+# APIはローカルプロセスなので直接アクセス
+cd apps/api
 ```
+
+または`task sonory:dev`で開発モードでサービスを起動すると、全サービスのログが統合表示された状態で起動します。
 
 ### 個別アプリケーション詳細
 - **フロントエンド**: [apps/web/README.md](apps/web/README.md)
@@ -222,15 +229,26 @@ cd apps/api && npm run dev  # API開発サーバー起動 (localhost:8787)
 
 ## 🏗 Build and Deploy
 
+### デプロイコマンド
+
 ```bash
-# 本番環境起動
+# 全サービスをデプロイ（Web + Python + API）
+task sonory:deploy           # 本番環境
+task sonory:deploy:staging   # ステージング環境
+
+# APIのみをデプロイ
+task sonory:deploy:api       # 本番環境
+task sonory:deploy:api:staging  # ステージング環境
+
+# Docker Composeサービスのみ起動（Web + Python）
 task sonory:prod
 
 # テスト環境起動（軽量版）
 task sonory:test
 
-# 全体クリーンアップ
-task sonory:clean
+# リビルド・クリーンアップ
+task sonory:rebuild          # Docker Composeサービスを再ビルド
+task sonory:clean            # 全体クリーンアップ
 ```
 
 ## 📝 Development Guidelines
