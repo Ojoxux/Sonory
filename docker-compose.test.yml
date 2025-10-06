@@ -19,9 +19,7 @@ services:
       - ./packages:/app/packages
       - /app/node_modules
       - web_next:/app/apps/web/.next
-    depends_on:
-      api:
-        condition: service_healthy
+    depends_on: []
     networks:
       - sonory-network
     restart: unless-stopped
