@@ -10,7 +10,6 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=http://api:8787
       - NEXT_PUBLIC_MAPBOX_TOKEN=${NEXT_PUBLIC_MAPBOX_TOKEN}
       # テスト環境ではpython-apiの環境変数を削除する
       - NEXT_PUBLIC_PYTHON_API_URL=
