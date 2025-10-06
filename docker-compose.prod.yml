@@ -1,4 +1,5 @@
 # Production overrides
+# Note: API service is deployed to Cloudflare Workers, not Docker Compose
 services:
   web:
     build:
@@ -8,23 +9,6 @@ services:
       - NEXT_TELEMETRY_DISABLED=1
     volumes: []
     restart: always
-
-  api:
-    build:
-      target: production
-    environment:
-      - NODE_ENV=production
-      # Production uses only SUPABASE_URL via env, secrets via files
-      - SUPABASE_URL=${SUPABASE_URL}
-      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000}
-      - PYTHON_AUDIO_ANALYZER_URL=http://python-api:8000
-      - PYTHON_AUDIO_ANALYZER_TIMEOUT=${PYTHON_AUDIO_ANALYZER_TIMEOUT:-30000}
-    volumes: []
-    restart: always
-    # Secrets are still required in production
-    secrets:
-      - supabase_service_key
-      - supabase_anon_key
 
   python-api:
     build:
