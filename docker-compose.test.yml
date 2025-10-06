@@ -10,7 +10,6 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=http://api:8787
       - NEXT_PUBLIC_MAPBOX_TOKEN=${NEXT_PUBLIC_MAPBOX_TOKEN}
       # テスト環境ではpython-apiの環境変数を削除する
       - NEXT_PUBLIC_PYTHON_API_URL=
@@ -19,42 +18,10 @@ services:
       - ./packages:/app/packages
       - /app/node_modules
       - web_next:/app/apps/web/.next
-    depends_on:
-      api:
-        condition: service_healthy
-    networks:
-      - sonory-network
-    restart: unless-stopped
-
-  # Hono API (Node.js Runtime)  
-  api:
-    build:
-      context: .
-      dockerfile: ./apps/api/Dockerfile
-      target: development
-    ports:
-      - "8787:8787"
-    environment:
-      - NODE_ENV=development
-      - SUPABASE_URL=${SUPABASE_URL}
-      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000}
-      # Remove python-api references for test environment
-      - PYTHON_AUDIO_ANALYZER_URL=
-      - PYTHON_AUDIO_ANALYZER_TIMEOUT=
-    volumes:
-      - ./apps/api:/app/apps/api
-      - ./packages:/app/packages
-      - /app/node_modules
-    # Remove dependency on python-api for test environment
     depends_on: []
     networks:
       - sonory-network
     restart: unless-stopped
-    command: sh -c "cd /app && npm run build --prefix apps/api && npm run dev:node --prefix apps/api"
-    # Use Docker Secrets
-    secrets:
-      - supabase_service_key
-      - supabase_anon_key
 
 volumes:
   web_next:
