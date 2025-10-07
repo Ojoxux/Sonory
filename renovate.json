@@ -1,6 +1,91 @@
 {
    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+   "description": "Sonory Monorepo用のRenovate設定。依存関係を安全に自動更新する。Lint・TypeScript・CI系は自動マージ、それ以外は手動レビューを前提とする。",
    "extends": [
-      "config:recommended"
-   ]
-}
+     "config:base",
+     ":semanticCommits",
+     ":semanticCommitTypeAll(chore)",
+     ":timezone(Asia/Tokyo)",
+     "group:monorepos",
+     "group:recommended",
+     ":prHourlyLimit2",
+     ":prConcurrentLimit5"
+   ],
+ 
+   "labels": ["dependencies", "renovate"],
+   "rangeStrategy": "bump",
+ 
+   "enabledManagers": [
+     "npm",
+     "dockerfile",
+     "docker-compose",
+     "github-actions",
+     "poetry"
+   ],
+ 
+   "packageRules": [
+     {
+       "matchManagers": ["npm"],
+       "groupName": "npm dependencies",
+       "description": "Node.js パッケージ（Next.js, Hono, 共通utilsなど）用。minor / patchのみ更新。主要依存は手動レビュー。",
+       "automerge": false,
+       "commitMessagePrefix": "chore(deps): ",
+       "updateTypes": ["minor", "patch"]
+     },
+     {
+       "matchManagers": ["dockerfile", "docker-compose"],
+       "groupName": "docker services",
+       "description": "DockerfileおよびCompose関連の更新。サービス破壊リスクを避けるため、手動レビュー必須。日曜夜のみスケジュール実行。",
+       "automerge": false,
+       "schedule": ["after 10pm and before 6am on sunday"],
+       "commitMessagePrefix": "chore(docker): "
+     },
+     {
+       "matchManagers": ["github-actions"],
+       "groupName": "github actions",
+       "description": "GitHub Actionsワークフロー更新。軽微な更新が多いため、自動マージを許可。",
+       "automerge": true,
+       "commitMessagePrefix": "chore(ci): ",
+       "updateTypes": ["minor", "patch"]
+     },
+     {
+       "matchManagers": ["poetry"],
+       "groupName": "python packages",
+       "description": "Python（FastAPI + YAMNet）環境の依存パッケージ。動作確認を要するため手動レビュー。",
+       "commitMessagePrefix": "chore(py): ",
+       "updateTypes": ["minor", "patch"],
+       "automerge": false
+     },
+     {
+       "matchPackageNames": ["typescript", "@types/*"],
+       "groupName": "typescript ecosystem",
+       "description": "TypeScript本体および型定義パッケージ。安全性が高いため自動マージを許可。",
+       "commitMessagePrefix": "chore(ts): ",
+       "automerge": true
+     },
+     {
+       "matchPackageNames": ["@biomejs/biome", "eslint", "prettier"],
+       "groupName": "code quality tools",
+       "description": "コード品質系ツール（Biome, ESLint, Prettier）。開発者体験に関わるが破壊的変更は稀なため、自動マージを許可。",
+       "commitMessagePrefix": "chore(lint): ",
+       "updateTypes": ["minor", "patch"],
+       "automerge": true
+     },
+     {
+       "matchPackageNames": ["next", "react", "react-dom"],
+       "groupName": "frontend core",
+       "description": "Next.js / React の主要依存。影響範囲が広いため手動レビューが必須。",
+       "commitMessagePrefix": "fix(frontend): ",
+       "automerge": false
+     },
+     {
+       "matchDatasources": ["docker"],
+       "description": "Docker関連パッケージのバージョン指定ルール。minorとpatchをまとめて更新。",
+       "separateMinorPatch": false
+     }
+   ],
+ 
+   "automergeType": "branch",
+   "prCreation": "not-pending",
+   "ignoreDeps": ["node", "npm"]
+ }
