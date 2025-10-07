@@ -86,7 +86,7 @@
      }
    ],
  
-   "automergeType": "branch",
-   "prCreation": "not-pending",
-   "ignoreDeps": ["node", "npm"]
- }
+  "automergeType": "branch",
+  "prCreation": "not-pending",
+  "ignoreDeps": ["node", "npm", "python"]
+}
