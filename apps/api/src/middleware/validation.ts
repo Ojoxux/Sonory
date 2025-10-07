@@ -1,5 +1,5 @@
 import { zValidator } from "@hono/zod-validator"
-import type * as z from "zod"
+import * as z from "zod"
 import { APIException, BACKEND_ERROR_CODES } from "./error"
 
 /**
