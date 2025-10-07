@@ -1,4 +1,3 @@
-import type { ZodTypeAny } from "zod"
 import type { Hook } from "@hono/zod-validator"
 import type { Env, ValidationTargets } from "hono"
 import { APIException, BACKEND_ERROR_CODES } from "./error"

@@ -1,3 +1,4 @@
+import { zValidator } from "@hono/zod-validator"
 import {
    ERROR_CODES,
    type NearbyPinsQuery,
@@ -7,7 +8,6 @@ import { Hono } from "hono"
 import { z } from "zod"
 import { APIException } from "../middleware/error"
 import { onZodValidationError } from "../middleware/validation"
-import { zValidator } from "@hono/zod-validator"
 import { AudioService } from "../services/audio.service"
 import { PinService } from "../services/pin.service"
 import type { Env } from "../types/api"
@@ -87,17 +87,21 @@ const reportPinSchema = z.object({
 /**
  * POST /api/pins - Create a new pin
  */
-app.post("/", zValidator("json", createPinSchema, onZodValidationError), async (c) => {
-   const service = new PinService(c)
-   const data = await c.req.json()
+app.post(
+   "/",
+   zValidator("json", createPinSchema, onZodValidationError),
+   async (c) => {
+      const service = new PinService(c)
+      const data = await c.req.json()
 
-   const pin = await service.createPin(data)
+      const pin = await service.createPin(data)
 
-   return c.json({
-      success: true,
-      data: pin,
-   })
-})
+      return c.json({
+         success: true,
+         data: pin,
+      })
+   },
+)
 
 /**
  * POST /api/pins/upload - Create a new pin with audio upload
@@ -251,77 +255,88 @@ app.post("/upload", async (c) => {
 /**
  * GET /api/pins/nearby - Get nearby pins
  */
-app.get("/nearby", zValidator("query", nearbyPinsSchema, onZodValidationError), async (c) => {
-   const service = new PinService(c)
-   const validated = c.req.valid("query")
+app.get(
+   "/nearby",
+   zValidator("query", nearbyPinsSchema, onZodValidationError),
+   async (c) => {
+      const service = new PinService(c)
+      const validated = c.req.valid("query")
 
-   const nearbyQuery: NearbyPinsQuery = {
-      bounds: {
-         north: validated.north,
-         south: validated.south,
-         east: validated.east,
-         west: validated.west,
-      },
-      limit: validated.limit ?? 50,
-      categories: validated.categories,
-   }
+      const nearbyQuery: NearbyPinsQuery = {
+         bounds: {
+            north: validated.north,
+            south: validated.south,
+            east: validated.east,
+            west: validated.west,
+         },
+         limit: validated.limit ?? 50,
+         categories: validated.categories,
+      }
 
-   const pins = await service.getNearbyPins(nearbyQuery)
+      const pins = await service.getNearbyPins(nearbyQuery)
 
-   // 積極的なキャッシュヘッダーを設定
-   c.header("Cache-Control", "public, s-maxage=120, stale-while-revalidate=300")
-   c.header("X-API-Version", "1.0")
-   c.header("X-Response-Time", Date.now().toString())
+      // 積極的なキャッシュヘッダーを設定
+      c.header(
+         "Cache-Control",
+         "public, s-maxage=120, stale-while-revalidate=300",
+      )
+      c.header("X-API-Version", "1.0")
+      c.header("X-Response-Time", Date.now().toString())
 
-   return c.json({
-      success: true,
-      data: pins,
-      meta: {
-         count: pins.length,
-         bounds: nearbyQuery.bounds,
-         limit: nearbyQuery.limit,
-      },
-   })
-})
+      return c.json({
+         success: true,
+         data: pins,
+         meta: {
+            count: pins.length,
+            bounds: nearbyQuery.bounds,
+            limit: nearbyQuery.limit,
+         },
+      })
+   },
+)
 
 /**
  * GET /api/pins/search - Search pins with filters
  */
-app.get("/search", zValidator("query", searchPinsSchema, onZodValidationError), async (c) => {
-   const service = new PinService(c)
-   const validated = c.req.valid("query")
+app.get(
+   "/search",
+   zValidator("query", searchPinsSchema, onZodValidationError),
+   async (c) => {
+      const service = new PinService(c)
+      const validated = c.req.valid("query")
 
-   const searchQuery: SearchPinsQuery = {
-      ...(validated.lat && validated.lng && validated.radius
-         ? {
-              location: {
-                 lat: validated.lat,
-                 lng: validated.lng,
-                 radius: validated.radius,
-              },
-           }
-         : {}),
-      ...(validated.startTime && validated.endTime
-         ? {
-              timeRange: {
-                 start: validated.startTime,
-                 end: validated.endTime,
-              },
-           }
-         : {}),
-      categories: validated.categories,
-      weather: validated.weather,
-      limit: validated.limit ?? 50,
-      offset: validated.offset ?? 0,
-   }
+      const searchQuery: SearchPinsQuery = {
+         ...(validated.lat && validated.lng && validated.radius
+            ? {
+                 location: {
+                    lat: validated.lat,
+                    lng: validated.lng,
+                    radius: validated.radius,
+                 },
+              }
+            : {}),
+         ...(validated.startTime && validated.endTime
+            ? {
+                 timeRange: {
+                    start: validated.startTime,
+                    end: validated.endTime,
+                 },
+              }
+            : {}),
+         categories: validated.categories,
+         weather: validated.weather,
+         limit: validated.limit ?? 50,
+         offset: validated.offset ?? 0,
+      }
 
-   const pins = await service.searchPins(searchQuery)
+      const pins = await service.searchPins(searchQuery)
 
-   return c.json({
-      success: true,
-      data: pins,
-   })
-})
+      return c.json({
+         success: true,
+         data: pins,
+      })
+   },
+)
 
 /**
  * GET /api/pins/user/:userId - Get user's pins
@@ -341,21 +356,25 @@ app.get("/user/:userId", async (c) => {
 /**
  * POST /api/pins/batch - Create multiple pins
  */
-app.post("/batch", zValidator("json", z.array(createPinSchema), onZodValidationError), async (c) => {
-   const service = new PinService(c)
-   const data = await c.req.json()
+app.post(
+   "/batch",
+   zValidator("json", z.array(createPinSchema), onZodValidationError),
+   async (c) => {
+      const service = new PinService(c)
+      const data = await c.req.json()
 
-   const pins = await service.createPinsBatch(data)
+      const pins = await service.createPinsBatch(data)
 
-   return c.json({
-      success: true,
-      data: pins,
-      meta: {
-         requested: data.length,
-         created: pins.length,
-      },
-   })
-})
+      return c.json({
+         success: true,
+         data: pins,
+         meta: {
+            requested: data.length,
+            created: pins.length,
+         },
+      })
+   },
+)
 
 /**
  * GET /api/pins/:id - Get pin by ID
@@ -379,22 +398,30 @@ app.get("/:id", async (c) => {
 /**
  * PUT /api/pins/:id - Update pin
  */
-app.put("/:id", zValidator("json", updatePinSchema, onZodValidationError), async (c) => {
-   const service = new PinService(c)
-   const id = c.req.param("id")
-   const data = await c.req.json()
+app.put(
+   "/:id",
+   zValidator("json", updatePinSchema, onZodValidationError),
+   async (c) => {
+      const service = new PinService(c)
+      const id = c.req.param("id")
+      const data = await c.req.json()
 
-   const pin = await service.updatePin(id, data)
+      const pin = await service.updatePin(id, data)
 
-   if (!pin) {
-      throw new APIException(ERROR_CODES.DATABASE_ERROR, "Pin not found", 404)
-   }
+      if (!pin) {
+         throw new APIException(
+            ERROR_CODES.DATABASE_ERROR,
+            "Pin not found",
+            404,
+         )
+      }
 
-   return c.json({
-      success: true,
-      data: pin,
-   })
-})
+      return c.json({
+         success: true,
+         data: pin,
+      })
+   },
+)
 
 /**
  * DELETE /api/pins/:id - Delete pin
@@ -418,21 +445,29 @@ app.delete("/:id", async (c) => {
 /**
  * POST /api/pins/:id/report - Report a pin
  */
-app.post("/:id/report", zValidator("json", reportPinSchema, onZodValidationError), async (c) => {
-   const service = new PinService(c)
-   const id = c.req.param("id")
-   const { reason } = await c.req.json()
+app.post(
+   "/:id/report",
+   zValidator("json", reportPinSchema, onZodValidationError),
+   async (c) => {
+      const service = new PinService(c)
+      const id = c.req.param("id")
+      const { reason } = await c.req.json()
 
-   const reported = await service.reportPin(id, reason)
+      const reported = await service.reportPin(id, reason)
 
-   if (!reported) {
-      throw new APIException(ERROR_CODES.DATABASE_ERROR, "Pin not found", 404)
-   }
+      if (!reported) {
+         throw new APIException(
+            ERROR_CODES.DATABASE_ERROR,
+            "Pin not found",
+            404,
+         )
+      }
 
-   return c.json({
-      success: true,
-      data: { reported: true },
-   })
-})
+      return c.json({
+         success: true,
+         data: { reported: true },
+      })
+   },
+)
 
 export default app
