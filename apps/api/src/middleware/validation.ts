@@ -1,5 +1,6 @@
-import { zValidator } from "@hono/zod-validator"
 import type { ZodTypeAny } from "zod"
+import type { Hook } from "@hono/zod-validator"
+import type { Env, ValidationTargets } from "hono"
 import { APIException, BACKEND_ERROR_CODES } from "./error"
 
 /**
@@ -18,19 +19,22 @@ export const formatValidationErrors = (
  * カスタムバリデーションミドルウェア
  * @description Zodスキーマを使用してリクエストをバリデート
  */
-export const validate = <T extends ZodTypeAny>(
-   target: "json" | "query" | "param",
-   schema: T,
-) => {
-   return zValidator(target, schema, (result, _c) => {
-      if (!result.success) {
-         const errors = result.error.flatten().fieldErrors
-         throw new APIException(
-            BACKEND_ERROR_CODES.INVALID_REQUEST,
-            formatValidationErrors(errors),
-            400,
-            { errors },
-         )
-      }
-   })
+/**
+ * zValidator 用の共通エラーハンドラ
+ */
+export const onZodValidationError: Hook<
+   unknown,
+   Env,
+   string,
+   keyof ValidationTargets
+> = (result, _c) => {
+   if (!result.success) {
+      const errors = result.error.flatten().fieldErrors
+      throw new APIException(
+         BACKEND_ERROR_CODES.INVALID_REQUEST,
+         formatValidationErrors(errors),
+         400,
+         { errors },
+      )
+   }
 }
