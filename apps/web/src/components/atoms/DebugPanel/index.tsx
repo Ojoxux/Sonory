@@ -21,6 +21,7 @@ import { useState } from "react"
 import { FaBug, FaChevronDown, FaChevronUp } from "react-icons/fa"
 import { useInferenceStore } from "../../../store/useInferenceStore"
 import { useRecorderStore } from "../../../store/useRecorderStore"
+import { AIAnalysisOrb } from "../AIAnalysisOrb"
 import { useDebugPanel, useYAMNetDebug } from "./hooks"
 import type { DebugPanelProps } from "./types"
 
@@ -40,9 +41,18 @@ export function DebugPanel({
    realtime,
 }: DebugPanelProps): ReactElement {
    const [isExpanded, setIsExpanded] = useState(false)
-   const [selectedTab, setSelectedTab] = useState<"main" | "yamnet" | "map">(
-      "main",
-   )
+   const [selectedTab, setSelectedTab] = useState<
+      "main" | "yamnet" | "map" | "orb"
+   >("main")
+
+   // Orb設定用のstate
+   const [orbHue, setOrbHue] = useState(220)
+   const [orbHoverIntensity, setOrbHoverIntensity] = useState(0.3)
+   const [orbRotateOnHover, setOrbRotateOnHover] = useState(true)
+   const [orbForceHoverState, setOrbForceHoverState] = useState(false)
+   const [orbCycleHue, setOrbCycleHue] = useState(false)
+   const [orbHueCycleSpeed, setOrbHueCycleSpeed] = useState(30)
+   const [orbSize, setOrbSize] = useState(320)
 
    const { handleTimeChange, handlePWADebugShow, handlePWADebugHide } =
       useDebugPanel({
@@ -132,6 +142,19 @@ export function DebugPanel({
                   }`}
                >
                   YAMNet
+               </button>
+               <button
+                  type="button"
+                  onClick={() => {
+                     setSelectedTab("orb")
+                  }}
+                  className={`rounded px-2 py-1 text-xs transition-colors ${
+                     selectedTab === "orb"
+                        ? "bg-blue-500/50 text-white"
+                        : "text-gray-300 hover:bg-white/10"
+                  }`}
+               >
+                  Orb
                </button>
             </div>
          )}
@@ -532,6 +555,230 @@ ${
                      >
                         Test YAMNet Button
                      </button>
+                  </div>
+               )}
+
+               {/* Orbタブ */}
+               {selectedTab === "orb" && (
+                  <div className="pointer-events-auto space-y-4">
+                     {/* Orbプレビュー */}
+                     <div className="flex h-96 w-full flex-col items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-slate-900 to-slate-950">
+                        <AIAnalysisOrb
+                           hue={orbHue}
+                           hoverIntensity={orbHoverIntensity}
+                           rotateOnHover={orbRotateOnHover}
+                           forceHoverState={orbForceHoverState}
+                           cycleHue={orbCycleHue}
+                           hueCycleSpeed={orbHueCycleSpeed}
+                           size={orbSize}
+                        />
+                        <div className="mt-6 flex flex-col items-center space-y-2 text-center">
+                           <p className="font-bold text-white text-xl tracking-wide">
+                              音を聴いています...
+                           </p>
+                           <p className="text-gray-400 text-sm tracking-wide">
+                              この音が何を伝えているか、感じています
+                           </p>
+                        </div>
+                     </div>
+
+                     {/* コントロールパネル */}
+                     <div className="space-y-3">
+                        {/* Hue */}
+                        <div>
+                           <label className="mb-1 block text-gray-300 text-xs">
+                              Hue (色相): {orbHue}°
+                           </label>
+                           <input
+                              type="range"
+                              min="0"
+                              max="360"
+                              value={orbHue}
+                              onChange={(e) =>
+                                 setOrbHue(Number(e.target.value))
+                              }
+                              className="w-full"
+                           />
+                        </div>
+
+                        {/* Hover Intensity */}
+                        <div>
+                           <label className="mb-1 block text-gray-300 text-xs">
+                              Hover Intensity: {orbHoverIntensity.toFixed(2)}
+                           </label>
+                           <input
+                              type="range"
+                              min="0"
+                              max="1"
+                              step="0.05"
+                              value={orbHoverIntensity}
+                              onChange={(e) =>
+                                 setOrbHoverIntensity(Number(e.target.value))
+                              }
+                              className="w-full"
+                           />
+                        </div>
+
+                        {/* Rotate On Hover */}
+                        <div className="flex items-center justify-between">
+                           <label className="text-gray-300 text-xs">
+                              Rotate On Hover
+                           </label>
+                           <button
+                              type="button"
+                              onClick={() =>
+                                 setOrbRotateOnHover(!orbRotateOnHover)
+                              }
+                              className={`rounded px-3 py-1 text-xs transition-colors ${
+                                 orbRotateOnHover
+                                    ? "bg-green-500/50 text-white"
+                                    : "bg-gray-600 text-gray-300"
+                              }`}
+                           >
+                              {orbRotateOnHover ? "ON" : "OFF"}
+                           </button>
+                        </div>
+
+                        {/* Force Hover State */}
+                        <div className="flex items-center justify-between">
+                           <label className="text-gray-300 text-xs">
+                              Force Hover State
+                           </label>
+                           <button
+                              type="button"
+                              onClick={() =>
+                                 setOrbForceHoverState(!orbForceHoverState)
+                              }
+                              className={`rounded px-3 py-1 text-xs transition-colors ${
+                                 orbForceHoverState
+                                    ? "bg-green-500/50 text-white"
+                                    : "bg-gray-600 text-gray-300"
+                              }`}
+                           >
+                              {orbForceHoverState ? "ON" : "OFF"}
+                           </button>
+                        </div>
+
+                        {/* Cycle Hue */}
+                        <div className="flex items-center justify-between">
+                           <label className="text-gray-300 text-xs">
+                              Cycle Hue (色相サイクル)
+                           </label>
+                           <button
+                              type="button"
+                              onClick={() => setOrbCycleHue(!orbCycleHue)}
+                              className={`rounded px-3 py-1 text-xs transition-colors ${
+                                 orbCycleHue
+                                    ? "bg-green-500/50 text-white"
+                                    : "bg-gray-600 text-gray-300"
+                              }`}
+                           >
+                              {orbCycleHue ? "ON" : "OFF"}
+                           </button>
+                        </div>
+
+                        {/* Hue Cycle Speed */}
+                        {orbCycleHue && (
+                           <div>
+                              <label className="mb-1 block text-gray-300 text-xs">
+                                 Cycle Speed: {orbHueCycleSpeed}°/s
+                              </label>
+                              <input
+                                 type="range"
+                                 min="10"
+                                 max="120"
+                                 step="10"
+                                 value={orbHueCycleSpeed}
+                                 onChange={(e) =>
+                                    setOrbHueCycleSpeed(Number(e.target.value))
+                                 }
+                                 className="w-full"
+                              />
+                           </div>
+                        )}
+
+                        {/* Size */}
+                        <div>
+                           <label className="mb-1 block text-gray-300 text-xs">
+                              Size: {orbSize}px
+                           </label>
+                           <input
+                              type="range"
+                              min="160"
+                              max="400"
+                              step="20"
+                              value={orbSize}
+                              onChange={(e) =>
+                                 setOrbSize(Number(e.target.value))
+                              }
+                              className="w-full"
+                           />
+                        </div>
+
+                        {/* プリセットボタン */}
+                        <div className="grid grid-cols-2 gap-2">
+                           <button
+                              type="button"
+                              onClick={() => {
+                                 setOrbHue(220)
+                                 setOrbHoverIntensity(0.3)
+                                 setOrbRotateOnHover(true)
+                                 setOrbForceHoverState(false)
+                                 setOrbCycleHue(false)
+                                 setOrbHueCycleSpeed(30)
+                                 setOrbSize(320)
+                              }}
+                              className="rounded bg-blue-500/20 px-2 py-1 text-blue-300 text-xs transition-colors hover:bg-blue-500/30"
+                           >
+                              デフォルト (青)
+                           </button>
+                           <button
+                              type="button"
+                              onClick={() => {
+                                 setOrbHue(0)
+                                 setOrbHoverIntensity(0.5)
+                                 setOrbRotateOnHover(true)
+                                 setOrbForceHoverState(true)
+                                 setOrbCycleHue(true)
+                                 setOrbHueCycleSpeed(60)
+                                 setOrbSize(240)
+                              }}
+                              className="rounded bg-purple-500/20 px-2 py-1 text-purple-300 text-xs transition-colors hover:bg-purple-500/30"
+                           >
+                              分析中 (虹色)
+                           </button>
+                           <button
+                              type="button"
+                              onClick={() => {
+                                 setOrbHue(0)
+                                 setOrbHoverIntensity(0.4)
+                                 setOrbRotateOnHover(true)
+                                 setOrbForceHoverState(false)
+                                 setOrbCycleHue(false)
+                                 setOrbHueCycleSpeed(30)
+                                 setOrbSize(320)
+                              }}
+                              className="rounded bg-red-500/20 px-2 py-1 text-red-300 text-xs transition-colors hover:bg-red-500/30"
+                           >
+                              エラー (赤)
+                           </button>
+                           <button
+                              type="button"
+                              onClick={() => {
+                                 setOrbHue(120)
+                                 setOrbHoverIntensity(0.2)
+                                 setOrbRotateOnHover(false)
+                                 setOrbForceHoverState(false)
+                                 setOrbCycleHue(false)
+                                 setOrbHueCycleSpeed(30)
+                                 setOrbSize(320)
+                              }}
+                              className="rounded bg-green-500/20 px-2 py-1 text-green-300 text-xs transition-colors hover:bg-green-500/30"
+                           >
+                              完了 (緑)
+                           </button>
+                        </div>
+                     </div>
                   </div>
                )}
             </>
