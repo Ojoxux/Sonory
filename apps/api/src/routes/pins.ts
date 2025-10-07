@@ -84,6 +84,9 @@ const reportPinSchema = z.object({
    reason: z.string().min(10).max(1000),
 })
 
+// HACK: 複雑な配列スキーマは事前に定義して型推論の深さを抑える
+const createPinsBatchSchema: z.ZodTypeAny = z.array(createPinSchema)
+
 /**
  * POST /api/pins - Create a new pin
  */
@@ -358,7 +361,7 @@ app.get("/user/:userId", async (c) => {
  */
 app.post(
    "/batch",
-   zValidator("json", z.array(createPinSchema), onZodValidationError),
+   zValidator("json", createPinsBatchSchema, onZodValidationError),
    async (c) => {
       const service = new PinService(c)
       const data = await c.req.json()
