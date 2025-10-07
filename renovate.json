@@ -7,10 +7,11 @@
      ":semanticCommitTypeAll(chore)",
      ":timezone(Asia/Tokyo)",
      "group:monorepos",
-     "group:recommended",
-     ":prHourlyLimit2",
-     ":prConcurrentLimit5"
+     "group:recommended"
    ],
+
+   "prHourlyLimit": 2,
+   "prConcurrentLimit": 5,
  
    "labels": ["dependencies", "renovate"],
    "rangeStrategy": "bump",
