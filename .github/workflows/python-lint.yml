@@ -2,20 +2,14 @@ name: Python Lint CI
 
 # トリガー条件: pushされたとき、またはpython-audio-analyzerディレクトリが変更されたとき
 on:
-  push:
-    paths:
-      - 'apps/python-audio-analyzer/**'
-      - '.github/workflows/python-lint.yml'
-    paths-ignore:
-      - 'apps/web/**'
-      - 'apps/api/**'
-  pull_request:
-    paths:
-      - 'apps/python-audio-analyzer/**'
-      - '.github/workflows/python-lint.yml'
-    paths-ignore:
-      - 'apps/web/**'
-      - 'apps/api/**'
+   push:
+     paths:
+       - 'apps/python-audio-analyzer/**'
+       - '.github/workflows/python-lint.yml'
+   pull_request:
+     paths:
+       - 'apps/python-audio-analyzer/**'
+       - '.github/workflows/python-lint.yml'
 
 jobs:
   lint-and-test:
