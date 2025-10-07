@@ -75,5 +75,5 @@
 			"npx biome check --fix --unsafe packages/config && npx biome format packages/config --write --unsafe"
 		]
 	},
-	"packageManager": "npm@10.0.0"
+	"packageManager": "npm@10.9.4"
 }
