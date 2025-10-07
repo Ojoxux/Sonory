@@ -1,5 +1,5 @@
 import { zValidator } from "@hono/zod-validator"
-import type { ZodSchema } from "zod"
+import * as z from "zod"
 import { APIException, BACKEND_ERROR_CODES } from "./error"
 
 /**
@@ -18,9 +18,9 @@ export const formatValidationErrors = (
  * カスタムバリデーションミドルウェア
  * @description Zodスキーマを使用してリクエストをバリデート
  */
-export const validate = <T>(
+export const validate = <T extends z.ZodTypeAny>(
    target: "json" | "query" | "param",
-   schema: ZodSchema<T>,
+   schema: T,
 ) => {
    return zValidator(target, schema, (result, _c) => {
       if (!result.success) {
