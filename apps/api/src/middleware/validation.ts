@@ -28,12 +28,31 @@ export const onZodValidationError: Hook<
    keyof ValidationTargets
 > = (result, _c) => {
    if (!result.success) {
-      const errors = result.error.flatten().fieldErrors
+      // エラーをフィールドごとに集約
+      const errorObj = result.error
+      if ("issues" in errorObj) {
+         const fieldErrors: Record<string, unknown> = {}
+         for (const issue of errorObj.issues) {
+            const path = (issue.path ?? []).join(".") || "_root"
+            const prev = fieldErrors[path]
+            fieldErrors[path] = prev
+               ? Array.isArray(prev)
+                  ? [...prev, issue.message]
+                  : [prev, issue.message]
+               : issue.message
+         }
+         throw new APIException(
+            BACKEND_ERROR_CODES.INVALID_REQUEST,
+            formatValidationErrors(fieldErrors),
+            400,
+            { errors: fieldErrors },
+         )
+      }
+      // 予備: issues が無い型でも安全に文字列化
       throw new APIException(
          BACKEND_ERROR_CODES.INVALID_REQUEST,
-         formatValidationErrors(errors),
+         "Validation failed",
          400,
-         { errors },
       )
    }
 }
