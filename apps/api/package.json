@@ -24,13 +24,13 @@
       "clean": "rm -rf dist .wrangler"
    },
    "dependencies": {
-      "@hono/zod-validator": "^0.5.0",
+      "@hono/zod-validator": "^0.7.3",
       "@sonory/shared-types": "file:../../packages/shared-types",
       "@sonory/utils": "file:../../packages/utils",
-      "@supabase/supabase-js": "^2.49.8",
-      "hono": "^4.9.9",
-      "vite": "^7.0.7",
-      "zod": "^3.25.28"
+      "@supabase/supabase-js": "^2.74.0",
+      "hono": "^4.9.10",
+      "vite": "^7.1.9",
+      "zod": "^3.25.76"
    },
    "devDependencies": {
       "@biomejs/biome": "1.9.4",
@@ -38,6 +38,6 @@
       "tsc-alias": "^1.8.16",
       "typescript": "^5",
       "vitest": "^3.2.4",
-      "wrangler": "^4.40.0"
+      "wrangler": "^4.42.0"
    }
 }
