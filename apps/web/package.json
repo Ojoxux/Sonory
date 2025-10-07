@@ -23,14 +23,14 @@
    },
    "dependencies": {
       "@ducanh2912/next-pwa": "^10.2.9",
-      "@mapbox/mapbox-gl-geocoder": "^5.0.3",
-      "@supabase/supabase-js": "^2.49.8",
-      "@tanstack/react-query": "^5.83.0",
-      "fp-ts": "^2.16.10",
-      "framer-motion": "^12.15.0",
+      "@mapbox/mapbox-gl-geocoder": "^5.1.2",
+      "@supabase/supabase-js": "^2.74.0",
+      "@tanstack/react-query": "^5.90.2",
+      "fp-ts": "^2.16.11",
+      "framer-motion": "^12.23.22",
       "idb": "^8.0.3",
-      "lucide-react": "^0.514.0",
-      "mapbox-gl": "^3.12.0",
+      "lucide-react": "^0.545.0",
+      "mapbox-gl": "^3.15.0",
       "next": "^15.5.4",
       "ogl": "^1.0.11",
       "react": "^19.2.0",
@@ -39,14 +39,14 @@
       "recordrtc": "^5.6.2",
       "use-effect-event": "^1.0.2",
       "uuid": "^11.1.0",
-      "wavesurfer.js": "^7.9.5",
-      "zod": "^3.25.28",
-      "zustand": "^5.0.5"
+      "wavesurfer.js": "^7.11.0",
+      "zod": "^3.25.76",
+      "zustand": "^5.0.8"
    },
    "devDependencies": {
       "@biomejs/biome": "1.9.4",
-      "@eslint/js": "^9.36.0",
-      "@tailwindcss/postcss": "^4",
+      "@eslint/js": "^9.37.0",
+      "@tailwindcss/postcss": "^4.1.14",
       "@types/mapbox__mapbox-gl-geocoder": "^5.0.0",
       "@types/mapbox-gl": "^3.4.1",
       "@types/node": "^20",
@@ -54,10 +54,10 @@
       "@types/react-dom": "^19",
       "@types/uuid": "^10.0.0",
       "eslint": "^9.37.0",
-      "eslint-plugin-react-you-might-not-need-an-effect": "^0.5.5",
+      "eslint-plugin-react-you-might-not-need-an-effect": "^0.5.6",
       "globals": "^16.4.0",
-      "tailwindcss": "^4",
+      "tailwindcss": "^4.1.14",
       "typescript": "^5",
-      "typescript-eslint": "^8.45.0"
+      "typescript-eslint": "^8.46.0"
    }
 }
