@@ -6,7 +6,7 @@ import { useSoundPinStore } from "@/store/useSoundPinStore"
 import { motion } from "framer-motion"
 import { useCallback, useEffect, useState } from "react"
 import { MdClose } from "react-icons/md"
-import { SonicLoader } from "../../atoms/SonicLoader"
+import { AIAnalysisOrb } from "../../atoms/AIAnalysisOrb"
 import { SoundWaveBackground } from "../../atoms/SoundWaveBackground"
 import { WaveformPlayer } from "../../molecules/WaveformPlayer"
 import type { AudioPlaybackProps } from "./types"
@@ -14,16 +14,16 @@ import type { AudioPlaybackProps } from "./types"
 /**
  * 表示状態の型定義
  */
-type ViewState = "audio-review" | "uploading" | "ai-analyzing" | "results"
+type ViewState = "audio-review" | "ai-analyzing" | "results"
 
 /**
  * 録音完了後の音声再生コンポーネント
  *
  * @description
- * 録音が完了した音声データの再生と削除機能を提供します。
- * wavesurfer.jsを使用した波形表示と再生コントロールを含みます。
- * ユーザーの操作に応じてAI推論を実行し、結果をマップピンとして表示します。
- * Sonoryらしい音響的なUIエフェクトを含みます。
+ * 録音が完了した音声データの再生と削除機能を提供する
+ * wavesurfer.jsを使用した波形表示と再生コントロールを含む
+ * ユーザーの操作に応じてAI推論を実行し、結果をマップピンとして表示
+ * Sonoryらしい音響的なUIエフェクトを含む
  *
  * @param audioData 再生する音声データ
  * @param onClose 閉じるボタンが押されたときのコールバック
@@ -38,6 +38,10 @@ type ViewState = "audio-review" | "uploading" | "ai-analyzing" | "results"
  *   currentPosition={{ latitude: 35.6895, longitude: 139.6917 }}
  * />
  * ```
+ *
+ * @memo
+ * 録音確認、AI分析、結果表示の3つの画面を切り替えているためコンポーネントの責務が複雑になっている
+ * TODO: なるはや責務分割して、コンポーネントの責務を明確にしたい
  */
 export function AudioPlayback({
    audioData,
@@ -55,7 +59,6 @@ export function AudioPlayback({
    } = useInferenceStore()
    const {
       uploadAudioToStorage,
-      uploadProgress,
       uploadError,
       uploadedAudioUrl,
       clearUploadState,
@@ -113,9 +116,9 @@ export function AudioPlayback({
       if (!audioData) return
 
       try {
-         // まず音声をアップロード
-         setViewState("uploading")
-         setAnalysisMessage("音声をアップロード中...")
+         // AI分析を開始（アップロードは裏で実行）
+         setViewState("ai-analyzing")
+         setAnalysisMessage("音を聴いています...")
 
          // 音声時間を実際のBlobから計算
          const duration = await new Promise<number>((resolve) => {
@@ -176,22 +179,13 @@ export function AudioPlayback({
             // アップロードに失敗してもAI分析は続行
          }
 
-         // AI分析を開始
-         setViewState("ai-analyzing")
-
-         // 段階的にメッセージを変更（15秒間）
-         setAnalysisMessage("音声データを読み込み中...")
+         // 段階的にメッセージを変更（3段階）
+         setTimeout(() => {
+            setAnalysisMessage("パターンを探しています...")
+         }, 3000)
 
          setTimeout(() => {
-            setAnalysisMessage("AIモデルで分析中...")
-         }, 2000)
-
-         setTimeout(() => {
-            setAnalysisMessage("パターンマッチングを実行中...")
-         }, 4000)
-
-         setTimeout(() => {
-            setAnalysisMessage("結果を生成中...")
+            setAnalysisMessage("もうすぐ完了です...")
          }, 6000)
 
          // AI分析を実行
@@ -310,7 +304,6 @@ export function AudioPlayback({
                      transition={{ delay: 0.2 }}
                   >
                      {viewState === "audio-review" && "録音完了"}
-                     {viewState === "uploading" && "アップロード中"}
                      {viewState === "ai-analyzing" && "AI分析中"}
                      {viewState === "results" && "AI分析結果"}
                   </motion.h2>
@@ -379,17 +372,31 @@ export function AudioPlayback({
                   </motion.div>
                )}
 
-               {/* アップロード中画面 */}
-               {viewState === "uploading" && (
-                  <SonicLoader
-                     isLoading={true}
-                     text={`${analysisMessage} (${uploadProgress}%)`}
-                  />
-               )}
-
                {/* AI分析中画面 */}
                {viewState === "ai-analyzing" && (
-                  <SonicLoader isLoading={true} text={analysisMessage} />
+                  <motion.div
+                     initial={{ opacity: 0, y: 20 }}
+                     animate={{ opacity: 1, y: 0 }}
+                     className="-mt-5 flex flex-col items-center justify-center"
+                  >
+                     <AIAnalysisOrb
+                        hue={0}
+                        cycleHue={true}
+                        hueCycleSpeed={60}
+                        forceHoverState={true}
+                        rotateOnHover={true}
+                        hoverIntensity={0.4}
+                        size={280}
+                     />
+                     <div className="mt-8 mb-5 flex flex-col items-center space-y-2 text-center">
+                        <p className="font-bold text-white text-xl tracking-wide">
+                           {analysisMessage}
+                        </p>
+                        <p className="text-gray-400 text-sm tracking-wide">
+                           この音が何を伝えているか、感じています
+                        </p>
+                     </div>
+                  </motion.div>
                )}
 
                {/* AI分析結果画面 */}
