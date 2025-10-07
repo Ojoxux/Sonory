@@ -6,7 +6,8 @@ import {
 import { Hono } from "hono"
 import { z } from "zod"
 import { APIException } from "../middleware/error"
-import { validate } from "../middleware/validation"
+import { onZodValidationError } from "../middleware/validation"
+import { zValidator } from "@hono/zod-validator"
 import { AudioService } from "../services/audio.service"
 import { PinService } from "../services/pin.service"
 import type { Env } from "../types/api"
@@ -86,7 +87,7 @@ const reportPinSchema = z.object({
 /**
  * POST /api/pins - Create a new pin
  */
-app.post("/", validate("json", createPinSchema), async (c) => {
+app.post("/", zValidator("json", createPinSchema, onZodValidationError), async (c) => {
    const service = new PinService(c)
    const data = await c.req.json()
 
@@ -250,7 +251,7 @@ app.post("/upload", async (c) => {
 /**
  * GET /api/pins/nearby - Get nearby pins
  */
-app.get("/nearby", validate("query", nearbyPinsSchema), async (c) => {
+app.get("/nearby", zValidator("query", nearbyPinsSchema, onZodValidationError), async (c) => {
    const service = new PinService(c)
    const validated = c.req.valid("query")
 
@@ -286,7 +287,7 @@ app.get("/nearby", validate("query", nearbyPinsSchema), async (c) => {
 /**
  * GET /api/pins/search - Search pins with filters
  */
-app.get("/search", validate("query", searchPinsSchema), async (c) => {
+app.get("/search", zValidator("query", searchPinsSchema, onZodValidationError), async (c) => {
    const service = new PinService(c)
    const validated = c.req.valid("query")
 
@@ -340,7 +341,7 @@ app.get("/user/:userId", async (c) => {
 /**
  * POST /api/pins/batch - Create multiple pins
  */
-app.post("/batch", validate("json", z.array(createPinSchema)), async (c) => {
+app.post("/batch", zValidator("json", z.array(createPinSchema), onZodValidationError), async (c) => {
    const service = new PinService(c)
    const data = await c.req.json()
 
@@ -378,7 +379,7 @@ app.get("/:id", async (c) => {
 /**
  * PUT /api/pins/:id - Update pin
  */
-app.put("/:id", validate("json", updatePinSchema), async (c) => {
+app.put("/:id", zValidator("json", updatePinSchema, onZodValidationError), async (c) => {
    const service = new PinService(c)
    const id = c.req.param("id")
    const data = await c.req.json()
@@ -417,7 +418,7 @@ app.delete("/:id", async (c) => {
 /**
  * POST /api/pins/:id/report - Report a pin
  */
-app.post("/:id/report", validate("json", reportPinSchema), async (c) => {
+app.post("/:id/report", zValidator("json", reportPinSchema, onZodValidationError), async (c) => {
    const service = new PinService(c)
    const id = c.req.param("id")
    const { reason } = await c.req.json()
