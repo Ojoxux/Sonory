@@ -16,10 +16,10 @@
    },
    "dependencies": {
       "@sonory/shared-types": "file:../shared-types",
-      "typescript": "^5"
+      "typescript": "^5.9.3"
    },
    "devDependencies": {
       "@biomejs/biome": "1.9.4",
-      "@types/node": "^20"
+      "@types/node": "^20.19.19"
    }
 }

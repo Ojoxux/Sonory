@@ -34,9 +34,9 @@
    },
    "devDependencies": {
       "@biomejs/biome": "1.9.4",
-      "@types/node": "^20",
+      "@types/node": "^20.19.19",
       "tsc-alias": "^1.8.16",
-      "typescript": "^5",
+      "typescript": "^5.9.3",
       "vitest": "^3.2.4",
       "wrangler": "^4.42.0"
    }
