@@ -164,21 +164,21 @@ export function AudioPlayback({
 		return null
 	}
 
-   return (
-      <motion.div
-         initial={{ opacity: 0, y: 20 }}
-         animate={{ opacity: 1, y: 0 }}
-         exit={{ opacity: 0, y: 20 }}
-         className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm ${className}`}
-      >
-         <motion.div
-            initial={{ scale: 0.9 }}
-            animate={{ scale: 1 }}
-            exit={{ scale: 0.9 }}
-            className="relative max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-2xl border border-white/10 bg-black/95 shadow-2xl backdrop-blur-xl"
-         >
-            {/* 音波背景パターン */}
-            <SoundWaveBackground opacity={0.01} animated={true} />
+	return (
+		<motion.div
+			initial={{ opacity: 0, y: 20 }}
+			animate={{ opacity: 1, y: 0 }}
+			exit={{ opacity: 0, y: 20 }}
+			className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm ${className}`}
+		>
+			<motion.div
+				initial={{ scale: 0.9 }}
+				animate={{ scale: 1 }}
+				exit={{ scale: 0.9 }}
+				className="relative max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-2xl border border-white/10 bg-black/95 shadow-2xl backdrop-blur-xl"
+			>
+				{/* 音波背景パターン */}
+				<SoundWaveBackground opacity={0.01} animated={true} />
 
             {/* ヘッダー */}
             <div className="relative flex items-center justify-between border-white/10 border-b p-6">
