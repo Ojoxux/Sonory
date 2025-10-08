@@ -5,7 +5,6 @@
  * AI分析中画面のプロパティ
  */
 export type AIAnalyzingViewProps = {
-	/** 分析状況を示すメッセージ */
-	message: string
+   /** 分析状況を示すメッセージ */
+   message: string
 }
-

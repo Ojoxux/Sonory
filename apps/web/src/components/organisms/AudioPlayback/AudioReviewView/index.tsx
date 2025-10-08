@@ -29,51 +29,50 @@ import type { AudioReviewViewProps } from "./types"
  * ```
  */
 export function AudioReviewView({
-	audioData,
-	formattedDate,
-	onContinue,
-	onCancel,
-	onWaveformReady,
-	onWaveformFinish,
+   audioData,
+   formattedDate,
+   onContinue,
+   onCancel,
+   onWaveformReady,
+   onWaveformFinish,
 }: AudioReviewViewProps) {
-	return (
-		<motion.div
-			initial={{ opacity: 0, y: 20 }}
-			animate={{ opacity: 1, y: 0 }}
-			transition={{ delay: 0.1 }}
-		>
-			<div className="mb-6">
-				<h3 className="mb-3 font-semibold text-lg text-white">録音音声</h3>
-				<WaveformPlayer
-					audioData={audioData}
-					height={120}
-					waveColor="#9ca3af"
-					progressColor="#dc2626"
-					className="w-full"
-					onReady={onWaveformReady}
-					onFinish={onWaveformFinish}
-				/>
-			</div>
+   return (
+      <motion.div
+         initial={{ opacity: 0, y: 20 }}
+         animate={{ opacity: 1, y: 0 }}
+         transition={{ delay: 0.1 }}
+      >
+         <div className="mb-6">
+            <h3 className="mb-3 font-semibold text-lg text-white">録音音声</h3>
+            <WaveformPlayer
+               audioData={audioData}
+               height={120}
+               waveColor="#9ca3af"
+               progressColor="#dc2626"
+               className="w-full"
+               onReady={onWaveformReady}
+               onFinish={onWaveformFinish}
+            />
+         </div>
 
-			<div className="flex gap-3">
-				<motion.button
-					onClick={onCancel}
-					className="flex-1 touch-manipulation rounded-xl border border-white/10 bg-white/10 px-4 py-3 font-semibold text-white shadow-[0_4px_20px_rgba(255,255,255,0.1)] backdrop-blur-sm transition-all duration-300 hover:bg-white/20 hover:shadow-[0_8px_32px_rgba(255,255,255,0.2)]"
-					whileHover={{ scale: 1.02 }}
-					whileTap={{ scale: 0.98 }}
-				>
-					キャンセル
-				</motion.button>
-				<motion.button
-					onClick={onContinue}
-					className="flex-1 touch-manipulation rounded-xl border border-blue-500/30 bg-blue-600/80 px-4 py-3 font-semibold text-white shadow-[0_4px_20px_rgba(59,130,246,0.4)] backdrop-blur-sm transition-all duration-300 hover:bg-blue-600 hover:shadow-[0_8px_32px_rgba(59,130,246,0.6)]"
-					whileHover={{ scale: 1.02 }}
-					whileTap={{ scale: 0.98 }}
-				>
-					続ける
-				</motion.button>
-			</div>
-		</motion.div>
-	)
+         <div className="flex gap-3">
+            <motion.button
+               onClick={onCancel}
+               className="flex-1 touch-manipulation rounded-xl border border-white/10 bg-white/10 px-4 py-3 font-semibold text-white shadow-[0_4px_20px_rgba(255,255,255,0.1)] backdrop-blur-sm transition-all duration-300 hover:bg-white/20 hover:shadow-[0_8px_32px_rgba(255,255,255,0.2)]"
+               whileHover={{ scale: 1.02 }}
+               whileTap={{ scale: 0.98 }}
+            >
+               キャンセル
+            </motion.button>
+            <motion.button
+               onClick={onContinue}
+               className="flex-1 touch-manipulation rounded-xl border border-blue-500/30 bg-blue-600/80 px-4 py-3 font-semibold text-white shadow-[0_4px_20px_rgba(59,130,246,0.4)] backdrop-blur-sm transition-all duration-300 hover:bg-blue-600 hover:shadow-[0_8px_32px_rgba(59,130,246,0.6)]"
+               whileHover={{ scale: 1.02 }}
+               whileTap={{ scale: 0.98 }}
+            >
+               続ける
+            </motion.button>
+         </div>
+      </motion.div>
+   )
 }
-
