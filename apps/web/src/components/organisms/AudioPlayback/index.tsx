@@ -100,104 +100,27 @@ export function AudioPlayback({
       // TODO: 音声再生完了時の処理を実装
    }, [])
 
-   /**
-    * 続けるボタンのクリックハンドラー
-    */
-   const handleContinue = async (): Promise<void> => {
-      if (!audioData) return
+	/**
+	 * 続けるボタンのクリックハンドラー
+	 */
+	const handleContinue = async (): Promise<void> => {
+		if (!audioData) return
 
-      try {
-         // AI分析を開始（アップロードは裏で実行）
-         setViewState("ai-analyzing")
-         setAnalysisMessage("音を聴いています...")
+		// AI分析画面に遷移
+		setViewState("ai-analyzing")
 
-         // 音声時間を実際のBlobから計算
-         const duration = await new Promise<number>((resolve) => {
-            const audio = new Audio(audioData.url)
-            audio.onloadedmetadata = () => {
-               const actualDuration = audio.duration
-               resolve(Number.isFinite(actualDuration) ? actualDuration : 10)
-            }
-            audio.onerror = () => resolve(10) // エラー時はデフォルト10秒
-         })
+		// 音声処理を実行
+		const result = await processAudio(audioData, currentPosition)
 
-         console.log("🎵 録音時間チェック:", { duration })
+		// バリデーションエラーの場合は録音確認画面に戻る
+		if (!result.success && result.error?.includes("録音時間")) {
+			setViewState("audio-review")
+			return
+		}
 
-         // 録音時間のバリデーション（9.9秒未満の場合はエラー）
-         if (duration < 9.9) {
-            console.error("録音時間が不足しています:", { duration })
-            setViewState("audio-review")
-            setAnalysisMessage(
-               `録音時間が${duration.toFixed(1)}秒のため、マップピンを作成できません。10秒の録音が必要です。`,
-            )
-            return
-         }
-
-         const metadata = {
-            duration,
-            location: currentPosition
-               ? {
-                    lat: currentPosition.latitude,
-                    lng: currentPosition.longitude,
-                 }
-               : undefined,
-         }
-
-         // アップロードを試行（タイムアウト付き）
-         let uploadResult: { url: string; id: string } | null = null
-         try {
-            console.log("🔄 音声アップロード開始:", {
-               blobSize: audioData.blob.size,
-               blobType: audioData.blob.type,
-               metadata,
-            })
-
-            const uploadPromise = uploadAudioToStorage(audioData.blob, metadata)
-            const timeoutPromise = new Promise<never>((_, reject) =>
-               setTimeout(
-                  () => reject(new Error("アップロードタイムアウト")),
-                  10000,
-               ),
-            )
-
-            uploadResult = await Promise.race([uploadPromise, timeoutPromise])
-            console.log("✅ 音声アップロード成功:", uploadResult)
-         } catch (uploadError) {
-            console.warn(
-               "⚠️ アップロードに失敗しました。オフライン分析を実行します:",
-               uploadError,
-            )
-            // アップロードに失敗してもAI分析は続行
-         }
-
-         // 段階的にメッセージを変更（3段階）
-         setTimeout(() => {
-            setAnalysisMessage("パターンを探しています...")
-         }, 3000)
-
-         setTimeout(() => {
-            setAnalysisMessage("もうすぐ完了です...")
-         }, 6000)
-
-         // AI分析を実行
-         // MEMO: startInferenceが完了するまで待機する
-         try {
-            await startInference(audioData)
-         } catch (inferenceError) {
-            console.warn(
-               "⚠️ AI分析に失敗しました。フォールバック結果を使用します:",
-               inferenceError,
-            )
-            // フォールバック結果は useInferenceStore 内で自動的に生成される
-         }
-
-         setViewState("results")
-      } catch (err) {
-         console.error("💥 処理に失敗しました:", err)
-         // エラーが発生した場合も結果画面に遷移（エラー表示のため）
-         setViewState("results")
-      }
-   }
+		// 結果画面に遷移
+		setViewState("results")
+	}
 
    /**
     * ピン配置ボタンのクリックハンドラー
