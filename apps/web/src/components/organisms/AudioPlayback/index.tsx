@@ -63,16 +63,14 @@ export function AudioPlayback({
       clearUploadState,
    } = useAudioProcessing()
 
-   const {
-      placePin,
-      pinCreationStatus,
-      pinCreationError,
-      clearPinCreationState,
-   } = usePinPlacement()
+    const {
+       placePin,
+       pinCreationStatus,
+       pinCreationError,
+       clearPinCreationState,
+    } = usePinPlacement()
 
-   const { formatRecordedAt } = usePinAudioPlayer(null, onClose)
-
-   const [viewState, setViewState] = useState<ViewState>("audio-review")
+    const [viewState, setViewState] = useState<ViewState>("audio-review")
 
    /**
     * 波形プレイヤーの準備完了時のコールバック（メモ化）
