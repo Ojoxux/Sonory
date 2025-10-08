@@ -33,7 +33,7 @@ jobs:
 
       # 3. npm キャッシュの復元 (ビルド高速化)
       - name: Restore npm cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/npm
           key: ${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}
