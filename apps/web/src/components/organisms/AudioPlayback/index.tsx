@@ -90,6 +90,7 @@ export function AudioPlayback({
 
    /**
     * 信頼度をパーセンテージでフォーマット
+    * TODO: 今は使ってないけど、パーセンテージ表示は好きなので後々ちゃんと実装したい
     */
    const formatConfidence = useCallback((confidence: number): string => {
       return `${Math.round(confidence * 100)}%`
