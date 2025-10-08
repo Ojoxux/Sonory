@@ -1,5 +1,6 @@
 "use client"
 
+import { formatRecordedAt } from "@/utils/dateFormat"
 import { motion } from "framer-motion"
 import { useCallback, useEffect, useState } from "react"
 import { MdClose } from "react-icons/md"
@@ -9,7 +10,6 @@ import { AnalysisResultsView } from "./AnalysisResultsView"
 import { AudioReviewView } from "./AudioReviewView"
 import { useAudioProcessing, usePinPlacement } from "./hooks"
 import type { AudioPlaybackProps } from "./types"
-import { usePinAudioPlayer } from "../PinAudioPlayer/usePinAudioPlayer"
 
 /**
  * 表示状態の型定義
