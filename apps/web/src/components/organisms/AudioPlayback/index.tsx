@@ -63,14 +63,14 @@ export function AudioPlayback({
       clearUploadState,
    } = useAudioProcessing()
 
-    const {
-       placePin,
-       pinCreationStatus,
-       pinCreationError,
-       clearPinCreationState,
-    } = usePinPlacement()
+   const {
+      placePin,
+      pinCreationStatus,
+      pinCreationError,
+      clearPinCreationState,
+   } = usePinPlacement()
 
-    const [viewState, setViewState] = useState<ViewState>("audio-review")
+   const [viewState, setViewState] = useState<ViewState>("audio-review")
 
    /**
     * 波形プレイヤーの準備完了時のコールバック（メモ化）
@@ -156,93 +156,98 @@ export function AudioPlayback({
    }
 
    return (
-      <motion.div
-         initial={{ opacity: 0, y: 20 }}
-         animate={{ opacity: 1, y: 0 }}
-         exit={{ opacity: 0, y: 20 }}
-         className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm ${className}`}
-      >
-         <motion.div
-            initial={{ scale: 0.9 }}
-            animate={{ scale: 1 }}
-            exit={{ scale: 0.9 }}
-            className="relative max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-2xl border border-white/10 bg-black/95 shadow-2xl backdrop-blur-xl"
-         >
-            {/* 音波背景パターン */}
-            <SoundWaveBackground opacity={0.01} animated={true} />
+      <>
+         {/* 音声確認画面 */}
+         {viewState === "audio-review" && (
+            <AudioReviewView
+               isOpen={true}
+               audioData={audioData}
+               formattedDate={formatRecordedAt(audioData.recordedAt)}
+               onContinue={handleContinue}
+               onCancel={handleClose}
+               onWaveformReady={handleWaveformReady}
+               onWaveformFinish={handleWaveformFinish}
+            />
+         )}
 
-            {/* ヘッダー */}
-            <div className="relative flex items-center justify-between border-white/10 border-b p-6">
-               <div>
-                  <motion.h2
-                     className="font-bold text-white text-xl"
-                     initial={{ opacity: 0, x: -20 }}
-                     animate={{ opacity: 1, x: 0 }}
-                     transition={{ delay: 0.2 }}
-                  >
-                     {viewState === "audio-review" && "録音完了"}
-                     {viewState === "ai-analyzing" && "AI分析中"}
-                     {viewState === "results" && "AI分析結果"}
-                  </motion.h2>
-                  <motion.p
-                     className="mt-1 text-neutral-300 text-sm"
-                     initial={{ opacity: 0, x: -20 }}
-                     animate={{ opacity: 1, x: 0 }}
-                     transition={{ delay: 0.3 }}
-                  >
-                     {formatRecordedAt(audioData.recordedAt)}
-                  </motion.p>
-               </div>
-               <motion.button
-                  onClick={handleClose}
-                  className="touch-manipulation rounded-full p-2 transition-colors hover:bg-white/10"
-                  aria-label="閉じる"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+         {/* AI分析中画面とAI分析結果画面は既存のオーバーレイ形式を維持 */}
+         {(viewState === "ai-analyzing" || viewState === "results") && (
+            <motion.div
+               initial={{ opacity: 0, y: 20 }}
+               animate={{ opacity: 1, y: 0 }}
+               exit={{ opacity: 0, y: 20 }}
+               className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm ${className}`}
+            >
+               <motion.div
+                  initial={{ scale: 0.9 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0.9 }}
+                  className="relative max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-2xl border border-white/10 bg-black/95 shadow-2xl backdrop-blur-xl"
                >
-                  <MdClose className="h-6 w-6 text-white" />
-               </motion.button>
-            </div>
+                  {/* 音波背景パターン */}
+                  <SoundWaveBackground opacity={0.01} animated={true} />
 
-            {/* メインコンテンツ */}
-            <div className="relative p-6">
-               {/* 音声確認画面 */}
-               {viewState === "audio-review" && (
-                  <AudioReviewView
-                     audioData={audioData}
-                     formattedDate={formatRecordedAt(audioData.recordedAt)}
-                     onContinue={handleContinue}
-                     onCancel={handleClose}
-                     onWaveformReady={handleWaveformReady}
-                     onWaveformFinish={handleWaveformFinish}
-                  />
-               )}
+                  {/* ヘッダー */}
+                  <div className="relative flex items-center justify-between border-white/10 border-b p-6">
+                     <div>
+                        <motion.h2
+                           className="font-bold text-white text-xl"
+                           initial={{ opacity: 0, x: -20 }}
+                           animate={{ opacity: 1, x: 0 }}
+                           transition={{ delay: 0.2 }}
+                        >
+                           {viewState === "ai-analyzing" && "AI分析中"}
+                           {viewState === "results" && "AI分析結果"}
+                        </motion.h2>
+                        <motion.p
+                           className="mt-1 text-neutral-300 text-sm"
+                           initial={{ opacity: 0, x: -20 }}
+                           animate={{ opacity: 1, x: 0 }}
+                           transition={{ delay: 0.3 }}
+                        >
+                           {formatRecordedAt(audioData.recordedAt)}
+                        </motion.p>
+                     </div>
+                     <motion.button
+                        onClick={handleClose}
+                        className="touch-manipulation rounded-full p-2 transition-colors hover:bg-white/10"
+                        aria-label="閉じる"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                     >
+                        <MdClose className="h-6 w-6 text-white" />
+                     </motion.button>
+                  </div>
 
-               {/* AI分析中画面 */}
-               {viewState === "ai-analyzing" && (
-                  <AIAnalyzingView message={analysisMessage} />
-               )}
+                  {/* メインコンテンツ */}
+                  <div className="relative p-6">
+                     {/* AI分析中画面 */}
+                     {viewState === "ai-analyzing" && (
+                        <AIAnalyzingView message={analysisMessage} />
+                     )}
 
-               {/* AI分析結果画面 */}
-               {viewState === "results" && (
-                  <AnalysisResultsView
-                     audioData={audioData}
-                     results={results}
-                     error={error}
-                     uploadError={uploadError}
-                     pinCreationError={pinCreationError}
-                     fallbackUsed={fallbackUsed}
-                     backendAnalysisResult={backendAnalysisResult}
-                     onPlacePin={handlePlacePin}
-                     onClose={handleClose}
-                     pinCreationStatus={pinCreationStatus}
-                     hasPosition={!!currentPosition}
-                     onWaveformReady={handleWaveformReady}
-                     onWaveformFinish={handleWaveformFinish}
-                  />
-               )}
-            </div>
-         </motion.div>
-      </motion.div>
+                     {/* AI分析結果画面 */}
+                     {viewState === "results" && (
+                        <AnalysisResultsView
+                           audioData={audioData}
+                           results={results}
+                           error={error}
+                           uploadError={uploadError}
+                           pinCreationError={pinCreationError}
+                           fallbackUsed={fallbackUsed}
+                           backendAnalysisResult={backendAnalysisResult}
+                           onPlacePin={handlePlacePin}
+                           onClose={handleClose}
+                           pinCreationStatus={pinCreationStatus}
+                           hasPosition={!!currentPosition}
+                           onWaveformReady={handleWaveformReady}
+                           onWaveformFinish={handleWaveformFinish}
+                        />
+                     )}
+                  </div>
+               </motion.div>
+            </motion.div>
+         )}
+      </>
    )
 }

@@ -18,14 +18,14 @@
  * ```
  */
 export function formatRecordedAt(date: Date): string {
-	return date.toLocaleString("ja-JP", {
-		year: "numeric",
-		month: "2-digit",
-		day: "2-digit",
-		hour: "2-digit",
-		minute: "2-digit",
-		second: "2-digit",
-	})
+   return date.toLocaleString("ja-JP", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+   })
 }
 
 /**
@@ -46,13 +46,12 @@ export function formatRecordedAt(date: Date): string {
  * ```
  */
 export function formatTime(seconds: number): string {
-	// NaN、Infinity、負の値をチェック
-	if (!Number.isFinite(seconds) || seconds < 0) {
-		return "00:00"
-	}
+   // NaN、Infinity、負の値をチェック
+   if (!Number.isFinite(seconds) || seconds < 0) {
+      return "00:00"
+   }
 
-	const mins = Math.floor(seconds / 60)
-	const secs = Math.floor(seconds % 60)
-	return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
+   const mins = Math.floor(seconds / 60)
+   const secs = Math.floor(seconds % 60)
+   return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
 }
-
