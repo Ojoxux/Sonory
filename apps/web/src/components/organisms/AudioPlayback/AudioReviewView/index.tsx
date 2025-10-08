@@ -30,7 +30,6 @@ import type { AudioReviewViewProps } from "./types"
  */
 export function AudioReviewView({
    audioData,
-   formattedDate,
    onContinue,
    onCancel,
    onWaveformReady,
