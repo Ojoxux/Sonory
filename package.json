@@ -43,12 +43,12 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
-		"@types/node": "^20",
+		"@types/node": "^20.19.19",
 		"concurrently": "^9.2.1",
 		"husky": "^9.1.7",
 		"lint-staged": "^15.5.2",
 		"turbo": "^2.5.8",
-		"typescript": "^5"
+		"typescript": "^5.9.3"
 	},
 	"lint-staged": {
 		"apps/web/**/*.{js,jsx,ts,tsx}": [
