@@ -1,14 +1,13 @@
 "use client"
 
-import { useInferenceStore } from "@/store/useInferenceStore"
-import { useRecorderStore } from "@/store/useRecorderStore"
-import { useSoundPinStore } from "@/store/useSoundPinStore"
 import { motion } from "framer-motion"
 import { useCallback, useEffect, useState } from "react"
 import { MdClose } from "react-icons/md"
-import { AIAnalysisOrb } from "../../atoms/AIAnalysisOrb"
 import { SoundWaveBackground } from "../../atoms/SoundWaveBackground"
-import { WaveformPlayer } from "../../molecules/WaveformPlayer"
+import { AIAnalyzingView } from "./AIAnalyzingView"
+import { AnalysisResultsView } from "./AnalysisResultsView"
+import { AudioReviewView } from "./AudioReviewView"
+import { useAudioProcessing, usePinPlacement } from "./hooks"
 import type { AudioPlaybackProps } from "./types"
 
 /**
