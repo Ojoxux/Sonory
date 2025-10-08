@@ -232,176 +232,24 @@ export function AudioPlayback({
 						<AIAnalyzingView message={analysisMessage} />
 					)}
 
-               {/* AI分析結果画面 */}
-               {viewState === "results" && (
-                  <motion.div
-                     initial={{ opacity: 0, y: 20 }}
-                     animate={{ opacity: 1, y: 0 }}
-                     transition={{ delay: 0.1 }}
-                  >
-                     <div className="mb-6">
-                        <h3 className="mb-3 font-semibold text-lg text-white">
-                           AI音分類結果
-                        </h3>
-
-                        {(error || uploadError || pinCreationError) && (
-                           <motion.div
-                              className="mb-4 rounded-lg border border-red-500/30 bg-red-500/20 p-4 backdrop-blur-sm"
-                              initial={{ opacity: 0, scale: 0.9 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                           >
-                              <span className="font-medium text-red-300">
-                                 エラー:{" "}
-                                 {pinCreationError ||
-                                    uploadError ||
-                                    error?.message}
-                              </span>
-                           </motion.div>
-                        )}
-
-                        {fallbackUsed && (
-                           <motion.div
-                              className="mb-4 rounded-lg border border-yellow-500/30 bg-yellow-500/20 p-4 backdrop-blur-sm"
-                              initial={{ opacity: 0, scale: 0.9 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                           >
-                              <span className="font-medium text-yellow-300">
-                                 ⚠️
-                                 バックエンドAPI接続失敗。オフライン分析結果を表示しています。
-                              </span>
-                           </motion.div>
-                        )}
-
-                        {results.length > 0 && (
-                           <div className="mb-6 space-y-2">
-                              {results.map((result, index) => (
-                                 <motion.div
-                                    key={`${result.label}-${index}`}
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: index * 0.1 }}
-                                    className={`flex items-center justify-between rounded-lg border p-3 backdrop-blur-sm ${
-                                       index === 0
-                                          ? "border-green-500/30 bg-green-500/20"
-                                          : "border-white/10 bg-white/5"
-                                    }`}
-                                 >
-                                    <span
-                                       className={`font-medium ${
-                                          index === 0
-                                             ? "text-green-300"
-                                             : "text-neutral-200"
-                                       }`}
-                                    >
-                                       {result.label}
-                                    </span>
-                                    <span
-                                       className={`text-sm ${
-                                          index === 0
-                                             ? "text-green-400"
-                                             : "text-neutral-400"
-                                       }`}
-                                    >
-                                       {formatConfidence(result.confidence)}
-                                    </span>
-                                 </motion.div>
-                              ))}
-                           </div>
-                        )}
-
-                        {backendAnalysisResult?.environment && (
-                           <motion.div
-                              className="mb-4 rounded-lg border border-blue-500/30 bg-blue-500/20 p-4 backdrop-blur-sm"
-                              initial={{ opacity: 0, scale: 0.9 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                           >
-                              <span className="font-medium text-blue-300">
-                                 環境:{" "}
-                                 {backendAnalysisResult.environment
-                                    .description ||
-                                    backendAnalysisResult.environment
-                                       .primary_type}
-                              </span>
-                           </motion.div>
-                        )}
-                     </div>
-
-                     {/* 録音音声プレイヤー（結果画面でも表示） */}
-                     <div className="mb-6">
-                        <h3 className="mb-3 font-semibold text-lg text-white">
-                           録音音声
-                        </h3>
-                        <WaveformPlayer
-                           audioData={audioData}
-                           height={120}
-                           waveColor="#9ca3af"
-                           progressColor="#dc2626"
-                           className="w-full"
-                           onReady={handleWaveformReady}
-                           onFinish={handleWaveformFinish}
-                        />
-                     </div>
-
-                     {/* アクションボタン */}
-                     <div className="flex gap-3">
-                        {results.length > 0 ? (
-                           <>
-                              {/* ピン配置ボタン */}
-                              <motion.button
-                                 onClick={handlePlacePin}
-                                 disabled={
-                                    pinCreationStatus === "creating" ||
-                                    !currentPosition
-                                 }
-                                 className={`flex-1 touch-manipulation rounded-xl border px-4 py-3 font-semibold text-white backdrop-blur-sm transition-all duration-300 ${
-                                    pinCreationStatus === "creating" ||
-                                    !currentPosition
-                                       ? "cursor-not-allowed border-gray-500/30 bg-gray-600/80"
-                                       : "border-green-500/30 bg-green-600/80 shadow-[0_4px_20px_rgba(34,197,94,0.4)] hover:bg-green-600 hover:shadow-[0_8px_32px_rgba(34,197,94,0.6)]"
-                                 }`}
-                                 whileHover={
-                                    pinCreationStatus === "creating" ||
-                                    !currentPosition
-                                       ? {}
-                                       : { scale: 1.02 }
-                                 }
-                                 whileTap={
-                                    pinCreationStatus === "creating" ||
-                                    !currentPosition
-                                       ? {}
-                                       : { scale: 0.98 }
-                                 }
-                              >
-                                 {pinCreationStatus === "creating"
-                                    ? "ピン作成中..."
-                                    : !currentPosition
-                                      ? "位置情報が必要です"
-                                      : "マップにピンを配置"}
-                              </motion.button>
-
-                              {/* 閉じるボタン */}
-                              <motion.button
-                                 onClick={handleClose}
-                                 className="flex-1 touch-manipulation rounded-xl border border-white/10 bg-white/10 px-4 py-3 font-semibold text-white shadow-[0_4px_20px_rgba(255,255,255,0.1)] backdrop-blur-sm transition-all duration-300 hover:bg-white/20 hover:shadow-[0_8px_32px_rgba(255,255,255,0.2)]"
-                                 whileHover={{ scale: 1.02 }}
-                                 whileTap={{ scale: 0.98 }}
-                              >
-                                 閉じる
-                              </motion.button>
-                           </>
-                        ) : (
-                           <motion.button
-                              onClick={handleClose}
-                              className="w-full touch-manipulation rounded-xl border border-blue-500/30 bg-blue-600/80 px-4 py-3 font-semibold text-white shadow-[0_4px_20px_rgba(59,130,246,0.4)] backdrop-blur-sm transition-all duration-300 hover:bg-blue-600 hover:shadow-[0_8px_32px_rgba(59,130,246,0.6)]"
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                           >
-                              閉じる
-                           </motion.button>
-                        )}
-                     </div>
-                  </motion.div>
-               )}
+					{/* AI分析結果画面 */}
+					{viewState === "results" && (
+						<AnalysisResultsView
+							audioData={audioData}
+							results={results}
+							error={error}
+							uploadError={uploadError}
+							pinCreationError={pinCreationError}
+							fallbackUsed={fallbackUsed}
+							backendAnalysisResult={backendAnalysisResult}
+							onPlacePin={handlePlacePin}
+							onClose={handleClose}
+							pinCreationStatus={pinCreationStatus}
+							hasPosition={!!currentPosition}
+							onWaveformReady={handleWaveformReady}
+							onWaveformFinish={handleWaveformFinish}
+						/>
+					)}
             </div>
          </motion.div>
       </motion.div>
