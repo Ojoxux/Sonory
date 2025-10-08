@@ -72,29 +72,19 @@ export function AudioPlayback({
 
 	const [viewState, setViewState] = useState<ViewState>("audio-review")
 
-   // TODO: viewState変更時のログ処理を実装（必要に応じて）
-
-   /**
-    * 録音時間をフォーマット
-    */
-   const formatRecordedAt = useCallback((date: Date): string => {
-      return date.toLocaleString("ja-JP", {
-         year: "numeric",
-         month: "2-digit",
-         day: "2-digit",
-         hour: "2-digit",
-         minute: "2-digit",
-         second: "2-digit",
-      })
-   }, [])
-
-   /**
-    * 信頼度をパーセンテージでフォーマット
-    * TODO: 今は使ってないけど、パーセンテージ表示は好きなので後々ちゃんと実装したい
-    */
-   const formatConfidence = useCallback((confidence: number): string => {
-      return `${Math.round(confidence * 100)}%`
-   }, [])
+	/**
+	 * 録音時間をフォーマット
+	 */
+	const formatRecordedAt = useCallback((date: Date): string => {
+		return date.toLocaleString("ja-JP", {
+			year: "numeric",
+			month: "2-digit",
+			day: "2-digit",
+			hour: "2-digit",
+			minute: "2-digit",
+			second: "2-digit",
+		})
+	}, [])
 
    /**
     * 波形プレイヤーの準備完了時のコールバック（メモ化）
