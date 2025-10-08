@@ -43,33 +43,34 @@ type ViewState = "audio-review" | "ai-analyzing" | "results"
  * TODO: なるはや責務分割して、コンポーネントの責務を明確にしたい
  */
 export function AudioPlayback({
-   audioData,
-   onClose,
-   className = "",
-   currentPosition,
+	audioData,
+	onClose,
+	className = "",
+	currentPosition,
 }: AudioPlaybackProps) {
-   const {
-      startInference,
-      results,
-      error,
-      clearResults,
-      fallbackUsed,
-      backendAnalysisResult,
-   } = useInferenceStore()
-   const {
-      uploadAudioToStorage,
-      uploadError,
-      uploadedAudioUrl,
-      clearUploadState,
-   } = useRecorderStore()
-   const {
-      createPersistentPin,
-      pinCreationStatus,
-      pinCreationError,
-      clearPinCreationState,
-   } = useSoundPinStore()
-   const [viewState, setViewState] = useState<ViewState>("audio-review")
-   const [analysisMessage, setAnalysisMessage] = useState("音声を分析中...")
+	// カスタムフックで状態とロジックを管理
+	const {
+		processAudio,
+		analysisMessage,
+		setAnalysisMessage,
+		results,
+		error,
+		clearResults,
+		fallbackUsed,
+		backendAnalysisResult,
+		uploadError,
+		uploadedAudioUrl,
+		clearUploadState,
+	} = useAudioProcessing()
+
+	const {
+		placePin,
+		pinCreationStatus,
+		pinCreationError,
+		clearPinCreationState,
+	} = usePinPlacement()
+
+	const [viewState, setViewState] = useState<ViewState>("audio-review")
 
    // TODO: viewState変更時のログ処理を実装（必要に応じて）
 
