@@ -122,55 +122,27 @@ export function AudioPlayback({
 		setViewState("results")
 	}
 
-   /**
-    * ピン配置ボタンのクリックハンドラー
-    */
-   const handlePlacePin = async (): Promise<void> => {
-      if (results.length > 0 && currentPosition && audioData) {
-         try {
-            // アップロード済みURLを優先的に使用
-            let audioUrl = uploadedAudioUrl
+	/**
+	 * ピン配置ボタンのクリックハンドラー
+	 */
+	const handlePlacePin = async (): Promise<void> => {
+		if (!audioData || !currentPosition) {
+			console.warn("⚠️ 音声データまたは位置情報が不足しています")
+			return
+		}
 
-            // アップロード済みURLがない場合は、BlobURLを使用（createPersistentPin内でアップロードされる）
-            if (!audioUrl) {
-               audioUrl = audioData.url || URL.createObjectURL(audioData.blob)
-               console.log(
-                  "⚠️ アップロード済みURLがないため、BlobURLを使用します",
-               )
-            }
+		const result = await placePin(
+			audioData,
+			uploadedAudioUrl,
+			currentPosition,
+			results,
+		)
 
-            console.log("📍 ピン配置開始:", {
-               hasUploadedUrl: !!uploadedAudioUrl,
-               audioUrl: `${audioUrl.substring(0, 100)}...`, // URLの先頭のみ表示
-               position: currentPosition,
-               resultsCount: results.length,
-            })
-
-            // 永続化ピンを作成
-            await createPersistentPin(
-               audioUrl,
-               {
-                  latitude: currentPosition.latitude,
-                  longitude: currentPosition.longitude,
-               },
-               results,
-            )
-
-            console.log("✅ ピン配置成功")
-            // 成功時は閉じる
-            onClose()
-         } catch (error) {
-            // エラー時はログ出力（エラー表示はストアで管理）
-            console.error("❌ ピン配置エラー:", error)
-         }
-      } else {
-         console.warn("⚠️ ピン配置条件が満たされていません:", {
-            hasResults: results.length > 0,
-            hasPosition: !!currentPosition,
-            hasAudioData: !!audioData,
-         })
-      }
-   }
+		// 成功時は閉じる
+		if (result.success) {
+			onClose()
+		}
+	}
 
    /**
     * キャンセル・閉じるボタンのクリックハンドラー
