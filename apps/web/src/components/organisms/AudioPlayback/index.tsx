@@ -9,6 +9,7 @@ import { AnalysisResultsView } from "./AnalysisResultsView"
 import { AudioReviewView } from "./AudioReviewView"
 import { useAudioProcessing, usePinPlacement } from "./hooks"
 import type { AudioPlaybackProps } from "./types"
+import { usePinAudioPlayer } from "../PinAudioPlayer/usePinAudioPlayer"
 
 /**
  * 表示状態の型定義
@@ -69,21 +70,9 @@ export function AudioPlayback({
       clearPinCreationState,
    } = usePinPlacement()
 
-   const [viewState, setViewState] = useState<ViewState>("audio-review")
+   const { formatRecordedAt } = usePinAudioPlayer(null, onClose)
 
-   /**
-    * 録音時間をフォーマット
-    */
-   const formatRecordedAt = useCallback((date: Date): string => {
-      return date.toLocaleString("ja-JP", {
-         year: "numeric",
-         month: "2-digit",
-         day: "2-digit",
-         hour: "2-digit",
-         minute: "2-digit",
-         second: "2-digit",
-      })
-   }, [])
+   const [viewState, setViewState] = useState<ViewState>("audio-review")
 
    /**
     * 波形プレイヤーの準備完了時のコールバック（メモ化）
