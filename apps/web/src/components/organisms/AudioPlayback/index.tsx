@@ -144,25 +144,25 @@ export function AudioPlayback({
 		}
 	}
 
-   /**
-    * キャンセル・閉じるボタンのクリックハンドラー
-    */
-   const handleClose = (): void => {
-      onClose()
-   }
+	/**
+	 * キャンセル・閉じるボタンのクリックハンドラー
+	 */
+	const handleClose = (): void => {
+		onClose()
+	}
 
-   // コンポーネントがマウントされたときに推論結果をクリア
-   useEffect(() => {
-      clearResults()
-      clearUploadState()
-      clearPinCreationState()
-      setViewState("audio-review")
-      setAnalysisMessage("音声を分析中...")
-   }, [clearResults, clearUploadState, clearPinCreationState])
+	// コンポーネントがマウントされたときに状態をクリア
+	useEffect(() => {
+		clearResults()
+		clearUploadState()
+		clearPinCreationState()
+		setViewState("audio-review")
+		setAnalysisMessage("音声を分析中...")
+	}, [clearResults, clearUploadState, clearPinCreationState, setAnalysisMessage])
 
-   if (!audioData) {
-      return null
-   }
+	if (!audioData) {
+		return null
+	}
 
    return (
       <motion.div
