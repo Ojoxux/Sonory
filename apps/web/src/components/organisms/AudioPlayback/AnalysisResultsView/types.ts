@@ -46,7 +46,7 @@ export type AnalysisResultsViewProps = {
 	/** 閉じるボタンのクリックハンドラー */
 	onClose: () => void
 	/** ピン作成ステータス */
-	pinCreationStatus?: "idle" | "creating" | "created" | "error"
+	pinCreationStatus?: "idle" | "creating" | "success" | "error"
 	/** 現在位置が存在するか */
 	hasPosition: boolean
 	/** 波形プレイヤーの準備完了時のコールバック */

@@ -16,13 +16,16 @@ import type { AudioPlaybackProps } from "./types"
 type ViewState = "audio-review" | "ai-analyzing" | "results"
 
 /**
- * 録音完了後の音声再生コンポーネント
+ * 録音完了後の音声処理オーケストレーターコンポーネント
  *
  * @description
- * 録音が完了した音声データの再生と削除機能を提供する
- * wavesurfer.jsを使用した波形表示と再生コントロールを含む
- * ユーザーの操作に応じてAI推論を実行し、結果をマップピンとして表示
- * Sonoryらしい音響的なUIエフェクトを含む
+ * 録音完了後の3つの画面状態を管理するオーケストレーター：
+ * 1. 録音確認画面（AudioReviewView）
+ * 2. AI分析中画面（AIAnalyzingView）
+ * 3. AI分析結果画面（AnalysisResultsView）
+ *
+ * ビジネスロジックはカスタムフック（useAudioProcessing, usePinPlacement）に委譲し、
+ * このコンポーネントは状態管理と画面遷移のみを担当する
  *
  * @param audioData 再生する音声データ
  * @param onClose 閉じるボタンが押されたときのコールバック
@@ -37,10 +40,6 @@ type ViewState = "audio-review" | "ai-analyzing" | "results"
  *   currentPosition={{ latitude: 35.6895, longitude: 139.6917 }}
  * />
  * ```
- *
- * @memo
- * 録音確認、AI分析、結果表示の3つの画面を切り替えているためコンポーネントの責務が複雑になっている
- * TODO: なるはや責務分割して、コンポーネントの責務を明確にしたい
  */
 export function AudioPlayback({
 	audioData,
