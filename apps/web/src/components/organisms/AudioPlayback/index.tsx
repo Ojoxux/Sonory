@@ -226,24 +226,25 @@ export function AudioPlayback({
                         <AIAnalyzingView message={analysisMessage} />
                      )}
 
-                     {/* AI分析結果画面 */}
-                     {viewState === "results" && (
-                        <AnalysisResultsView
-                           audioData={audioData}
-                           results={results}
-                           error={error}
-                           uploadError={uploadError}
-                           pinCreationError={pinCreationError}
-                           fallbackUsed={fallbackUsed}
-                           backendAnalysisResult={backendAnalysisResult}
-                           onPlacePin={handlePlacePin}
-                           onClose={handleClose}
-                           pinCreationStatus={pinCreationStatus}
-                           hasPosition={!!currentPosition}
-                           onWaveformReady={handleWaveformReady}
-                           onWaveformFinish={handleWaveformFinish}
-                        />
-                     )}
+                  {/* AI分析結果画面 */}
+                  {viewState === "results" && (
+                     <AnalysisResultsView
+                        isOpen={true}
+                        audioData={audioData}
+                        results={results}
+                        error={error}
+                        uploadError={uploadError}
+                        pinCreationError={pinCreationError}
+                        fallbackUsed={fallbackUsed}
+                        backendAnalysisResult={backendAnalysisResult}
+                        onPlacePin={handlePlacePin}
+                        onClose={handleClose}
+                        pinCreationStatus={pinCreationStatus}
+                        hasPosition={!!currentPosition}
+                        onWaveformReady={handleWaveformReady}
+                        onWaveformFinish={handleWaveformFinish}
+                     />
+                  )}
                   </div>
                </motion.div>
             </motion.div>
