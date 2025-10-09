@@ -154,40 +154,46 @@ export function AudioPlayback({
    return (
       <>
          {/* 音声確認画面 */}
-         <AudioReviewView
-            isOpen={viewState === "audio-review"}
-            audioData={audioData}
-            formattedDate={formatRecordedAt(audioData.recordedAt)}
-            onContinue={handleContinue}
-            onCancel={handleClose}
-            onWaveformReady={handleWaveformReady}
-            onWaveformFinish={handleWaveformFinish}
-         />
+         {viewState === "audio-review" && (
+            <AudioReviewView
+               isOpen={true}
+               audioData={audioData}
+               formattedDate={formatRecordedAt(audioData.recordedAt)}
+               onContinue={handleContinue}
+               onCancel={handleClose}
+               onWaveformReady={handleWaveformReady}
+               onWaveformFinish={handleWaveformFinish}
+            />
+         )}
 
          {/* AI分析中画面 */}
-         <AIAnalyzingView
-            isOpen={viewState === "ai-analyzing"}
-            message={analysisMessage}
-            onClose={handleClose}
-         />
+         {viewState === "ai-analyzing" && (
+            <AIAnalyzingView
+               isOpen={true}
+               message={analysisMessage}
+               onClose={handleClose}
+            />
+         )}
 
          {/* AI分析結果画面 */}
-         <AnalysisResultsView
-            isOpen={viewState === "results"}
-            audioData={audioData}
-            results={results}
-            error={error}
-            uploadError={uploadError}
-            pinCreationError={pinCreationError}
-            fallbackUsed={fallbackUsed}
-            backendAnalysisResult={backendAnalysisResult}
-            onPlacePin={handlePlacePin}
-            onClose={handleClose}
-            pinCreationStatus={pinCreationStatus}
-            hasPosition={!!currentPosition}
-            onWaveformReady={handleWaveformReady}
-            onWaveformFinish={handleWaveformFinish}
-         />
+         {viewState === "results" && (
+            <AnalysisResultsView
+               isOpen={true}
+               audioData={audioData}
+               results={results}
+               error={error}
+               uploadError={uploadError}
+               pinCreationError={pinCreationError}
+               fallbackUsed={fallbackUsed}
+               backendAnalysisResult={backendAnalysisResult}
+               onPlacePin={handlePlacePin}
+               onClose={handleClose}
+               pinCreationStatus={pinCreationStatus}
+               hasPosition={!!currentPosition}
+               onWaveformReady={handleWaveformReady}
+               onWaveformFinish={handleWaveformFinish}
+            />
+         )}
       </>
    )
 }
