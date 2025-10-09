@@ -1,9 +1,11 @@
 "use client"
 
-import { motion } from "framer-motion"
-import { useCallback } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { useCallback, useState } from "react"
+import { Sheet } from "react-modal-sheet"
 import { WaveformPlayer } from "../../../molecules/WaveformPlayer"
 import type { AnalysisResultsViewProps } from "./types"
+
 
 /**
  * AI分析結果表示画面コンポーネント
@@ -12,6 +14,7 @@ import type { AnalysisResultsViewProps } from "./types"
  * AI分析の結果を表示し、マップへのピン配置または閉じる操作を提供
  * エラー状態やフォールバック状態の表示も含む
  *
+ * @param isOpen シートの開閉状態
  * @param audioData 音声データ
  * @param results AI分析結果
  * @param error エラーメッセージ
@@ -38,6 +41,7 @@ import type { AnalysisResultsViewProps } from "./types"
  * ```
  */
 export function AnalysisResultsView({
+   isOpen,
    audioData,
    results,
    error,
@@ -59,164 +63,243 @@ export function AnalysisResultsView({
       return `${Math.round(confidence * 100)}%`
    }, [])
 
+   // 表示する結果
+   const displayResults = results
+
+   // detent="content"により、コンテンツの高さに自動調整される
+   const isFullHeight = true
+
+   // その他のアコーディオンの開閉状態
+   const [isOtherResultsOpen, setIsOtherResultsOpen] = useState(false)
+
+   // その他の候補アコーディオンのトグル
+   const toggleOtherResults = useCallback(() => {
+      setIsOtherResultsOpen((prev) => !prev)
+   }, [])
+
    return (
-      <motion.div
-         initial={{ opacity: 0, y: 20 }}
-         animate={{ opacity: 1, y: 0 }}
-         transition={{ delay: 0.1 }}
+      <Sheet
+         isOpen={isOpen}
+         onClose={onClose}
+         snapPoints={[0, 1]}
+         initialSnap={1}
+         detent="content"
       >
-         <div className="mb-6">
-            <h3 className="mb-3 font-semibold text-lg text-white">
-               AI音分類結果
-            </h3>
+         <Sheet.Container className="!bg-black/95 !backdrop-blur-xl !border-t !border-white/10 !shadow-2xl">
+            <Sheet.Header className="!bg-transparent">
+               <div className="flex flex-col items-center px-6 pt-4 pb-4">
+                  <div className="mb-3 h-1 w-12 rounded-full bg-white/20" />
+                  <h2 className="font-bold text-white text-xl">
+                     AI分析結果
+                  </h2>
+                  <p className="mt-2 text-neutral-400 text-sm">
+                     音声を分析した結果を表示しています
+                  </p>
+               </div>
+            </Sheet.Header>
 
-            {/* エラー表示 */}
-            {(error || uploadError || pinCreationError) && (
+            <Sheet.Content className="!bg-transparent !overflow-y-auto">
                <motion.div
-                  className="mb-4 rounded-lg border border-red-500/30 bg-red-500/20 p-4 backdrop-blur-sm"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="px-6 space-y-4 min-h-0"
                >
-                  <span className="font-medium text-red-300">
-                     エラー: {pinCreationError || uploadError || error?.message}
-                  </span>
-               </motion.div>
-            )}
-
-            {/* フォールバック警告 */}
-            {fallbackUsed && (
-               <motion.div
-                  className="mb-4 rounded-lg border border-yellow-500/30 bg-yellow-500/20 p-4 backdrop-blur-sm"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-               >
-                  <span className="font-medium text-yellow-300">
-                     ⚠️
-                     バックエンドAPI接続失敗。オフライン分析結果を表示しています。
-                  </span>
-               </motion.div>
-            )}
-
-            {/* 分析結果リスト */}
-            {results.length > 0 && (
-               <div className="mb-6 space-y-2">
-                  {results.map((result, index) => (
+                  {/* エラー表示 */}
+                  {(error || uploadError || pinCreationError) && (
                      <motion.div
-                        key={`${result.label}-${index}`}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className={`flex items-center justify-between rounded-lg border p-3 backdrop-blur-sm ${
-                           index === 0
-                              ? "border-green-500/30 bg-green-500/20"
-                              : "border-white/10 bg-white/5"
-                        }`}
+                        className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 backdrop-blur-sm"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
                      >
-                        <span
-                           className={`font-medium ${
-                              index === 0
-                                 ? "text-green-300"
-                                 : "text-neutral-200"
-                           }`}
-                        >
-                           {result.label}
-                        </span>
-                        <span
-                           className={`text-sm ${
-                              index === 0
-                                 ? "text-green-400"
-                                 : "text-neutral-400"
-                           }`}
-                        >
-                           {formatConfidence(result.confidence)}
+                        <span className="text-red-300 text-sm leading-relaxed">
+                           {pinCreationError || uploadError || error?.message}
                         </span>
                      </motion.div>
-                  ))}
-               </div>
-            )}
+                  )}
 
-            {/* バックエンド環境情報 */}
-            {backendAnalysisResult?.environment && (
-               <motion.div
-                  className="mb-4 rounded-lg border border-blue-500/30 bg-blue-500/20 p-4 backdrop-blur-sm"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-               >
-                  <span className="font-medium text-blue-300">
-                     環境:{" "}
-                     {backendAnalysisResult.environment.description ||
-                        backendAnalysisResult.environment.primary_type}
-                  </span>
+                  {/* フォールバック警告 */}
+                  {fallbackUsed && (
+                     <motion.div
+                        className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4 backdrop-blur-sm"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                     >
+                        <span className="text-yellow-300 text-sm leading-relaxed">
+                           ⚠️ オフライン分析結果を表示中
+                        </span>
+                     </motion.div>
+                  )}
+
+                  {/* 分析結果リスト */}
+                  {displayResults.length > 0 && (
+                     <div className="space-y-3">
+                        <h3 className="font-semibold text-base text-white/80">
+                           検出された音
+                        </h3>
+
+                        {/* 最も可能性の高い結果（ハイライト表示） */}
+                        <motion.div
+                           initial={{ opacity: 0, scale: 0.95 }}
+                           animate={{ opacity: 1, scale: 1 }}
+                           transition={{ delay: 0.1 }}
+                           className="rounded-xl border border-green-500/30 bg-green-500/10 p-4 backdrop-blur-sm"
+                        >
+                           <div className="flex items-center justify-between mb-1.5">
+                              <span className="font-semibold text-green-300 text-base">
+                                 {displayResults[0].label}
+                              </span>
+                              <span className="font-mono font-semibold text-green-400 text-sm">
+                                 {formatConfidence(displayResults[0].confidence)}
+                              </span>
+                           </div>
+                           <div className="flex items-center gap-1.5 text-green-300/60 text-xs">
+                              <span className="inline-block h-1 w-1 rounded-full bg-green-400 animate-pulse" />
+                              最も可能性が高い
+                           </div>
+                        </motion.div>
+
+                        {/* その他の候補（アコーディオン） */}
+                        {displayResults.length > 1 && isFullHeight && (
+                           <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm overflow-hidden">
+                              <button
+                                 onClick={toggleOtherResults}
+                                 className="flex w-full items-center justify-between p-3 text-left transition-colors hover:bg-white/5"
+                              >
+                                 <span className="text-white/60 text-xs font-medium">
+                                    その他の候補 ({displayResults.length - 1}件)
+                                 </span>
+                                 <motion.span
+                                    animate={{ rotate: isOtherResultsOpen ? 180 : 0 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="text-white/60 text-sm"
+                                 >
+                                    ▼
+                                 </motion.span>
+                              </button>
+                              
+                              <AnimatePresence initial={false}>
+                                 {isOtherResultsOpen && (
+                                    <motion.div
+                                       initial={{ height: 0, opacity: 0 }}
+                                       animate={{ height: "auto", opacity: 1 }}
+                                       exit={{ height: 0, opacity: 0 }}
+                                       transition={{ duration: 0.2, ease: "easeInOut" }}
+                                       className="overflow-hidden"
+                                    >
+                                       <div className="space-y-2 px-3 pb-3">
+                                          {displayResults.slice(1, 3).map((result, index) => (
+                                             <div
+                                                key={`${result.label}-${index + 1}`}
+                                                className="flex items-center justify-between py-1"
+                                             >
+                                                <span className="text-neutral-300 text-sm">
+                                                   {result.label}
+                                                </span>
+                                                <span className="font-mono text-neutral-400 text-xs">
+                                                   {formatConfidence(result.confidence)}
+                                                </span>
+                                             </div>
+                                          ))}
+                                       </div>
+                                    </motion.div>
+                                 )}
+                              </AnimatePresence>
+                           </div>
+                        )}
+                     </div>
+                  )}
+
+                  {/* バックエンド環境情報 */}
+                  {backendAnalysisResult?.environment && (
+                     <motion.div
+                        className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-4 backdrop-blur-sm"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                     >
+                        <div className="flex items-center gap-2">
+                           <span className="text-blue-400 text-lg">🌍</span>
+                           <span className="text-blue-300 text-sm">
+                              {backendAnalysisResult.environment.description ||
+                                 backendAnalysisResult.environment.primary_type}
+                           </span>
+                        </div>
+                     </motion.div>
+                  )}
+
+                  {/* 録音音声プレイヤー */}
+                  <div className="space-y-2">
+                     <h3 className="font-semibold text-base text-white/80">
+                        録音音声
+                     </h3>
+                     <div className="rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm">
+                        <WaveformPlayer
+                           audioData={audioData}
+                           height={80}
+                           waveColor="#9ca3af"
+                           progressColor="#dc2626"
+                           className="w-full"
+                           onReady={onWaveformReady}
+                           onFinish={onWaveformFinish}
+                        />
+                     </div>
+                  </div>
+
+                  {/* アクションボタン */}
+                  <div className="flex gap-2.5 pt-1 pb-6">
+                     {displayResults.length > 0 ? (
+                        <>
+                           {/* ピン配置ボタン */}
+                           <motion.button
+                              onClick={onPlacePin}
+                              disabled={
+                                 pinCreationStatus === "creating" ||
+                                 !hasPosition
+                              }
+                              className={`flex-1 touch-manipulation rounded-xl px-4 py-3 font-semibold text-white text-sm transition-all duration-200 ${
+                                 pinCreationStatus === "creating" ||
+                                 !hasPosition
+                                    ? "cursor-not-allowed bg-gray-600/60"
+                                    : "bg-green-600 active:bg-green-700"
+                              }`}
+                              whileTap={
+                                 pinCreationStatus === "creating" ||
+                                 !hasPosition
+                                    ? {}
+                                    : { scale: 0.98 }
+                              }
+                           >
+                              {pinCreationStatus === "creating"
+                                 ? "ピン作成中..."
+                                 : !hasPosition
+                                   ? "位置情報が必要です"
+                                   : "マップにピンを配置"}
+                           </motion.button>
+
+                           {/* 閉じるボタン */}
+                           <motion.button
+                              onClick={onClose}
+                              className="flex-1 touch-manipulation rounded-xl border border-white/10 bg-white/5 px-4 py-3 font-semibold text-white text-sm transition-all duration-200 active:bg-white/10"
+                              whileTap={{ scale: 0.98 }}
+                           >
+                              閉じる
+                           </motion.button>
+                        </>
+                     ) : (
+                        <motion.button
+                           onClick={onClose}
+                           className="w-full touch-manipulation rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white text-sm transition-all duration-200 active:bg-blue-700"
+                           whileTap={{ scale: 0.98 }}
+                        >
+                           閉じる
+                        </motion.button>
+                     )}
+                  </div>
                </motion.div>
-            )}
-         </div>
+            </Sheet.Content>
+         </Sheet.Container>
 
-         {/* 録音音声プレイヤー */}
-         <div className="mb-6">
-            <h3 className="mb-3 font-semibold text-lg text-white">録音音声</h3>
-            <WaveformPlayer
-               audioData={audioData}
-               height={120}
-               waveColor="#9ca3af"
-               progressColor="#dc2626"
-               className="w-full"
-               onReady={onWaveformReady}
-               onFinish={onWaveformFinish}
-            />
-         </div>
-
-         {/* アクションボタン */}
-         <div className="flex gap-3">
-            {results.length > 0 ? (
-               <>
-                  {/* ピン配置ボタン */}
-                  <motion.button
-                     onClick={onPlacePin}
-                     disabled={pinCreationStatus === "creating" || !hasPosition}
-                     className={`flex-1 touch-manipulation rounded-xl border px-4 py-3 font-semibold text-white backdrop-blur-sm transition-all duration-300 ${
-                        pinCreationStatus === "creating" || !hasPosition
-                           ? "cursor-not-allowed border-gray-500/30 bg-gray-600/80"
-                           : "border-green-500/30 bg-green-600/80 shadow-[0_4px_20px_rgba(34,197,94,0.4)] hover:bg-green-600 hover:shadow-[0_8px_32px_rgba(34,197,94,0.6)]"
-                     }`}
-                     whileHover={
-                        pinCreationStatus === "creating" || !hasPosition
-                           ? {}
-                           : { scale: 1.02 }
-                     }
-                     whileTap={
-                        pinCreationStatus === "creating" || !hasPosition
-                           ? {}
-                           : { scale: 0.98 }
-                     }
-                  >
-                     {pinCreationStatus === "creating"
-                        ? "ピン作成中..."
-                        : !hasPosition
-                          ? "位置情報が必要です"
-                          : "マップにピンを配置"}
-                  </motion.button>
-
-                  {/* 閉じるボタン */}
-                  <motion.button
-                     onClick={onClose}
-                     className="flex-1 touch-manipulation rounded-xl border border-white/10 bg-white/10 px-4 py-3 font-semibold text-white shadow-[0_4px_20px_rgba(255,255,255,0.1)] backdrop-blur-sm transition-all duration-300 hover:bg-white/20 hover:shadow-[0_8px_32px_rgba(255,255,255,0.2)]"
-                     whileHover={{ scale: 1.02 }}
-                     whileTap={{ scale: 0.98 }}
-                  >
-                     閉じる
-                  </motion.button>
-               </>
-            ) : (
-               <motion.button
-                  onClick={onClose}
-                  className="w-full touch-manipulation rounded-xl border border-blue-500/30 bg-blue-600/80 px-4 py-3 font-semibold text-white shadow-[0_4px_20px_rgba(59,130,246,0.4)] backdrop-blur-sm transition-all duration-300 hover:bg-blue-600 hover:shadow-[0_8px_32px_rgba(59,130,246,0.6)]"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-               >
-                  閉じる
-               </motion.button>
-            )}
-         </div>
-      </motion.div>
+         <Sheet.Backdrop className="!bg-black/50 !backdrop-blur-sm" />
+      </Sheet>
    )
 }

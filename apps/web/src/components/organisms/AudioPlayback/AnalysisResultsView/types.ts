@@ -27,6 +27,8 @@ export type BackendAnalysisResult = {
  * AI分析結果表示画面のプロパティ
  */
 export type AnalysisResultsViewProps = {
+   /** シートの開閉状態 */
+   isOpen: boolean
    /** 音声データ */
    audioData: AudioData
    /** AI分析結果 */
