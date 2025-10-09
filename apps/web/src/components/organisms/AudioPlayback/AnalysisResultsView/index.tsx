@@ -1,11 +1,10 @@
 "use client"
 
-import { motion, AnimatePresence } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
 import { useCallback, useState } from "react"
 import { Sheet } from "react-modal-sheet"
 import { WaveformPlayer } from "../../../molecules/WaveformPlayer"
 import type { AnalysisResultsViewProps } from "./types"
-
 
 /**
  * AI分析結果表示画面コンポーネント
@@ -89,9 +88,7 @@ export function AnalysisResultsView({
             <Sheet.Header className="!bg-transparent">
                <div className="flex flex-col items-center px-6 pt-4 pb-4">
                   <div className="mb-3 h-1 w-12 rounded-full bg-white/20" />
-                  <h2 className="font-bold text-white text-xl">
-                     AI分析結果
-                  </h2>
+                  <h2 className="font-bold text-white text-xl">AI分析結果</h2>
                   <p className="mt-2 text-neutral-400 text-sm">
                      音声を分析した結果を表示しています
                   </p>
@@ -103,7 +100,7 @@ export function AnalysisResultsView({
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="px-6 space-y-4 min-h-0"
+                  className="min-h-0 space-y-4 px-6"
                >
                   {/* エラー表示 */}
                   {(error || uploadError || pinCreationError) && (
@@ -125,7 +122,7 @@ export function AnalysisResultsView({
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                      >
-                        <span className="text-yellow-300 text-sm leading-relaxed">
+                        <span className="text-sm text-yellow-300 leading-relaxed">
                            ⚠️ オフライン分析結果を表示中
                         </span>
                      </motion.div>
@@ -145,62 +142,73 @@ export function AnalysisResultsView({
                            transition={{ delay: 0.1 }}
                            className="rounded-xl border border-green-500/30 bg-green-500/10 p-4 backdrop-blur-sm"
                         >
-                           <div className="flex items-center justify-between mb-1.5">
-                              <span className="font-semibold text-green-300 text-base">
+                           <div className="mb-1.5 flex items-center justify-between">
+                              <span className="font-semibold text-base text-green-300">
                                  {displayResults[0].label}
                               </span>
                               <span className="font-mono font-semibold text-green-400 text-sm">
-                                 {formatConfidence(displayResults[0].confidence)}
+                                 {formatConfidence(
+                                    displayResults[0].confidence,
+                                 )}
                               </span>
                            </div>
                            <div className="flex items-center gap-1.5 text-green-300/60 text-xs">
-                              <span className="inline-block h-1 w-1 rounded-full bg-green-400 animate-pulse" />
+                              <span className="inline-block h-1 w-1 animate-pulse rounded-full bg-green-400" />
                               最も可能性が高い
                            </div>
                         </motion.div>
 
                         {/* その他の候補（アコーディオン） */}
                         {displayResults.length > 1 && isFullHeight && (
-                           <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm overflow-hidden">
+                           <div className="overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm">
                               <button
                                  onClick={toggleOtherResults}
                                  className="flex w-full items-center justify-between p-3 text-left transition-colors hover:bg-white/5"
                               >
-                                 <span className="text-white/60 text-xs font-medium">
+                                 <span className="font-medium text-white/60 text-xs">
                                     その他の候補 ({displayResults.length - 1}件)
                                  </span>
                                  <motion.span
-                                    animate={{ rotate: isOtherResultsOpen ? 180 : 0 }}
+                                    animate={{
+                                       rotate: isOtherResultsOpen ? 180 : 0,
+                                    }}
                                     transition={{ duration: 0.2 }}
-                                    className="text-white/60 text-sm"
+                                    className="text-sm text-white/60"
                                  >
                                     ▼
                                  </motion.span>
                               </button>
-                              
+
                               <AnimatePresence initial={false}>
                                  {isOtherResultsOpen && (
                                     <motion.div
                                        initial={{ height: 0, opacity: 0 }}
                                        animate={{ height: "auto", opacity: 1 }}
                                        exit={{ height: 0, opacity: 0 }}
-                                       transition={{ duration: 0.2, ease: "easeInOut" }}
+                                       transition={{
+                                          duration: 0.2,
+                                          ease: "easeInOut",
+                                       }}
                                        className="overflow-hidden"
                                     >
                                        <div className="space-y-2 px-3 pb-3">
-                                          {displayResults.slice(1, 3).map((result, index) => (
-                                             <div
-                                                key={`${result.label}-${index + 1}`}
-                                                className="flex items-center justify-between py-1"
-                                             >
-                                                <span className="text-neutral-300 text-sm">
-                                                   {result.label}
-                                                </span>
-                                                <span className="font-mono text-neutral-400 text-xs">
-                                                   {formatConfidence(result.confidence)}
-                                                </span>
-                                             </div>
-                                          ))}
+                                          {displayResults
+                                             .slice(1, 3)
+                                             .map((result, index) => (
+                                                <div
+                                                   key={`${result.label}-${index + 1}`}
+                                                   className="flex items-center justify-between py-1"
+                                                >
+                                                   <span className="text-neutral-300 text-sm">
+                                                      {result.label}
+                                                   </span>
+                                                   <span className="font-mono text-neutral-400 text-xs">
+                                                      {formatConfidence(
+                                                         result.confidence,
+                                                      )}
+                                                   </span>
+                                                </div>
+                                             ))}
                                        </div>
                                     </motion.div>
                                  )}
@@ -256,7 +264,7 @@ export function AnalysisResultsView({
                                  pinCreationStatus === "creating" ||
                                  !hasPosition
                               }
-                              className={`flex-1 touch-manipulation rounded-xl px-4 py-3 font-semibold text-white text-sm transition-all duration-200 ${
+                              className={`flex-1 touch-manipulation rounded-xl px-4 py-3 font-semibold text-sm text-white transition-all duration-200 ${
                                  pinCreationStatus === "creating" ||
                                  !hasPosition
                                     ? "cursor-not-allowed bg-gray-600/60"
@@ -279,7 +287,7 @@ export function AnalysisResultsView({
                            {/* 閉じるボタン */}
                            <motion.button
                               onClick={onClose}
-                              className="flex-1 touch-manipulation rounded-xl border border-white/10 bg-white/5 px-4 py-3 font-semibold text-white text-sm transition-all duration-200 active:bg-white/10"
+                              className="flex-1 touch-manipulation rounded-xl border border-white/10 bg-white/5 px-4 py-3 font-semibold text-sm text-white transition-all duration-200 active:bg-white/10"
                               whileTap={{ scale: 0.98 }}
                            >
                               閉じる
@@ -288,7 +296,7 @@ export function AnalysisResultsView({
                      ) : (
                         <motion.button
                            onClick={onClose}
-                           className="w-full touch-manipulation rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white text-sm transition-all duration-200 active:bg-blue-700"
+                           className="w-full touch-manipulation rounded-xl bg-blue-600 px-4 py-3 font-semibold text-sm text-white transition-all duration-200 active:bg-blue-700"
                            whileTap={{ scale: 0.98 }}
                         >
                            閉じる
