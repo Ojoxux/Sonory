@@ -22,8 +22,6 @@ export type AudioPlaybackProps = {
    audioData: AudioData | null
    /** 閉じるボタンが押されたときのコールバック */
    onClose: () => void
-   /** クラス名 */
-   className?: string
    /** 現在の位置情報（マップピン表示用） */
    currentPosition?: LocationData | null
 }
