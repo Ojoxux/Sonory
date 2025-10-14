@@ -33,7 +33,7 @@
       "zod": "^3.25.76"
    },
    "devDependencies": {
-      "@biomejs/biome": "1.9.4",
+      "@biomejs/biome": "2.2.6",
       "@types/node": "^20.19.21",
       "tsc-alias": "^1.8.16",
       "typescript": "^5.9.3",

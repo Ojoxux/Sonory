@@ -42,7 +42,7 @@
 		"@sonory/config": "*"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "1.9.4",
+		"@biomejs/biome": "2.2.6",
 		"@types/node": "^20.19.21",
 		"concurrently": "^9.2.1",
 		"husky": "^9.1.7",
