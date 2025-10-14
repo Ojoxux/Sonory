@@ -12,10 +12,10 @@ import type { AIAnalyzingViewProps } from "./types"
  * AI分析が実行中であることを視覚的に示す画面
  * AIAnalysisOrb を使用したアニメーションと進行状況メッセージを表示
  * react-modal-sheet を使用してボトムシートとして表示
+ * 分析中はユーザーによる閉じる操作を完全に無効化した(disableDrag + disableDismiss)
  *
  * @param isOpen シートの開閉状態
  * @param message 分析状況を示すメッセージ
- * @param onClose シートを閉じるハンドラー（オプション）
  *
  * @example
  * ```tsx
@@ -25,20 +25,16 @@ import type { AIAnalyzingViewProps } from "./types"
  * />
  * ```
  */
-export function AIAnalyzingView({
-   isOpen,
-   message,
-   onClose,
-}: AIAnalyzingViewProps) {
+export function AIAnalyzingView({ isOpen, message }: AIAnalyzingViewProps) {
    return (
       <Sheet
          isOpen={isOpen}
-         onClose={
-            onClose ||
-            (() => {
-               // 閉じる処理が指定されていない場合は何もしない
-            })
-         }
+         onClose={() => {
+            // AI分析中は閉じる操作を無効化
+            // MEMO: disableDismissにより呼ばれない
+         }}
+         disableDrag={true}
+         disableDismiss={true}
          detent="content"
          snapPoints={[0, 1]}
          initialSnap={1}
