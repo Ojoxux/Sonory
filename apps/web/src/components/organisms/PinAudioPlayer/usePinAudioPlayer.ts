@@ -1,4 +1,5 @@
 import type { SoundPin } from "@/store/useSoundPinStore"
+import { formatRecordedAt, formatTime } from "@/utils/dateFormat"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useEffectEvent } from "use-effect-event"
 import type {
@@ -30,35 +31,6 @@ export function usePinAudioPlayer(
    const isMounted = true
    const progressBarRef = useRef<HTMLDivElement>(null)
    const animationFrameRef = useRef<number | null>(null)
-
-   /**
-    * 録音時間をフォーマット
-    */
-   const formatRecordedAt = useCallback((date: Date): string => {
-      return date.toLocaleString("ja-JP", {
-         year: "numeric",
-         month: "2-digit",
-         day: "2-digit",
-         hour: "2-digit",
-         minute: "2-digit",
-         second: "2-digit",
-      })
-   }, [])
-
-   /**
-    * 時間をフォーマット（MM:SS形式）
-    * NaNやInfinityを安全に処理
-    */
-   const formatTime = useCallback((seconds: number): string => {
-      // NaN、Infinity、負の値をチェック
-      if (!Number.isFinite(seconds) || seconds < 0) {
-         return "00:00"
-      }
-
-      const mins = Math.floor(seconds / 60)
-      const secs = Math.floor(seconds % 60)
-      return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
-   }, [])
 
    /**
     * 音声を読み込み
