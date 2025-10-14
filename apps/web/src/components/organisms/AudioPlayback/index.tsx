@@ -167,12 +167,9 @@ export function AudioPlayback({
          )}
 
          {/* AI分析中画面 */}
+         {/* MEMO: AI分析中に閉じられると困るので、onCloseを使用しない */}
          {viewState === "ai-analyzing" && (
-            <AIAnalyzingView
-               isOpen={true}
-               message={analysisMessage}
-               onClose={handleClose}
-            />
+            <AIAnalyzingView isOpen={true} message={analysisMessage} />
          )}
 
          {/* AI分析結果画面 */}
