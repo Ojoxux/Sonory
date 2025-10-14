@@ -33,7 +33,9 @@ export function AIAnalyzingView({
    return (
       <Sheet
          isOpen={isOpen}
-         onClose={onClose || (() => {})}
+         onClose={onClose || (() => {
+            // 閉じる処理が指定されていない場合は何もしない
+         })}
          detent="content"
          snapPoints={[0, 1]}
          initialSnap={1}
