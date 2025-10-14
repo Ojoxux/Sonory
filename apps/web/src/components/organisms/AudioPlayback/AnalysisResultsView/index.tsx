@@ -162,6 +162,7 @@ export function AnalysisResultsView({
                         {displayResults.length > 1 && isFullHeight && (
                            <div className="overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm">
                               <button
+                                 type="button"
                                  onClick={toggleOtherResults}
                                  className="flex w-full items-center justify-between p-3 text-left transition-colors hover:bg-white/5"
                               >
