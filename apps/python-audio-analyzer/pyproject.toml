@@ -19,7 +19,7 @@ dependencies = [
     "httpx>=0.28.1",
     "python-multipart>=0.0.20",
     "redis>=6.4.0",
-    "structlog>=23.3.0",
+    "structlog>=25.4.0",
 ]
 
 [project.optional-dependencies]
