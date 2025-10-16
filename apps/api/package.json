@@ -30,7 +30,7 @@
       "@supabase/supabase-js": "^2.75.0",
       "hono": "^4.9.12",
       "vite": "^7.1.10",
-      "zod": "^3.25.76"
+      "zod": "^4.1.12"
    },
    "devDependencies": {
       "@biomejs/biome": "1.9.4",
