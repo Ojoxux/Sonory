@@ -1,5 +1,5 @@
 {
-   "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+   "$schema": "https://biomejs.dev/schemas/2.2.6/schema.json",
    "extends": ["../../packages/config/biome.json"],
    "files": {
       "ignore": [
@@ -15,7 +15,12 @@
       "rules": {
          "suspicious": {
             "noReactSpecificProps": "off",
-            "noConsoleLog": "off"
+            "noConsole": {
+               "level": "off",
+               "options": {
+                  "allow": ["log", "warn", "error", "info"]
+               }
+            }
          },
          "style": {
             "useNamingConvention": "off"
