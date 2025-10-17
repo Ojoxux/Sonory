@@ -20,6 +20,6 @@
    },
    "devDependencies": {
       "@biomejs/biome": "1.9.4",
-      "@types/node": "^20.19.21"
+      "@types/node": "^20.19.22"
    }
 }
