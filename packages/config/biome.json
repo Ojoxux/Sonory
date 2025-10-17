@@ -1,5 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.2.6/schema.json",
 	"formatter": {
 		"enabled": true,
 		"useEditorconfig": true,
@@ -74,7 +74,7 @@
 				"noGlobalObjectCalls": "error",
 				"noInnerDeclarations": "error",
 				"noInvalidConstructorSuper": "error",
-				"noNewSymbol": "error",
+				"noInvalidBuiltinInstantiation": "error",
 				"noNonoctalDecimalEscape": "error",
 				"noPrecisionLoss": "error",
 				"noSelfAssign": "error",
@@ -99,6 +99,7 @@
 				"noInferrableTypes": "error",
 				"noNamespace": "error",
 				"noNonNullAssertion": "warn",
+				"noVar": "error",
 				"useAsConstAssertion": "error",
 				"useBlockStatements": "off",
 				"useImportType": "error",
@@ -146,7 +147,12 @@
 				"useNamespaceKeyword": "error",
 				"useValidTypeof": "error",
 				"noArrayIndexKey": "warn",
-				"noConsoleLog": "off",
+				"noConsole": {
+					"level": "off",
+					"options": {
+						"allow": ["log", "warn", "error", "info"]
+					}
+				},
 				"noDuplicateJsxProps": "error",
 				"noReactSpecificProps": "error"
 			},
@@ -159,20 +165,28 @@
 					}
 				}
 			}
-		},
+		}
+	},
+	"files": {
 		"ignore": [
+			".next/**",
+			"dist/**",
+			"public/sw.js",
+			"public/workbox-*.js",
+			"public/worker-*.js",
+			"public/fallback-*.js",
+			"public/*.map",
+			"node_modules/**",
+			"coverage/**",
+			"**/*.min.js",
+			"**/*.min.css",
+			".wrangler/**",
+			"**/public/sw.js",
+			"**/public/workbox-*.js",
 			"**/next.config.js",
 			"**/*.d.ts",
 			"**/server.js",
-			"**/routes.js",
-			"**/public/sw.js",
-			"**/public/workbox-*.js",
-			"**/public/worker-*.js",
-			"**/dist/**",
-			"**/.next/**",
-			"**/node_modules/**",
-			"**/coverage/**",
-			"**/.wrangler/**"
+			"**/routes.js"
 		]
 	},
 	"overrides": [
@@ -184,15 +198,13 @@
 						"noConstAssign": "off",
 						"noGlobalObjectCalls": "off",
 						"noInvalidConstructorSuper": "off",
-						"noNewSymbol": "off",
+						"noInvalidBuiltinInstantiation": "off",
 						"noSetterReturn": "off",
 						"noUndeclaredVariables": "off",
 						"noUnreachable": "off",
 						"noUnreachableSuper": "off"
 					},
 					"style": {
-						"noArguments": "error",
-						"noVar": "error",
 						"useConst": "error",
 						"useImportType": "error",
 						"useShorthandFunctionType": "error"
@@ -217,7 +229,6 @@
 				"rules": {
 					"a11y": {
 						"noAutofocus": "error",
-						"noBlankTarget": "error",
 						"noDistractingElements": "error",
 						"noHeaderScope": "error",
 						"noPositiveTabindex": "error",
@@ -259,23 +270,5 @@
 				}
 			}
 		}
-	],
-	"files": {
-		"ignore": [
-			".next/**",
-			"dist/**",
-			"public/sw.js",
-			"public/workbox-*.js",
-			"public/worker-*.js",
-			"public/fallback-*.js",
-			"public/*.map",
-			"node_modules/**",
-			"coverage/**",
-			"**/*.min.js",
-			"**/*.min.css",
-			".wrangler/**",
-			"**/public/sw.js",
-			"**/public/workbox-*.js"
-		]
-	}
+	]
 }
