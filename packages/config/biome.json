@@ -109,9 +109,7 @@
 				"useLiteralEnumMembers": "error",
 				"useNamingConvention": "off",
 				"useNumberNamespace": "error",
-				"useNumericLiterals": "error",
 				"useSelfClosingElements": "error",
-				"useShorthandArrayType": "error",
 				"useShorthandAssign": "error",
 				"useTemplate": "error"
 			},
