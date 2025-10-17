@@ -6,9 +6,9 @@
  */
 
 import * as E from "fp-ts/Either"
+import { pipe } from "fp-ts/function"
 import * as O from "fp-ts/Option"
 import * as te from "fp-ts/TaskEither"
-import { pipe } from "fp-ts/function"
 
 // =============================================================================
 // Option型ユーティリティ

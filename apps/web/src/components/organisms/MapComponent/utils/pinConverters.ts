@@ -2,8 +2,8 @@
  * ピン変換ユーティリティ
  */
 
-import type { SoundPin } from "@/store/useSoundPinStore"
 import type { SoundPinAPI } from "@sonory/shared-types"
+import type { SoundPin } from "@/store/useSoundPinStore"
 
 /**
  * APIピンをローカルピン形式に変換

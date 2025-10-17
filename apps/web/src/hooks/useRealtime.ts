@@ -1,14 +1,14 @@
 "use client"
 
+import { useCallback, useEffect, useRef } from "react"
+// TODO: Next.js が React 19 の useEffectEvent に対応したら削除する
+import { useEffectEvent } from "use-effect-event"
 import { useRealtimeStore } from "@/store/useRealtimeStore"
 import type { LocationData, MapBounds } from "@/store/useSoundPinStore"
 import {
    requestNotificationPermission,
    sendNewPinNotification,
 } from "@/utils/notifications"
-import { useCallback, useEffect, useRef } from "react"
-// TODO: Next.js が React 19 の useEffectEvent に対応したら削除する
-import { useEffectEvent } from "use-effect-event"
 
 /**
  * リアルタイム統合フックのオプション型定義

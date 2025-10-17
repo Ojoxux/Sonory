@@ -2,8 +2,8 @@
  * 閉じるボタンコンポーネント
  */
 
-import { memo } from "react"
 import type { ReactElement } from "react"
+import { memo } from "react"
 import { MdClose } from "react-icons/md"
 
 export interface CloseButtonProps {

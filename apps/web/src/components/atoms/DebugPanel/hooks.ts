@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react"
-import type { DebugPanelProps } from "./types"
-import type { DebugLog, PerformanceData } from "./types"
+import type { DebugLog, DebugPanelProps, PerformanceData } from "./types"
 
 export function useDebugPanel({
    onTimeChange,

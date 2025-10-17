@@ -2,9 +2,9 @@
  * MapComponent型定義
  */
 
-import type { SoundPin } from "@/store/useSoundPinStore"
 import type mapboxgl from "mapbox-gl"
 import type { RefObject } from "react"
+import type { SoundPin } from "@/store/useSoundPinStore"
 import type { LocationData } from "./mapbox.types"
 import type { LightingConfig } from "./utils/sunCalculations"
 

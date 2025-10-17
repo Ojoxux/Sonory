@@ -1,5 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.2.6/schema.json",
 	"formatter": {
 		"enabled": true,
 		"useEditorconfig": true,
@@ -49,11 +49,10 @@
 			"complexity": {
 				"noBannedTypes": "error",
 				"noExtraBooleanCast": "error",
-				"noMultipleSpacesInRegularExpressionLiterals": "error",
+				"noAdjacentSpacesInRegex": "error",
 				"noUselessCatch": "error",
 				"noUselessThisAlias": "error",
 				"noUselessTypeConstraint": "error",
-				"noWith": "error",
 				"noForEach": "warn",
 				"noExcessiveCognitiveComplexity": {
 					"level": "warn",
@@ -74,7 +73,7 @@
 				"noGlobalObjectCalls": "error",
 				"noInnerDeclarations": "error",
 				"noInvalidConstructorSuper": "error",
-				"noNewSymbol": "error",
+				"noInvalidBuiltinInstantiation": "error",
 				"noNonoctalDecimalEscape": "error",
 				"noPrecisionLoss": "error",
 				"noSelfAssign": "error",
@@ -88,9 +87,9 @@
 				"noUnusedImports": "error",
 				"noUnusedLabels": "error",
 				"noUnusedVariables": "error",
-				"useArrayLiterals": "off",
 				"useIsNan": "error",
 				"useValidForDirection": "error",
+				"useValidTypeof": "error",
 				"useYield": "error",
 				"useHookAtTopLevel": "error",
 				"useExhaustiveDependencies": "off"
@@ -99,6 +98,7 @@
 				"noInferrableTypes": "error",
 				"noNamespace": "error",
 				"noNonNullAssertion": "warn",
+				"useArrayLiterals": "off",
 				"useAsConstAssertion": "error",
 				"useBlockStatements": "off",
 				"useImportType": "error",
@@ -109,9 +109,7 @@
 				"useLiteralEnumMembers": "error",
 				"useNamingConvention": "off",
 				"useNumberNamespace": "error",
-				"useNumericLiterals": "error",
 				"useSelfClosingElements": "error",
-				"useShorthandArrayType": "error",
 				"useShorthandAssign": "error",
 				"useTemplate": "error"
 			},
@@ -142,11 +140,17 @@
 				"noShadowRestrictedNames": "error",
 				"noSparseArray": "error",
 				"noUnsafeNegation": "error",
+				"noVar": "error",
+				"noWith": "error",
 				"useGetterReturn": "error",
 				"useNamespaceKeyword": "error",
-				"useValidTypeof": "error",
 				"noArrayIndexKey": "warn",
-				"noConsoleLog": "off",
+				"noConsole": {
+					"level": "off",
+					"options": {
+						"allow": ["log", "warn", "error", "info"]
+					}
+				},
 				"noDuplicateJsxProps": "error",
 				"noReactSpecificProps": "error"
 			},
@@ -159,40 +163,47 @@
 					}
 				}
 			}
-		},
-		"ignore": [
+		}
+	},
+	"files": {
+		"experimentalScannerIgnores": [
+			".next/**",
+			"dist/**",
+			"public/sw.js",
+			"public/workbox-*.js",
+			"public/worker-*.js",
+			"public/fallback-*.js",
+			"public/*.map",
+			"node_modules/**",
+			"coverage/**",
+			"**/*.min.js",
+			"**/*.min.css",
+			".wrangler/**",
+			"**/public/sw.js",
+			"**/public/workbox-*.js",
 			"**/next.config.js",
 			"**/*.d.ts",
 			"**/server.js",
-			"**/routes.js",
-			"**/public/sw.js",
-			"**/public/workbox-*.js",
-			"**/public/worker-*.js",
-			"**/dist/**",
-			"**/.next/**",
-			"**/node_modules/**",
-			"**/coverage/**",
-			"**/.wrangler/**"
+			"**/routes.js"
 		]
 	},
 	"overrides": [
 		{
-			"include": ["*.ts", "*.tsx", "*.mts", "*.cts"],
+			"includes": ["*.ts", "*.tsx", "*.mts", "*.cts"],
 			"linter": {
 				"rules": {
 					"correctness": {
 						"noConstAssign": "off",
 						"noGlobalObjectCalls": "off",
 						"noInvalidConstructorSuper": "off",
-						"noNewSymbol": "off",
+						"noInvalidBuiltinInstantiation": "off",
 						"noSetterReturn": "off",
 						"noUndeclaredVariables": "off",
 						"noUnreachable": "off",
-						"noUnreachableSuper": "off"
+						"noUnreachableSuper": "off",
+						"useValidTypeof": "off"
 					},
 					"style": {
-						"noArguments": "error",
-						"noVar": "error",
 						"useConst": "error",
 						"useImportType": "error",
 						"useShorthandFunctionType": "error"
@@ -205,19 +216,19 @@
 						"noImportAssign": "off",
 						"noRedeclare": "off",
 						"noUnsafeNegation": "off",
-						"useGetterReturn": "off",
-						"useValidTypeof": "off"
+						"noVar": "off",
+						"noWith": "off",
+						"useGetterReturn": "off"
 					}
 				}
 			}
 		},
 		{
-			"include": ["*.tsx", "*.jsx"],
+			"includes": ["*.tsx", "*.jsx"],
 			"linter": {
 				"rules": {
 					"a11y": {
 						"noAutofocus": "error",
-						"noBlankTarget": "error",
 						"noDistractingElements": "error",
 						"noHeaderScope": "error",
 						"noPositiveTabindex": "error",
@@ -252,30 +263,12 @@
 			}
 		},
 		{
-			"include": ["*.json", "*.jsonc"],
+			"includes": ["*.json", "*.jsonc"],
 			"json": {
 				"formatter": {
 					"trailingCommas": "none"
 				}
 			}
 		}
-	],
-	"files": {
-		"ignore": [
-			".next/**",
-			"dist/**",
-			"public/sw.js",
-			"public/workbox-*.js",
-			"public/worker-*.js",
-			"public/fallback-*.js",
-			"public/*.map",
-			"node_modules/**",
-			"coverage/**",
-			"**/*.min.js",
-			"**/*.min.css",
-			".wrangler/**",
-			"**/public/sw.js",
-			"**/public/workbox-*.js"
-		]
-	}
+	]
 }

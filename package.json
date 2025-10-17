@@ -2,7 +2,11 @@
 	"name": "sonory-monorepo",
 	"version": "0.1.0",
 	"private": true,
-	"workspaces": ["apps/web", "apps/api", "packages/*"],
+	"workspaces": [
+		"apps/web",
+		"apps/api",
+		"packages/*"
+	],
 	"scripts": {
 		"build": "turbo build",
 		"dev": "turbo dev",
@@ -37,12 +41,12 @@
 		"win:start:all": "concurrently \"npm run win:start:python\" \"npm run start:api\" \"npm run start:frontend\" --names \"🐍Python,🔗API,📱Frontend\" --prefix-colors \"yellow,blue,green\""
 	},
 	"dependencies": {
+		"@sonory/config": "*",
 		"@sonory/shared-types": "*",
-		"@sonory/utils": "*",
-		"@sonory/config": "*"
+		"@sonory/utils": "*"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "1.9.4",
+		"@biomejs/biome": "^2.2.6",
 		"@types/node": "^20.19.22",
 		"concurrently": "^9.2.1",
 		"husky": "^9.1.7",

@@ -1,9 +1,9 @@
+import type { NextRequest } from "next/server"
+import { NextResponse } from "next/server"
 import type {
    ReverseGeocodingError,
    ReverseGeocodingResponse,
 } from "@/types/geocoding"
-import type { NextRequest } from "next/server"
-import { NextResponse } from "next/server"
 
 // Node.js Runtimeを使用（外部API接続のため）
 export const runtime = "nodejs"

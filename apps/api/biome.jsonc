@@ -1,3 +1,7 @@
 {
-   "extends": ["../../packages/config/biome.json"]
+   "$schema": "https://biomejs.dev/schemas/2.2.6/schema.json",
+   "extends": ["../../packages/config/biome.json"],
+   "files": {
+      "experimentalScannerIgnores": [".wrangler/**", "dist/**"]
+   }
 }

@@ -8,10 +8,10 @@
       "build": "next build",
       "start": "next start",
       "lint": "npm run lint:biome && npm run lint:eslint",
-      "lint:biome": "biome check .",
+      "lint:biome": "biome check src",
       "lint:eslint": "eslint .",
       "lint:fix": "npm run lint:biome:fix && npm run lint:eslint:fix",
-      "lint:biome:fix": "biome check --fix --unsafe .",
+      "lint:biome:fix": "biome check --fix --unsafe src",
       "lint:eslint:fix": "eslint . --fix",
       "format": "biome format .",
       "format:fix": "biome format . --write",
@@ -46,7 +46,7 @@
       "zustand": "^5.0.8"
    },
    "devDependencies": {
-      "@biomejs/biome": "1.9.4",
+      "@biomejs/biome": "2.2.6",
       "@eslint/js": "^9.37.0",
       "@tailwindcss/postcss": "^4.1.14",
       "@types/mapbox__mapbox-gl-geocoder": "^5.0.0",

@@ -1,10 +1,10 @@
 "use client"
 
+import { memo, useEffect, useRef } from "react"
 import { CloseButton } from "@/components/atoms/CloseButton"
 import { InstallButton } from "@/components/atoms/InstallButton"
 import { InstallIcon } from "@/components/atoms/InstallIcon"
 import { useDebugStore } from "@/store/useDebugStore"
-import { memo, useEffect, useRef } from "react"
 import {
    useCheckIfInstalled,
    useDebugEventListeners,
