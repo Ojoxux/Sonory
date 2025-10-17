@@ -28,7 +28,7 @@
       "@sonory/shared-types": "file:../../packages/shared-types",
       "@sonory/utils": "file:../../packages/utils",
       "@supabase/supabase-js": "^2.75.0",
-      "hono": "^4.9.12",
+      "hono": "^4.10.0",
       "vite": "^7.1.10",
       "zod": "^4.1.12"
    },
