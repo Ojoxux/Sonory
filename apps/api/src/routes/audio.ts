@@ -1,6 +1,6 @@
 import { ERROR_CODES } from "@sonory/shared-types"
-import { Hono } from "hono"
 import type { Context } from "hono"
+import { Hono } from "hono"
 import type { Env } from "../index"
 import { APIException } from "../middleware/error"
 import { rateLimits } from "../middleware/rateLimit"

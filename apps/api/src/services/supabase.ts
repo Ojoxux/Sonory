@@ -1,6 +1,6 @@
 import { ERROR_CODES } from "@sonory/shared-types"
-import { createClient } from "@supabase/supabase-js"
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { createClient } from "@supabase/supabase-js"
 import { getSecureSupabaseConfig } from "../config/secrets"
 import type { Env } from "../index"
 import { APIException } from "../middleware/error"
