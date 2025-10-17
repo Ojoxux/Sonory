@@ -49,11 +49,10 @@
 			"complexity": {
 				"noBannedTypes": "error",
 				"noExtraBooleanCast": "error",
-				"noMultipleSpacesInRegularExpressionLiterals": "error",
+				"noAdjacentSpacesInRegex": "error",
 				"noUselessCatch": "error",
 				"noUselessThisAlias": "error",
 				"noUselessTypeConstraint": "error",
-				"noWith": "error",
 				"noForEach": "warn",
 				"noExcessiveCognitiveComplexity": {
 					"level": "warn",
@@ -88,9 +87,9 @@
 				"noUnusedImports": "error",
 				"noUnusedLabels": "error",
 				"noUnusedVariables": "error",
-				"useArrayLiterals": "off",
 				"useIsNan": "error",
 				"useValidForDirection": "error",
+				"useValidTypeof": "error",
 				"useYield": "error",
 				"useHookAtTopLevel": "error",
 				"useExhaustiveDependencies": "off"
@@ -99,7 +98,7 @@
 				"noInferrableTypes": "error",
 				"noNamespace": "error",
 				"noNonNullAssertion": "warn",
-				"noVar": "error",
+				"useArrayLiterals": "off",
 				"useAsConstAssertion": "error",
 				"useBlockStatements": "off",
 				"useImportType": "error",
@@ -143,9 +142,10 @@
 				"noShadowRestrictedNames": "error",
 				"noSparseArray": "error",
 				"noUnsafeNegation": "error",
+				"noVar": "error",
+				"noWith": "error",
 				"useGetterReturn": "error",
 				"useNamespaceKeyword": "error",
-				"useValidTypeof": "error",
 				"noArrayIndexKey": "warn",
 				"noConsole": {
 					"level": "off",
@@ -168,7 +168,7 @@
 		}
 	},
 	"files": {
-		"ignore": [
+		"experimentalScannerIgnores": [
 			".next/**",
 			"dist/**",
 			"public/sw.js",
@@ -191,7 +191,7 @@
 	},
 	"overrides": [
 		{
-			"include": ["*.ts", "*.tsx", "*.mts", "*.cts"],
+			"includes": ["*.ts", "*.tsx", "*.mts", "*.cts"],
 			"linter": {
 				"rules": {
 					"correctness": {
@@ -202,7 +202,8 @@
 						"noSetterReturn": "off",
 						"noUndeclaredVariables": "off",
 						"noUnreachable": "off",
-						"noUnreachableSuper": "off"
+						"noUnreachableSuper": "off",
+						"useValidTypeof": "off"
 					},
 					"style": {
 						"useConst": "error",
@@ -217,14 +218,15 @@
 						"noImportAssign": "off",
 						"noRedeclare": "off",
 						"noUnsafeNegation": "off",
-						"useGetterReturn": "off",
-						"useValidTypeof": "off"
+						"noVar": "off",
+						"noWith": "off",
+						"useGetterReturn": "off"
 					}
 				}
 			}
 		},
 		{
-			"include": ["*.tsx", "*.jsx"],
+			"includes": ["*.tsx", "*.jsx"],
 			"linter": {
 				"rules": {
 					"a11y": {
@@ -263,7 +265,7 @@
 			}
 		},
 		{
-			"include": ["*.json", "*.jsonc"],
+			"includes": ["*.json", "*.jsonc"],
 			"json": {
 				"formatter": {
 					"trailingCommas": "none"

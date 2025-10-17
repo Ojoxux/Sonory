@@ -2,7 +2,7 @@
    "$schema": "https://biomejs.dev/schemas/2.2.6/schema.json",
    "extends": ["../../packages/config/biome.json"],
    "files": {
-      "ignore": [
+      "experimentalScannerIgnores": [
          ".next/**",
          "public/sw.js",
          "public/workbox-*.js",
@@ -47,7 +47,7 @@
    },
    "overrides": [
       {
-         "include": ["src/app/api/**/*.ts"],
+         "includes": ["src/app/api/**/*.ts"],
          "linter": {
             "rules": {
                "style": {
@@ -57,7 +57,7 @@
          }
       },
       {
-         "include": ["*.tsx", "*.ts"],
+         "includes": ["*.tsx", "*.ts"],
          "linter": {
             "rules": {
                "correctness": {
