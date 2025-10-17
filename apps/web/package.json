@@ -42,7 +42,7 @@
       "use-effect-event": "^2.0.3",
       "uuid": "^11.1.0",
       "wavesurfer.js": "^7.11.0",
-      "zod": "^3.25.76",
+      "zod": "^4.1.12",
       "zustand": "^5.0.8"
    },
    "devDependencies": {
