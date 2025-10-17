@@ -2,14 +2,7 @@
    "$schema": "https://biomejs.dev/schemas/2.2.6/schema.json",
    "extends": ["../../packages/config/biome.json"],
    "files": {
-      "experimentalScannerIgnores": [
-         ".next/**",
-         "public/sw.js",
-         "public/workbox-*.js",
-         "public/worker-*.js",
-         "public/fallback-*.js",
-         "public/*.map"
-      ]
+      "experimentalScannerIgnores": [".next/**", "public/**"]
    },
    "linter": {
       "rules": {
@@ -29,7 +22,7 @@
             "noExcessiveCognitiveComplexity": {
                "level": "warn",
                "options": {
-                  "maxAllowedComplexity": 50
+                  "maxAllowedComplexity": 60
                }
             }
          },

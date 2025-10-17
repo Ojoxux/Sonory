@@ -274,9 +274,9 @@ export function useMapComponent({
    })
 
    // マップ初期化（一度だけ実行、依存関係は意図的に除外）
-	// 注意: この useEffect は意図的に依存関係を空にしています
-	// 依存関係を追加するとマップが何度も再初期化されて問題を起こすためです
-	useEffect(() => {
+   // 注意: この useEffect は意図的に依存関係を空にしています
+   // 依存関係を追加するとマップが何度も再初期化されて問題を起こすためです
+   useEffect(() => {
       if (!mapContainerRef.current || mapInitializedRef.current) return
 
       const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
