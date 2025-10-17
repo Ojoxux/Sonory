@@ -43,7 +43,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
-		"@types/node": "^20.19.21",
+		"@types/node": "^20.19.22",
 		"concurrently": "^9.2.1",
 		"husky": "^9.1.7",
 		"lint-staged": "^16.2.4",
