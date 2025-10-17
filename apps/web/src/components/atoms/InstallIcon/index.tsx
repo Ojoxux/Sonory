@@ -2,8 +2,8 @@
  * インストールアイコンコンポーネント
  */
 
-import { memo } from "react"
 import type { ReactElement } from "react"
+import { memo } from "react"
 import { MdInstallMobile } from "react-icons/md"
 
 export interface InstallIconProps {

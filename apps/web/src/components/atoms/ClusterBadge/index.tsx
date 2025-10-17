@@ -149,7 +149,7 @@ export const ClusterBadge = memo<ClusterBadgeProps>(function ClusterBadge({
 
          {/* パルス効果 */}
          <motion.div
-            className={`absolute inset-0 rounded-full ${currentVariant.border}border-2 opacity-50 `}
+            className={`absolute inset-0 rounded-full ${currentVariant.border}border-2 opacity-50`}
             animate={{
                scale: [1, 1.4, 1],
                opacity: [0.5, 0, 0.5],

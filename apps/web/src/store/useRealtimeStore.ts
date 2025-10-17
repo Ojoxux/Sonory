@@ -1,5 +1,5 @@
-import { createClient } from "@supabase/supabase-js"
 import type { RealtimeChannel, SupabaseClient } from "@supabase/supabase-js"
+import { createClient } from "@supabase/supabase-js"
 import { create } from "zustand"
 import type { LocationData } from "./useSoundPinStore"
 

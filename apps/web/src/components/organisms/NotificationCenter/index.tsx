@@ -1,8 +1,8 @@
 "use client"
 
-import { useRealtimeStore } from "@/store/useRealtimeStore"
-import type { RealtimeNotification } from "@/store/useRealtimeStore"
 import { useEffect, useState } from "react"
+import type { RealtimeNotification } from "@/store/useRealtimeStore"
+import { useRealtimeStore } from "@/store/useRealtimeStore"
 
 /**
  * NotificationCenterのプロパティ型定義

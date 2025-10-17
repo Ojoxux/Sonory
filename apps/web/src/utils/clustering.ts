@@ -5,8 +5,8 @@
  * 近接するピンをグループ化してバッジ表示する機能を提供
  */
 
-import type { SoundPin } from "@/store/useSoundPinStore"
 import type mapboxgl from "mapbox-gl"
+import type { SoundPin } from "@/store/useSoundPinStore"
 
 /** クラスタリング設定 */
 export type ClusteringConfig = {

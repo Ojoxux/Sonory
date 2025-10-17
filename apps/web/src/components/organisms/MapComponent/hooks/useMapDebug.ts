@@ -2,8 +2,8 @@
  * マップデバッグ機能管理フック
  */
 
-import { useDebugStore } from "@/store/useDebugStore"
 import { useEffect } from "react"
+import { useDebugStore } from "@/store/useDebugStore"
 
 export interface UseMapDebugReturn {
    debugMode: boolean

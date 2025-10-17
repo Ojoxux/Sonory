@@ -2,8 +2,8 @@
  * インストールボタンコンポーネント
  */
 
-import { memo } from "react"
 import type { ReactElement } from "react"
+import { memo } from "react"
 
 export interface InstallButtonProps {
    /** クリック時の処理 */

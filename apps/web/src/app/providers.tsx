@@ -1,9 +1,9 @@
 "use client"
 
-import { initializeNotifications } from "@/utils/notifications"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { PropsWithChildren } from "react"
 import { useEffect, useState } from "react"
+import { initializeNotifications } from "@/utils/notifications"
 
 /**
  * アプリケーション全体のプロバイダー

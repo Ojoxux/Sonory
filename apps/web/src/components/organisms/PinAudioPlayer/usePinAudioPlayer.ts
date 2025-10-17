@@ -1,6 +1,6 @@
-import type { SoundPin } from "@/store/useSoundPinStore"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useEffectEvent } from "use-effect-event"
+import type { SoundPin } from "@/store/useSoundPinStore"
 import type {
    AudioLoadingStatus,
    PlaybackState,

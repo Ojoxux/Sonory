@@ -22,12 +22,12 @@ import type {
 } from "../mapbox.types"
 import { applyNightLighting } from "../styles/mapStyles"
 import {
-   type LightingConfig,
-   type WeatherEffects,
    applyWeatherEffects,
    calculateSunPosition,
    defaultWeather,
    getLightingConfig,
+   type LightingConfig,
+   type WeatherEffects,
 } from "../utils/sunCalculations"
 
 export type UseMapLightingProps = {

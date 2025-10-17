@@ -1,6 +1,6 @@
 import js from "@eslint/js"
-import reactYouMightNotNeedAnEffect from "eslint-plugin-react-you-might-not-need-an-effect"
 import { defineConfig } from "eslint/config"
+import reactYouMightNotNeedAnEffect from "eslint-plugin-react-you-might-not-need-an-effect"
 import globals from "globals"
 import tseslint from "typescript-eslint"
 

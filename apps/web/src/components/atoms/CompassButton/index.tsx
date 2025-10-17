@@ -1,7 +1,7 @@
 "use client"
 
-import { CompassIcon } from "@/components/atoms/CompassIcon"
 import { motion } from "framer-motion"
+import { CompassIcon } from "@/components/atoms/CompassIcon"
 import type { CompassButtonProps } from "./type"
 
 /**
