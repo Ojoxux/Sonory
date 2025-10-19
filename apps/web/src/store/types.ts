@@ -29,7 +29,7 @@ export type AudioData = {
    /** 音声データのBlob */
    blob: Blob
    /** 音声データのURL */
-   url: string
+   url?: string
    /** 録音日時 */
    recordedAt: Date
    /** 音声データのID */
