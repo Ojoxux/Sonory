@@ -160,8 +160,8 @@ export function WaveformPlayer({
          return
       }
 
-      // BlobやURLの有効性を事前にチェック
-      if (!audioData.url && (!audioData.blob || audioData.blob.size === 0)) {
+      // Blobの有効性を事前にチェック
+      if (!audioData.blob || audioData.blob.size === 0) {
          setError(new Error("有効な音声データが見つかりません"))
          setIsLoading(false)
          return
