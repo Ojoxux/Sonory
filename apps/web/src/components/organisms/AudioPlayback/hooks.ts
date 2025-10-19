@@ -209,11 +209,11 @@ export const usePinPlacement = () => {
             // アップロード済みURLを優先的に使用
             let audioUrl = uploadedAudioUrl
 
-            // アップロード済みURLがない場合は、BlobURLを使用（createPersistentPin内でアップロードされる）
+            // アップロード済みURLがない場合は、BlobからURLを生成（createPersistentPin内でアップロードされる）
             if (!audioUrl) {
-               audioUrl = audioData.url || URL.createObjectURL(audioData.blob)
+               audioUrl = URL.createObjectURL(audioData.blob)
                console.log(
-                  "⚠️ アップロード済みURLがないため、BlobURLを使用します",
+                  "⚠️ アップロード済みURLがないため、BlobからURLを生成します",
                )
             }
 
