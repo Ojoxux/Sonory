@@ -50,12 +50,17 @@ export const useAudioProcessing = () => {
 
             // 音声時間を実際のBlobから計算
             const duration = await new Promise<number>((resolve) => {
-               const audio = new Audio(audioData.url)
+               const blobUrl = URL.createObjectURL(audioData.blob)
+               const audio = new Audio(blobUrl)
                audio.onloadedmetadata = () => {
                   const actualDuration = audio.duration
+                  URL.revokeObjectURL(blobUrl) // メモリ解放
                   resolve(Number.isFinite(actualDuration) ? actualDuration : 10)
                }
-               audio.onerror = () => resolve(10) // エラー時はデフォルト10秒
+               audio.onerror = () => {
+                  URL.revokeObjectURL(blobUrl) // メモリ解放
+                  resolve(10) // エラー時はデフォルト10秒
+               }
             })
 
             console.log("🎵 録音時間チェック:", { duration })
