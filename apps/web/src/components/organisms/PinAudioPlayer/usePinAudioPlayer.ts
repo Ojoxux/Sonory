@@ -223,29 +223,38 @@ export function usePinAudioPlayer(
 
    // ピンが変更されたときに音声を読み込み
    useEffect(() => {
-      if (pin?.audioData?.url) {
-         console.log("🎵 PinAudioPlayer: 音声読み込み開始", {
-            pinId: pin.id,
-            audioUrl: pin.audioData.url,
-            isPersisted: pin.isPersisted,
-            primaryLabel: pin.primaryLabel,
-            environment: pin.environment,
-            classificationResults: pin.classificationResults,
-         })
+      if (pin?.audioData) {
+         const audioUrl =
+            pin.audioData.url ||
+            (pin.audioData.blob
+               ? URL.createObjectURL(pin.audioData.blob)
+               : null)
 
-         loadAudio(pin.audioData.url)
-      } else {
-         console.warn("⚠️ PinAudioPlayer: 音声URLが見つかりません", {
-            pin: pin
-               ? {
-                    id: pin.id,
-                    hasAudioData: !!pin.audioData,
-                    audioDataUrl: pin.audioData?.url,
-                    primaryLabel: pin.primaryLabel,
-                    environment: pin.environment,
-                 }
-               : null,
-         })
+         if (audioUrl) {
+            console.log("🎵 PinAudioPlayer: 音声読み込み開始", {
+               pinId: pin.id,
+               audioUrl,
+               hasUrl: !!pin.audioData.url,
+               hasBlob: !!pin.audioData.blob,
+               isPersisted: pin.isPersisted,
+               primaryLabel: pin.primaryLabel,
+               environment: pin.environment,
+               classificationResults: pin.classificationResults,
+            })
+
+            loadAudio(audioUrl)
+         } else {
+            console.warn("⚠️ PinAudioPlayer: 音声URLもBlobも見つかりません", {
+               pin: {
+                  id: pin.id,
+                  hasAudioData: !!pin.audioData,
+                  audioDataUrl: pin.audioData?.url,
+                  hasBlob: !!pin.audioData?.blob,
+                  primaryLabel: pin.primaryLabel,
+                  environment: pin.environment,
+               },
+            })
+         }
       }
    }, [pin, loadAudio])
 

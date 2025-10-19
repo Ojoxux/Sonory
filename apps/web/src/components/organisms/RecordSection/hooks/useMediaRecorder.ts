@@ -123,10 +123,8 @@ export function useMediaRecorder() {
                console.warn("⚠️ 録音データが小さすぎます（1KB未満）")
             }
 
-            const audioUrl = URL.createObjectURL(audioBlob)
             const audioData: AudioData = {
                blob: audioBlob,
-               url: audioUrl,
                recordedAt: new Date(),
                id: crypto.randomUUID(),
             }
