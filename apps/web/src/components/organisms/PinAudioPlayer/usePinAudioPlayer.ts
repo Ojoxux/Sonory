@@ -224,8 +224,11 @@ export function usePinAudioPlayer(
    // ピンが変更されたときに音声を読み込み
    useEffect(() => {
       if (pin?.audioData) {
-         const audioUrl = pin.audioData.url ||
-                         (pin.audioData.blob ? URL.createObjectURL(pin.audioData.blob) : null)
+         const audioUrl =
+            pin.audioData.url ||
+            (pin.audioData.blob
+               ? URL.createObjectURL(pin.audioData.blob)
+               : null)
 
          if (audioUrl) {
             console.log("🎵 PinAudioPlayer: 音声読み込み開始", {
