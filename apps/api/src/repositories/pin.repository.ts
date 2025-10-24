@@ -439,7 +439,8 @@ export class PinRepository {
       // audio_file_pathがない場合は、audio_urlからファイルパスを抽出して署名付きURLを生成
       let audioUrl = record.audio_url
 
-      const filePathToUse = record.audio_file_path || this.extractFilePathFromUrl(record.audio_url)
+      const filePathToUse =
+         record.audio_file_path || this.extractFilePathFromUrl(record.audio_url)
 
       if (filePathToUse) {
          try {
@@ -784,9 +785,7 @@ export class PinRepository {
 
          // Convert to domain models efficiently
          return await Promise.all(
-            records.map((record: SoundPinRecord) =>
-               this.toDomainModel(record),
-            ),
+            records.map((record: SoundPinRecord) => this.toDomainModel(record)),
          )
       } catch (error) {
          this.logger.error("Failed to find pins within bounds", {
@@ -833,9 +832,7 @@ export class PinRepository {
          }
 
          return await Promise.all(
-            records.map((record: SoundPinRecord) =>
-               this.toDomainModel(record),
-            ),
+            records.map((record: SoundPinRecord) => this.toDomainModel(record)),
          )
       } catch (error) {
          this.logger.error("Failed to find nearby pins", {

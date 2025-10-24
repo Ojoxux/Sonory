@@ -447,15 +447,28 @@ export class PinService extends BaseService {
             ai_analysis_result: null,
 
             // 天気情報（metadataまたはトップレベルから）
-            weather_temperature: request.metadata?.weather?.temperature ?? request.weather?.temperature ?? null,
-            weather_condition: request.metadata?.weather?.condition ?? request.weather?.condition ?? null,
-            weather_wind_speed: request.metadata?.weather?.windSpeed ?? request.weather?.windSpeed ?? null,
-            weather_humidity: request.metadata?.weather?.humidity ?? request.weather?.humidity ?? null,
+            weather_temperature:
+               request.metadata?.weather?.temperature ??
+               request.weather?.temperature ??
+               null,
+            weather_condition:
+               request.metadata?.weather?.condition ??
+               request.weather?.condition ??
+               null,
+            weather_wind_speed:
+               request.metadata?.weather?.windSpeed ??
+               request.weather?.windSpeed ??
+               null,
+            weather_humidity:
+               request.metadata?.weather?.humidity ??
+               request.weather?.humidity ??
+               null,
 
             // メタデータ（metadataまたはトップレベルから）
             time_tag: request.metadata?.timeTag ?? request.timeTag ?? null,
             title: request.metadata?.title ?? request.title ?? null,
-            device_info: request.metadata?.deviceInfo ?? request.deviceInfo ?? null,
+            device_info:
+               request.metadata?.deviceInfo ?? request.deviceInfo ?? null,
          }
       }
 
