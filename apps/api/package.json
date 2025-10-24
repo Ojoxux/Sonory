@@ -28,7 +28,7 @@
       "@sonory/shared-types": "file:../../packages/shared-types",
       "@sonory/utils": "file:../../packages/utils",
       "@supabase/supabase-js": "^2.76.1",
-      "hono": "^4.10.2",
+      "hono": "^4.10.3",
       "vite": "^7.1.12",
       "zod": "^4.1.12"
    },
@@ -37,7 +37,7 @@
       "@types/node": "^22.18.12",
       "tsc-alias": "^1.8.16",
       "typescript": "^5.9.3",
-      "vitest": "^4.0.2",
+      "vitest": "^4.0.3",
       "wrangler": "^4.45.0"
    }
 }
