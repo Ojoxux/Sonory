@@ -208,6 +208,7 @@ export interface AudioMetadata {
 export interface AudioUploadResult {
    audioId: string
    audioUrl: string
+   audioFilePath: string // Permanent file path in storage
    metadata: AudioMetadata
 }
 
