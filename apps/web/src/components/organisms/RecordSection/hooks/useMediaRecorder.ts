@@ -127,6 +127,7 @@ export function useMediaRecorder() {
                blob: audioBlob,
                recordedAt: new Date(),
                id: crypto.randomUUID(),
+               duration: elapsedTime,
             }
 
             setAudioData(audioData)

@@ -34,6 +34,27 @@ export class PinRepository {
    }
 
    /**
+    * Extract file path from storage URL or placeholder URL
+    * @param url - Storage URL or placeholder URL
+    * @returns File path or null
+    */
+   private extractFilePathFromUrl(url: string): string | null {
+      if (!url) return null
+
+      // Handle placeholder URLs (storage://bucket/path)
+      if (url.startsWith("storage://")) {
+         const match = url.match(/^storage:\/\/[^/]+\/(.+)$/)
+         return match?.[1] ?? null
+      }
+
+      // Handle signed URLs or public URLs
+      // Example: https://...supabase.co/storage/v1/object/sign/sonory-audio/path/to/file.webm?token=...
+      // Extract: path/to/file.webm
+      const match = url.match(/\/sonory-audio\/(.+?)(?:\?|$)/)
+      return match?.[1] ?? null
+   }
+
+   /**
     * Parses location data from either WKT, GeoJSON, or PostGIS binary format
     * @param locationData - Location data in various formats
     * @returns Parsed coordinates
@@ -395,7 +416,7 @@ export class PinRepository {
     * @param record - Database record
     * @returns Domain model
     */
-   private toDomainModel(record: SoundPinRecord): SoundPinAPI {
+   private async toDomainModel(record: SoundPinRecord): Promise<SoundPinAPI> {
       const { lat, lng } = this.parseLocationData(record.location)
 
       // AI分析結果を新しいスキーマから取得
@@ -414,6 +435,43 @@ export class PinRepository {
          })
       }
 
+      // Generate signed URL from audio_file_path
+      // audio_file_pathがない場合は、audio_urlからファイルパスを抽出して署名付きURLを生成
+      let audioUrl = record.audio_url
+
+      const filePathToUse =
+         record.audio_file_path || this.extractFilePathFromUrl(record.audio_url)
+
+      if (filePathToUse) {
+         try {
+            const { data: signedData, error: signedError } =
+               await this.supabase.storage
+                  .from("sonory-audio")
+                  .createSignedUrl(filePathToUse, 604800) // 7 days
+
+            if (!signedError && signedData) {
+               audioUrl = signedData.signedUrl
+               this.logger.info("Generated signed URL from file path", {
+                  recordId: record.id,
+                  filePath: filePathToUse,
+                  requestId: this.requestId,
+               })
+            } else {
+               this.logger.warn("Failed to generate signed URL", {
+                  error: signedError?.message,
+                  recordId: record.id,
+                  requestId: this.requestId,
+               })
+            }
+         } catch (error) {
+            this.logger.error("Error generating signed URL", {
+               error: error instanceof Error ? error.message : String(error),
+               recordId: record.id,
+               requestId: this.requestId,
+            })
+         }
+      }
+
       return {
          id: record.id,
          ...(record.user_id ? { userId: record.user_id } : {}),
@@ -422,7 +480,7 @@ export class PinRepository {
             lng,
          },
          audio: {
-            url: record.audio_url,
+            url: audioUrl,
             duration: record.audio_duration,
             format: record.audio_format,
          },
@@ -494,6 +552,7 @@ export class PinRepository {
             p_lat: lat,
             p_lng: lng,
             p_audio_url: data.audio_url,
+            p_audio_file_path: data.audio_file_path,
             p_audio_duration: data.audio_duration,
             p_audio_format: data.audio_format,
             p_weather_temperature: data.weather_temperature,
@@ -536,7 +595,7 @@ export class PinRepository {
             pinId: pinRecord.id,
             requestId: this.requestId,
          })
-         return this.toDomainModel(pinRecord)
+         return await this.toDomainModel(pinRecord)
       } catch (error) {
          this.logger.error("Failed to create pin", {
             error: error instanceof Error ? error.message : String(error),
@@ -573,7 +632,7 @@ export class PinRepository {
             throw error
          }
 
-         return this.toDomainModel(record)
+         return await this.toDomainModel(record)
       } catch (error) {
          this.logger.error("Failed to find pin by ID", {
             error: error instanceof Error ? error.message : String(error),
@@ -619,7 +678,7 @@ export class PinRepository {
             pinId: id,
             requestId: this.requestId,
          })
-         return this.toDomainModel(record)
+         return await this.toDomainModel(record)
       } catch (error) {
          this.logger.error("Failed to update pin", {
             error: error instanceof Error ? error.message : String(error),
@@ -725,8 +784,8 @@ export class PinRepository {
          })
 
          // Convert to domain models efficiently
-         return records.map((record: SoundPinRecord) =>
-            this.toDomainModel(record),
+         return await Promise.all(
+            records.map((record: SoundPinRecord) => this.toDomainModel(record)),
          )
       } catch (error) {
          this.logger.error("Failed to find pins within bounds", {
@@ -772,8 +831,8 @@ export class PinRepository {
             throw error
          }
 
-         return records.map((record: SoundPinRecord) =>
-            this.toDomainModel(record),
+         return await Promise.all(
+            records.map((record: SoundPinRecord) => this.toDomainModel(record)),
          )
       } catch (error) {
          this.logger.error("Failed to find nearby pins", {
