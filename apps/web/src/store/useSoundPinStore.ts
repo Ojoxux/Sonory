@@ -106,6 +106,7 @@ export type SoundPinState = {
       audioUrl: string,
       location: LocationData,
       analysisResult: InferenceResult[],
+      duration?: number,
    ) => Promise<SoundPin>
    /** ピン作成状態を設定 */
    setPinCreationStatus: (status: PinCreationStatus) => void
@@ -332,6 +333,7 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
       audioUrl: string,
       location: LocationData,
       analysisResult: InferenceResult[],
+      duration?: number,
    ): Promise<SoundPin> => {
       try {
          set({
@@ -359,6 +361,7 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
                url: audioUrl,
                recordedAt: now,
                id: crypto.randomUUID(),
+               duration: duration,
             },
             classificationResults: analysisResult,
             recordedAt: now,
@@ -403,7 +406,7 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
          formData.append(
             "metadata",
             JSON.stringify({
-               duration: 10,
+               duration: duration || 10,
                timeTag,
                title: primaryResult?.label || "音声ピン",
                deviceInfo: navigator.userAgent,
@@ -462,6 +465,7 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
                url: result.data.audio.url,
                recordedAt: new Date(result.data.createdAt),
                id: result.data.id,
+               duration: duration,
             },
             classificationResults: analysisResult,
             recordedAt: new Date(result.data.createdAt),
