@@ -222,6 +222,7 @@ export const usePinPlacement = () => {
                audioUrl: `${audioUrl.substring(0, 100)}...`, // URLの先頭のみ表示
                position: currentPosition,
                resultsCount: results.length,
+               duration: audioData.duration,
             })
 
             // 永続化ピンを作成
@@ -232,6 +233,7 @@ export const usePinPlacement = () => {
                   longitude: currentPosition.longitude,
                },
                results,
+               audioData.duration,
             )
 
             console.log("✅ ピン配置成功")
