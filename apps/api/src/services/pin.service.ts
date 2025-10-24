@@ -53,8 +53,16 @@ export class PinService extends BaseService {
          // Validate location
          this.validateLocation(request.location)
 
-         // Validate audio metadata
-         this.validateAudioMetadata(request.audio)
+         // Validate audio metadata (if audio object is provided)
+         if (request.audio) {
+            this.validateAudioMetadata(request.audio)
+         } else if (!request.audio_file_path) {
+            throw new APIException(
+               ERROR_CODES.DATABASE_ERROR,
+               "Either audio or audio_file_path must be provided",
+               400,
+            )
+         }
 
          // Convert to database insert format
          const pinData = this.toDatabaseInsert(request)
@@ -378,7 +386,12 @@ export class PinService extends BaseService {
     * @param audio - Audio metadata to validate
     * @throws APIException if audio metadata is invalid
     */
-   private validateAudioMetadata(audio: CreatePinRequest["audio"]): void {
+   private validateAudioMetadata(audio: {
+      url: string
+      duration: number
+      format: "webm" | "mp3" | "wav"
+      filePath?: string
+   }): void {
       if (!audio.url || audio.url.trim() === "") {
          throw new APIException(
             ERROR_CODES.INVALID_AUDIO_FORMAT,
@@ -414,6 +427,46 @@ export class PinService extends BaseService {
    private toDatabaseInsert(request: CreatePinRequest): SoundPinInsert {
       // PostGISのPOINT関数を使用してGeography型に変換
       const locationWKT = `POINT(${request.location.lng} ${request.location.lat})`
+
+      // audio_file_pathが直接指定されている場合の処理
+      if (request.audio_file_path) {
+         // プレースホルダーURLを生成
+         const placeholderUrl = `storage://sonory-audio/${request.audio_file_path}`
+
+         return {
+            // 必須フィールド
+            user_id: null, // TODO: 認証実装後はコンテキストから取得
+            location: locationWKT,
+            audio_url: placeholderUrl,
+            audio_duration: request.metadata?.duration ?? 10,
+            audio_format: "webm" as const, // デフォルト値
+            audio_file_path: request.audio_file_path,
+            status: "active" as const,
+
+            // AI分析フィールド（初期値はnull、後で更新）
+            ai_analysis_result: null,
+
+            // 天気情報（metadataまたはトップレベルから）
+            weather_temperature: request.metadata?.weather?.temperature ?? request.weather?.temperature ?? null,
+            weather_condition: request.metadata?.weather?.condition ?? request.weather?.condition ?? null,
+            weather_wind_speed: request.metadata?.weather?.windSpeed ?? request.weather?.windSpeed ?? null,
+            weather_humidity: request.metadata?.weather?.humidity ?? request.weather?.humidity ?? null,
+
+            // メタデータ（metadataまたはトップレベルから）
+            time_tag: request.metadata?.timeTag ?? request.timeTag ?? null,
+            title: request.metadata?.title ?? request.title ?? null,
+            device_info: request.metadata?.deviceInfo ?? request.deviceInfo ?? null,
+         }
+      }
+
+      // 従来のaudioオブジェクトを使用する場合
+      if (!request.audio) {
+         throw new APIException(
+            ERROR_CODES.DATABASE_ERROR,
+            "Either audio or audio_file_path must be provided",
+            400,
+         )
+      }
 
       return {
          // 必須フィールド
@@ -528,11 +581,24 @@ export class PinService extends BaseService {
 // Type definitions for requests
 interface CreatePinRequest {
    location: LocationCoordinates
-   audio: {
+   audio?: {
       url: string
       duration: number
       format: "webm" | "mp3" | "wav"
       filePath?: string
+   }
+   audio_file_path?: string
+   metadata?: {
+      duration?: number
+      timeTag?: "朝" | "昼" | "夕" | "夜"
+      title?: string
+      deviceInfo?: string
+      weather?: {
+         temperature: number
+         condition?: string
+         windSpeed?: number
+         humidity?: number
+      }
    }
    weather?: {
       temperature: number
