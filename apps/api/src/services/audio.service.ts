@@ -504,18 +504,45 @@ export class AudioService extends BaseService {
          })
 
          // audioUrlからファイルパスを抽出して新しいSigned URLを生成
-         // これにより、古いSigned URLの有効期限切れを回避
+         // これにより、古いSigned URLの有効期限切れやプレースホルダーURLを回避
          let analysisAudioUrl = audioUrl
-         try {
-            // URLからファイルパスを抽出（例: /storage/v1/object/sign/sonory-audio/... から sonory-audio/... を取得）
-            const urlObj = new URL(audioUrl)
-            const pathMatch = urlObj.pathname.match(
-               /\/object\/(?:sign|public)\/([^?]+)/,
-            )
-            if (pathMatch?.[1]) {
-               const filePath = pathMatch[1].replace(`${this.bucketName}/`, "")
+         let filePath: string | null = null
 
-               // 新しいSigned URLを生成（有効期限: 2時間）
+         // プレースホルダーURL (storage://bucket/path) からファイルパスを抽出
+         if (audioUrl.startsWith("storage://")) {
+            const match = audioUrl.match(/^storage:\/\/[^/]+\/(.+)$/)
+            filePath = match?.[1] ?? null
+            this.log("info", "Extracted file path from placeholder URL", {
+               originalUrl: audioUrl,
+               filePath,
+            })
+         } else {
+            // HTTP/HTTPS URLからファイルパスを抽出
+            try {
+               const urlObj = new URL(audioUrl)
+               const pathMatch = urlObj.pathname.match(
+                  /\/object\/(?:sign|public)\/([^?]+)/,
+               )
+               if (pathMatch?.[1]) {
+                  filePath = pathMatch[1].replace(`${this.bucketName}/`, "")
+                  this.log("info", "Extracted file path from HTTP URL", {
+                     originalUrl: audioUrl,
+                     filePath,
+                  })
+               }
+            } catch (urlError) {
+               this.log("warn", "Failed to parse URL", {
+                  error:
+                     urlError instanceof Error
+                        ? urlError.message
+                        : String(urlError),
+               })
+            }
+         }
+
+         // ファイルパスが抽出できた場合、新しいSigned URLを生成
+         if (filePath) {
+            try {
                const { data: signedData, error: signedError } =
                   await this.supabaseClient.storage
                      .from(this.bucketName)
@@ -526,16 +553,26 @@ export class AudioService extends BaseService {
                   this.log("info", "Generated fresh signed URL for analysis", {
                      originalUrl: audioUrl,
                      newUrl: analysisAudioUrl,
+                     filePath,
+                  })
+               } else {
+                  this.log("error", "Failed to generate signed URL", {
+                     error: signedError?.message,
+                     filePath,
                   })
                }
+            } catch (signedUrlError) {
+               this.log("error", "Exception while generating signed URL", {
+                  error:
+                     signedUrlError instanceof Error
+                        ? signedUrlError.message
+                        : String(signedUrlError),
+                  filePath,
+               })
             }
-         } catch (urlError) {
-            // URLパースに失敗した場合は元のURLを使用
-            this.log("warn", "Failed to refresh signed URL, using original", {
-               error:
-                  urlError instanceof Error
-                     ? urlError.message
-                     : String(urlError),
+         } else {
+            this.log("warn", "Could not extract file path from URL", {
+               audioUrl,
             })
          }
 
