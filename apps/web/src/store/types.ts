@@ -34,6 +34,8 @@ export type AudioData = {
    recordedAt: Date
    /** 音声データのID */
    id: string
+   /** 音声の長さ（秒） */
+   duration?: number
 }
 
 /**
