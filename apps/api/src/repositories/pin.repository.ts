@@ -34,6 +34,27 @@ export class PinRepository {
    }
 
    /**
+    * Extract file path from storage URL or placeholder URL
+    * @param url - Storage URL or placeholder URL
+    * @returns File path or null
+    */
+   private extractFilePathFromUrl(url: string): string | null {
+      if (!url) return null
+
+      // Handle placeholder URLs (storage://bucket/path)
+      if (url.startsWith("storage://")) {
+         const match = url.match(/^storage:\/\/[^/]+\/(.+)$/)
+         return match?.[1] ?? null
+      }
+
+      // Handle signed URLs or public URLs
+      // Example: https://...supabase.co/storage/v1/object/sign/sonory-audio/path/to/file.webm?token=...
+      // Extract: path/to/file.webm
+      const match = url.match(/\/sonory-audio\/(.+?)(?:\?|$)/)
+      return match?.[1] ?? null
+   }
+
+   /**
     * Parses location data from either WKT, GeoJSON, or PostGIS binary format
     * @param locationData - Location data in various formats
     * @returns Parsed coordinates
@@ -414,25 +435,28 @@ export class PinRepository {
          })
       }
 
-      // Generate signed URL from audio_file_path if available
-      // Fall back to audio_url for backward compatibility
+      // Generate signed URL from audio_file_path
+      // audio_file_pathがない場合は、audio_urlからファイルパスを抽出して署名付きURLを生成
       let audioUrl = record.audio_url
-      if (record.audio_file_path) {
+
+      const filePathToUse = record.audio_file_path || this.extractFilePathFromUrl(record.audio_url)
+
+      if (filePathToUse) {
          try {
             const { data: signedData, error: signedError } =
                await this.supabase.storage
                   .from("sonory-audio")
-                  .createSignedUrl(record.audio_file_path, 604800) // 7 days
+                  .createSignedUrl(filePathToUse, 604800) // 7 days
 
             if (!signedError && signedData) {
                audioUrl = signedData.signedUrl
                this.logger.info("Generated signed URL from file path", {
                   recordId: record.id,
-                  filePath: record.audio_file_path,
+                  filePath: filePathToUse,
                   requestId: this.requestId,
                })
             } else {
-               this.logger.warn("Failed to generate signed URL, using audio_url", {
+               this.logger.warn("Failed to generate signed URL", {
                   error: signedError?.message,
                   recordId: record.id,
                   requestId: this.requestId,
