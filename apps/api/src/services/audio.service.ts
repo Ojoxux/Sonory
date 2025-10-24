@@ -195,12 +195,14 @@ export class AudioService extends BaseService {
          const result: AudioUploadResult = {
             audioId: data.id || filePath,
             audioUrl: urlData.signedUrl,
+            audioFilePath: filePath, // Permanent file path for storage
             metadata,
          }
 
          this.log("info", "Audio upload completed", {
             audioId: result.audioId,
             audioUrl: result.audioUrl,
+            audioFilePath: result.audioFilePath,
          })
 
          return result
