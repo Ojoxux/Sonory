@@ -10,6 +10,7 @@ export interface SoundPinRecord {
    user_id: string | null
    location: string // PostGIS geography stored as WKT or GeoJSON string
    audio_url: string
+   audio_file_path: string | null // Permanent file path in storage
    audio_duration: number
    audio_format: "webm" | "mp3" | "wav"
    weather_temperature: number | null
