@@ -35,12 +35,17 @@ export function usePinAudioPlayer(
    /**
     * 音声を読み込み
     */
-   const loadAudio = useCallback(async (audioUrl: string): Promise<void> => {
+   const loadAudio = useCallback(async (audioUrl: string, suggestedDuration?: number): Promise<void> => {
       try {
          setAudioLoadingStatus("loading")
          setAudioLoadError(null)
          setCurrentTime(0)
-         setDuration(0)
+         // suggestedDurationがあれば事前に設定
+         if (suggestedDuration && Number.isFinite(suggestedDuration) && suggestedDuration > 0) {
+            setDuration(suggestedDuration)
+         } else {
+            setDuration(0)
+         }
 
          const audio = new Audio(audioUrl)
 
@@ -57,15 +62,17 @@ export function usePinAudioPlayer(
                   readyState: audio.readyState,
                })
             } else {
-               // durationが無効な場合は、デフォルト値を設定
-               setDuration(10) // 10秒のデフォルト値
+               // durationが無効な場合は、suggestedDurationまたはデフォルト値を使用
+               const fallbackDuration = suggestedDuration || 10
+               setDuration(fallbackDuration)
                setAudioLoadingStatus("ready")
-               console.warn(
-                  "⚠️ PinAudioPlayer: 音声のdurationが無効です。デフォルト値を使用します:",
+               console.log(
+                  "ℹ️ PinAudioPlayer: audio要素からdurationを取得できませんでした。フォールバック値を使用します:",
                   {
                      audioUrl,
                      audioDuration,
-                     defaultDuration: 10,
+                     usedDuration: fallbackDuration,
+                     hasSuggestedDuration: !!suggestedDuration,
                   },
                )
             }
@@ -240,9 +247,10 @@ export function usePinAudioPlayer(
                primaryLabel: pin.primaryLabel,
                environment: pin.environment,
                classificationResults: pin.classificationResults,
+               duration: pin.audioData.duration,
             })
 
-            loadAudio(audioUrl)
+            loadAudio(audioUrl, pin.audioData.duration)
          } else {
             console.warn("⚠️ PinAudioPlayer: 音声URLもBlobも見つかりません", {
                pin: {
