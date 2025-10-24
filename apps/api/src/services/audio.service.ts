@@ -162,24 +162,10 @@ export class AudioService extends BaseService {
             )
          }
 
-         // 署名付きURL（Signed URL）を生成（プライベートバケット対応）
-         // 有効期限: 1時間（3600秒）
-         const { data: urlData, error: urlError } =
-            await this.supabaseClient.storage
-               .from(this.bucketName)
-               .createSignedUrl(filePath, 3600)
-
-         if (urlError || !urlData) {
-            this.log("error", "Failed to create signed URL", {
-               error: urlError?.message || "Unknown error",
-               filePath,
-            })
-            throw new APIException(
-               ERROR_CODES.STORAGE_ERROR,
-               `Failed to create signed URL: ${urlError?.message || "Unknown error"}`,
-               500,
-            )
-         }
+         // 署名付きURLは保存せず、ファイルパスのみを保存
+         // 実際のURLはPin取得時に動的に生成される（pin.repository.tsで実装済み）
+         // プレースホルダーとしてファイルパスをURLフィールドに設定
+         const placeholderUrl = `storage://${this.bucketName}/${filePath}`
 
          // メタデータを構築
          const metadata: AudioMetadata = {
@@ -188,13 +174,13 @@ export class AudioService extends BaseService {
             size: file.size,
             format: this.extractFormat(file),
             duration: 0, // 実際の長さは後で更新
-            url: urlData.signedUrl,
+            url: placeholderUrl, // プレースホルダー（実際のURLは取得時に生成）
             uploadedAt: new Date().toISOString(),
          }
 
          const result: AudioUploadResult = {
             audioId: data.id || filePath,
-            audioUrl: urlData.signedUrl,
+            audioUrl: placeholderUrl, // プレースホルダー（実際のURLは取得時に生成）
             audioFilePath: filePath, // Permanent file path for storage
             metadata,
          }
