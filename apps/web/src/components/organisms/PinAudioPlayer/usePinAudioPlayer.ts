@@ -35,126 +35,133 @@ export function usePinAudioPlayer(
    /**
     * 音声を読み込み
     */
-   const loadAudio = useCallback(async (audioUrl: string, suggestedDuration?: number): Promise<void> => {
-      try {
-         setAudioLoadingStatus("loading")
-         setAudioLoadError(null)
-         setCurrentTime(0)
-         // suggestedDurationがあれば事前に設定
-         if (suggestedDuration && Number.isFinite(suggestedDuration) && suggestedDuration > 0) {
-            setDuration(suggestedDuration)
-         } else {
-            setDuration(0)
-         }
-
-         const audio = new Audio(audioUrl)
-
-         // 音声読み込み完了時の処理
-         audio.onloadedmetadata = () => {
-            const audioDuration = audio.duration
-            // durationが有効な値かチェック
-            if (Number.isFinite(audioDuration) && audioDuration > 0) {
-               setDuration(audioDuration)
-               setAudioLoadingStatus("ready")
-               console.log("✅ PinAudioPlayer: 音声読み込み成功", {
-                  audioUrl,
-                  duration: audioDuration,
-                  readyState: audio.readyState,
-               })
+   const loadAudio = useCallback(
+      async (audioUrl: string, suggestedDuration?: number): Promise<void> => {
+         try {
+            setAudioLoadingStatus("loading")
+            setAudioLoadError(null)
+            setCurrentTime(0)
+            // suggestedDurationがあれば事前に設定
+            if (
+               suggestedDuration &&
+               Number.isFinite(suggestedDuration) &&
+               suggestedDuration > 0
+            ) {
+               setDuration(suggestedDuration)
             } else {
-               // durationが無効な場合は、suggestedDurationまたはデフォルト値を使用
-               const fallbackDuration = suggestedDuration || 10
-               setDuration(fallbackDuration)
-               setAudioLoadingStatus("ready")
-               console.log(
-                  "ℹ️ PinAudioPlayer: audio要素からdurationを取得できませんでした。フォールバック値を使用します:",
-                  {
+               setDuration(0)
+            }
+
+            const audio = new Audio(audioUrl)
+
+            // 音声読み込み完了時の処理
+            audio.onloadedmetadata = () => {
+               const audioDuration = audio.duration
+               // durationが有効な値かチェック
+               if (Number.isFinite(audioDuration) && audioDuration > 0) {
+                  setDuration(audioDuration)
+                  setAudioLoadingStatus("ready")
+                  console.log("✅ PinAudioPlayer: 音声読み込み成功", {
                      audioUrl,
-                     audioDuration,
-                     usedDuration: fallbackDuration,
-                     hasSuggestedDuration: !!suggestedDuration,
-                  },
-               )
+                     duration: audioDuration,
+                     readyState: audio.readyState,
+                  })
+               } else {
+                  // durationが無効な場合は、suggestedDurationまたはデフォルト値を使用
+                  const fallbackDuration = suggestedDuration || 10
+                  setDuration(fallbackDuration)
+                  setAudioLoadingStatus("ready")
+                  console.log(
+                     "ℹ️ PinAudioPlayer: audio要素からdurationを取得できませんでした。フォールバック値を使用します:",
+                     {
+                        audioUrl,
+                        audioDuration,
+                        usedDuration: fallbackDuration,
+                        hasSuggestedDuration: !!suggestedDuration,
+                     },
+                  )
+               }
             }
-         }
 
-         // 音声データが利用可能になったときの処理
-         audio.oncanplaythrough = () => {
-            const audioDuration = audio.duration
-            if (Number.isFinite(audioDuration) && audioDuration > 0) {
-               setDuration(audioDuration)
-               setAudioLoadingStatus("ready")
+            // 音声データが利用可能になったときの処理
+            audio.oncanplaythrough = () => {
+               const audioDuration = audio.duration
+               if (Number.isFinite(audioDuration) && audioDuration > 0) {
+                  setDuration(audioDuration)
+                  setAudioLoadingStatus("ready")
+               }
             }
-         }
 
-         // 音声再生時間更新（requestAnimationFrameで滑らかに）
-         const updateTime = () => {
-            if (audio && !audio.paused && !audio.ended) {
+            // 音声再生時間更新（requestAnimationFrameで滑らかに）
+            const updateTime = () => {
+               if (audio && !audio.paused && !audio.ended) {
+                  const currentTime = audio.currentTime
+                  if (Number.isFinite(currentTime) && currentTime >= 0) {
+                     setCurrentTime(currentTime)
+                  }
+                  animationFrameRef.current = requestAnimationFrame(updateTime)
+               }
+            }
+
+            audio.ontimeupdate = () => {
                const currentTime = audio.currentTime
                if (Number.isFinite(currentTime) && currentTime >= 0) {
                   setCurrentTime(currentTime)
                }
+            }
+
+            // 再生開始時にアニメーションフレーム更新を開始
+            audio.onplay = () => {
+               if (animationFrameRef.current) {
+                  cancelAnimationFrame(animationFrameRef.current)
+               }
                animationFrameRef.current = requestAnimationFrame(updateTime)
             }
-         }
 
-         audio.ontimeupdate = () => {
-            const currentTime = audio.currentTime
-            if (Number.isFinite(currentTime) && currentTime >= 0) {
-               setCurrentTime(currentTime)
+            // 一時停止・終了時にアニメーションフレーム更新を停止
+            audio.onpause = () => {
+               if (animationFrameRef.current) {
+                  cancelAnimationFrame(animationFrameRef.current)
+                  animationFrameRef.current = null
+               }
             }
-         }
 
-         // 再生開始時にアニメーションフレーム更新を開始
-         audio.onplay = () => {
-            if (animationFrameRef.current) {
-               cancelAnimationFrame(animationFrameRef.current)
+            // 音声再生終了時の処理
+            audio.onended = () => {
+               if (animationFrameRef.current) {
+                  cancelAnimationFrame(animationFrameRef.current)
+                  animationFrameRef.current = null
+               }
+               setPlaybackState("ended")
+               setCurrentTime(0)
             }
-            animationFrameRef.current = requestAnimationFrame(updateTime)
-         }
 
-         // 一時停止・終了時にアニメーションフレーム更新を停止
-         audio.onpause = () => {
-            if (animationFrameRef.current) {
-               cancelAnimationFrame(animationFrameRef.current)
-               animationFrameRef.current = null
+            // 音声読み込みエラー時の処理
+            audio.onerror = (error) => {
+               console.error("🚨 PinAudioPlayer: 音声読み込みエラー:", {
+                  error,
+                  audioUrl,
+                  audioSrc: audio.src,
+                  audioReadyState: audio.readyState,
+                  audioNetworkState: audio.networkState,
+               })
+               setAudioLoadingStatus("error")
+               setAudioLoadError(`音声の読み込みに失敗しました: ${audioUrl}`)
             }
-         }
 
-         // 音声再生終了時の処理
-         audio.onended = () => {
-            if (animationFrameRef.current) {
-               cancelAnimationFrame(animationFrameRef.current)
-               animationFrameRef.current = null
-            }
-            setPlaybackState("ended")
-            setCurrentTime(0)
-         }
-
-         // 音声読み込みエラー時の処理
-         audio.onerror = (error) => {
-            console.error("🚨 PinAudioPlayer: 音声読み込みエラー:", {
-               error,
-               audioUrl,
-               audioSrc: audio.src,
-               audioReadyState: audio.readyState,
-               audioNetworkState: audio.networkState,
-            })
+            setAudioElement(audio)
+         } catch (error) {
+            console.error("音声読み込み処理エラー:", error)
             setAudioLoadingStatus("error")
-            setAudioLoadError(`音声の読み込みに失敗しました: ${audioUrl}`)
+            setAudioLoadError(
+               error instanceof Error
+                  ? error.message
+                  : "音声の読み込みに失敗しました",
+            )
          }
-
-         setAudioElement(audio)
-      } catch (error) {
-         console.error("音声読み込み処理エラー:", error)
-         setAudioLoadingStatus("error")
-         setAudioLoadError(
-            error instanceof Error
-               ? error.message
-               : "音声の読み込みに失敗しました",
-         )
-      }
-   }, [])
+      },
+      [],
+   )
 
    /**
     * 音声再生/一時停止のトグル

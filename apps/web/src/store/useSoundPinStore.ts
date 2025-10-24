@@ -382,7 +382,9 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
          // storage:// URLの場合は既にアップロード済みなのでスキップし、
          // メタデータのみでピンを作成
          if (audioUrl.startsWith("storage://")) {
-            console.log("🔄 既にアップロード済みのため、メタデータのみでピン作成")
+            console.log(
+               "🔄 既にアップロード済みのため、メタデータのみでピン作成",
+            )
 
             // storage:// URLからファイルパスを抽出
             const match = audioUrl.match(/^storage:\/\/[^/]+\/(.+)$/)
@@ -484,7 +486,10 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
 
             console.log("📍 ピン作成完了:", {
                pinId: createdPin.id,
-               location: { lat: createdPin.latitude, lng: createdPin.longitude },
+               location: {
+                  lat: createdPin.latitude,
+                  lng: createdPin.longitude,
+               },
                isPersisted: createdPin.isPersisted,
                weather: createdPin.weather,
             })
