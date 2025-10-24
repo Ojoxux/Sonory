@@ -29,7 +29,7 @@
       "fp-ts": "^2.16.11",
       "framer-motion": "^12.23.24",
       "idb": "^8.0.3",
-      "lucide-react": "^0.546.0",
+      "lucide-react": "^0.548.0",
       "mapbox-gl": "^3.16.0",
       "motion": "^12.23.24",
       "next": "^15.5.6",
