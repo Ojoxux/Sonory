@@ -10,7 +10,7 @@ import { APIException } from "../middleware/error"
 import { PinRepository } from "../repositories/pin.repository"
 import type { SoundPinInsert, SoundPinUpdate } from "../types/database"
 import { BaseService } from "./base.service"
-import { getSupabaseClient } from "./supabase"
+import { getSupabaseAdmin } from "./supabase"
 
 /**
  * Pin service for managing sound pins
@@ -27,7 +27,7 @@ export class PinService extends BaseService {
 
    constructor(ctx: Context) {
       super(ctx)
-      const supabase = getSupabaseClient(this.env)
+      const supabase = getSupabaseAdmin(this.env)
       this.repository = new PinRepository(supabase, this.requestId)
    }
 
@@ -422,6 +422,7 @@ export class PinService extends BaseService {
          audio_url: request.audio.url,
          audio_duration: request.audio.duration,
          audio_format: request.audio.format,
+         audio_file_path: request.audio.filePath ?? null,
          status: "active" as const,
 
          // AI分析フィールド（初期値はnull、後で更新）
@@ -531,6 +532,7 @@ interface CreatePinRequest {
       url: string
       duration: number
       format: "webm" | "mp3" | "wav"
+      filePath?: string
    }
    weather?: {
       temperature: number
