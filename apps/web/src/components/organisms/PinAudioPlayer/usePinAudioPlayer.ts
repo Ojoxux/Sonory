@@ -320,6 +320,17 @@ export function usePinAudioPlayer(
          ? Math.min(100, (safeCurrentTime / safeDuration) * 100)
          : 0
 
+   // その他の候補アコーディオンの開閉状態
+   const [isOtherResultsOpen, setIsOtherResultsOpen] = useState(false)
+   // その他の候補アコーディオンのトグル
+   const toggleOtherResults = useCallback(() => {
+      setIsOtherResultsOpen((prev) => !prev)
+   }, [])
+   // 信頼度をパーセンテージでフォーマット
+   const formatConfidence = useCallback((confidence: number): string => {
+      return `${Math.round(confidence * 100)}%`
+   }, [])
+
    return {
       audioLoadingStatus,
       playbackState,
@@ -334,5 +345,8 @@ export function usePinAudioPlayer(
       handleSeek,
       handleClose,
       progressPercentage,
+      isOtherResultsOpen,
+      toggleOtherResults,
+      formatConfidence,
    }
 }
