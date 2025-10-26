@@ -71,6 +71,7 @@ export const convertApiPinToLocal = (apiPin: SoundPinAPI): SoundPin => {
          recordedAt: new Date(apiPin.createdAt),
          id: apiPin.id,
          blob: new Blob(), // APIピンのblobは空
+         duration: apiPin.audio.duration,
       },
       classificationResults,
       recordedAt: new Date(apiPin.createdAt),

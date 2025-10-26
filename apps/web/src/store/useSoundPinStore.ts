@@ -106,6 +106,7 @@ export type SoundPinState = {
       audioUrl: string,
       location: LocationData,
       analysisResult: InferenceResult[],
+      duration?: number,
    ) => Promise<SoundPin>
    /** ピン作成状態を設定 */
    setPinCreationStatus: (status: PinCreationStatus) => void
@@ -332,6 +333,7 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
       audioUrl: string,
       location: LocationData,
       analysisResult: InferenceResult[],
+      duration?: number,
    ): Promise<SoundPin> => {
       try {
          set({
@@ -359,6 +361,7 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
                url: audioUrl,
                recordedAt: now,
                id: crypto.randomUUID(),
+               duration: duration,
             },
             classificationResults: analysisResult,
             recordedAt: now,
@@ -376,7 +379,125 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
             lastCreatedPinId: tempPin.id, // 一時ピンのIDを設定（即座の表示更新のため）
          }))
 
-         // 常に /api/pins/upload エンドポイントを使用
+         // storage:// URLの場合は既にアップロード済みなのでスキップし、
+         // メタデータのみでピンを作成
+         if (audioUrl.startsWith("storage://")) {
+            console.log(
+               "🔄 既にアップロード済みのため、メタデータのみでピン作成",
+            )
+
+            // storage:// URLからファイルパスを抽出
+            const match = audioUrl.match(/^storage:\/\/[^/]+\/(.+)$/)
+            const filePath = match?.[1]
+
+            if (!filePath) {
+               throw new Error(
+                  "storage:// URLからファイルパスを抽出できませんでした",
+               )
+            }
+
+            // メタデータのみでピンを作成するエンドポイントを使用
+            const response = await fetch("/api/pins", {
+               method: "POST",
+               headers: {
+                  "Content-Type": "application/json",
+               },
+               body: JSON.stringify({
+                  audio_file_path: filePath,
+                  location: {
+                     lat: location.latitude,
+                     lng: location.longitude,
+                     accuracy: location.accuracy,
+                  },
+                  metadata: {
+                     duration: duration || 10,
+                     timeTag,
+                     title: primaryResult?.label || "音声ピン",
+                     deviceInfo: navigator.userAgent,
+                     ...(weatherData ? { weather: weatherData } : {}),
+                  },
+               }),
+            })
+
+            if (!response.ok) {
+               const errorData = await response.json().catch(() => ({}))
+               throw new Error(
+                  errorData.message || `ピン作成失敗: ${response.status}`,
+               )
+            }
+
+            const result: {
+               success: boolean
+               data?: {
+                  id: string
+                  audio_url: string
+                  location: {
+                     lat: number
+                     lng: number
+                  }
+                  audio: {
+                     url: string
+                  }
+                  createdAt: string
+                  timeTag?: "朝" | "昼" | "夕" | "夜"
+                  weather?: {
+                     temperature: number
+                     condition: string
+                     windSpeed?: number
+                     humidity?: number
+                  }
+               }
+               error?: string
+            } = await response.json()
+
+            if (!result.success || !result.data) {
+               throw new Error("ピン作成結果が不正です")
+            }
+
+            // 作成されたピンをローカル形式に変換
+            const createdPin: SoundPin = {
+               id: result.data.id,
+               latitude: result.data.location.lat,
+               longitude: result.data.location.lng,
+               audioData: {
+                  blob: new Blob(),
+                  url: result.data.audio.url,
+                  recordedAt: new Date(result.data.createdAt),
+                  id: result.data.id,
+                  duration: duration,
+               },
+               classificationResults: analysisResult,
+               recordedAt: new Date(result.data.createdAt),
+               primaryLabel: primaryResult?.label ?? "不明",
+               primaryConfidence: primaryResult?.confidence ?? 0,
+               isPersisted: true,
+               timeTag: result.data.timeTag,
+               environment: primaryResult?.label || "unknown",
+               weather: result.data.weather,
+            }
+
+            // 一時ピンを削除し、永続化ピンを追加
+            set((state) => ({
+               tempPins: state.tempPins.filter((p) => p.id !== tempPin.id),
+               persistedPins: [...state.persistedPins, createdPin],
+               pinCreationStatus: "success",
+               lastCreatedPinId: createdPin.id,
+            }))
+
+            console.log("📍 ピン作成完了:", {
+               pinId: createdPin.id,
+               location: {
+                  lat: createdPin.latitude,
+                  lng: createdPin.longitude,
+               },
+               isPersisted: createdPin.isPersisted,
+               weather: createdPin.weather,
+            })
+
+            return createdPin
+         }
+
+         // blob: URLの場合は通常のアップロードフロー
          console.log("🔄 音声ファイルをアップロード")
 
          let audioBlob: Blob
@@ -403,7 +524,7 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
          formData.append(
             "metadata",
             JSON.stringify({
-               duration: 10,
+               duration: duration || 10,
                timeTag,
                title: primaryResult?.label || "音声ピン",
                deviceInfo: navigator.userAgent,
@@ -462,6 +583,7 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
                url: result.data.audio.url,
                recordedAt: new Date(result.data.createdAt),
                id: result.data.id,
+               duration: duration,
             },
             classificationResults: analysisResult,
             recordedAt: new Date(result.data.createdAt),

@@ -24,17 +24,37 @@ const createPinSchema = z.object({
       lng: z.number().min(-180).max(180),
       accuracy: z.number().positive().optional(),
    }),
-   audio: z.object({
-      url: z.string().url(),
-      duration: z.number().min(9.9).max(600), // タイマー精度を考慮して9.9秒以上
-      format: z.enum(["webm", "mp3", "wav"]),
-   }),
+   // audio.urlまたはaudio_file_pathのどちらかが必須
+   audio: z
+      .object({
+         url: z.string().url(),
+         duration: z.number().min(9.9).max(600), // タイマー精度を考慮して9.9秒以上
+         format: z.enum(["webm", "mp3", "wav"]),
+      })
+      .optional(),
+   audio_file_path: z.string().optional(),
+   metadata: z
+      .object({
+         duration: z.number().positive().optional(),
+         timeTag: z.enum(["朝", "昼", "夕", "夜"]).optional(),
+         title: z.string().max(200).optional(),
+         deviceInfo: z.string().optional(),
+         weather: z
+            .object({
+               temperature: z.number(),
+               condition: z.string().optional().nullable(),
+               windSpeed: z.number().optional().nullable(),
+               humidity: z.number().min(0).max(100).optional().nullable(),
+            })
+            .optional(),
+      })
+      .optional(),
    weather: z
       .object({
          temperature: z.number(),
-         condition: z.string().optional(),
-         windSpeed: z.number().optional(),
-         humidity: z.number().min(0).max(100).optional(),
+         condition: z.string().optional().nullable(),
+         windSpeed: z.number().optional().nullable(),
+         humidity: z.number().min(0).max(100).optional().nullable(),
       })
       .optional(),
    timeTag: z.enum(["朝", "昼", "夕", "夜"]).optional(),
