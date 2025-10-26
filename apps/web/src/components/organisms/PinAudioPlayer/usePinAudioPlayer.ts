@@ -329,7 +329,7 @@ export function usePinAudioPlayer(
    // 信頼度をパーセンテージでフォーマット
    const formatConfidence = useCallback((confidence: number): string => {
       return `${Math.round(confidence * 100)}%`
-   }, []) 
+   }, [])
 
    return {
       audioLoadingStatus,

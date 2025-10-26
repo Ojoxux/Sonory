@@ -106,177 +106,177 @@ export function PinAudioPlayer({
                </motion.button>
             </div>
 
-               {/* メインコンテンツ */}
-               <div className="relative p-6">
-                  {/* ピン情報 */}
-                  <div className="mb-6">
-                     <h3 className="mb-3 font-semibold text-lg text-white">
-                        音声分類結果
-                     </h3>
+            {/* メインコンテンツ */}
+            <div className="relative p-6">
+               {/* ピン情報 */}
+               <div className="mb-6">
+                  <h3 className="mb-3 font-semibold text-lg text-white">
+                     音声分類結果
+                  </h3>
 
-                     {/* デバッグ情報 */}
-                     {process.env.NODE_ENV === "development" && (
-                        <div className="mb-4 rounded-lg border border-purple-500/30 bg-purple-500/20 p-3 text-xs">
-                           <div className="mb-2 font-medium text-purple-300">
-                              デバッグ情報:
-                           </div>
-                           <div className="space-y-1 text-purple-200">
-                              <div>Pin ID: {pin.id}</div>
-                              <div>Primary Label: {pin.primaryLabel}</div>
-                              <div>Environment: {pin.environment}</div>
-                              <div>
-                                 Classification Results Count:{" "}
-                                 <span
-                                    className={`font-semibold ${
-                                       pin.classificationResults.length > 1
-                                          ? "text-green-300"
-                                          : "text-yellow-300"
-                                    }`}
-                                 >
-                                    {pin.classificationResults.length}件
-                                 </span>
-                                 {pin.classificationResults.length > 1
-                                    ? " (複数の結果あり)"
-                                    : " (単一結果)"}
-                              </div>
-                              <div>
-                                 Classification Results:{" "}
-                                 {JSON.stringify(
-                                    pin.classificationResults,
-                                    null,
-                                    2,
-                                 )}
-                              </div>
-                           </div>
+                  {/* デバッグ情報 */}
+                  {process.env.NODE_ENV === "development" && (
+                     <div className="mb-4 rounded-lg border border-purple-500/30 bg-purple-500/20 p-3 text-xs">
+                        <div className="mb-2 font-medium text-purple-300">
+                           デバッグ情報:
                         </div>
-                     )}
-
-                     {pin.classificationResults.length > 0 ? (
-                        <div className="mb-4 space-y-3">
-                           {/* 最も可能性の高い結果 */}
-                           <motion.div
-                              initial={{ opacity: 0, scale: 0.95 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              transition={{ delay: 0.1 }}
-                              className="rounded-xl border border-green-500/30 bg-green-500/10 p-4 backdrop-blur-sm"
-                           >
-                              <div className="mb-1.5 flex items-center justify-between">
-                                 <span className="font-semibold text-base text-green-300">
-                                    {pin.classificationResults[0].label ===
-                                    "unknown"
-                                       ? "未分類"
-                                       : pin.classificationResults[0].label}
-                                 </span>
-                                 <span className="font-mono font-semibold text-green-400 text-sm">
-                                    {formatConfidence(
-                                       pin.classificationResults[0].confidence,
-                                    )}
-                                 </span>
-                              </div>
-                              <div className="flex items-center gap-1.5 text-green-300/60 text-xs">
-                                 <span className="inline-block h-1 w-1 animate-pulse rounded-full bg-green-400" />
-                                 最も可能性が高い
-                              </div>
-                           </motion.div>
-
-                           {/* その他の候補 */}
-                           {pin.classificationResults.length > 1 && (
-                              <div className="overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm">
-                                 <button
-                                    type="button"
-                                    onClick={toggleOtherResults}
-                                    className="flex w-full items-center justify-between p-3 text-left transition-colors hover:bg-white/5"
-                                 >
-                                    <span className="font-medium text-white/60 text-xs">
-                                       その他の候補 (
-                                       {pin.classificationResults.length - 1}
-                                       件)
-                                    </span>
-                                    <motion.span
-                                       animate={{
-                                          rotate: isOtherResultsOpen ? 180 : 0,
-                                       }}
-                                       transition={{ duration: 0.2 }}
-                                       className="text-sm text-white/60"
-                                    >
-                                       ▼
-                                    </motion.span>
-                                 </button>
-
-                                 <AnimatePresence initial={false}>
-                                    {isOtherResultsOpen && (
-                                       <motion.div
-                                          initial={{ height: 0, opacity: 0 }}
-                                          animate={{
-                                             height: "auto",
-                                             opacity: 1,
-                                          }}
-                                          exit={{ height: 0, opacity: 0 }}
-                                          transition={{
-                                             duration: 0.2,
-                                             ease: "easeInOut",
-                                          }}
-                                          className="overflow-hidden"
-                                       >
-                                          <div className="space-y-2 px-3 pb-3">
-                                             {pin.classificationResults
-                                                .slice(1)
-                                                .map((result, index) => (
-                                                   <div
-                                                      key={`${result.label}-${index + 1}`}
-                                                      className="flex items-center justify-between py-1"
-                                                   >
-                                                      <span className="text-neutral-300 text-sm">
-                                                         {result.label ===
-                                                         "unknown"
-                                                            ? "未分類"
-                                                            : result.label}
-                                                      </span>
-                                                      <span className="font-mono text-neutral-400 text-xs">
-                                                         {formatConfidence(
-                                                            result.confidence,
-                                                         )}
-                                                      </span>
-                                                   </div>
-                                                ))}
-                                          </div>
-                                       </motion.div>
-                                    )}
-                                 </AnimatePresence>
-                              </div>
-                           )}
-                        </div>
-                     ) : (
-                        <div className="mb-4">
-                           <motion.div
-                              initial={{ opacity: 0, x: -20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              className="flex items-center justify-between rounded-lg border border-yellow-500/30 bg-yellow-500/20 p-3 backdrop-blur-sm"
-                           >
-                              <span className="font-medium text-yellow-300">
-                                 {pin.environment === "unknown"
-                                    ? "未分類"
-                                    : pin.environment}
+                        <div className="space-y-1 text-purple-200">
+                           <div>Pin ID: {pin.id}</div>
+                           <div>Primary Label: {pin.primaryLabel}</div>
+                           <div>Environment: {pin.environment}</div>
+                           <div>
+                              Classification Results Count:{" "}
+                              <span
+                                 className={`font-semibold ${
+                                    pin.classificationResults.length > 1
+                                       ? "text-green-300"
+                                       : "text-yellow-300"
+                                 }`}
+                              >
+                                 {pin.classificationResults.length}件
                               </span>
-                              <span className="text-sm text-yellow-400">
-                                 {Math.round(pin.primaryConfidence * 100)}%
-                              </span>
-                           </motion.div>
+                              {pin.classificationResults.length > 1
+                                 ? " (複数の結果あり)"
+                                 : " (単一結果)"}
+                           </div>
+                           <div>
+                              Classification Results:{" "}
+                              {JSON.stringify(
+                                 pin.classificationResults,
+                                 null,
+                                 2,
+                              )}
+                           </div>
                         </div>
-                     )}
+                     </div>
+                  )}
 
-                     {pin.environment && (
+                  {pin.classificationResults.length > 0 ? (
+                     <div className="mb-4 space-y-3">
+                        {/* 最も可能性の高い結果 */}
                         <motion.div
-                           className="mb-4 rounded-lg border border-blue-500/30 bg-blue-500/20 p-4 backdrop-blur-sm"
-                           initial={{ opacity: 0, scale: 0.9 }}
+                           initial={{ opacity: 0, scale: 0.95 }}
                            animate={{ opacity: 1, scale: 1 }}
+                           transition={{ delay: 0.1 }}
+                           className="rounded-xl border border-green-500/30 bg-green-500/10 p-4 backdrop-blur-sm"
                         >
-                           <span className="font-medium text-blue-300">
-                              環境: {pin.environment}
+                           <div className="mb-1.5 flex items-center justify-between">
+                              <span className="font-semibold text-base text-green-300">
+                                 {pin.classificationResults[0].label ===
+                                 "unknown"
+                                    ? "未分類"
+                                    : pin.classificationResults[0].label}
+                              </span>
+                              <span className="font-mono font-semibold text-green-400 text-sm">
+                                 {formatConfidence(
+                                    pin.classificationResults[0].confidence,
+                                 )}
+                              </span>
+                           </div>
+                           <div className="flex items-center gap-1.5 text-green-300/60 text-xs">
+                              <span className="inline-block h-1 w-1 animate-pulse rounded-full bg-green-400" />
+                              最も可能性が高い
+                           </div>
+                        </motion.div>
+
+                        {/* その他の候補 */}
+                        {pin.classificationResults.length > 1 && (
+                           <div className="overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm">
+                              <button
+                                 type="button"
+                                 onClick={toggleOtherResults}
+                                 className="flex w-full items-center justify-between p-3 text-left transition-colors hover:bg-white/5"
+                              >
+                                 <span className="font-medium text-white/60 text-xs">
+                                    その他の候補 (
+                                    {pin.classificationResults.length - 1}
+                                    件)
+                                 </span>
+                                 <motion.span
+                                    animate={{
+                                       rotate: isOtherResultsOpen ? 180 : 0,
+                                    }}
+                                    transition={{ duration: 0.2 }}
+                                    className="text-sm text-white/60"
+                                 >
+                                    ▼
+                                 </motion.span>
+                              </button>
+
+                              <AnimatePresence initial={false}>
+                                 {isOtherResultsOpen && (
+                                    <motion.div
+                                       initial={{ height: 0, opacity: 0 }}
+                                       animate={{
+                                          height: "auto",
+                                          opacity: 1,
+                                       }}
+                                       exit={{ height: 0, opacity: 0 }}
+                                       transition={{
+                                          duration: 0.2,
+                                          ease: "easeInOut",
+                                       }}
+                                       className="overflow-hidden"
+                                    >
+                                       <div className="space-y-2 px-3 pb-3">
+                                          {pin.classificationResults
+                                             .slice(1)
+                                             .map((result, index) => (
+                                                <div
+                                                   key={`${result.label}-${index + 1}`}
+                                                   className="flex items-center justify-between py-1"
+                                                >
+                                                   <span className="text-neutral-300 text-sm">
+                                                      {result.label ===
+                                                      "unknown"
+                                                         ? "未分類"
+                                                         : result.label}
+                                                   </span>
+                                                   <span className="font-mono text-neutral-400 text-xs">
+                                                      {formatConfidence(
+                                                         result.confidence,
+                                                      )}
+                                                   </span>
+                                                </div>
+                                             ))}
+                                       </div>
+                                    </motion.div>
+                                 )}
+                              </AnimatePresence>
+                           </div>
+                        )}
+                     </div>
+                  ) : (
+                     <div className="mb-4">
+                        <motion.div
+                           initial={{ opacity: 0, x: -20 }}
+                           animate={{ opacity: 1, x: 0 }}
+                           className="flex items-center justify-between rounded-lg border border-yellow-500/30 bg-yellow-500/20 p-3 backdrop-blur-sm"
+                        >
+                           <span className="font-medium text-yellow-300">
+                              {pin.environment === "unknown"
+                                 ? "未分類"
+                                 : pin.environment}
+                           </span>
+                           <span className="text-sm text-yellow-400">
+                              {Math.round(pin.primaryConfidence * 100)}%
                            </span>
                         </motion.div>
-                     )}
-                  </div>
+                     </div>
+                  )}
+
+                  {pin.environment && (
+                     <motion.div
+                        className="mb-4 rounded-lg border border-blue-500/30 bg-blue-500/20 p-4 backdrop-blur-sm"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                     >
+                        <span className="font-medium text-blue-300">
+                           環境: {pin.environment}
+                        </span>
+                     </motion.div>
+                  )}
+               </div>
 
                {/* 音声再生エラー */}
                {audioLoadError && (
