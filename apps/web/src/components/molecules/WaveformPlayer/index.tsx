@@ -5,35 +5,8 @@ import { MdPause, MdPlayArrow } from "react-icons/md"
 // TODO: Next.js が React 19 の useEffectEvent に対応したら削除する
 import { useEffectEvent } from "use-effect-event"
 import WaveSurfer from "wavesurfer.js"
-import type { AudioData } from "../../../store/types"
-
-/**
- * @typedef WaveformPlayerProps
- * @description wavesurfer.jsを使用した音声再生・波形表示コンポーネントのプロパティ型
- * @property audioData 再生する音声データ
- * @property height 波形の高さ（ピクセル）
- * @property waveColor 波形の色
- * @property progressColor 再生プログレスの色
- * @property className クラス名
- * @property onReady 初期化完了時のコールバック
- * @property onFinish 再生完了時のコールバック
- */
-type WaveformPlayerProps = {
-   /** 再生する音声データ */
-   audioData: AudioData | null
-   /** 波形の高さ（ピクセル） */
-   height?: number
-   /** 波形の色 */
-   waveColor?: string
-   /** 再生プログレスの色 */
-   progressColor?: string
-   /** クラス名 */
-   className?: string
-   /** 初期化完了時のコールバック */
-   onReady?: () => void
-   /** 再生完了時のコールバック */
-   onFinish?: () => void
-}
+import type { WaveformPlayerProps } from "./types"
+import { formatTime } from "./utils"
 
 /**
  * wavesurfer.jsを使用した音声再生・波形表示コンポーネント
@@ -62,8 +35,6 @@ export function WaveformPlayer({
    const [error, setError] = useState<Error | null>(null)
    const [isInitialized, setIsInitialized] = useState<boolean>(false)
    const initIdRef = useRef<number>(0)
-   // 定数
-   const SECONDS_IN_MINUTE = 60
 
    /**
     * WaveSurferインスタンスを安全に破棄
@@ -425,20 +396,6 @@ export function WaveformPlayer({
       }
    }, [isPlaying, initializeWaveSurfer, audioData, isInitialized])
 
-   /**
-    * 秒数をMM:SS形式でフォーマット
-    * NaNやInfinityを安全に処理
-    */
-   const formatTime = useCallback((time: number): string => {
-      // NaN、Infinity、負の値をチェック
-      if (!Number.isFinite(time) || time < 0) {
-         return "00:00"
-      }
-
-      const minutes = Math.floor(time / SECONDS_IN_MINUTE)
-      const seconds = Math.round(time % SECONDS_IN_MINUTE)
-      return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`
-   }, [])
 
    // 音声データが変更されたときにWaveSurferを再初期化
    useEffect(() => {

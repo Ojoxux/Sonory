@@ -47,11 +47,17 @@ export function extractWaveformPeaks(
 
 /**
  * 秒数をMM:SS形式でフォーマット
+ * NaNやInfinityを安全に処理
  * @param timeInSeconds - 秒単位の時間
  * @returns フォーマットされた時間文字列
  */
 const SECONDS_IN_MINUTE = 60
 export function formatTime(timeInSeconds: number): string {
+   // NaN、Infinity、負の値をチェック
+   if (!Number.isFinite(timeInSeconds) || timeInSeconds < 0) {
+      return "00:00"
+   }
+
    const minutes = Math.floor(timeInSeconds / SECONDS_IN_MINUTE)
    const seconds = Math.round(timeInSeconds % SECONDS_IN_MINUTE)
    return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`
