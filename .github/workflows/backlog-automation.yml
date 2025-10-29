@@ -1,0 +1,102 @@
+name: Backlog Automation
+
+on:
+  issues:
+    types: [labeled]
+
+env:
+  PROJECT_URL: https://github.com/users/Ojoxux/projects/1
+  PROGRESS_LABELS: '["todo", "in progress", "review", "done"]'
+
+jobs:
+  move-to-backlog:
+    # backlogラベルが追加されたときのみ実行
+    if: github.event.label.name == 'backlog'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+    
+    steps:
+      - name: Remove progress labels
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const progressLabels = JSON.parse(process.env.PROGRESS_LABELS);
+            
+            // 現在のIssueラベルを取得
+            const { data: issue } = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+            
+            const currentLabels = issue.labels.map(label => label.name);
+            const progressLabelsToRemove = currentLabels.filter(label => 
+              progressLabels.includes(label)
+            );
+            
+            // 進捗ラベルをすべて削除
+            for (const label of progressLabelsToRemove) {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                name: label
+              });
+              console.log(`🗑️ Removed progress label '${label}' from issue #${context.issue.number}`);
+            }
+            
+            if (progressLabelsToRemove.length === 0) {
+              console.log(`ℹ️ No progress labels to remove from issue #${context.issue.number}`);
+            } else {
+              console.log(`✅ Removed ${progressLabelsToRemove.length} progress label(s) from issue #${context.issue.number}`);
+            }
+
+      - name: Get Project Item ID
+        id: get-item
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ secrets.PROJECT_PAT }}
+          script: |
+            const query = `
+              query($owner: String!, $repo: String!, $issue_number: Int!) {
+                repository(owner: $owner, name: $repo) {
+                  issue(number: $issue_number) {
+                    projectItems(first: 10) {
+                      nodes {
+                        id
+                        project { id title }
+                      }
+                    }
+                  }
+                }
+              }
+            `;
+            const variables = {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            };
+            const result = await github.graphql(query, variables);
+            const projectItems = result.repository.issue.projectItems.nodes;
+            
+            if (projectItems.length > 0) {
+              console.log(`✅ Found project item for issue #${context.issue.number}`);
+              return projectItems[0].id;
+            }
+            
+            console.log(`⚠️ No project item found for issue #${context.issue.number}`);
+            return null;
+
+      - name: Move to Backlog Column
+        if: steps.get-item.outputs.result
+        uses: titoportas/update-project-fields@v0.1.0
+        with:
+          project-url: ${{ env.PROJECT_URL }}
+          github-token: ${{ secrets.PROJECT_PAT }}
+          item-id: ${{ steps.get-item.outputs.result }}
+          field-keys: Status
+          field-values: "🗂️ バックログ"
+
