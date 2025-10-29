@@ -8,16 +8,16 @@ import type { PinAudioPlayerProps } from "./types"
 import { usePinAudioPlayer } from "./usePinAudioPlayer"
 
 /**
- * ピンクリック時の音声再生コンポーネント
+ * ピンクリック時の音声再生コンポーネント（BottomSheet版）
  *
  * @description
  * 永続化されたピンの音声を再生するためのコンポーネントです。
  * 音声URLから直接再生し、再生状態を管理します。
  * Sonoryらしい音響的なUIエフェクトを含みます。
+ * react-modal-sheet を使用してボトムシートとして表示します。
  *
  * @param pin 再生する音声ピン
  * @param onClose 閉じるボタンが押されたときのコールバック
- * @param className クラス名
  *
  * @example
  * ```tsx
