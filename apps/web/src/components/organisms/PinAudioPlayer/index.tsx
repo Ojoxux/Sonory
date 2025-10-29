@@ -1,8 +1,8 @@
 "use client"
 
 import { AnimatePresence, motion } from "framer-motion"
-import { createPortal } from "react-dom"
-import { MdClose, MdPause, MdPlayArrow } from "react-icons/md"
+import { MdPause, MdPlayArrow } from "react-icons/md"
+import { Sheet } from "react-modal-sheet"
 import { SoundWaveBackground } from "../../atoms/SoundWaveBackground"
 import type { PinAudioPlayerProps } from "./types"
 import { usePinAudioPlayer } from "./usePinAudioPlayer"
