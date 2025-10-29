@@ -18,8 +18,6 @@ export interface PinAudioPlayerProps {
    pin: SoundPin | null
    /** 閉じるボタンが押されたときのコールバック */
    onClose: () => void
-   /** クラス名 */
-   className?: string
 }
 
 /**
