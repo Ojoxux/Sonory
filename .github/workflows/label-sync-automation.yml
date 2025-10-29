@@ -68,15 +68,22 @@ jobs:
             
             // ラベル削除の場合
             if (context.payload.action === 'unlabeled') {
-              // 進捗ラベルが全くない場合、デフォルトで'todo'を追加
+              // 進捗ラベルが全くない場合、backlogラベルがなければデフォルトで'todo'を追加
               if (currentProgressLabels.length === 0) {
-                await github.rest.issues.addLabels({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: context.issue.number,
-                  labels: ['todo']
-                });
-                console.log(`✅ Added default 'todo' label to issue #${context.issue.number} (no progress labels)`);
+                // backlogラベルが存在する場合はtodoを自動追加しない
+                const hasBacklogLabel = currentLabels.includes('backlog');
+                
+                if (!hasBacklogLabel) {
+                  await github.rest.issues.addLabels({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: context.issue.number,
+                    labels: ['todo']
+                  });
+                  console.log(`✅ Added default 'todo' label to issue #${context.issue.number} (no progress labels)`);
+                } else {
+                  console.log(`ℹ️ Skipped adding 'todo' label to issue #${context.issue.number} (has 'backlog' label)`);
+                }
               }
             }
 
