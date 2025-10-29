@@ -30,7 +30,6 @@ import { usePinAudioPlayer } from "./usePinAudioPlayer"
 export function PinAudioPlayer({
    pin,
    onClose,
-   className = "",
 }: PinAudioPlayerProps) {
    const {
       audioLoadingStatus,
@@ -55,59 +54,48 @@ export function PinAudioPlayer({
       return null
    }
 
-   return createPortal(
-      <motion.div
-         initial={{ opacity: 0, y: 20 }}
-         animate={{ opacity: 1, y: 0 }}
-         exit={{ opacity: 0, y: 20 }}
-         className={`fixed inset-0 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm ${className}`}
-         style={{ zIndex: 9999 }}
+   return (
+      <Sheet
+         isOpen={true}
+         onClose={handleClose}
+         detent="content"
+         snapPoints={[0, 1]}
+         initialSnap={1}
       >
-         <motion.div
-            initial={{ scale: 0.9 }}
-            animate={{ scale: 1 }}
-            exit={{ scale: 0.9 }}
-            className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-white/10 bg-black/95 shadow-2xl backdrop-blur-xl"
-         >
+         <Sheet.Container className="!bg-black/95 !backdrop-blur-xl !border-t !border-white/10 !shadow-2xl">
             {/* 音波背景パターン */}
             <SoundWaveBackground
                opacity={0.01}
                animated={playbackState === "playing"}
             />
 
-            {/* ヘッダー */}
-            <div className="relative flex items-center justify-between border-white/10 border-b p-6">
-               <div>
-                  <motion.h2
-                     className="font-bold text-white text-xl"
-                     initial={{ opacity: 0, x: -20 }}
-                     animate={{ opacity: 1, x: 0 }}
-                     transition={{ delay: 0.2 }}
-                  >
-                     音声ピン再生
-                  </motion.h2>
-                  <motion.p
-                     className="mt-1 text-neutral-300 text-sm"
-                     initial={{ opacity: 0, x: -20 }}
-                     animate={{ opacity: 1, x: 0 }}
-                     transition={{ delay: 0.3 }}
-                  >
-                     {formatRecordedAt(pin.recordedAt)}
-                  </motion.p>
+            <Sheet.Header className="!bg-transparent">
+               <div className="flex flex-col items-center px-6 pt-4 pb-2">
+                  <div className="mb-2 h-1 w-12 rounded-full bg-white/20" />
+                  <div className="w-full text-center">
+                     <motion.h2
+                        className="font-bold text-white text-xl"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.2 }}
+                     >
+                        音声ピン再生
+                     </motion.h2>
+                     <motion.p
+                        className="mt-1 text-neutral-300 text-sm"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.3 }}
+                     >
+                        {formatRecordedAt(pin.recordedAt)}
+                     </motion.p>
+                  </div>
                </div>
-               <motion.button
-                  onClick={handleClose}
-                  className="touch-manipulation rounded-full p-2 transition-colors hover:bg-white/10"
-                  aria-label="閉じる"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-               >
-                  <MdClose className="h-6 w-6 text-white" />
-               </motion.button>
-            </div>
+            </Sheet.Header>
 
-            {/* メインコンテンツ */}
-            <div className="relative p-6">
+            <Sheet.Content className="!bg-transparent">
+               {/* メインコンテンツ */}
+               <div className="relative px-6 pb-6">
                {/* ピン情報 */}
                <div className="mb-6">
                   <h3 className="mb-3 font-semibold text-lg text-white">
@@ -388,8 +376,10 @@ export function PinAudioPlayer({
                   閉じる
                </motion.button>
             </div>
-         </motion.div>
-      </motion.div>,
-      document.body,
+            </Sheet.Content>
+         </Sheet.Container>
+
+         <Sheet.Backdrop className="!bg-black/50 !backdrop-blur-sm" />
+      </Sheet>
    )
 }
