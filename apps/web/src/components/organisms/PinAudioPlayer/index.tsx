@@ -50,7 +50,7 @@ export function PinAudioPlayer({
       formatConfidence,
    } = usePinAudioPlayer(pin, onClose)
 
-   if (!pin || !isMounted) {
+   if (!isMounted || !pin) {
       return null
    }
 
@@ -61,6 +61,7 @@ export function PinAudioPlayer({
          detent="content"
          snapPoints={[0, 1]}
          initialSnap={1}
+         tweenConfig={{ ease: "easeInOut", duration: 0.3 }}
       >
          <Sheet.Container className="!bg-black/95 !backdrop-blur-xl !border-t !border-white/10 !shadow-2xl">
             {/* 音波背景パターン */}
