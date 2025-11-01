@@ -37,7 +37,7 @@
       "@types/node": "^24.9.2",
       "tsc-alias": "^1.8.16",
       "typescript": "^5.9.3",
-      "vitest": "^4.0.5",
+      "vitest": "^4.0.6",
       "wrangler": "^4.45.3"
    }
 }

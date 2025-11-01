@@ -29,7 +29,7 @@
       "fp-ts": "^2.16.11",
       "framer-motion": "^12.23.24",
       "idb": "^8.0.3",
-      "lucide-react": "^0.548.0",
+      "lucide-react": "^0.552.0",
       "mapbox-gl": "^3.16.0",
       "motion": "^12.23.24",
       "next": "^16.0.1",
@@ -47,7 +47,7 @@
    },
    "devDependencies": {
       "@biomejs/biome": "2.2.7",
-      "@eslint/js": "^9.38.0",
+      "@eslint/js": "^9.39.0",
       "@tailwindcss/postcss": "^4.1.16",
       "@types/mapbox__mapbox-gl-geocoder": "^5.1.0",
       "@types/mapbox-gl": "^3.4.1",
@@ -57,7 +57,7 @@
       "@types/uuid": "^11.0.0",
       "eslint": "^9.38.0",
       "eslint-plugin-react-you-might-not-need-an-effect": "^0.7.0",
-      "globals": "^16.4.0",
+      "globals": "^16.5.0",
       "tailwindcss": "^4.1.16",
       "typescript": "^5.9.3",
       "typescript-eslint": "^8.46.2"
