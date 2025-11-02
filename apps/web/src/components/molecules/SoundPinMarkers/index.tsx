@@ -18,7 +18,7 @@
 
 import mapboxgl from "mapbox-gl"
 import { useCallback, useEffect, useMemo, useRef } from "react"
-import { createRoot } from "react-dom/client"
+import { createRoot, type Root } from "react-dom/client"
 import { ClusterBadge } from "@/components/atoms/ClusterBadge"
 import { SoundPinIcon } from "@/components/atoms/SoundPinIcon"
 import type { SoundPin } from "@/store/useSoundPinStore"
