@@ -298,7 +298,9 @@ export function SoundPinMarkers({
 
                const root = rootMapRef.current.get(clusterId)
                if (root) {
-                  root.unmount()
+                  setTimeout(() => {
+                     root.unmount()
+                  }, 0)
                   rootMapRef.current.delete(clusterId)
                }
             }
