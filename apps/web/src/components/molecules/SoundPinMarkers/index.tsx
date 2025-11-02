@@ -92,6 +92,7 @@ export function SoundPinMarkers({
             markerElement.style.cursor = "pointer"
 
             const root = createRoot(markerElement)
+            rootMapRef.current.set(cluster.id, root)
 
             const handleClick = () => {
                if (cluster.isSingle) {
