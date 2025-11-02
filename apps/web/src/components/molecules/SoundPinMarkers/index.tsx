@@ -485,7 +485,9 @@ export function SoundPinMarkers({
          clusterMarkersRef.current.clear()
 
          for (const root of rootMapRef.current.values()) {
-            root.unmount()
+            setTimeout(() => {
+               root.unmount()
+            }, 0)
          }
          rootMapRef.current.clear()
 
