@@ -45,6 +45,7 @@ export function SoundPinMarkers({
    onPinSelect,
 }: SoundPinMarkersProps): null {
    const clusterMarkersRef = useRef<Map<string, mapboxgl.Marker>>(new Map())
+   const rootMapRef = useRef<Map<string, Root>>(new Map())
    const currentClustersRef = useRef<PinCluster[]>([])
    const currentZoomRef = useRef<number>(0)
    const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
