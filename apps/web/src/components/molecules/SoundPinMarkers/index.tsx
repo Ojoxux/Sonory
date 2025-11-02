@@ -295,6 +295,12 @@ export function SoundPinMarkers({
                   marker.remove()
                   clusterMarkersRef.current.delete(clusterId)
                }
+
+               const root = rootMapRef.current.get(clusterId)
+               if (root) {
+                  root.unmount()
+                  rootMapRef.current.delete(clusterId)
+               }
             }
          }
 
