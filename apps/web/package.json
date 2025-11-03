@@ -51,7 +51,7 @@
       "@tailwindcss/postcss": "^4.1.16",
       "@types/mapbox__mapbox-gl-geocoder": "^5.1.0",
       "@types/mapbox-gl": "^3.4.1",
-      "@types/node": "^24.9.2",
+      "@types/node": "^24.10.0",
       "@types/react": "^19.2.2",
       "@types/react-dom": "^19.2.2",
       "@types/uuid": "^11.0.0",
