@@ -389,7 +389,15 @@ export function useWaveformPlayer({
          setError(error)
          setIsLoading(false)
       }
-   }, [audioData, height, waveColor, progressColor, destroyWaveSurfer])
+   }, [
+      audioData,
+      height,
+      waveColor,
+      progressColor,
+      destroyWaveSurfer,
+      onFinishEvent,
+      onReadyEvent,
+   ])
 
    /**
     * 再生/一時停止を切り替え

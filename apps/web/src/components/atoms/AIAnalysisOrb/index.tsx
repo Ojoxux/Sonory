@@ -325,7 +325,6 @@ export function AIAnalysisOrb({
       forceHoverState,
       cycleHue,
       hueCycleSpeed,
-      size,
    ])
 
    return (

@@ -256,6 +256,7 @@ export const useNearbyPins = ({
       return () => clearTimeout(timer)
    })
 
+   // biome-ignore lint/correctness/useExhaustiveDependencies(prefetchEvent): prefetchEvent は useEffectEvent でラップされているため依存配列に含めない（React公式ドキュメント推奨）
    useEffect(() => {
       // Only prefetch if main query is successful
       if (query.isSuccess) {
