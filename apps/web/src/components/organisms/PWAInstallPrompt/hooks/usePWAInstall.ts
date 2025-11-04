@@ -2,9 +2,7 @@
  * PWAインストール関連のカスタムフック
  */
 
-import { useCallback, useEffect, useState } from "react"
-// TODO: Next.js が React 19 の useEffectEvent に対応したら削除する
-import { useEffectEvent } from "use-effect-event"
+import { useCallback, useEffect, useEffectEvent, useState } from "react"
 
 /** アニメーション遅延時間（ミリ秒） */
 const ANIMATION_DELAYS = {
@@ -280,7 +278,7 @@ export function useDebugEventListeners(
          window.removeEventListener(EVENT_NAMES.PWA_DEBUG_SHOW, handleDebugShow)
          window.removeEventListener(EVENT_NAMES.PWA_DEBUG_HIDE, handleDebugHide)
       }
-   }, [])
+   }, [handleDebugHideEvent, handleDebugShowEvent])
 }
 
 /**
@@ -333,6 +331,8 @@ export function usePWAInstallEventListeners(
       }, ANIMATION_DELAYS.CLOSE_ANIMATION)
    })
 
+   // biome-ignore lint/correctness/useExhaustiveDependencies(handleBeforeInstallPromptEvent): useEffectEvent でラップされているため依存配列に含めない（React公式ドキュメント推奨）
+   // biome-ignore lint/correctness/useExhaustiveDependencies(handleAppInstalledEvent): useEffectEvent でラップされているため依存配列に含めない（React公式ドキュメント推奨）
    useEffect(() => {
       // PWAが既にインストール済みかチェック
       if (checkIfInstalled()) {

@@ -1,8 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useRef } from "react"
-// TODO: Next.js が React 19 の useEffectEvent に対応したら削除する
-import { useEffectEvent } from "use-effect-event"
+import { useCallback, useEffect, useEffectEvent, useRef } from "react"
 import { useRealtimeStore } from "@/store/useRealtimeStore"
 import type { LocationData, MapBounds } from "@/store/useSoundPinStore"
 import {
@@ -251,6 +249,7 @@ export function useRealtime(
       })
    })
 
+   // biome-ignore lint/correctness/useExhaustiveDependencies(connectEvent): connectEvent は useEffectEvent でラップされているため依存配列に含めない（React公式ドキュメント推奨）
    useEffect(() => {
       if (autoConnect && !isConnected && connectionStatus === "disconnected") {
          connectEvent()
@@ -264,6 +263,7 @@ export function useRealtime(
       })
    })
 
+   // biome-ignore lint/correctness/useExhaustiveDependencies(requestPermissionEvent): requestPermissionEvent は useEffectEvent でラップされているため依存配列に含めない（React公式ドキュメント推奨）
    useEffect(() => {
       if (autoRequestPermission && isConnected) {
          requestPermissionEvent()
@@ -296,6 +296,7 @@ export function useRealtime(
       disconnect()
    })
 
+   // biome-ignore lint/correctness/useExhaustiveDependencies(disconnectEvent): disconnectEvent は useEffectEvent でラップされているため依存配列に含めない（React公式ドキュメント推奨）
    useEffect(() => {
       return () => {
          if (isConnected) {

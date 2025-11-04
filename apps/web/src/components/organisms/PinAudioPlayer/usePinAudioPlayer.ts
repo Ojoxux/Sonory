@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react"
-import { useEffectEvent } from "use-effect-event"
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react"
 import type { SoundPin } from "@/store/useSoundPinStore"
 import { formatRecordedAt, formatTime } from "@/utils/dateFormat"
 import type {
@@ -230,6 +229,7 @@ export function usePinAudioPlayer(
       onClose()
    })
 
+   // biome-ignore lint/correctness/useExhaustiveDependencies(onCloseEvent): onCloseEvent は useEffectEvent でラップされているため依存配列に含めない（React公式ドキュメント推奨）
    const handleClose = useCallback((): void => {
       stopAudio()
       onCloseEvent()

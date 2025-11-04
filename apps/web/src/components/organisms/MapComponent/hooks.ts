@@ -273,9 +273,8 @@ export function useMapComponent({
       onUpdateLighting: () => updateLightingAndShadows(),
    })
 
-   // マップ初期化（一度だけ実行、依存関係は意図的に除外）
-   // 注意: この useEffect は意図的に依存関係を空にしています
-   // 依存関係を追加するとマップが何度も再初期化されて問題を起こすためです
+   // マップ初期化（一度だけ実行）
+   // MEMO: attemptGeolocationはuseCallbackでメモ化されているため、依存配列に含めても再初期化は発生しない
    useEffect(() => {
       if (!mapContainerRef.current || mapInitializedRef.current) return
 
@@ -577,7 +576,22 @@ export function useMapComponent({
             hasInitialPositionSet.current = false
          }
       }
-   }, []) // 依存関係を空にして一度だけ実行
+   }, [
+      attemptGeolocation,
+      debugTimeOverride,
+      savePosition,
+      updateLightingAndShadows,
+      customPosition,
+      savedPosition,
+      onGeolocationReady,
+      onReturnToLocationReady,
+      onBearingChange,
+      map,
+      setMap,
+      setMapStyleLoaded,
+      setGeolocateInitialized,
+      setMapBounds,
+   ]) // 依存関係を追加。mapInitializedRefでガードされているため再初期化は発生しない
 
    // 位置情報が取得できたらマップの中心を移動（ユーザー操作を考慮）
    // positionは外部のhooksから来ており、その変更に反応する必要があるため、useEffectが適切
