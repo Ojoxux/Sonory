@@ -2,9 +2,7 @@
  * PWAインストール関連のカスタムフック
  */
 
-import { useCallback, useEffect, useState } from "react"
-// TODO: Next.js が React 19 の useEffectEvent に対応したら削除する
-import { useEffectEvent } from "use-effect-event"
+import { useCallback, useEffect, useEffectEvent, useState } from "react"
 
 /** アニメーション遅延時間（ミリ秒） */
 const ANIMATION_DELAYS = {

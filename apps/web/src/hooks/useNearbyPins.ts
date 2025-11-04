@@ -6,9 +6,7 @@ import {
    useQuery,
    useQueryClient,
 } from "@tanstack/react-query"
-import { useCallback, useEffect, useMemo, useRef } from "react"
-// TODO: Next.js が React 19 の useEffectEvent に対応したら削除する
-import { useEffectEvent } from "use-effect-event"
+import { useCallback, useEffect, useEffectEvent, useMemo, useRef } from "react"
 
 interface MapBounds {
    north: number

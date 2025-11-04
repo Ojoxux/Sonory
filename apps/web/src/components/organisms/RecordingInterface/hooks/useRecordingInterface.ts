@@ -1,9 +1,7 @@
 "use client"
 
 import type { PanInfo } from "framer-motion"
-import { useCallback, useEffect, useRef, useState } from "react"
-// TODO: Next.js が React 19 の useEffectEvent に対応したら削除する
-import { useEffectEvent } from "use-effect-event"
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react"
 import { useRecorderStore } from "../../../../store/useRecorderStore"
 // 実際のMediaRecorder APIを使用
 import { useMediaRecorder } from "../../RecordSection/hooks/useMediaRecorder"

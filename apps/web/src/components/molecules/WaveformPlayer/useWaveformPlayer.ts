@@ -1,6 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react"
-// TODO: Next.js が React 19 の useEffectEvent に対応したら削除する
-import { useEffectEvent } from "use-effect-event"
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react"
 import WaveSurfer from "wavesurfer.js"
 import type { AudioData } from "../../../store/types"
 

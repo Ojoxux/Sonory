@@ -1,8 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useRef } from "react"
-// TODO: Next.js が React 19 の useEffectEvent に対応したら削除する
-import { useEffectEvent } from "use-effect-event"
+import { useCallback, useEffect, useEffectEvent, useRef } from "react"
 import { useRealtimeStore } from "@/store/useRealtimeStore"
 import type { LocationData, MapBounds } from "@/store/useSoundPinStore"
 import {
