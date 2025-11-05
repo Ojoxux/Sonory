@@ -18,7 +18,7 @@
 
 import mapboxgl from "mapbox-gl"
 import { useCallback, useEffect, useMemo, useRef } from "react"
-import { createRoot } from "react-dom/client"
+import { createRoot, type Root } from "react-dom/client"
 import { ClusterBadge } from "@/components/atoms/ClusterBadge"
 import { SoundPinIcon } from "@/components/atoms/SoundPinIcon"
 import type { SoundPin } from "@/store/useSoundPinStore"
@@ -45,6 +45,7 @@ export function SoundPinMarkers({
    onPinSelect,
 }: SoundPinMarkersProps): null {
    const clusterMarkersRef = useRef<Map<string, mapboxgl.Marker>>(new Map())
+   const rootMapRef = useRef<Map<string, Root>>(new Map())
    const currentClustersRef = useRef<PinCluster[]>([])
    const currentZoomRef = useRef<number>(0)
    const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -91,6 +92,7 @@ export function SoundPinMarkers({
             markerElement.style.cursor = "pointer"
 
             const root = createRoot(markerElement)
+            rootMapRef.current.set(cluster.id, root)
 
             const handleClick = () => {
                if (cluster.isSingle) {
@@ -293,6 +295,14 @@ export function SoundPinMarkers({
                   marker.remove()
                   clusterMarkersRef.current.delete(clusterId)
                }
+
+               const root = rootMapRef.current.get(clusterId)
+               if (root) {
+                  setTimeout(() => {
+                     root.unmount()
+                  }, 0)
+                  rootMapRef.current.delete(clusterId)
+               }
             }
          }
 
@@ -473,6 +483,14 @@ export function SoundPinMarkers({
             marker.remove()
          }
          clusterMarkersRef.current.clear()
+
+         for (const root of rootMapRef.current.values()) {
+            setTimeout(() => {
+               root.unmount()
+            }, 0)
+         }
+         rootMapRef.current.clear()
+
          currentClustersRef.current = []
       }
    }, [])

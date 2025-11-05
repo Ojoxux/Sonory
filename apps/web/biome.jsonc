@@ -34,7 +34,7 @@
             "noUnusedVariables": {
                "level": "warn"
             },
-            "useExhaustiveDependencies": "off"
+            "useExhaustiveDependencies": "error"
          }
       }
    },
@@ -45,16 +45,6 @@
             "rules": {
                "style": {
                   "useNamingConvention": "off"
-               }
-            }
-         }
-      },
-      {
-         "includes": ["*.tsx", "*.ts"],
-         "linter": {
-            "rules": {
-               "correctness": {
-                  "useExhaustiveDependencies": "off"
                }
             }
          }

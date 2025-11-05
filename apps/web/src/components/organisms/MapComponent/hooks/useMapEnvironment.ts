@@ -11,9 +11,7 @@
  */
 
 import type mapboxgl from "mapbox-gl"
-import { useCallback, useEffect, useRef, useState } from "react"
-// TODO: Next.js が React 19 の useEffectEvent に対応したら削除する
-import { useEffectEvent } from "use-effect-event"
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react"
 import type {
    LocationData,
    MapboxExtendedMap,
@@ -303,7 +301,7 @@ export function useMapEnvironment({
       )
 
       return () => clearInterval(interval)
-   }, [map, mapStyleLoaded])
+   }, [map, mapStyleLoaded, updateEvent])
 
    // デバッグ時間が変更された時に即座に更新
    useEffect(() => {
@@ -318,7 +316,7 @@ export function useMapEnvironment({
       }
 
       setTimeout(updateWithStyleCheck, 1000)
-   }, [map, mapStyleLoaded])
+   }, [map, mapStyleLoaded, updateEvent])
 
    return {
       currentLighting,

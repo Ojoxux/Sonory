@@ -1,6 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react"
-// TODO: Next.js が React 19 の useEffectEvent に対応したら削除する
-import { useEffectEvent } from "use-effect-event"
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react"
 import WaveSurfer from "wavesurfer.js"
 import type { AudioData } from "../../../store/types"
 
@@ -389,7 +387,15 @@ export function useWaveformPlayer({
          setError(error)
          setIsLoading(false)
       }
-   }, [audioData, height, waveColor, progressColor, destroyWaveSurfer])
+   }, [
+      audioData,
+      height,
+      waveColor,
+      progressColor,
+      destroyWaveSurfer,
+      onFinishEvent,
+      onReadyEvent,
+   ])
 
    /**
     * 再生/一時停止を切り替え

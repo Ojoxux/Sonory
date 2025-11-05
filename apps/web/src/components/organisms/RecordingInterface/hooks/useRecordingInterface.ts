@@ -1,9 +1,7 @@
 "use client"
 
 import type { PanInfo } from "framer-motion"
-import { useEffect, useRef, useState } from "react"
-// TODO: Next.js が React 19 の useEffectEvent に対応したら削除する
-import { useEffectEvent } from "use-effect-event"
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react"
 import { useRecorderStore } from "../../../../store/useRecorderStore"
 // 実際のMediaRecorder APIを使用
 import { useMediaRecorder } from "../../RecordSection/hooks/useMediaRecorder"
@@ -45,6 +43,18 @@ export function useRecordingInterface(
    // 外部クリック検知用のref
    const instructionsRef = useRef<HTMLDivElement>(null)
 
+   // 外部クリック検知ハンドラー（useEffectより前に定義）
+   const handleCloseInstructions = useCallback(() => {
+      setIsClosing(true)
+      // アニメーション完了後に状態をリセット
+      setTimeout(() => {
+         setShowInstructions(false)
+         setIsClosing(false)
+         setIsAgreed(false)
+         setShowConfirmationComplete(false)
+      }, 1200) // クローズアニメーションの時間に合わせる（0.6 + 0.6 = 1.2秒）
+   }, []) // setState関数は既にメモ化されているため依存配列は空
+
    // 外部クリック検知
    useEffect(() => {
       if (!showInstructions) return
@@ -69,7 +79,7 @@ export function useRecordingInterface(
          document.removeEventListener("mousedown", handleClickOutside)
          document.removeEventListener("touchstart", handleClickOutside)
       }
-   }, [showInstructions])
+   }, [showInstructions, handleCloseInstructions])
 
    // 録音開始時刻を記録
    const recordingStartTimeRef = useRef<number | null>(null)
@@ -113,6 +123,7 @@ export function useRecordingInterface(
       onExpandedChange?.(expanded)
    })
 
+   // biome-ignore lint/correctness/useExhaustiveDependencies(onExpandedChangeEvent): onExpandedChangeEvent は useEffectEvent でラップされているため依存配列に含めない（React公式ドキュメント推奨）
    useEffect(() => {
       onExpandedChangeEvent(isExpanded && status !== "idle")
    }, [isExpanded, status])
@@ -222,17 +233,6 @@ export function useRecordingInterface(
       setShowConfirmationComplete(false)
       setShowInstructions(false)
       setIsClosing(false)
-   }
-
-   const handleCloseInstructions = () => {
-      setIsClosing(true)
-      // アニメーション完了後に状態をリセット
-      setTimeout(() => {
-         setShowInstructions(false)
-         setIsClosing(false)
-         setIsAgreed(false)
-         setShowConfirmationComplete(false)
-      }, 1200) // クローズアニメーションの時間に合わせる（0.6 + 0.6 = 1.2秒）
    }
 
    const instructionItems = [
