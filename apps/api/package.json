@@ -29,7 +29,7 @@
       "@sonory/utils": "file:../../packages/utils",
       "@supabase/supabase-js": "^2.80.0",
       "hono": "^4.10.4",
-      "vite": "^7.2.1",
+      "vite": "^7.2.2",
       "zod": "^4.1.12"
    },
    "devDependencies": {
@@ -37,7 +37,7 @@
       "@types/node": "^24.10.0",
       "tsc-alias": "^1.8.16",
       "typescript": "^5.9.3",
-      "vitest": "^4.0.7",
+      "vitest": "^4.0.8",
       "wrangler": "^4.46.0"
    }
 }
