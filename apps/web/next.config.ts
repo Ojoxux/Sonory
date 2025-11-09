@@ -23,6 +23,8 @@ const withPWA = require("@ducanh2912/next-pwa").default({
 const nextConfig: NextConfig = {
    /* config options here */
    reactStrictMode: true,
+   // 👇 Next.js 16 Turbopack 対応
+   turbopack: {},
    // 👇 Mapbox 環境変数（任意）
    env: {
       NEXT_PUBLIC_MAPBOX_TOKEN: process.env.NEXT_PUBLIC_MAPBOX_TOKEN,

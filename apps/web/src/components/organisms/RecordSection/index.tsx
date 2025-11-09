@@ -6,7 +6,7 @@ import { RecordButton } from "@/components/molecules/RecordButton"
 import { useInferenceStore } from "@/store/useInferenceStore"
 import { useRecorderStore } from "@/store/useRecorderStore"
 import { useMediaRecorder } from "./hooks/useMediaRecorder"
-import type { RecordSectionProps } from "./type"
+import type { RecordSectionProps } from "./types"
 
 /**
  * 録音セクションコンポーネント

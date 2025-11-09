@@ -3,7 +3,7 @@
 import { LoadingSpinner } from "@/components/atoms/LoadingSpinner"
 import { RecordButtonIcon } from "@/components/atoms/RecordButtonIcon"
 import { RecordButtonText } from "@/components/atoms/RecordButtonText"
-import type { RecordButtonContentProps } from "./type"
+import type { RecordButtonContentProps } from "./types"
 
 /**
  * 録音ボタンコンテンツコンポーネント

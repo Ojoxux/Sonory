@@ -1,6 +1,6 @@
 "use client"
 
-import type { FloatingIndicatorProps } from "./type"
+import type { FloatingIndicatorProps } from "./types"
 
 /**
  * フローティングインジケーターコンポーネント

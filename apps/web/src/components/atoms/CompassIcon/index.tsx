@@ -2,7 +2,7 @@
 
 import { animate, motion, useMotionValue } from "framer-motion"
 import { useRef } from "react"
-import type { CompassIconProps } from "./type"
+import type { CompassIconProps } from "./types"
 
 /**
  * 最短経路での回転角度を計算する
