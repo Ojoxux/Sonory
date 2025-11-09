@@ -3,6 +3,9 @@ import type { LightingConfig } from "@/components/organisms/MapComponent/utils/s
 import type { UseRealtimeReturn } from "@/hooks/useRealtime"
 import type { SoundPin } from "@/store/useSoundPinStore"
 
+/**
+ * DebugPanelコンポーネントのプロパティ
+ */
 export type DebugPanelProps = {
    /** 位置情報データ */
    position: LocationData | null
@@ -32,15 +35,53 @@ export type DebugPanelProps = {
    realtime?: UseRealtimeReturn
 }
 
+/**
+ * デバッグログの型定義
+ */
 export type DebugLog = {
+   /** ログの一意ID */
    id: string
+   /** ログレベル */
    level: "info" | "warn" | "error"
+   /** ログメッセージ */
    message: string
+   /** タイムスタンプ */
    timestamp: string
 }
 
+/**
+ * パフォーマンスデータの型定義
+ */
 export type PerformanceData = {
+   /** メモリ使用量（MB） */
    memoryUsage: number
+   /** 最後のAI処理時間（ms） */
    lastAIProcessingTime: number
+   /** フレームレート（fps） */
    frameRate: number
+}
+
+/**
+ * DebugPanelのタブタイプ
+ */
+export type TabType = "main" | "yamnet" | "map" | "orb"
+
+/**
+ * AIAnalysisOrbの設定状態
+ */
+export type OrbState = {
+   /** 色相（0-360度） */
+   hue: number
+   /** ホバー時の強度（0-1） */
+   hoverIntensity: number
+   /** ホバー時に回転するかどうか */
+   rotateOnHover: boolean
+   /** 強制的にホバー状態にするかどうか */
+   forceHoverState: boolean
+   /** 色相をサイクルするかどうか */
+   cycleHue: boolean
+   /** 色相サイクルの速度（度/秒） */
+   hueCycleSpeed: number
+   /** Orbのサイズ（px） */
+   size: number
 }
