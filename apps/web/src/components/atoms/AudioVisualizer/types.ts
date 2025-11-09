@@ -1,5 +1,5 @@
 /**
- * AudioVisualizerコンポーネントのプロパティ型定義
+ * AudioVisualizerコンポーネントのProps型定義
  */
 export interface AudioVisualizerProps {
    /** ビジュアライザーがアクティブかどうか */

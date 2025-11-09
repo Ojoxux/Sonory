@@ -1,7 +1,7 @@
 import type { MouseEventHandler, ReactNode } from "react"
 
 /**
- * IconButtonコンポーネントのプロパティ型定義
+ * IconButtonコンポーネントのProps型定義
  */
 export interface IconButtonProps {
    /** 表示するアイコン要素 */

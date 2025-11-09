@@ -1,5 +1,5 @@
 /**
- * UIOverlayコンポーネントのプロパティ型定義
+ * UIOverlayコンポーネントのProps型定義
  */
 export interface UIOverlayProps {
    /** 設定ボタンクリック時のハンドラー */

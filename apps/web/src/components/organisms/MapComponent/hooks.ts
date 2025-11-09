@@ -33,7 +33,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { pipe } from "fp-ts/function"
 import * as O from "fp-ts/Option"
 import mapboxgl from "mapbox-gl"
-import { useEffect, useMemo, useRef } from "react"
+import { useCallback, useEffect, useMemo, useRef } from "react"
 import { useNearbyPins } from "@/hooks/useNearbyPins"
 import { useSoundPinStore } from "@/store/useSoundPinStore"
 import { useBrowserGeolocation } from "./hooks/useBrowserGeolocation"
@@ -151,7 +151,14 @@ export function useMapComponent({
       setDebugTimeOverride,
    } = useMapDebug()
 
-   const { selectedPinId, selectPin, lastCreatedPinId } = useSoundPinStore()
+   const {
+      selectedPinId,
+      selectPin,
+      lastCreatedPinId,
+      pins: localPins,
+      persistedPins,
+      tempPins,
+   } = useSoundPinStore()
 
    // TanStack Query
    const queryClient = useQueryClient()
@@ -273,6 +280,57 @@ export function useMapComponent({
       onUpdateLighting: () => updateLightingAndShadows(),
    })
 
+   /**
+    * 初期ライトプリセットを決定
+    */
+   const determineInitialLightPreset = useCallback(
+      (debugTimeOverride: number | null): "day" | "dawn" | "dusk" | "night" => {
+         const currentHour =
+            debugTimeOverride !== null
+               ? debugTimeOverride
+               : new Date().getHours()
+
+         if (currentHour >= 8 && currentHour < 17) {
+            return "day"
+         }
+         if (currentHour >= 22 || currentHour < 4) {
+            return "night"
+         }
+         if (
+            (currentHour >= 17 && currentHour < 22) ||
+            (currentHour >= 4 && currentHour < 8)
+         ) {
+            return "dusk"
+         }
+         return "dawn"
+      },
+      [],
+   )
+
+   /**
+    * マップ境界を更新する関数
+    */
+   const updateMapBounds = useCallback(
+      (
+         mapInstance: mapboxgl.Map,
+         setMapBounds: (bounds: MapBounds) => void,
+      ): void => {
+         setTimeout(() => {
+            const bounds = mapInstance.getBounds()
+            if (bounds) {
+               const newBounds: MapBounds = {
+                  north: bounds.getNorth(),
+                  south: bounds.getSouth(),
+                  east: bounds.getEast(),
+                  west: bounds.getWest(),
+               }
+               setMapBounds(newBounds)
+            }
+         }, 100)
+      },
+      [],
+   )
+
    // マップ初期化（一度だけ実行）
    // MEMO: attemptGeolocationはuseCallbackでメモ化されているため、依存配列に含めても再初期化は発生しない
    useEffect(() => {
@@ -288,28 +346,8 @@ export function useMapComponent({
       mapboxgl.accessToken = mapboxToken
 
       try {
-         // 現在時刻に基づいて初期lightPresetを決定（正常マッピング）
-         const currentHour =
-            debugTimeOverride !== null
-               ? debugTimeOverride
-               : new Date().getHours()
-         let initialLightPreset: "day" | "dawn" | "dusk" | "night" = "dawn"
-
-         // 昼の時間帯（8時から17時）→ 明るい空が必要 → 'day'を使用
-         if (currentHour >= 8 && currentHour < 17) {
-            initialLightPreset = "day" // 正常
-         }
-         // 夜の時間帯（22時から4時）→ 暗い空が必要 → 'night'を使用
-         else if (currentHour >= 22 || currentHour < 4) {
-            initialLightPreset = "night" // 正常
-         }
-         // 夕方・早朝の時間帯（17時-22時、4時-8時）
-         else if (
-            (currentHour >= 17 && currentHour < 22) ||
-            (currentHour >= 4 && currentHour < 8)
-         ) {
-            initialLightPreset = "dusk"
-         }
+         const initialLightPreset =
+            determineInitialLightPreset(debugTimeOverride)
 
          if (process.env.NODE_ENV === "development") {
             // TODO: 開発環境でのログ出力を実装
@@ -407,20 +445,7 @@ export function useMapComponent({
                },
             })
 
-            // マップロード完了時に境界を設定
-            setTimeout(() => {
-               const bounds = mapInstance.getBounds()
-               if (bounds) {
-                  const newBounds: MapBounds = {
-                     north: bounds.getNorth(),
-                     south: bounds.getSouth(),
-                     east: bounds.getEast(),
-                     west: bounds.getWest(),
-                  }
-                  console.log("🔍 MapComponent: ロード時の境界設定", newBounds)
-                  setMapBounds(newBounds)
-               }
-            }, 100)
+            updateMapBounds(mapInstance, setMapBounds)
          })
 
          // スタイル読み込み完了時の処理（より確実な検知）
@@ -436,23 +461,7 @@ export function useMapComponent({
                   }
                }, 500)
 
-               // スタイルロード完了時にも境界を設定
-               setTimeout(() => {
-                  const bounds = mapInstance.getBounds()
-                  if (bounds) {
-                     const newBounds: MapBounds = {
-                        north: bounds.getNorth(),
-                        south: bounds.getSouth(),
-                        east: bounds.getEast(),
-                        west: bounds.getWest(),
-                     }
-                     console.log(
-                        "🔍 MapComponent: スタイルロード時の境界設定",
-                        newBounds,
-                     )
-                     setMapBounds(newBounds)
-                  }
-               }, 100)
+               updateMapBounds(mapInstance, setMapBounds)
             }
          })
 
@@ -465,20 +474,7 @@ export function useMapComponent({
                }
                setMapStyleLoaded(true)
 
-               // idle状態でも境界を設定
-               setTimeout(() => {
-                  const bounds = mapInstance.getBounds()
-                  if (bounds) {
-                     const newBounds: MapBounds = {
-                        north: bounds.getNorth(),
-                        south: bounds.getSouth(),
-                        east: bounds.getEast(),
-                        west: bounds.getWest(),
-                     }
-                     console.log("🔍 MapComponent: idle時の境界設定", newBounds)
-                     setMapBounds(newBounds)
-                  }
-               }, 100)
+               updateMapBounds(mapInstance, setMapBounds)
             }
          })
 
@@ -552,30 +548,42 @@ export function useMapComponent({
          console.error("マップの初期化に失敗:", error)
       }
 
-      return () => {
-         if (mapInitializedRef.current && map) {
-            // イベントリスナーをクリーンアップ
-            if (userInteractionHandlerRef.current) {
-               const eventTypes = [
-                  "dragstart",
-                  "zoomstart",
-                  "rotatestart",
-                  "pitchstart",
-                  "touchstart",
-               ] as const
-               for (const eventType of eventTypes) {
-                  if (userInteractionHandlerRef.current) {
-                     map.off(eventType, userInteractionHandlerRef.current)
-                  }
-               }
-            }
+      /**
+       * イベントリスナーをクリーンアップ
+       */
+      const cleanupEventListeners = (
+         mapInstance: mapboxgl.Map,
+         handler: (() => void) | null,
+      ): void => {
+         if (!handler) return
 
+         const eventTypes = [
+            "dragstart",
+            "zoomstart",
+            "rotatestart",
+            "pitchstart",
+            "touchstart",
+         ] as const
+
+         for (const eventType of eventTypes) {
+            mapInstance.off(eventType, handler)
+         }
+      }
+
+      /**
+       * マップをクリーンアップ
+       */
+      const cleanupMap = (): void => {
+         if (mapInitializedRef.current && map) {
+            cleanupEventListeners(map, userInteractionHandlerRef.current)
             map.remove()
             setMap(null)
             mapInitializedRef.current = false
             hasInitialPositionSet.current = false
          }
       }
+
+      return cleanupMap
    }, [
       attemptGeolocation,
       debugTimeOverride,
@@ -591,6 +599,8 @@ export function useMapComponent({
       setMapStyleLoaded,
       setGeolocateInitialized,
       setMapBounds,
+      determineInitialLightPreset,
+      updateMapBounds,
    ]) // 依存関係を追加。mapInitializedRefでガードされているため再初期化は発生しない
 
    // 位置情報が取得できたらマップの中心を移動（ユーザー操作を考慮）
@@ -808,7 +818,10 @@ export function useMapComponent({
       )
 
       // 新しいピンの位置にマップを移動（即座に実行）
-      const newPin = nearbyPins.find((p) => p.id === lastCreatedPinId)
+      // ストアから直接全てのピンを検索
+      const allPins = [...localPins, ...persistedPins, ...tempPins]
+      const newPin = allPins.find((p) => p.id === lastCreatedPinId)
+
       if (newPin && map) {
          console.log("🎯 新しいピンの位置にマップを移動:", {
             pinId: newPin.id,
@@ -834,7 +847,15 @@ export function useMapComponent({
          queryKey: ["nearby-pins"],
          refetchType: "active", // アクティブなクエリのみ再取得
       })
-   }, [lastCreatedPinId, map, mapStyleLoaded, nearbyPins, queryClient])
+   }, [
+      lastCreatedPinId,
+      map,
+      mapStyleLoaded,
+      localPins,
+      persistedPins,
+      tempPins,
+      queryClient,
+   ])
 
    return {
       mapContainerRef,

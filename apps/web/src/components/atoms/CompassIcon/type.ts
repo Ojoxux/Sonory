@@ -1,5 +1,5 @@
 /**
- * CompassIconコンポーネントのプロパティ型定義
+ * CompassIconコンポーネントのProps型定義
  */
 export interface CompassIconProps {
    /** 追加のCSSクラス */

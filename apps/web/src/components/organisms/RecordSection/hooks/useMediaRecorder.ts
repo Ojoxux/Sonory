@@ -5,6 +5,109 @@ import type { AudioData } from "../../../../store/types"
 import { useRecorderStore } from "../../../../store/useRecorderStore"
 
 /**
+ * 経過時間を計算
+ */
+function calculateElapsedTime(
+   recordingStartTimeRef: React.MutableRefObject<number | null>,
+): number {
+   if (!recordingStartTimeRef.current) {
+      return 0
+   }
+   const currentTime = performance.now()
+   return (currentTime - recordingStartTimeRef.current) / 1000
+}
+
+/**
+ * タイマーをクリア
+ */
+function clearAutoStopTimer(
+   autoStopTimerRef: React.MutableRefObject<NodeJS.Timeout | null>,
+): void {
+   if (autoStopTimerRef.current) {
+      clearTimeout(autoStopTimerRef.current)
+      autoStopTimerRef.current = null
+   }
+}
+
+/**
+ * 音声Blobを作成
+ */
+function createAudioBlob(chunks: Blob[], mimeType: string): Blob {
+   return new Blob(chunks, { type: mimeType })
+}
+
+/**
+ * 音声データを検証
+ */
+function validateAudioBlob(audioBlob: Blob): void {
+   if (audioBlob.size < 1000) {
+      console.warn("⚠️ 録音データが小さすぎます（1KB未満）")
+   }
+}
+
+/**
+ * AudioDataを作成
+ */
+function createAudioData(audioBlob: Blob, elapsedTime: number): AudioData {
+   return {
+      blob: audioBlob,
+      recordedAt: new Date(),
+      id: crypto.randomUUID(),
+      duration: elapsedTime,
+   }
+}
+
+/**
+ * ストリームを停止
+ */
+function stopStream(
+   streamRef: React.MutableRefObject<MediaStream | null>,
+): void {
+   if (streamRef.current) {
+      for (const track of streamRef.current.getTracks()) {
+         track.stop()
+      }
+      streamRef.current = null
+   }
+}
+
+/**
+ * 録音停止処理
+ */
+function handleRecordingStop(
+   mediaRecorder: MediaRecorder,
+   chunksRef: React.MutableRefObject<Blob[]>,
+   autoStopTimerRef: React.MutableRefObject<NodeJS.Timeout | null>,
+   recordingStartTimeRef: React.MutableRefObject<number | null>,
+   streamRef: React.MutableRefObject<MediaStream | null>,
+   setAudioData: (data: AudioData) => void,
+   setIsRecording: (recording: boolean) => void,
+): void {
+   const elapsedTime = calculateElapsedTime(recordingStartTimeRef)
+
+   console.log("🎵 MediaRecorder停止イベント発火", { elapsedTime })
+
+   clearAutoStopTimer(autoStopTimerRef)
+   recordingStartTimeRef.current = null
+
+   const audioBlob = createAudioBlob(chunksRef.current, mediaRecorder.mimeType)
+
+   console.log("🎤 最終録音データ:", {
+      chunks: chunksRef.current.length,
+      totalSize: audioBlob.size,
+      mimeType: audioBlob.type,
+      duration: elapsedTime,
+   })
+
+   validateAudioBlob(audioBlob)
+
+   const audioData = createAudioData(audioBlob, elapsedTime)
+   setAudioData(audioData)
+   setIsRecording(false)
+   stopStream(streamRef)
+}
+
+/**
  * MediaRecorder APIを使用した録音機能フック
  *
  * @description
@@ -91,55 +194,15 @@ export function useMediaRecorder() {
 
          // 録音停止イベント
          mediaRecorder.onstop = (): void => {
-            const currentTime = performance.now()
-            const elapsedTime = recordingStartTimeRef.current
-               ? (currentTime - recordingStartTimeRef.current) / 1000
-               : 0
-
-            console.log("🎵 MediaRecorder停止イベント発火", { elapsedTime })
-
-            // 自動停止タイマーをクリア
-            if (autoStopTimerRef.current) {
-               clearTimeout(autoStopTimerRef.current)
-               autoStopTimerRef.current = null
-            }
-
-            // 録音開始時刻をクリア
-            recordingStartTimeRef.current = null
-
-            const audioBlob = new Blob(chunksRef.current, {
-               type: mediaRecorder.mimeType,
-            })
-
-            console.log("🎤 最終録音データ:", {
-               chunks: chunksRef.current.length,
-               totalSize: audioBlob.size,
-               mimeType: audioBlob.type,
-               duration: elapsedTime,
-            })
-
-            // 音声データの検証
-            if (audioBlob.size < 1000) {
-               console.warn("⚠️ 録音データが小さすぎます（1KB未満）")
-            }
-
-            const audioData: AudioData = {
-               blob: audioBlob,
-               recordedAt: new Date(),
-               id: crypto.randomUUID(),
-               duration: elapsedTime,
-            }
-
-            setAudioData(audioData)
-            setIsRecording(false)
-
-            // ストリームを停止
-            if (streamRef.current) {
-               for (const track of streamRef.current.getTracks()) {
-                  track.stop()
-               }
-               streamRef.current = null
-            }
+            handleRecordingStop(
+               mediaRecorder,
+               chunksRef,
+               autoStopTimerRef,
+               recordingStartTimeRef,
+               streamRef,
+               setAudioData,
+               setIsRecording,
+            )
          }
 
          // エラーイベント

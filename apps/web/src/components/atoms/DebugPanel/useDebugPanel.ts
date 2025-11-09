@@ -1,5 +1,95 @@
 import { useEffect, useState } from "react"
-import type { DebugLog, DebugPanelProps, PerformanceData } from "./types"
+import type {
+   DebugLog,
+   DebugPanelProps,
+   OrbState,
+   PerformanceData,
+   TabType,
+} from "./types"
+
+/**
+ * DebugPanelの状態管理用カスタムフック
+ */
+export function useDebugPanelState() {
+   const [isExpanded, setIsExpanded] = useState(false)
+   const [selectedTab, setSelectedTab] = useState<TabType>("main")
+
+   const [orbState, setOrbState] = useState<OrbState>({
+      hue: 220,
+      hoverIntensity: 0.3,
+      rotateOnHover: true,
+      forceHoverState: false,
+      cycleHue: false,
+      hueCycleSpeed: 30,
+      size: 320,
+   })
+
+   const toggleExpanded = () => {
+      setIsExpanded((prev) => !prev)
+   }
+
+   const resetOrbToDefault = () => {
+      setOrbState({
+         hue: 220,
+         hoverIntensity: 0.3,
+         rotateOnHover: true,
+         forceHoverState: false,
+         cycleHue: false,
+         hueCycleSpeed: 30,
+         size: 320,
+      })
+   }
+
+   const resetOrbToAnalyzing = () => {
+      setOrbState({
+         hue: 0,
+         hoverIntensity: 0.5,
+         rotateOnHover: true,
+         forceHoverState: true,
+         cycleHue: true,
+         hueCycleSpeed: 60,
+         size: 240,
+      })
+   }
+
+   const resetOrbToError = () => {
+      setOrbState({
+         hue: 0,
+         hoverIntensity: 0.4,
+         rotateOnHover: true,
+         forceHoverState: false,
+         cycleHue: false,
+         hueCycleSpeed: 30,
+         size: 320,
+      })
+   }
+
+   const resetOrbToComplete = () => {
+      setOrbState({
+         hue: 120,
+         hoverIntensity: 0.2,
+         rotateOnHover: false,
+         forceHoverState: false,
+         cycleHue: false,
+         hueCycleSpeed: 30,
+         size: 320,
+      })
+   }
+
+   return {
+      isExpanded,
+      selectedTab,
+      orbState,
+      setIsExpanded,
+      setSelectedTab,
+      toggleExpanded,
+      setOrbState,
+      resetOrbToDefault,
+      resetOrbToAnalyzing,
+      resetOrbToError,
+      resetOrbToComplete,
+   }
+}
 
 export function useDebugPanel({
    onTimeChange,

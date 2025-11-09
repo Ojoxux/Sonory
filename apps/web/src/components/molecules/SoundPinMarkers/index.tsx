@@ -50,6 +50,16 @@ export function SoundPinMarkers({
    const currentZoomRef = useRef<number>(0)
    const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
+   // propsをrefに保存してエフェクト内で安全に使用
+   const onPinSelectRef = useRef(onPinSelect)
+   const selectedPinIdRef = useRef(selectedPinId)
+
+   // 最新の値を常に保持
+   useEffect(() => {
+      onPinSelectRef.current = onPinSelect
+      selectedPinIdRef.current = selectedPinId
+   })
+
    // ピンデータの安定化（メモ化）
    const stablePins = useMemo(() => {
       return pins.map((pin) => ({
@@ -97,7 +107,9 @@ export function SoundPinMarkers({
             const handleClick = () => {
                if (cluster.isSingle) {
                   const pin = cluster.pins[0]
-                  onPinSelect(selectedPinId === pin.id ? null : pin.id)
+                  onPinSelectRef.current(
+                     selectedPinIdRef.current === pin.id ? null : pin.id,
+                  )
                } else {
                   const bounds = new mapboxgl.LngLatBounds()
                   for (const pin of cluster.pins) {
@@ -109,7 +121,7 @@ export function SoundPinMarkers({
 
             if (cluster.isSingle) {
                const pin = cluster.pins[0]
-               const isSelected = selectedPinId === pin.id
+               const isSelected = selectedPinIdRef.current === pin.id
                const isAnalyzing =
                   !pin.isPersisted || !pin.classificationResults
 
@@ -166,7 +178,7 @@ export function SoundPinMarkers({
             return null
          }
       },
-      [map, selectedPinId, onPinSelect],
+      [map],
    )
 
    /**
@@ -222,31 +234,19 @@ export function SoundPinMarkers({
    )
 
    /**
-    * マーカーの差分更新
+    * 新規マーカーを作成する
     */
-   const updateMarkersIncremental = useCallback(
-      (newClusters: PinCluster[]) => {
-         if (!map) return
-
-         // 新しいクラスターが空の場合は処理をスキップ
-         if (newClusters.length === 0) {
-            console.log(
-               "⚠️ 新しいクラスターが空のため、マーカー更新をスキップします",
-            )
-            return
-         }
-
-         const existingClusterIds = new Set(clusterMarkersRef.current.keys())
-         const newClusterIds = new Set(newClusters.map((c) => c.id))
-
-         // 新規・更新マーカーを先に処理（作成）
+   const createNewMarkers = useCallback(
+      (
+         newClusters: PinCluster[],
+         _existingClusterIds: Set<string>,
+      ): Map<string, mapboxgl.Marker> => {
          const newMarkersToAdd = new Map<string, mapboxgl.Marker>()
 
          for (const cluster of newClusters) {
             const existingMarker = clusterMarkersRef.current.get(cluster.id)
 
             if (!existingMarker) {
-               // 新規マーカー作成
                console.log("🆕 新規マーカー作成開始:", {
                   clusterId: cluster.id,
                })
@@ -261,8 +261,23 @@ export function SoundPinMarkers({
                      clusterId: cluster.id,
                   })
                }
-            } else {
-               // 既存マーカーの位置更新
+            }
+         }
+
+         return newMarkersToAdd
+      },
+      [createClusterMarker],
+   )
+
+   /**
+    * 既存マーカーの位置を更新する
+    */
+   const updateExistingMarkerPositions = useCallback(
+      (newClusters: PinCluster[]): void => {
+         for (const cluster of newClusters) {
+            const existingMarker = clusterMarkersRef.current.get(cluster.id)
+
+            if (existingMarker) {
                const currentLngLat = existingMarker.getLngLat()
                const newLng = cluster.center.longitude
                const newLat = cluster.center.latitude
@@ -280,13 +295,17 @@ export function SoundPinMarkers({
                }
             }
          }
+      },
+      [],
+   )
 
-         // 新規マーカーをマップに追加
-         for (const [clusterId, marker] of newMarkersToAdd) {
-            clusterMarkersRef.current.set(clusterId, marker)
-         }
+   /**
+    * 不要になったマーカーを削除する
+    */
+   const removeObsoleteMarkers = useCallback(
+      (newClusterIds: Set<string>): void => {
+         const existingClusterIds = new Set(clusterMarkersRef.current.keys())
 
-         // 不要になったマーカーを削除（新規マーカー作成後）
          for (const clusterId of existingClusterIds) {
             if (!newClusterIds.has(clusterId)) {
                const marker = clusterMarkersRef.current.get(clusterId)
@@ -305,6 +324,44 @@ export function SoundPinMarkers({
                }
             }
          }
+      },
+      [],
+   )
+
+   /**
+    * マーカーの差分更新
+    */
+   const updateMarkersIncremental = useCallback(
+      (newClusters: PinCluster[]) => {
+         if (!map) return
+
+         // 新しいクラスターが空の場合は処理をスキップ
+         if (newClusters.length === 0) {
+            console.log(
+               "⚠️ 新しいクラスターが空のため、マーカー更新をスキップします",
+            )
+            return
+         }
+
+         const existingClusterIds = new Set(clusterMarkersRef.current.keys())
+         const newClusterIds = new Set(newClusters.map((c) => c.id))
+
+         // 既存マーカーの位置更新
+         updateExistingMarkerPositions(newClusters)
+
+         // 新規マーカーを作成
+         const newMarkersToAdd = createNewMarkers(
+            newClusters,
+            existingClusterIds,
+         )
+
+         // 新規マーカーをマップに追加
+         for (const [clusterId, marker] of newMarkersToAdd) {
+            clusterMarkersRef.current.set(clusterId, marker)
+         }
+
+         // 不要になったマーカーを削除
+         removeObsoleteMarkers(newClusterIds)
 
          currentClustersRef.current = newClusters
 
@@ -314,7 +371,12 @@ export function SoundPinMarkers({
             markerIds: Array.from(clusterMarkersRef.current.keys()),
          })
       },
-      [map, createClusterMarker],
+      [
+         map,
+         createNewMarkers,
+         updateExistingMarkerPositions,
+         removeObsoleteMarkers,
+      ],
    )
 
    /**
@@ -434,27 +496,17 @@ export function SoundPinMarkers({
    ])
 
    // ピンデータ変更時の更新（依存配列を最適化）
+   // selectedPinIdの変更も含めて、すべての変更をdebouncedUpdateMarkersで処理
    useEffect(() => {
-      console.log("🔄 ピンデータ変更検知:", {
+      console.log("🔄 ピンデータまたは選択状態変更検知:", {
          pinsCount: stablePins.length,
+         selectedPinId,
          mapReady: !!map,
          styleLoaded: mapStyleLoaded,
          existingMarkers: clusterMarkersRef.current.size,
       })
       debouncedUpdateMarkers()
-   }, [map, stablePins, mapStyleLoaded, debouncedUpdateMarkers])
-
-   // 選択状態変更時の軽量更新
-   useEffect(() => {
-      if (!map || !mapStyleLoaded) return
-
-      // 選択状態が変わった場合は、マーカーを再作成
-      // SoundPinIconはvariantによって見た目が変わるため
-      const newClusters = clusterPins(stablePins, map)
-
-      // 選択状態変更時は常に更新（見た目が変わるため）
-      updateMarkersIncremental(newClusters)
-   }, [map, mapStyleLoaded, stablePins, updateMarkersIncremental])
+   }, [map, stablePins, mapStyleLoaded, selectedPinId, debouncedUpdateMarkers])
 
    // ズームイベントの最適化
    useEffect(() => {

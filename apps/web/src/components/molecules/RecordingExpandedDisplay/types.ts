@@ -1,5 +1,5 @@
 /**
- * RecordingExpandedDisplayコンポーネントのプロパティ型定義
+ * RecordingExpandedDisplayコンポーネントのProps型定義
  */
 export interface RecordingExpandedDisplayProps {
    /** 録音状態 */

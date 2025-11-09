@@ -1,5 +1,5 @@
 /**
- * RecordingHeaderコンポーネントのプロパティ型定義
+ * RecordingHeaderコンポーネントのProps型定義
  */
 export interface RecordingHeaderProps {
    /**

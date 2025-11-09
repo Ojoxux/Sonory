@@ -1,10 +1,10 @@
 import type { AudioData } from "@/store/types"
 
 /**
- * AudioReviewView コンポーネントのプロパティ型
+ * AudioReviewView コンポーネントのProps型
  *
  * @description
- * 録音確認画面のプロパティ
+ * 録音確認画面のProps
  */
 export type AudioReviewViewProps = {
    /** シートの開閉状態 */

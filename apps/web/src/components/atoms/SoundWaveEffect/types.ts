@@ -1,5 +1,5 @@
 /**
- * SoundWaveEffectコンポーネントのプロパティ型定義
+ * SoundWaveEffectコンポーネントのProps型定義
  */
 export interface SoundWaveEffectProps {
    /** エフェクトがアクティブかどうか */

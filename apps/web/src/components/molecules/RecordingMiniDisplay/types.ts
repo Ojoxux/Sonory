@@ -1,5 +1,5 @@
 /**
- * RecordingMiniDisplayコンポーネントのプロパティ型定義
+ * RecordingMiniDisplayコンポーネントのProps型定義
  */
 export interface RecordingMiniDisplayProps {
    /** 録音状態 */

@@ -204,6 +204,125 @@ async function fetchLocationData(
    }
 }
 
+/**
+ * パラメータを検証する
+ */
+function validateParameters(
+   lat: string | null,
+   lon: string | null,
+): { latitude: number; longitude: number } | { error: string } {
+   if (!lat || !lon) {
+      return { error: "Missing required parameters: lat, lon" }
+   }
+
+   const latitude = Number.parseFloat(lat)
+   const longitude = Number.parseFloat(lon)
+
+   if (
+      Number.isNaN(latitude) ||
+      Number.isNaN(longitude) ||
+      latitude < -90 ||
+      latitude > 90 ||
+      longitude < -180 ||
+      longitude > 180
+   ) {
+      return { error: "Invalid latitude or longitude values" }
+   }
+
+   return { latitude, longitude }
+}
+
+/**
+ * キャッシュから取得する
+ */
+function getCachedResult(
+   cacheKey: string,
+   now: number,
+): NextResponse<CachedResult> | null {
+   const cached = memoryCache.get(cacheKey)
+   if (cached && now - cached.timestamp < CACHE_DURATION) {
+      return NextResponse.json(cached.data, {
+         headers: {
+            "Cache-Control":
+               "public, s-maxage=172800, stale-while-revalidate=345600",
+            "X-Cache": "HIT",
+            "X-Cache-Key": cacheKey,
+         },
+      })
+   }
+   return null
+}
+
+/**
+ * レスポンスデータを構造化する
+ */
+function formatLocationResult(
+   data: LocationData,
+   latitude: number,
+   longitude: number,
+): CachedResult {
+   return {
+      latitude,
+      longitude,
+      address: data.address || {},
+      displayName: data.display_name || "",
+      locationName:
+         data.address?.city ||
+         data.address?.town ||
+         data.address?.village ||
+         data.address?.county ||
+         data.address?.state ||
+         data.address?.country ||
+         "Unknown Location",
+   }
+}
+
+/**
+ * 古いキャッシュエントリを削除する
+ */
+function cleanupOldCache(now: number): void {
+   if (memoryCache.size <= 2000) {
+      return
+   }
+
+   const entries = Array.from(memoryCache.entries())
+   const oldEntries = entries.filter(
+      ([, value]) => now - value.timestamp > CACHE_DURATION,
+   )
+   for (const [key] of oldEntries) {
+      memoryCache.delete(key)
+   }
+}
+
+/**
+ * タイムアウトエラーのフォールバックレスポンスを返す
+ */
+function createTimeoutFallbackResponse(
+   request: NextRequest,
+): NextResponse<CachedResult> {
+   return NextResponse.json(
+      {
+         latitude: Number.parseFloat(
+            request.nextUrl.searchParams.get("lat") || "0",
+         ),
+         longitude: Number.parseFloat(
+            request.nextUrl.searchParams.get("lon") || "0",
+         ),
+         address: {},
+         displayName: "Location",
+         locationName: "Unknown Location",
+      },
+      {
+         status: 200,
+         headers: {
+            "Cache-Control":
+               "public, s-maxage=3600, stale-while-revalidate=7200",
+            "X-Cache": "TIMEOUT-FALLBACK",
+         },
+      },
+   )
+}
+
 export async function GET(
    request: NextRequest,
 ): Promise<NextResponse<ReverseGeocodingResponse | ReverseGeocodingError>> {
@@ -214,82 +333,34 @@ export async function GET(
       const lang = searchParams.get("lang") || "en"
 
       // パラメータの検証
-      if (!lat || !lon) {
-         return NextResponse.json(
-            { error: "Missing required parameters: lat, lon" },
-            { status: 400 },
-         )
+      const validation = validateParameters(lat, lon)
+      if ("error" in validation) {
+         return NextResponse.json({ error: validation.error }, { status: 400 })
       }
 
-      // 緯度・経度の範囲チェック
-      const latitude = Number.parseFloat(lat)
-      const longitude = Number.parseFloat(lon)
-
-      if (
-         Number.isNaN(latitude) ||
-         Number.isNaN(longitude) ||
-         latitude < -90 ||
-         latitude > 90 ||
-         longitude < -180 ||
-         longitude > 180
-      ) {
-         return NextResponse.json(
-            { error: "Invalid latitude or longitude values" },
-            { status: 400 },
-         )
-      }
+      const { latitude, longitude } = validation
 
       // キャッシュキーを生成
       const cacheKey = createCacheKey(latitude, longitude, lang)
       const now = Date.now()
 
       // メモリキャッシュをチェック
-      const cached = memoryCache.get(cacheKey)
-      if (cached && now - cached.timestamp < CACHE_DURATION) {
-         return NextResponse.json(cached.data, {
-            headers: {
-               "Cache-Control":
-                  "public, s-maxage=172800, stale-while-revalidate=345600", // 48時間キャッシュ
-               "X-Cache": "HIT",
-               "X-Cache-Key": cacheKey,
-            },
-         })
+      const cached = getCachedResult(cacheKey, now)
+      if (cached) {
+         return cached
       }
 
       // APIから取得
       const data = await fetchLocationData(latitude, longitude, lang)
 
       // レスポンスデータの構造化
-      const result = {
-         latitude,
-         longitude,
-         address: data.address || {},
-         displayName: data.display_name || "",
-         // 地域名の優先順位: city > town > village > county > state
-         locationName:
-            data.address?.city ||
-            data.address?.town ||
-            data.address?.village ||
-            data.address?.county ||
-            data.address?.state ||
-            data.address?.country ||
-            "Unknown Location",
-      }
+      const result = formatLocationResult(data, latitude, longitude)
 
       // メモリキャッシュに保存
       memoryCache.set(cacheKey, { data: result, timestamp: now })
 
       // 古いキャッシュエントリを削除（メモリ管理）
-      if (memoryCache.size > 2000) {
-         // キャッシュサイズを拡大
-         const entries = Array.from(memoryCache.entries())
-         const oldEntries = entries.filter(
-            ([, value]) => now - value.timestamp > CACHE_DURATION,
-         )
-         for (const [key] of oldEntries) {
-            memoryCache.delete(key)
-         }
-      }
+      cleanupOldCache(now)
 
       // 積極的なキャッシュヘッダーを設定
       return NextResponse.json(result, {
@@ -305,27 +376,7 @@ export async function GET(
 
       // タイムアウトエラーの場合はフォールバック
       if (error instanceof Error && error.name === "AbortError") {
-         return NextResponse.json(
-            {
-               latitude: Number.parseFloat(
-                  request.nextUrl.searchParams.get("lat") || "0",
-               ),
-               longitude: Number.parseFloat(
-                  request.nextUrl.searchParams.get("lon") || "0",
-               ),
-               address: {},
-               displayName: "Location",
-               locationName: "Unknown Location",
-            },
-            {
-               status: 200,
-               headers: {
-                  "Cache-Control":
-                     "public, s-maxage=3600, stale-while-revalidate=7200", // 1時間キャッシュ
-                  "X-Cache": "TIMEOUT-FALLBACK",
-               },
-            },
-         )
+         return createTimeoutFallbackResponse(request)
       }
 
       return NextResponse.json(

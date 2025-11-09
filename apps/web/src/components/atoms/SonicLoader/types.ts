@@ -1,5 +1,5 @@
 /**
- * SonicLoaderコンポーネントのプロパティ型定義
+ * SonicLoaderコンポーネントのProps型定義
  */
 export interface SonicLoaderProps {
    /** ローディング中かどうか */

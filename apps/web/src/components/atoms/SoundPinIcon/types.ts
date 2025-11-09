@@ -1,5 +1,5 @@
 /**
- * SoundPinIconコンポーネントのプロパティ型定義
+ * SoundPinIconコンポーネントのProps型定義
  */
 export interface SoundPinIconProps {
    /** アイコンのサイズ */

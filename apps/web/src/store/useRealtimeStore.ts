@@ -177,6 +177,100 @@ function isPinData(data: unknown): data is PinData {
 }
 
 /**
+ * ピンデータのバリデーションと位置情報の抽出
+ */
+function validatePinData(
+   payload: Record<string, unknown>,
+): { pinData: PinData; lat: number; lng: number } | null {
+   if (!isPinData(payload)) {
+      console.warn("⚠️ 無効なピンデータ")
+      return null
+   }
+
+   const pinData = payload
+
+   if (!pinData.location?.coordinates) {
+      console.warn("⚠️ ピンデータに位置情報がありません")
+      return null
+   }
+
+   const [lng, lat] = pinData.location.coordinates
+   return { pinData, lat, lng }
+}
+
+/**
+ * 通知範囲内かチェック
+ */
+function isWithinNotificationRange(
+   userLat: number,
+   userLng: number,
+   pinLat: number,
+   pinLng: number,
+   maxDistance: number,
+): { distance: number; isWithin: boolean } {
+   const distance = calculateDistance(userLat, userLng, pinLat, pinLng)
+
+   return {
+      distance,
+      isWithin: distance <= maxDistance,
+   }
+}
+
+/**
+ * 通知オブジェクトを作成
+ */
+function createNotification(
+   pinData: PinData,
+   lat: number,
+   lng: number,
+   distance: number,
+   generateNotificationId: () => string,
+): RealtimeNotification {
+   return {
+      id: generateNotificationId(),
+      type: "new_pin",
+      pinId: pinData.id,
+      location: { lat, lng },
+      distance: Math.round(distance),
+      timestamp: new Date(),
+      isRead: false,
+      data: {
+         title: pinData.title || "音声ピン",
+         primaryLabel: pinData.ai_analysis?.categories?.topic,
+         confidence: pinData.ai_analysis?.categories?.confidence,
+      },
+   }
+}
+
+/**
+ * 音声アラートを再生
+ */
+function playSoundAlert(): void {
+   if (!("Audio" in window)) {
+      return
+   }
+
+   try {
+      const audio = new Audio("/sounds/notification.mp3")
+      audio.volume = 0.3
+      audio.play().catch(() => {
+         // 音声再生失敗は無視
+      })
+   } catch {
+      // Audio作成失敗は無視
+   }
+}
+
+/**
+ * 振動アラートを実行
+ */
+function triggerVibrationAlert(): void {
+   if ("vibrate" in navigator) {
+      navigator.vibrate([200, 100, 200])
+   }
+}
+
+/**
  * デフォルトの通知設定
  */
 const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
@@ -422,45 +516,32 @@ export const useRealtimeStore = create<RealtimeState & RealtimeActions>(
          }
 
          try {
-            if (!isPinData(payload)) {
-               console.warn("⚠️ 無効なピンデータ")
+            const validatedData = validatePinData(payload)
+            if (!validatedData) {
                return
             }
 
-            const pinData = payload
+            const { pinData, lat, lng } = validatedData
 
-            if (!pinData.location?.coordinates) {
-               console.warn("⚠️ ピンデータに位置情報がありません")
-               return
-            }
-
-            const [lng, lat] = pinData.location.coordinates
-            const distance = calculateDistance(
+            const { distance, isWithin } = isWithinNotificationRange(
                userLocation.latitude,
                userLocation.longitude,
                lat,
                lng,
+               notificationSettings.maxDistance,
             )
 
-            // 通知範囲内かチェック
-            if (distance > notificationSettings.maxDistance) {
+            if (!isWithin) {
                return
             }
 
-            const notification: RealtimeNotification = {
-               id: generateNotificationId(),
-               type: "new_pin",
-               pinId: pinData.id,
-               location: { lat, lng },
-               distance: Math.round(distance),
-               timestamp: new Date(),
-               isRead: false,
-               data: {
-                  title: pinData.title || "音声ピン",
-                  primaryLabel: pinData.ai_analysis?.categories?.topic,
-                  confidence: pinData.ai_analysis?.categories?.confidence,
-               },
-            }
+            const notification = createNotification(
+               pinData,
+               lat,
+               lng,
+               distance,
+               generateNotificationId,
+            )
 
             set((state) => ({
                recentNotifications: [
@@ -471,25 +552,11 @@ export const useRealtimeStore = create<RealtimeState & RealtimeActions>(
 
             // 音声・振動アラート
             if (notificationSettings.soundEnabled) {
-               // ブラウザ通知音（可能な場合）
-               if ("Audio" in window) {
-                  try {
-                     const audio = new Audio("/sounds/notification.mp3")
-                     audio.volume = 0.3
-                     audio.play().catch(() => {
-                        // 音声再生失敗は無視
-                     })
-                  } catch {
-                     // Audio作成失敗は無視
-                  }
-               }
+               playSoundAlert()
             }
 
-            if (
-               notificationSettings.vibrationEnabled &&
-               "vibrate" in navigator
-            ) {
-               navigator.vibrate([200, 100, 200])
+            if (notificationSettings.vibrationEnabled) {
+               triggerVibrationAlert()
             }
 
             console.log("🔔 新ピン通知:", notification)

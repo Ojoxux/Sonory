@@ -1,5 +1,5 @@
 /**
- * PulseEffectコンポーネントのプロパティ型定義
+ * PulseEffectコンポーネントのProps型定義
  */
 export interface PulseEffectProps {
    /**

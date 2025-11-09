@@ -1,7 +1,7 @@
 import type { AudioData } from "../../../store/types"
 
 /**
- * WaveformPlayerコンポーネントのプロパティ型
+ * WaveformPlayerコンポーネントのProps型
  */
 export type WaveformPlayerProps = {
    /** 再生する音声データ */

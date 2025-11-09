@@ -229,6 +229,380 @@ function generateTimeTag(date: Date): "朝" | "昼" | "夕" | "夜" {
 }
 
 /**
+ * APIレスポンスの型定義
+ */
+interface PinApiResponse {
+   success: boolean
+   data?: {
+      id: string
+      audio_url: string
+      location: {
+         lat: number
+         lng: number
+      }
+      audio: {
+         url: string
+      }
+      createdAt: string
+      timeTag?: "朝" | "昼" | "夕" | "夜"
+      weather?: {
+         temperature: number
+         condition: string
+         windSpeed?: number
+         humidity?: number
+      }
+   }
+   error?: string
+}
+
+/**
+ * 一時ピンを作成
+ */
+function createTempPin(
+   audioUrl: string,
+   location: LocationData,
+   analysisResult: InferenceResult[],
+   primaryResult: InferenceResult | undefined,
+   timeTag: "朝" | "昼" | "夕" | "夜",
+   weatherData:
+      | {
+           temperature: number
+           condition: string
+           windSpeed?: number
+           humidity?: number
+        }
+      | undefined,
+   duration: number | undefined,
+   now: Date,
+): SoundPin {
+   return {
+      id: crypto.randomUUID(),
+      latitude: location.latitude,
+      longitude: location.longitude,
+      audioData: {
+         blob: new Blob(),
+         url: audioUrl,
+         recordedAt: now,
+         id: crypto.randomUUID(),
+         duration: duration,
+      },
+      classificationResults: analysisResult,
+      recordedAt: now,
+      primaryLabel: primaryResult?.label ?? "不明",
+      primaryConfidence: primaryResult?.confidence ?? 0,
+      isPersisted: false,
+      timeTag: timeTag,
+      environment: primaryResult?.label || "unknown",
+      weather: weatherData,
+   }
+}
+
+/**
+ * APIレスポンスをSoundPinに変換
+ */
+function convertApiResponseToPin(
+   result: PinApiResponse,
+   analysisResult: InferenceResult[],
+   primaryResult: InferenceResult | undefined,
+   duration: number | undefined,
+): SoundPin {
+   if (!result.success || !result.data) {
+      throw new Error("ピン作成結果が不正です")
+   }
+
+   return {
+      id: result.data.id,
+      latitude: result.data.location.lat,
+      longitude: result.data.location.lng,
+      audioData: {
+         blob: new Blob(),
+         url: result.data.audio.url,
+         recordedAt: new Date(result.data.createdAt),
+         id: result.data.id,
+         duration: duration,
+      },
+      classificationResults: analysisResult,
+      recordedAt: new Date(result.data.createdAt),
+      primaryLabel: primaryResult?.label ?? "不明",
+      primaryConfidence: primaryResult?.confidence ?? 0,
+      isPersisted: true,
+      timeTag: result.data.timeTag,
+      environment: primaryResult?.label || "unknown",
+      weather: result.data.weather,
+   }
+}
+
+/**
+ * storage:// URLからピンを作成
+ */
+async function createPinFromStorageUrl(
+   audioUrl: string,
+   location: LocationData,
+   analysisResult: InferenceResult[],
+   primaryResult: InferenceResult | undefined,
+   timeTag: "朝" | "昼" | "夕" | "夜",
+   weatherData:
+      | {
+           temperature: number
+           condition: string
+           windSpeed?: number
+           humidity?: number
+        }
+      | undefined,
+   duration: number | undefined,
+): Promise<SoundPin> {
+   console.log("🔄 既にアップロード済みのため、メタデータのみでピン作成")
+
+   const match = audioUrl.match(/^storage:\/\/[^/]+\/(.+)$/)
+   const filePath = match?.[1]
+
+   if (!filePath) {
+      throw new Error("storage:// URLからファイルパスを抽出できませんでした")
+   }
+
+   const response = await fetch("/api/pins", {
+      method: "POST",
+      headers: {
+         "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+         audio_file_path: filePath,
+         location: {
+            lat: location.latitude,
+            lng: location.longitude,
+            accuracy: location.accuracy,
+         },
+         metadata: {
+            duration: duration || 10,
+            timeTag,
+            title: primaryResult?.label || "音声ピン",
+            deviceInfo: navigator.userAgent,
+            ...(weatherData ? { weather: weatherData } : {}),
+         },
+      }),
+   })
+
+   if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.message || `ピン作成失敗: ${response.status}`)
+   }
+
+   const result: PinApiResponse = await response.json()
+   return convertApiResponseToPin(
+      result,
+      analysisResult,
+      primaryResult,
+      duration,
+   )
+}
+
+/**
+ * 音声ファイルをアップロードしてピンを作成
+ */
+async function uploadPinWithAudio(
+   audioUrl: string,
+   location: LocationData,
+   analysisResult: InferenceResult[],
+   primaryResult: InferenceResult | undefined,
+   timeTag: "朝" | "昼" | "夕" | "夜",
+   weatherData:
+      | {
+           temperature: number
+           condition: string
+           windSpeed?: number
+           humidity?: number
+        }
+      | undefined,
+   duration: number | undefined,
+): Promise<SoundPin> {
+   console.log("🔄 音声ファイルをアップロード")
+
+   const audioBlob = await fetch(audioUrl).then((res) => res.blob())
+
+   const formData = new FormData()
+   formData.append("audio", audioBlob, "audio.webm")
+   formData.append(
+      "location",
+      JSON.stringify({
+         lat: location.latitude,
+         lng: location.longitude,
+         accuracy: location.accuracy,
+      }),
+   )
+   formData.append(
+      "metadata",
+      JSON.stringify({
+         duration: duration || 10,
+         timeTag,
+         title: primaryResult?.label || "音声ピン",
+         deviceInfo: navigator.userAgent,
+         ...(weatherData ? { weather: weatherData } : {}),
+      }),
+   )
+
+   const response = await fetch("/api/pins/upload", {
+      method: "POST",
+      body: formData,
+   })
+
+   if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.message || `ピン作成失敗: ${response.status}`)
+   }
+
+   const result: PinApiResponse = await response.json()
+   return convertApiResponseToPin(
+      result,
+      analysisResult,
+      primaryResult,
+      duration,
+   )
+}
+
+/**
+ * ピンの状態を更新（一時ピンを削除し、永続化ピンを追加）
+ */
+function updatePinState(tempPin: SoundPin, createdPin: SoundPin): void {
+   useSoundPinStore.setState((state) => ({
+      tempPins: state.tempPins.filter((p) => p.id !== tempPin.id),
+      persistedPins: [...state.persistedPins, createdPin],
+      pinCreationStatus: "success",
+      lastCreatedPinId: createdPin.id,
+   }))
+
+   console.log("📍 ピン作成完了:", {
+      pinId: createdPin.id,
+      location: {
+         lat: createdPin.latitude,
+         lng: createdPin.longitude,
+      },
+      isPersisted: createdPin.isPersisted,
+      weather: createdPin.weather,
+   })
+}
+
+/**
+ * 周辺ピン検索の遅延更新をスケジュール
+ */
+function scheduleNearbyPinsUpdate(pinId: string): void {
+   console.log("⏰ 新ピン作成後の周辺ピン検索を1秒遅延...")
+   setTimeout(() => {
+      console.log("🔄 遅延後の周辺ピン検索実行")
+      useSoundPinStore.setState((state) => ({
+         ...state,
+         lastCreatedPinId: pinId,
+      }))
+   }, 1000)
+}
+
+/**
+ * DBピンの型定義
+ */
+interface DbPin {
+   id: string
+   location: { lat: number; lng: number }
+   audio: { url: string; duration: number; format: string }
+   title?: string
+   timeTag?: "朝" | "昼" | "夕" | "夜"
+   weather?: {
+      temperature: number
+      condition: string
+      windSpeed?: number
+      humidity?: number
+   }
+   aiAnalysis?: {
+      transcription: string
+      categories: {
+         confidence: number
+         topic: string
+         emotion: string
+         language: string
+      }
+      summary?: string
+   }
+   status: "active" | "processing" | "deleted" | "reported"
+   createdAt: string
+}
+
+/**
+ * 分類結果を構築
+ */
+function buildClassificationResults(pin: DbPin): InferenceResult[] {
+   const results: InferenceResult[] = []
+
+   // titleフィールドから分類結果を取得（最優先）
+   if (pin.title && pin.title !== "音声ピン" && pin.title.trim() !== "") {
+      results.push({
+         label: pin.title,
+         confidence: pin.aiAnalysis?.categories?.confidence || 0.8,
+      })
+      return results
+   }
+
+   // aiAnalysisのtopicから分類結果を取得
+   if (
+      pin.aiAnalysis?.categories?.topic &&
+      pin.aiAnalysis.categories.topic !== "unknown"
+   ) {
+      results.push({
+         label: pin.aiAnalysis.categories.topic,
+         confidence: pin.aiAnalysis.categories.confidence || 0,
+      })
+      return results
+   }
+
+   // どちらもない場合は「未分類」
+   results.push({
+      label: "未分類",
+      confidence: 0,
+   })
+   return results
+}
+
+/**
+ * DBピンをSoundPinに変換
+ */
+function convertDbPinToSoundPin(dbPin: unknown): SoundPin {
+   const pin = dbPin as DbPin
+
+   // デバッグ: データベースから取得したピンデータの内容をログ出力
+   if (process.env.NODE_ENV === "development") {
+      console.log("🔍 Converting DB pin to SoundPin:", {
+         pinId: pin.id,
+         dbTitle: pin.title,
+         aiAnalysis: pin.aiAnalysis,
+         primaryResult: pin.aiAnalysis?.categories,
+      })
+   }
+
+   const classificationResults = buildClassificationResults(pin)
+   const primaryLabel =
+      pin.title || pin.aiAnalysis?.categories?.topic || "音声ピン"
+   const environment =
+      pin.title || pin.aiAnalysis?.categories?.topic || "unknown"
+
+   return {
+      id: pin.id,
+      latitude: pin.location.lat,
+      longitude: pin.location.lng,
+      audioData: {
+         blob: new Blob(),
+         url: pin.audio.url,
+         recordedAt: new Date(pin.createdAt),
+         id: pin.id,
+      },
+      classificationResults,
+      recordedAt: new Date(pin.createdAt),
+      primaryLabel,
+      primaryConfidence: pin.aiAnalysis?.categories?.confidence || 0.8,
+      isPersisted: true,
+      weather: pin.weather,
+      timeTag: pin.timeTag,
+      environment,
+   }
+}
+
+/**
  * 音声ピン管理用Zustandストア
  *
  * @description
@@ -351,291 +725,58 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
             location.longitude,
          )
 
-         // まず、ローカルピンとして即座に表示（DB同期まで表示を維持）
-         const tempPin: SoundPin = {
-            id: crypto.randomUUID(), // 一時的なID
-            latitude: location.latitude,
-            longitude: location.longitude,
-            audioData: {
-               blob: new Blob(),
-               url: audioUrl,
-               recordedAt: now,
-               id: crypto.randomUUID(),
-               duration: duration,
-            },
-            classificationResults: analysisResult,
-            recordedAt: now,
-            primaryLabel: primaryResult?.label ?? "不明",
-            primaryConfidence: primaryResult?.confidence ?? 0,
-            isPersisted: false, // まだ永続化されていない
-            timeTag: timeTag,
-            environment: primaryResult?.label || "unknown",
-            weather: weatherData, // 天気情報を追加
-         }
+         // 一時ピンを作成して追加
+         const tempPin = createTempPin(
+            audioUrl,
+            location,
+            analysisResult,
+            primaryResult,
+            timeTag,
+            weatherData,
+            duration,
+            now,
+         )
 
-         // 一時ピンとして即座に追加し、lastCreatedPinIdを設定
          set((state) => ({
             tempPins: [...state.tempPins, tempPin],
-            lastCreatedPinId: tempPin.id, // 一時ピンのIDを設定（即座の表示更新のため）
+            lastCreatedPinId: tempPin.id,
          }))
 
-         // storage:// URLの場合は既にアップロード済みなのでスキップし、
-         // メタデータのみでピンを作成
+         // storage:// URLの場合
          if (audioUrl.startsWith("storage://")) {
-            console.log(
-               "🔄 既にアップロード済みのため、メタデータのみでピン作成",
+            const createdPin = await createPinFromStorageUrl(
+               audioUrl,
+               location,
+               analysisResult,
+               primaryResult,
+               timeTag,
+               weatherData,
+               duration,
             )
-
-            // storage:// URLからファイルパスを抽出
-            const match = audioUrl.match(/^storage:\/\/[^/]+\/(.+)$/)
-            const filePath = match?.[1]
-
-            if (!filePath) {
-               throw new Error(
-                  "storage:// URLからファイルパスを抽出できませんでした",
-               )
-            }
-
-            // メタデータのみでピンを作成するエンドポイントを使用
-            const response = await fetch("/api/pins", {
-               method: "POST",
-               headers: {
-                  "Content-Type": "application/json",
-               },
-               body: JSON.stringify({
-                  audio_file_path: filePath,
-                  location: {
-                     lat: location.latitude,
-                     lng: location.longitude,
-                     accuracy: location.accuracy,
-                  },
-                  metadata: {
-                     duration: duration || 10,
-                     timeTag,
-                     title: primaryResult?.label || "音声ピン",
-                     deviceInfo: navigator.userAgent,
-                     ...(weatherData ? { weather: weatherData } : {}),
-                  },
-               }),
-            })
-
-            if (!response.ok) {
-               const errorData = await response.json().catch(() => ({}))
-               throw new Error(
-                  errorData.message || `ピン作成失敗: ${response.status}`,
-               )
-            }
-
-            const result: {
-               success: boolean
-               data?: {
-                  id: string
-                  audio_url: string
-                  location: {
-                     lat: number
-                     lng: number
-                  }
-                  audio: {
-                     url: string
-                  }
-                  createdAt: string
-                  timeTag?: "朝" | "昼" | "夕" | "夜"
-                  weather?: {
-                     temperature: number
-                     condition: string
-                     windSpeed?: number
-                     humidity?: number
-                  }
-               }
-               error?: string
-            } = await response.json()
-
-            if (!result.success || !result.data) {
-               throw new Error("ピン作成結果が不正です")
-            }
-
-            // 作成されたピンをローカル形式に変換
-            const createdPin: SoundPin = {
-               id: result.data.id,
-               latitude: result.data.location.lat,
-               longitude: result.data.location.lng,
-               audioData: {
-                  blob: new Blob(),
-                  url: result.data.audio.url,
-                  recordedAt: new Date(result.data.createdAt),
-                  id: result.data.id,
-                  duration: duration,
-               },
-               classificationResults: analysisResult,
-               recordedAt: new Date(result.data.createdAt),
-               primaryLabel: primaryResult?.label ?? "不明",
-               primaryConfidence: primaryResult?.confidence ?? 0,
-               isPersisted: true,
-               timeTag: result.data.timeTag,
-               environment: primaryResult?.label || "unknown",
-               weather: result.data.weather,
-            }
-
-            // 一時ピンを削除し、永続化ピンを追加
-            set((state) => ({
-               tempPins: state.tempPins.filter((p) => p.id !== tempPin.id),
-               persistedPins: [...state.persistedPins, createdPin],
-               pinCreationStatus: "success",
-               lastCreatedPinId: createdPin.id,
-            }))
-
-            console.log("📍 ピン作成完了:", {
-               pinId: createdPin.id,
-               location: {
-                  lat: createdPin.latitude,
-                  lng: createdPin.longitude,
-               },
-               isPersisted: createdPin.isPersisted,
-               weather: createdPin.weather,
-            })
-
+            updatePinState(tempPin, createdPin)
+            scheduleNearbyPinsUpdate(createdPin.id)
             return createdPin
          }
 
-         // blob: URLの場合は通常のアップロードフロー
-         console.log("🔄 音声ファイルをアップロード")
-
-         let audioBlob: Blob
-
-         if (audioUrl.startsWith("blob:")) {
-            // BlobURLから音声データを取得
-            audioBlob = await fetch(audioUrl).then((res) => res.blob())
-         } else {
-            // 既存のURLから音声データを取得
-            audioBlob = await fetch(audioUrl).then((res) => res.blob())
-         }
-
-         // FormDataを作成
-         const formData = new FormData()
-         formData.append("audio", audioBlob, "audio.webm")
-         formData.append(
-            "location",
-            JSON.stringify({
-               lat: location.latitude,
-               lng: location.longitude,
-               accuracy: location.accuracy,
-            }),
+         // blob: URLの場合
+         const createdPin = await uploadPinWithAudio(
+            audioUrl,
+            location,
+            analysisResult,
+            primaryResult,
+            timeTag,
+            weatherData,
+            duration,
          )
-         formData.append(
-            "metadata",
-            JSON.stringify({
-               duration: duration || 10,
-               timeTag,
-               title: primaryResult?.label || "音声ピン",
-               deviceInfo: navigator.userAgent,
-               ...(weatherData ? { weather: weatherData } : {}), // 天気情報がある場合のみ追加
-            }),
-         )
-
-         // アップロードエンドポイントを使用
-         const response = await fetch("/api/pins/upload", {
-            method: "POST",
-            body: formData,
-         })
-
-         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}))
-            throw new Error(
-               errorData.message || `ピン作成失敗: ${response.status}`,
-            )
-         }
-
-         const result: {
-            success: boolean
-            data?: {
-               id: string
-               audio_url: string
-               location: {
-                  lat: number
-                  lng: number
-               }
-               audio: {
-                  url: string
-               }
-               createdAt: string
-               timeTag?: "朝" | "昼" | "夕" | "夜"
-               weather?: {
-                  temperature: number
-                  condition: string
-                  windSpeed?: number
-                  humidity?: number
-               }
-            }
-            error?: string
-         } = await response.json()
-
-         if (!result.success || !result.data) {
-            throw new Error("ピン作成結果が不正です")
-         }
-
-         // 作成されたピンをローカル形式に変換
-         const createdPin: SoundPin = {
-            id: result.data.id, // 実際のDBのID
-            latitude: result.data.location.lat,
-            longitude: result.data.location.lng,
-            audioData: {
-               blob: new Blob(), // 空のBlob（実際のBlobは不要）
-               url: result.data.audio.url,
-               recordedAt: new Date(result.data.createdAt),
-               id: result.data.id,
-               duration: duration,
-            },
-            classificationResults: analysisResult,
-            recordedAt: new Date(result.data.createdAt),
-            primaryLabel: primaryResult?.label ?? "不明",
-            primaryConfidence: primaryResult?.confidence ?? 0,
-            isPersisted: true,
-            timeTag: result.data.timeTag,
-            environment: primaryResult?.label || "unknown",
-            weather: result.data.weather, // 天気情報を追加
-         }
-
-         // 一時ピンを削除し、永続化ピンを追加
-         set((state) => ({
-            tempPins: state.tempPins.filter((p) => p.id !== tempPin.id), // 一時ピンを削除
-            persistedPins: [...state.persistedPins, createdPin],
-            pinCreationStatus: "success",
-            lastCreatedPinId: createdPin.id, // 永続化ピンのIDに更新
-         }))
-
-         console.log("🔄 永続化ピン作成完了、lastCreatedPinIdを更新:", {
-            tempPinId: tempPin.id,
-            persistedPinId: createdPin.id,
-         })
-
-         console.log("📍 ピン作成完了:", {
-            pinId: createdPin.id,
-            location: { lat: createdPin.latitude, lng: createdPin.longitude },
-            isPersisted: createdPin.isPersisted,
-            weather: createdPin.weather,
-         })
-
-         // ⚠️ 重要：データベースの読み取り一貫性を確保するため、
-         // 新ピン作成後の周辺ピン検索を1秒遅延させる
-         console.log("⏰ 新ピン作成後の周辺ピン検索を1秒遅延...")
-         setTimeout(() => {
-            console.log("🔄 遅延後の周辺ピン検索実行")
-            // 遅延後の周辺ピン検索は、MapComponent側で実行される
-            // ここでは新ピン作成フラグを設定して通知
-            set((state) => ({
-               ...state,
-               lastCreatedPinId: createdPin.id,
-            }))
-         }, 1000)
-
+         updatePinState(tempPin, createdPin)
+         scheduleNearbyPinsUpdate(createdPin.id)
          return createdPin
       } catch (error) {
          const errorMessage =
             error instanceof Error ? error.message : "ピン作成に失敗しました"
 
-         // エラー時は一時ピンも削除
          set((_state) => ({
-            tempPins: [], // 一時ピンをクリア
+            tempPins: [],
             pinCreationStatus: "error",
             pinCreationError: errorMessage,
          }))
@@ -812,105 +953,7 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
 
          // DB結果をSoundPin形式に変換
          const loadedPins: SoundPin[] = (result.data || []).map(
-            (dbPin: unknown) => {
-               const pin = dbPin as {
-                  id: string
-                  location: { lat: number; lng: number }
-                  audio: { url: string; duration: number; format: string }
-                  title?: string
-                  timeTag?: "朝" | "昼" | "夕" | "夜"
-                  weather?: {
-                     temperature: number
-                     condition: string
-                     windSpeed?: number
-                     humidity?: number
-                  }
-                  aiAnalysis?: {
-                     transcription: string
-                     categories: {
-                        confidence: number
-                        topic: string
-                        emotion: string
-                        language: string
-                     }
-                     summary?: string
-                  }
-                  status: "active" | "processing" | "deleted" | "reported"
-                  createdAt: string
-               }
-
-               // デバッグ: データベースから取得したピンデータの内容をログ出力
-               if (process.env.NODE_ENV === "development") {
-                  console.log("🔍 Converting DB pin to SoundPin:", {
-                     pinId: pin.id,
-                     dbTitle: pin.title,
-                     aiAnalysis: pin.aiAnalysis,
-                     primaryResult: pin.aiAnalysis?.categories,
-                  })
-               }
-
-               // 分類結果を構築
-               const classificationResults = []
-
-               // 1. titleフィールドから分類結果を取得（最優先）
-               if (
-                  pin.title &&
-                  pin.title !== "音声ピン" &&
-                  pin.title.trim() !== ""
-               ) {
-                  classificationResults.push({
-                     label: pin.title,
-                     confidence: pin.aiAnalysis?.categories?.confidence || 0.8, // デフォルトで80%の信頼度
-                     category: "other" as const,
-                  })
-               }
-               // 2. aiAnalysisのtopicから分類結果を取得
-               else if (
-                  pin.aiAnalysis?.categories?.topic &&
-                  pin.aiAnalysis.categories.topic !== "unknown"
-               ) {
-                  classificationResults.push({
-                     label: pin.aiAnalysis.categories.topic,
-                     confidence: pin.aiAnalysis.categories.confidence || 0,
-                     category: "other" as const,
-                  })
-               }
-               // 3. どちらもない場合は「未分類」
-               else {
-                  classificationResults.push({
-                     label: "未分類",
-                     confidence: 0,
-                     category: "other" as const,
-                  })
-               }
-
-               // primaryLabelとenvironmentを決定
-               const primaryLabel =
-                  pin.title || pin.aiAnalysis?.categories?.topic || "音声ピン"
-               const environment =
-                  pin.title || pin.aiAnalysis?.categories?.topic || "unknown"
-
-               return {
-                  id: pin.id,
-                  latitude: pin.location.lat,
-                  longitude: pin.location.lng,
-                  audioData: {
-                     blob: new Blob(),
-                     url: pin.audio.url,
-                     recordedAt: new Date(pin.createdAt),
-                     id: pin.id,
-                  },
-                  classificationResults,
-                  recordedAt: new Date(pin.createdAt),
-                  primaryLabel,
-                  primaryConfidence:
-                     pin.aiAnalysis?.categories?.confidence || 0.8,
-                  isPersisted: true,
-                  weather: pin.weather,
-                  timeTag: pin.timeTag,
-                  environment,
-               }
-            },
+            (dbPin: unknown) => convertDbPinToSoundPin(dbPin),
          )
 
          set((_state) => ({
