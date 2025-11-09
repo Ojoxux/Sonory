@@ -17,6 +17,64 @@ interface AudioMetadata {
 }
 
 /**
+ * FormDataを作成する
+ */
+function createUploadFormData(
+   audioBlob: Blob,
+   metadata: AudioMetadata,
+): FormData {
+   const formData = new FormData()
+   formData.append("audio", audioBlob, `audio-${Date.now()}.webm`)
+
+   if (metadata.location) {
+      formData.append(
+         "metadata",
+         JSON.stringify({
+            location: metadata.location,
+            duration: metadata.duration,
+         }),
+      )
+   }
+
+   return formData
+}
+
+/**
+ * アップロードレスポンスを検証する
+ */
+function validateUploadResponse(result: unknown): {
+   audioUrl: string
+   audioId: string
+} {
+   if (
+      typeof result !== "object" ||
+      result === null ||
+      !("success" in result) ||
+      result.success !== true ||
+      !("data" in result) ||
+      typeof result.data !== "object" ||
+      result.data === null
+   ) {
+      throw new Error("アップロード結果が不正です")
+   }
+
+   const data = result.data as Record<string, unknown>
+   const audioUrl = data.audioUrl
+   const audioId = data.audioId
+
+   if (typeof audioUrl !== "string" || typeof audioId !== "string") {
+      console.error("❌ アップロードレスポンスに必要な値が含まれていません:", {
+         audioUrl,
+         audioId,
+         fullResponse: result,
+      })
+      throw new Error("アップロードレスポンスが不完全です")
+   }
+
+   return { audioUrl, audioId }
+}
+
+/**
  * 録音機能を管理するZustandストア
  *
  * 録音の開始、停止、一時停止、再開、リセットなどの機能を提供します。
@@ -146,29 +204,8 @@ export const useRecorderStore = create<RecorderState>((set, _get) => ({
             uploadError: null,
          })
 
-         // FormDataを作成
-         const formData = new FormData()
-         formData.append("audio", audioBlob, `audio-${Date.now()}.webm`)
+         const formData = createUploadFormData(audioBlob, metadata)
 
-         // 位置情報をメタデータとして追加（必要に応じて）
-         if (metadata.location) {
-            formData.append(
-               "metadata",
-               JSON.stringify({
-                  location: metadata.location,
-                  duration: metadata.duration,
-               }),
-            )
-         }
-
-         // 進捗をシミュレート（実際のアップロード進捗は取得困難）
-         const progressInterval = setInterval(() => {
-            set((state) => ({
-               uploadProgress: Math.min(state.uploadProgress + 10, 90),
-            }))
-         }, 200)
-
-         // バックエンドAPIにアップロード
          console.log("🔄 音声アップロード実行中...", {
             endpoint: "/api/audio/upload",
             blobSize: audioBlob.size,
@@ -179,8 +216,6 @@ export const useRecorderStore = create<RecorderState>((set, _get) => ({
             method: "POST",
             body: formData,
          })
-
-         clearInterval(progressInterval)
 
          console.log("📡 アップロードレスポンス受信:", {
             status: response.status,
@@ -195,47 +230,26 @@ export const useRecorderStore = create<RecorderState>((set, _get) => ({
                errorData,
             })
             throw new Error(
-               errorData.message || `アップロード失敗: ${response.status}`,
+               (errorData as { message?: string })?.message ||
+                  `アップロード失敗: ${response.status}`,
             )
          }
 
          const result = await response.json()
-
          console.log("📤 アップロードレスポンス:", result)
 
-         if (!result.success || !result.data) {
-            throw new Error("アップロード結果が不正です")
-         }
+         const { audioUrl, audioId } = validateUploadResponse(result)
 
-         // バックエンドのレスポンス形式に対応
-         const { audioUrl, audioId } = result.data
-
-         // 値の存在確認
-         if (!audioUrl || !audioId) {
-            console.error(
-               "❌ アップロードレスポンスに必要な値が含まれていません:",
-               {
-                  audioUrl,
-                  audioId,
-                  fullResponse: result,
-               },
-            )
-            throw new Error("アップロードレスポンスが不完全です")
-         }
-
-         const url = audioUrl
-         const id = audioId
-
-         console.log("✅ アップロード成功:", { url, id })
+         console.log("✅ アップロード成功:", { url: audioUrl, id: audioId })
 
          set({
             uploadStatus: "success",
             uploadProgress: 100,
-            uploadedAudioUrl: url,
-            uploadedAudioId: id,
+            uploadedAudioUrl: audioUrl,
+            uploadedAudioId: audioId,
          })
 
-         return { url, id }
+         return { url: audioUrl, id: audioId }
       } catch (error) {
          const errorMessage =
             error instanceof Error
