@@ -15,8 +15,8 @@ import type { DebugInfoProps } from "./types"
  * ```
  */
 export function DebugInfo({ pin }: DebugInfoProps) {
-   // 開発環境以外では非表示
-   if (process.env.NODE_ENV !== "development") return null
+   // MEMO: 本番環境では表示する必要がないので、何も返さない
+   if (process.env.NODE_ENV === "production") return null
 
    return (
       <div className="mb-4 rounded-lg border border-purple-500/30 bg-purple-500/20 p-3 text-xs">

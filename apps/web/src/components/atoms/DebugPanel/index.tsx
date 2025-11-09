@@ -68,6 +68,11 @@ export function DebugPanel({
    const { audioData } = useRecorderStore()
    const { performanceData, logs, clearLogs } = useYAMNetDebug()
 
+   // MEMO: 本番環境では表示する必要がないので、何も返さない
+   if (process.env.NODE_ENV === "production") {
+      return <></>
+   }
+
    return (
       <motion.div
          initial={{ opacity: 0, y: 20 }}
