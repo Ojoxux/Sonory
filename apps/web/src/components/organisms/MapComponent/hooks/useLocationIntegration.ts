@@ -61,6 +61,99 @@ export function useLocationIntegration({
    const [geolocateAttempted, setGeolocateAttempted] = useState<boolean>(false)
 
    /**
+    * 録音データを保存・復元するヘルパー関数
+    */
+   const preserveRecordingData = useCallback((): void => {
+      const recordingData = localStorage.getItem("recording_data")
+      if (recordingData) {
+         localStorage.setItem("recording_data", recordingData)
+      }
+   }, [])
+
+   /**
+    * 位置情報を更新し、マップの視点を調整する
+    */
+   const updatePositionAndMap = useCallback(
+      (newPosition: LocationData): void => {
+         setMapboxPosition(newPosition)
+         preserveRecordingData()
+         onPositionUpdate(newPosition)
+
+         if (debugMode) {
+            showNotification("位置情報を更新しました", "success")
+         }
+
+         if (map) {
+            map.flyTo({
+               center: [newPosition.longitude, newPosition.latitude],
+               zoom: 18,
+               pitch: 50,
+               bearing: -20,
+               essential: true,
+               duration: 2000,
+            })
+         }
+      },
+      [
+         debugMode,
+         map,
+         onPositionUpdate,
+         preserveRecordingData,
+         showNotification,
+      ],
+   )
+
+   /**
+    * 保存された位置情報を使用する
+    */
+   const loadSavedPosition = useCallback((): boolean => {
+      const savedPosition = localStorage.getItem("sonory_last_position")
+      if (!savedPosition) {
+         return false
+      }
+
+      try {
+         const parsed = JSON.parse(savedPosition) as LocationData
+         setMapboxPosition(parsed)
+         preserveRecordingData()
+         onPositionUpdate(parsed)
+
+         if (debugMode) {
+            showNotification("保存された位置情報を使用しました", "warning")
+         }
+         return true
+      } catch (parseError) {
+         console.error("保存された位置情報の解析エラー:", parseError)
+         return false
+      }
+   }, [debugMode, onPositionUpdate, preserveRecordingData, showNotification])
+
+   /**
+    * Mapboxのgeolocationコントロールを試行する
+    */
+   const tryMapboxGeolocation = useCallback((): void => {
+      if (!geolocateControl || !geolocateInitialized) {
+         return
+      }
+
+      try {
+         geolocateControl.trigger()
+      } catch (triggerError) {
+         console.error("Mapbox trigger失敗:", triggerError)
+      }
+   }, [geolocateControl, geolocateInitialized])
+
+   /**
+    * フォールバックレベル2の処理
+    */
+   const handleFallbackLevel2 = useCallback((): void => {
+      if (loadSavedPosition()) {
+         return
+      }
+      tryMapboxGeolocation()
+   }, [tryMapboxGeolocation, loadSavedPosition])
+
+   /**
     * 段階的フォールバック戦略による位置情報取得
     */
    const attemptGeolocation = useCallback((): void => {
@@ -68,17 +161,7 @@ export function useLocationIntegration({
 
       if (!("geolocation" in navigator)) {
          console.warn("Geolocation APIがサポートされていません")
-         // 保存された位置情報があればそれを使用
-         const savedPosition = localStorage.getItem("sonory_last_position")
-         if (savedPosition) {
-            try {
-               const parsed = JSON.parse(savedPosition) as LocationData
-               setMapboxPosition(parsed)
-               onPositionUpdate(parsed)
-            } catch (error) {
-               console.error("保存された位置情報の解析エラー:", error)
-            }
-         }
+         loadSavedPosition()
          return
       }
 
@@ -89,41 +172,13 @@ export function useLocationIntegration({
       ): void => {
          navigator.geolocation.getCurrentPosition(
             (position) => {
-               const newPosition = {
+               const newPosition: LocationData = {
                   latitude: position.coords.latitude,
                   longitude: position.coords.longitude,
                   accuracy: position.coords.accuracy,
                   timestamp: Date.now(),
                }
-               setMapboxPosition(newPosition)
-
-               // 位置情報を更新する前に録音データを保存
-               const recordingData = localStorage.getItem("recording_data")
-
-               // 位置情報を更新
-               onPositionUpdate(newPosition)
-
-               // 録音データを復元
-               if (recordingData) {
-                  localStorage.setItem("recording_data", recordingData)
-               }
-
-               // デバッグモード時のみ成功通知
-               if (debugMode) {
-                  showNotification("位置情報を更新しました", "success")
-               }
-
-               // マップの視点を更新（斜めから見下ろす視点を維持）
-               if (map) {
-                  map.flyTo({
-                     center: [newPosition.longitude, newPosition.latitude],
-                     zoom: 18,
-                     pitch: 50,
-                     bearing: -20,
-                     essential: true,
-                     duration: 2000,
-                  })
-               }
+               updatePositionAndMap(newPosition)
             },
             (error) => {
                // 段階的フォールバック
@@ -137,53 +192,7 @@ export function useLocationIntegration({
                      2,
                   )
                } else if (fallbackLevel === 2) {
-                  const savedPosition = localStorage.getItem(
-                     "sonory_last_position",
-                  )
-                  if (savedPosition) {
-                     try {
-                        const parsed = JSON.parse(savedPosition) as LocationData
-                        setMapboxPosition(parsed)
-
-                        // 位置情報を更新する前に録音データを保存
-                        const recordingData =
-                           localStorage.getItem("recording_data")
-
-                        // 位置情報を更新
-                        onPositionUpdate(parsed)
-
-                        // 録音データを復元
-                        if (recordingData) {
-                           localStorage.setItem("recording_data", recordingData)
-                        }
-
-                        if (debugMode) {
-                           showNotification(
-                              "保存された位置情報を使用しました",
-                              "warning",
-                           )
-                        }
-                        return
-                     } catch (parseError) {
-                        console.error(
-                           "保存された位置情報の解析エラー:",
-                           parseError,
-                        )
-                     }
-                  }
-
-                  // レベル4: Mapboxのgeolocationコントロールを試行
-                  if (geolocateControl && geolocateInitialized) {
-                     try {
-                        geolocateControl.trigger()
-                     } catch (triggerError) {
-                        console.error("Mapbox trigger失敗:", triggerError)
-                     }
-                  } else {
-                     // TODO: Mapboxの位置情報取得が利用できない場合の処理を実装
-                  }
-               } else {
-                  // TODO: 最終的なフォールバック処理を実装
+                  handleFallbackLevel2()
                }
             },
             options,
@@ -199,14 +208,7 @@ export function useLocationIntegration({
          },
          1,
       )
-   }, [
-      geolocateControl,
-      geolocateInitialized,
-      debugMode,
-      showNotification,
-      onPositionUpdate,
-      map,
-   ])
+   }, [handleFallbackLevel2, updatePositionAndMap, loadSavedPosition])
 
    /**
     * 位置情報をリセットする関数
