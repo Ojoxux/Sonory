@@ -6,7 +6,6 @@ AudioSetの521クラスを日本語12カテゴリに変換し、環境タイプ�
 """
 
 import asyncio
-import logging
 import os
 import tempfile
 from typing import Dict, List, Optional, Tuple, Any
@@ -69,7 +68,7 @@ def setup_tensorflow_hub_cache():
         os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"  # INFO以上のログを表示
 
         return cache_dir
-    except Exception as e:
+    except Exception:
         # フォールバック：システムの一時ディレクトリを使用
         fallback_dir = tempfile.mkdtemp(prefix="tfhub_cache_")
         os.environ["TFHUB_CACHE_DIR"] = fallback_dir
