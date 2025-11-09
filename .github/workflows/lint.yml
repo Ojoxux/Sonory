@@ -1,15 +1,19 @@
 name: Lint CI
 
-# トリガー条件: pushされたとき (python-audio-analyzerを除く)
+# トリガー条件: pushされたとき (python周りのファイルとドキュメントを除く)
 on:
   push:
     paths-ignore:
       - 'apps/python-audio-analyzer/**'
       - '.github/workflows/python-lint.yml'
+      - '**/*.md'
+      - 'docs/**'
   pull_request:
     paths-ignore:
       - 'apps/python-audio-analyzer/**'
       - '.github/workflows/python-lint.yml'
+      - '**/*.md'
+      - 'docs/**'
 
 jobs:
   build:
