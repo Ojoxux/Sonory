@@ -1,7 +1,7 @@
 "use client"
 
 import { RecordButtonContent } from "@/components/molecules/RecordButtonContent"
-import type { RecordButtonProps } from "./type"
+import type { RecordButtonProps } from "./types"
 
 /**
  * 録音ボタンコンポーネント

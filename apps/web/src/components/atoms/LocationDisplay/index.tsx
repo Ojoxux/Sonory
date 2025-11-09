@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { memo, useCallback, useMemo } from "react"
-import type { LocationDisplayProps } from "./type"
+import type { LocationDisplayProps } from "./types"
 
 /**
  * 位置情報表示コンポーネント

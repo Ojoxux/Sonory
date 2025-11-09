@@ -1,7 +1,7 @@
 "use client"
 
 import { MdCheck, MdFiberManualRecord, MdStop } from "react-icons/md"
-import type { RecordButtonIconProps } from "./type"
+import type { RecordButtonIconProps } from "./types"
 
 /**
  * 録音ボタンアイコンコンポーネント

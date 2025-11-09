@@ -5,7 +5,7 @@ import { MdInfo, MdSettings } from "react-icons/md"
 import { CompassButton } from "@/components/atoms/CompassButton"
 import { IconButton } from "@/components/atoms/IconButton"
 import { LocationDisplay } from "@/components/atoms/LocationDisplay"
-import type { AppHeaderProps } from "./type"
+import type { AppHeaderProps } from "./types"
 
 /**
  * アプリケーションヘッダーコンポーネント
