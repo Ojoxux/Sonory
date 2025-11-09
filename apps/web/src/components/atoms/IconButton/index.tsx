@@ -1,6 +1,6 @@
 "use client"
 
-import type { IconButtonProps } from "./type"
+import type { IconButtonProps } from "./types"
 
 /**
  * アイコンボタンコンポーネント

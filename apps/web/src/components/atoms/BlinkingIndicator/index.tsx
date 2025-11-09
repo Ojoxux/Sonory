@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion"
 import { useEffect, useState } from "react"
-import type { BlinkingIndicatorProps } from "./type"
+import type { BlinkingIndicatorProps } from "./types"
 
 /**
  * 点滅インジケーターコンポーネント

@@ -8,7 +8,7 @@ import { RecordingMiniDisplay } from "../../molecules/RecordingMiniDisplay"
 import { AudioPlayback } from "../AudioPlayback"
 import { RecordingContainer } from "../RecordingContainer"
 import { useRecordingInterface } from "./hooks/useRecordingInterface"
-import type { RecordingInterfaceProps } from "./type"
+import type { RecordingInterfaceProps } from "./types"
 
 /**
  * 録音インターフェースコンポーネント

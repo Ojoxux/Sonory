@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion"
 import { useEffect, useState } from "react"
-import type { PulseEffectProps } from "./type"
+import type { PulseEffectProps } from "./types"
 
 /**
  * パルスエフェクトコンポーネント
