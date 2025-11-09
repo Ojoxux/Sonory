@@ -21,12 +21,12 @@ import { FaBug, FaChevronDown, FaChevronUp } from "react-icons/fa"
 import { useInferenceStore } from "../../../store/useInferenceStore"
 import { useRecorderStore } from "../../../store/useRecorderStore"
 import { AIAnalysisOrb } from "../AIAnalysisOrb"
+import type { DebugPanelProps } from "./types"
 import {
    useDebugPanel,
    useDebugPanelState,
    useYAMNetDebug,
 } from "./useDebugPanel"
-import type { DebugPanelProps } from "./types"
 import { formatMainDebugInfo, formatRecordedAt } from "./utils"
 
 export function DebugPanel({

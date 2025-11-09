@@ -81,4 +81,3 @@ export function formatRecordedAt(date: Date): string {
       second: "2-digit",
    })
 }
-
