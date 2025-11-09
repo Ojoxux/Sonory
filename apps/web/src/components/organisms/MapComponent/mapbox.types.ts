@@ -1,5 +1,5 @@
 /**
- * MapComponentのプロパティ型定義
+ * MapComponentのProps型定義
  */
 export type MapComponentProps = {
    /** 位置情報取得関数への参照を受け取るコールバック */

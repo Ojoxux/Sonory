@@ -2,7 +2,7 @@ import type { PanInfo } from "framer-motion"
 import type { MutableRefObject, ReactNode } from "react"
 
 /**
- * RecordingContainerコンポーネントのプロパティ型定義
+ * RecordingContainerコンポーネントのProps型定義
  */
 export interface RecordingContainerProps {
    /**

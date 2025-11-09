@@ -1,5 +1,5 @@
 /**
- * RecordingInitialStateコンポーネントのプロパティ型定義
+ * RecordingInitialStateコンポーネントのProps型定義
  */
 export interface RecordingInitialStateProps {
    /**

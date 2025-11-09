@@ -1,5 +1,5 @@
 /**
- * RecordingTimerコンポーネントのプロパティ型定義
+ * RecordingTimerコンポーネントのProps型定義
  */
 export interface RecordingTimerProps {
    /**

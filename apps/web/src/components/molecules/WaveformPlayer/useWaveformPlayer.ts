@@ -71,6 +71,57 @@ export function useWaveformPlayer({
    const [isInitialized, setIsInitialized] = useState<boolean>(false)
 
    /**
+    * アニメーションフレームをクリーンアップする
+    */
+   const cleanupAnimationFrame = useCallback((): void => {
+      if (animationFrameRef.current) {
+         cancelAnimationFrame(animationFrameRef.current)
+         animationFrameRef.current = null
+      }
+   }, [])
+
+   /**
+    * WaveSurferを停止する
+    */
+   const pauseWaveSurfer = useCallback((): void => {
+      if (
+         wavesurferRef.current?.isPlaying &&
+         typeof wavesurferRef.current.isPlaying === "function" &&
+         wavesurferRef.current.isPlaying()
+      ) {
+         try {
+            wavesurferRef.current.pause()
+         } catch (pauseError) {
+            console.warn("Error pausing before destroy:", pauseError)
+         }
+      }
+   }, [])
+
+   /**
+    * WaveSurferインスタンスを実際に破棄する
+    */
+   const performDestroy = useCallback((): void => {
+      if (!wavesurferRef.current) {
+         return
+      }
+
+      try {
+         // すべてのイベントリスナーを先に解除
+         if (typeof wavesurferRef.current.unAll === "function") {
+            wavesurferRef.current.unAll()
+         }
+
+         // 破棄処理を実行
+         wavesurferRef.current.destroy()
+      } catch (error) {
+         console.warn("WaveSurfer destroy error:", error)
+      } finally {
+         wavesurferRef.current = null
+         isDestroyingRef.current = false
+      }
+   }, [])
+
+   /**
     * WaveSurferインスタンスを安全に破棄
     */
    const destroyWaveSurfer = useCallback((): Promise<void> => {
@@ -85,46 +136,19 @@ export function useWaveformPlayer({
             setIsInitialized(false)
 
             // アニメーションフレームをクリーンアップ
-            if (animationFrameRef.current) {
-               cancelAnimationFrame(animationFrameRef.current)
-               animationFrameRef.current = null
-            }
+            cleanupAnimationFrame()
 
             if (
                wavesurferRef.current &&
                typeof wavesurferRef.current.destroy === "function"
             ) {
-               try {
-                  if (
-                     wavesurferRef.current.isPlaying &&
-                     typeof wavesurferRef.current.isPlaying === "function" &&
-                     wavesurferRef.current.isPlaying()
-                  ) {
-                     wavesurferRef.current.pause()
-                  }
-               } catch (pauseError) {
-                  console.warn("Error pausing before destroy:", pauseError)
-               }
+               // 再生停止処理
+               pauseWaveSurfer()
 
                // 即座に破棄せず、少し遅延させる
                setTimeout(() => {
-                  try {
-                     if (wavesurferRef.current) {
-                        // すべてのイベントリスナーを先に解除
-                        if (typeof wavesurferRef.current.unAll === "function") {
-                           wavesurferRef.current.unAll()
-                        }
-
-                        // 破棄処理を実行
-                        wavesurferRef.current.destroy()
-                     }
-                  } catch (error) {
-                     console.warn("WaveSurfer destroy error:", error)
-                  } finally {
-                     wavesurferRef.current = null
-                     isDestroyingRef.current = false
-                     resolve()
-                  }
+                  performDestroy()
+                  resolve()
                }, 200) // 遅延時間を増やす
             } else {
                wavesurferRef.current = null
@@ -138,7 +162,7 @@ export function useWaveformPlayer({
             resolve()
          }
       })
-   }, [])
+   }, [cleanupAnimationFrame, pauseWaveSurfer, performDestroy])
 
    /**
     * useEffectEventでコールバックをラップ
@@ -152,6 +176,221 @@ export function useWaveformPlayer({
    })
 
    /**
+    * 初期状態を検証する
+    */
+   const validateInitialization = useCallback((): boolean => {
+      if (
+         typeof window === "undefined" ||
+         !containerRef.current ||
+         !audioData
+      ) {
+         return false
+      }
+
+      if (!audioData.blob || audioData.blob.size === 0) {
+         setError(new Error("有効な音声データが見つかりません"))
+         setIsLoading(false)
+         return false
+      }
+
+      return true
+   }, [audioData])
+
+   /**
+    * durationを安全に設定する（複数回リトライ）
+    */
+   const setupDurationTracking = useCallback((wavesurfer: WaveSurfer): void => {
+      const setDurationSafely = (): boolean => {
+         const duration = wavesurfer.getDuration()
+         if (Number.isFinite(duration) && duration > 0) {
+            setDuration(duration)
+            return true
+         }
+         return false
+      }
+
+      // 即座にdurationを試行
+      if (!setDurationSafely()) {
+         // 少し遅延を入れてから再試行
+         setTimeout(() => {
+            if (!setDurationSafely()) {
+               // さらに遅延して最終試行
+               setTimeout(() => {
+                  if (!setDurationSafely()) {
+                     // 最終的にデフォルト値を設定
+                     setDuration(10)
+                     console.warn(
+                        "WaveSurfer音声のdurationが取得できませんでした。デフォルト値を使用します。",
+                     )
+                  }
+               }, 100)
+            }
+         }, 50)
+      }
+   }, [])
+
+   /**
+    * 再生終了処理
+    */
+   const handlePlaybackFinish = useCallback(
+      (wavesurfer: WaveSurfer): void => {
+         if (wavesurfer.isPlaying()) {
+            wavesurfer.pause()
+            setIsPlaying(false)
+            wavesurfer.seekTo(0)
+            setCurrentTime(0)
+            onFinishEvent()
+         }
+      },
+      [onFinishEvent],
+   )
+
+   /**
+    * 現在時刻を更新する（再生終了チェック付き）
+    */
+   const updateCurrentTime = useCallback(
+      (wavesurfer: WaveSurfer, time: number): void => {
+         if (Number.isFinite(time) && time >= 0) {
+            setCurrentTime(time)
+         }
+
+         const audioDuration = wavesurfer.getDuration()
+         if (
+            Number.isFinite(audioDuration) &&
+            audioDuration > 0 &&
+            Number.isFinite(time) &&
+            time >= audioDuration - 0.05
+         ) {
+            handlePlaybackFinish(wavesurfer)
+         }
+      },
+      [handlePlaybackFinish],
+   )
+
+   /**
+    * イベントリスナーを設定する
+    */
+   const setupEventListeners = useCallback(
+      (wavesurfer: WaveSurfer): void => {
+         // readyイベント
+         wavesurfer.on("ready", () => {
+            setIsLoading(false)
+            setIsInitialized(true)
+            setupDurationTracking(wavesurfer)
+            onReadyEvent()
+            wavesurfer.play()
+         })
+
+         // 再生中の現在時刻更新（requestAnimationFrame）
+         const updateTime = (): void => {
+            if (wavesurfer?.isPlaying?.()) {
+               const time = wavesurfer.getCurrentTime()
+               updateCurrentTime(wavesurfer, time)
+
+               if (!wavesurfer.isPlaying()) {
+                  return
+               }
+
+               const audioDuration = wavesurfer.getDuration()
+               const currentTime = wavesurfer.getCurrentTime()
+               if (
+                  !(
+                     Number.isFinite(audioDuration) &&
+                     audioDuration > 0 &&
+                     Number.isFinite(currentTime) &&
+                     currentTime >= audioDuration - 0.05
+                  )
+               ) {
+                  animationFrameRef.current = requestAnimationFrame(updateTime)
+               }
+            }
+         }
+
+         // audioprocessイベント
+         wavesurfer.on("audioprocess", (time: number) => {
+            updateCurrentTime(wavesurfer, time)
+         })
+
+         // timeupdateイベント
+         wavesurfer.on("timeupdate", (time: number) => {
+            if (Number.isFinite(time) && time >= 0) {
+               setCurrentTime(time)
+            }
+         })
+
+         // playイベント
+         wavesurfer.on("play", () => {
+            setIsPlaying(true)
+            if (animationFrameRef.current) {
+               cancelAnimationFrame(animationFrameRef.current)
+            }
+            animationFrameRef.current = requestAnimationFrame(updateTime)
+         })
+
+         // pauseイベント
+         wavesurfer.on("pause", () => {
+            setIsPlaying(false)
+            if (animationFrameRef.current) {
+               cancelAnimationFrame(animationFrameRef.current)
+               animationFrameRef.current = null
+            }
+         })
+
+         // seekingイベント
+         wavesurfer.on("seeking", (time: number) => {
+            if (Number.isFinite(time) && time >= 0) {
+               setCurrentTime(time)
+            }
+         })
+
+         // errorイベント
+         wavesurfer.on("error", (err: Error) => {
+            console.error("WaveSurfer error event:", err)
+            setError(err)
+            setIsLoading(false)
+            setIsPlaying(false)
+            setIsInitialized(false)
+         })
+      },
+      [setupDurationTracking, updateCurrentTime, onReadyEvent],
+   )
+
+   /**
+    * 音声データを読み込む
+    */
+   const loadAudioData = useCallback(
+      (wavesurfer: WaveSurfer): void => {
+         if (!audioData) {
+            console.error("No audio data provided")
+            setError(new Error("音声データが提供されていません"))
+            setIsLoading(false)
+            return
+         }
+
+         try {
+            if (audioData.blob) {
+               wavesurfer.loadBlob(audioData.blob)
+            } else if (audioData.url) {
+               wavesurfer.load(audioData.url)
+            } else {
+               console.error("No valid audio data found")
+               setError(new Error("有効な音声データが見つかりません"))
+               setIsLoading(false)
+            }
+         } catch (loadError) {
+            console.error("Audio loading error:", loadError)
+            setError(
+               loadError instanceof Error
+                  ? loadError
+                  : new Error("音声データの読み込みに失敗しました"),
+            )
+            setIsLoading(false)
+         }
+      },
+      [audioData],
+   )
+
+   /**
     * WaveSurferインスタンスを初期化
     * - 既存インスタンスの破棄と競合防止
     * - 音声データの有効性チェック
@@ -160,18 +399,7 @@ export function useWaveformPlayer({
    const initializeWaveSurfer = useCallback(async (): Promise<void> => {
       const myInitId = ++initIdRef.current
 
-      if (
-         typeof window === "undefined" ||
-         !containerRef.current ||
-         !audioData
-      ) {
-         return
-      }
-
-      // Blobの有効性を事前にチェック
-      if (!audioData.blob || audioData.blob.size === 0) {
-         setError(new Error("有効な音声データが見つかりません"))
-         setIsLoading(false)
+      if (!validateInitialization()) {
          return
       }
 
@@ -180,14 +408,14 @@ export function useWaveformPlayer({
          setIsLoading(true)
          setIsInitialized(false)
 
-         // 既存のインスタンスを安全に破棄（Promiseの完了を必ず待つ）
+         // 既存のインスタンスを安全に破棄
          await destroyWaveSurfer()
 
          // ここで新しい初期化が走っていないかチェック
          if (myInitId !== initIdRef.current) return
 
          // コンテナが DOM に存在することを確認
-         if (!containerRef.current.isConnected) {
+         if (!containerRef.current?.isConnected) {
             console.warn("Container is not connected to DOM")
             setIsLoading(false)
             return
@@ -221,163 +449,11 @@ export function useWaveformPlayer({
 
          wavesurferRef.current = wavesurfer
 
-         // durationを安全に設定するヘルパー関数
-         const setDurationSafely = () => {
-            const duration = wavesurfer.getDuration()
-            if (Number.isFinite(duration) && duration > 0) {
-               setDuration(duration)
-               return true
-            }
-            return false
-         }
-
          // イベントリスナーを設定
-         wavesurfer.on("ready", () => {
-            setIsLoading(false)
-            setIsInitialized(true)
-
-            // 即座にdurationを試行
-            if (!setDurationSafely()) {
-               // 少し遅延を入れてから再試行
-               setTimeout(() => {
-                  if (!setDurationSafely()) {
-                     // さらに遅延して最終試行
-                     setTimeout(() => {
-                        if (!setDurationSafely()) {
-                           // 最終的にデフォルト値を設定
-                           setDuration(10)
-                           console.warn(
-                              "WaveSurfer音声のdurationが取得できませんでした。デフォルト値を使用します。",
-                           )
-                        }
-                     }, 100)
-                  }
-               }, 50)
-            }
-
-            onReadyEvent()
-            wavesurfer.play() // 再生を ready イベント内で確実に実行
-         })
-
-         // 再生中の現在時刻を更新（requestAnimationFrameで滑らかに）
-         const updateTime = () => {
-            if (wavesurfer?.isPlaying?.()) {
-               const time = wavesurfer.getCurrentTime()
-               if (Number.isFinite(time) && time >= 0) {
-                  setCurrentTime(time)
-               }
-
-               // 終了間近になったら手動で終了処理をトリガーする
-               const audioDuration = wavesurfer.getDuration()
-               if (
-                  Number.isFinite(audioDuration) &&
-                  audioDuration > 0 &&
-                  Number.isFinite(time) &&
-                  time >= audioDuration - 0.05
-               ) {
-                  // すでに再生が停止していなければ、手動で停止し、終了処理を呼び出す
-                  if (wavesurfer.isPlaying()) {
-                     wavesurfer.pause() // 再生を停止
-                     setIsPlaying(false)
-                     wavesurfer.seekTo(0) // 再生位置を先頭に
-                     setCurrentTime(0) // UI上の時間もリセット
-                     onFinishEvent() // 親コンポーネントに終了を通知
-                  }
-               } else {
-                  animationFrameRef.current = requestAnimationFrame(updateTime)
-               }
-            }
-         }
-
-         wavesurfer.on("audioprocess", (time: number) => {
-            // 時間が有効な値かチェック
-            if (Number.isFinite(time) && time >= 0) {
-               setCurrentTime(time)
-            }
-            // 終了間近になったら手動で終了処理をトリガーする
-            const audioDuration = wavesurfer.getDuration()
-            if (
-               Number.isFinite(audioDuration) &&
-               audioDuration > 0 &&
-               Number.isFinite(time) &&
-               time >= audioDuration - 0.05
-            ) {
-               // すでに再生が停止していなければ、手動で停止し、終了処理を呼び出す
-               if (wavesurfer.isPlaying()) {
-                  wavesurfer.pause() // 再生を停止
-                  setIsPlaying(false)
-                  wavesurfer.seekTo(0) // 再生位置を先頭に
-                  setCurrentTime(0) // UI上の時間もリセット
-                  onFinishEvent() // 親コンポーネントに終了を通知
-               }
-            }
-         })
-
-         // 再生位置が変化したときの現在時刻を更新
-         wavesurfer.on("timeupdate", (time: number) => {
-            // 時間が有効な値かチェック
-            if (Number.isFinite(time) && time >= 0) {
-               setCurrentTime(time)
-            }
-         })
-
-         // 再生・一時停止状態の管理
-         wavesurfer.on("play", () => {
-            setIsPlaying(true)
-            // 再生開始時にアニメーションフレーム更新を開始
-            if (animationFrameRef.current) {
-               cancelAnimationFrame(animationFrameRef.current)
-            }
-            animationFrameRef.current = requestAnimationFrame(updateTime)
-         })
-
-         wavesurfer.on("pause", () => {
-            setIsPlaying(false)
-            // 一時停止時にアニメーションフレーム更新を停止
-            if (animationFrameRef.current) {
-               cancelAnimationFrame(animationFrameRef.current)
-               animationFrameRef.current = null
-            }
-         })
-
-         // シーク時の再生位置更新
-         wavesurfer.on("seeking", (time: number) => {
-            // 時間が有効な値かチェック
-            if (Number.isFinite(time) && time >= 0) {
-               setCurrentTime(time)
-            }
-         })
-
-         // エラー時の状態管理
-         wavesurfer.on("error", (err: Error) => {
-            console.error("WaveSurfer error event:", err)
-            setError(err)
-            setIsLoading(false)
-            setIsPlaying(false)
-            setIsInitialized(false)
-         })
+         setupEventListeners(wavesurfer)
 
          // 音声データを読み込み
-         try {
-            if (audioData.blob) {
-               wavesurfer.loadBlob(audioData.blob)
-            } else if (audioData.url) {
-               wavesurfer.load(audioData.url)
-            } else {
-               console.error("No valid audio data found")
-               setError(new Error("有効な音声データが見つかりません"))
-               setIsLoading(false)
-               return
-            }
-         } catch (loadError) {
-            console.error("Audio loading error:", loadError)
-            setError(
-               loadError instanceof Error
-                  ? loadError
-                  : new Error("音声データの読み込みに失敗しました"),
-            )
-            setIsLoading(false)
-         }
+         loadAudioData(wavesurfer)
       } catch (err) {
          console.error("WaveSurfer initialization error:", err)
          const error =
@@ -388,13 +464,13 @@ export function useWaveformPlayer({
          setIsLoading(false)
       }
    }, [
-      audioData,
+      validateInitialization,
+      destroyWaveSurfer,
       height,
       waveColor,
       progressColor,
-      destroyWaveSurfer,
-      onFinishEvent,
-      onReadyEvent,
+      setupEventListeners,
+      loadAudioData,
    ])
 
    /**

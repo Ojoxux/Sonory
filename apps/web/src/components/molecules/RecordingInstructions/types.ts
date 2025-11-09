@@ -1,7 +1,7 @@
 import type { MutableRefObject } from "react"
 
 /**
- * RecordingInstructionsコンポーネントのプロパティ型定義
+ * RecordingInstructionsコンポーネントのProps型定義
  */
 export interface RecordingInstructionsProps {
    /**

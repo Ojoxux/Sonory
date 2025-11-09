@@ -21,10 +21,10 @@ export type BackendAnalysisResult = {
 }
 
 /**
- * AnalysisResultsView コンポーネントのプロパティ型
+ * AnalysisResultsView コンポーネントのProps型
  *
  * @description
- * AI分析結果表示画面のプロパティ
+ * AI分析結果表示画面のProps
  */
 export type AnalysisResultsViewProps = {
    /** シートの開閉状態 */

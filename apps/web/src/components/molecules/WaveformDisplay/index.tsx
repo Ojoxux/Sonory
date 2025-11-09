@@ -74,6 +74,101 @@ export function WaveformDisplay({
    }, [height])
 
    /**
+    * バーの色を決定する
+    */
+   const getBarColor = useCallback(
+      (
+         hasData: boolean,
+         isRecordingComplete: boolean,
+         isRecording: boolean,
+         barPosition: number,
+         progress: number,
+      ): string => {
+         if (!hasData) {
+            return "#e5e7eb" // デフォルト（未録音）
+         }
+
+         if (isRecordingComplete) {
+            return waveColor
+         }
+
+         if (isRecording && barPosition <= progress) {
+            return waveColor
+         }
+
+         return "#e5e7eb"
+      },
+      [waveColor],
+   )
+
+   /**
+    * バーを描画する
+    */
+   const drawBars = useCallback(
+      (
+         ctx: CanvasRenderingContext2D,
+         width: number,
+         canvasHeight: number,
+         maxBars: number,
+         progress: number,
+         isRecordingComplete: boolean,
+      ): void => {
+         for (let i = 0; i < maxBars; i++) {
+            const x = i * TOTAL_BAR_WIDTH
+            const dataIndex = Math.max(0, waveformData.length - maxBars + i)
+            const hasData = dataIndex < waveformData.length
+
+            // バーの高さを決定
+            const value = hasData ? waveformData[dataIndex] : 0
+            const barHeight = hasData
+               ? Math.max(2, (value / 100) * canvasHeight * 0.8)
+               : canvasHeight * 0.1
+
+            const y = (canvasHeight - barHeight) / 2
+            const barPosition = (x + FIXED_BAR_WIDTH / 2) / width
+
+            // バーの色を決定
+            const barColor = getBarColor(
+               hasData,
+               isRecordingComplete,
+               isRecording,
+               barPosition,
+               progress,
+            )
+
+            ctx.fillStyle = barColor
+            ctx.fillRect(x, y, FIXED_BAR_WIDTH, barHeight)
+         }
+      },
+      [waveformData, isRecording, getBarColor],
+   )
+
+   /**
+    * プログレスインジケーターを描画する
+    */
+   const drawProgressIndicator = useCallback(
+      (
+         ctx: CanvasRenderingContext2D,
+         width: number,
+         canvasHeight: number,
+         progress: number,
+      ): void => {
+         if (!isRecording || recordingTime <= 0) {
+            return
+         }
+
+         const progressX = progress * width
+         ctx.strokeStyle = progressColor
+         ctx.lineWidth = 2
+         ctx.beginPath()
+         ctx.moveTo(progressX, 0)
+         ctx.lineTo(progressX, canvasHeight)
+         ctx.stroke()
+      },
+      [isRecording, recordingTime, progressColor],
+   )
+
+   /**
     * 波形を描画
     */
    const draw = useCallback((): void => {
@@ -103,56 +198,18 @@ export function WaveformDisplay({
          isCompleted || (!isRecording && recordingTime > 0)
 
       // バーを描画
-      for (let i = 0; i < maxBars; i++) {
-         const x = i * TOTAL_BAR_WIDTH
-         const dataIndex = Math.max(0, waveformData.length - maxBars + i)
-         const hasData = dataIndex < waveformData.length
-
-         // バーの高さを決定
-         const value = hasData ? waveformData[dataIndex] : 0
-         const barHeight = hasData
-            ? Math.max(2, (value / 100) * canvasHeight * 0.8)
-            : canvasHeight * 0.1
-
-         const y = (canvasHeight - barHeight) / 2
-
-         // バーの色を決定
-         let barColor = "#e5e7eb" // デフォルト（未録音）
-
-         if (isRecordingComplete && hasData) {
-            // 録音完了時は全てのデータを録音済みの色に
-            barColor = waveColor
-         } else if (isRecording && hasData) {
-            // 録音中はプログレスに基づいて色を決定
-            const barPosition = (x + FIXED_BAR_WIDTH / 2) / width
-            if (barPosition <= progress) {
-               barColor = waveColor
-            }
-         }
-
-         ctx.fillStyle = barColor
-         ctx.fillRect(x, y, FIXED_BAR_WIDTH, barHeight)
-      }
+      drawBars(ctx, width, canvasHeight, maxBars, progress, isRecordingComplete)
 
       // 録音位置インジケーター（録音中のみ）
-      if (isRecording && recordingTime > 0) {
-         const progressX = progress * width
-         ctx.strokeStyle = progressColor
-         ctx.lineWidth = 2
-         ctx.beginPath()
-         ctx.moveTo(progressX, 0)
-         ctx.lineTo(progressX, canvasHeight)
-         ctx.stroke()
-      }
+      drawProgressIndicator(ctx, width, canvasHeight, progress)
    }, [
       backgroundColor,
-      waveColor,
-      progressColor,
-      waveformData,
       recordingTime,
       maxDuration,
       isRecording,
       isCompleted,
+      drawBars,
+      drawProgressIndicator,
    ])
 
    // 初期化とリサイズ処理

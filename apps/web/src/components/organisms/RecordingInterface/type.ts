@@ -9,7 +9,7 @@ export type LocationData = {
 }
 
 /**
- * RecordingInterfaceコンポーネントのプロパティ型定義
+ * RecordingInterfaceコンポーネントのProps型定義
  */
 export interface RecordingInterfaceProps {
    /**

@@ -1,7 +1,7 @@
 import type { MouseEventHandler } from "react"
 
 /**
- * CompassButtonコンポーネントのプロパティ型定義
+ * CompassButtonコンポーネントのProps型定義
  */
 export interface CompassButtonProps {
    /** クリック時のハンドラー */

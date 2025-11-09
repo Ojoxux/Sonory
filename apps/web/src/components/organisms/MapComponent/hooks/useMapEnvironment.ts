@@ -155,6 +155,127 @@ export function useMapEnvironment({
    // 前回の更新時刻を追跡（頻繁な更新を避ける）
    const lastUpdateRef = useRef(0)
 
+   /**
+    * 現在時刻と時間を取得する
+    */
+   const getCurrentTimeAndHour = useCallback((): {
+      currentTime: Date
+      currentHour: number
+   } => {
+      const currentTime = new Date()
+      if (debugTimeOverride !== null) {
+         currentTime.setHours(debugTimeOverride, 0, 0, 0)
+      }
+
+      const currentHour =
+         debugTimeOverride !== null ? debugTimeOverride : currentTime.getHours()
+
+      return { currentTime, currentHour }
+   }, [debugTimeOverride])
+
+   /**
+    * 太陽高度を計算する
+    */
+   const calculateSunAltitude = useCallback(
+      (currentTime: Date, currentHour: number): number => {
+         if (position) {
+            const sunPosition = calculateSunPosition(
+               currentTime,
+               position.latitude,
+               position.longitude,
+            )
+            return sunPosition.altitude
+         }
+         // デフォルトの太陽高度（時間ベース）
+         return currentHour >= 6 && currentHour < 18 ? 45 : -20
+      },
+      [position],
+   )
+
+   /**
+    * ライティング設定を更新する
+    */
+   const updateLightingConfig = useCallback((sunAltitude: number): void => {
+      const lighting = getLightingConfig(sunAltitude)
+      const weatherAdjustedLighting = applyWeatherEffects(
+         lighting,
+         currentWeather,
+      )
+      setCurrentLighting(weatherAdjustedLighting)
+   }, [])
+
+   /**
+    * 3D地形を初期化する
+    */
+   const initializeTerrain = useCallback(
+      (targetMap: mapboxgl.Map): void => {
+         if (terrainInitializedRef.current) {
+            return
+         }
+
+         try {
+            if (!targetMap.getSource("mapbox-dem")) {
+               targetMap.addSource("mapbox-dem", {
+                  type: "raster-dem",
+                  url: "mapbox://mapbox.mapbox-terrain-dem-v1",
+                  tileSize: 512,
+                  maxzoom: 12, // 詳細度を下げて高速化
+               })
+            }
+
+            const terrainConfig = {
+               source: "mapbox-dem",
+               exaggeration: 1.2, // 固定値で高速化
+            }
+            mapboxHelpers.setTerrain(targetMap, terrainConfig)
+            terrainInitializedRef.current = true
+         } catch (error) {
+            if (process.env.NODE_ENV === "development") {
+               console.warn("⚠️ 地形設定エラー:", error)
+            }
+         }
+      },
+      [mapboxHelpers],
+   )
+
+   /**
+    * フォグ効果を適用する
+    */
+   const applyFogEffects = useCallback(
+      (targetMap: mapboxgl.Map, fogColor: string): void => {
+         try {
+            const fogConfig = {
+               range: [0.8, 12],
+               color: fogColor,
+               "horizon-blend": 0.1,
+            }
+            mapboxHelpers.setFog(targetMap, fogConfig)
+         } catch (error) {
+            if (process.env.NODE_ENV === "development") {
+               console.warn("⚠️ フォグ設定エラー:", error)
+            }
+         }
+      },
+      [mapboxHelpers],
+   )
+
+   /**
+    * 夜間照明効果を適用する
+    */
+   const applyNightLightingEffect = useCallback(
+      (targetMap: mapboxgl.Map, currentHour: number): void => {
+         try {
+            const isNightTime = currentHour >= 22 || currentHour < 4
+            applyNightLighting(targetMap, isNightTime ? -20 : 45)
+         } catch (error) {
+            if (process.env.NODE_ENV === "development") {
+               console.warn("⚠️ 照明設定エラー:", error)
+            }
+         }
+      },
+      [],
+   )
+
    const updateLightingAndShadows = useCallback(
       (mapInstance?: mapboxgl.Map): void => {
          const targetMap = mapInstance || map
@@ -168,106 +289,48 @@ export function useMapEnvironment({
          lastUpdateRef.current = now
 
          try {
-            // 現在時刻を取得（デバッグモード時はオーバーライド）
-            const currentTime = new Date()
-            if (debugTimeOverride !== null) {
-               currentTime.setHours(debugTimeOverride, 0, 0, 0)
-            }
-
-            const currentHour =
-               debugTimeOverride !== null
-                  ? debugTimeOverride
-                  : currentTime.getHours()
+            const { currentTime, currentHour } = getCurrentTimeAndHour()
 
             // 時間ベースでlightPresetを決定
             const lightPreset = getLightPresetFromTime(debugTimeOverride)
-
-            // Mapbox Standard Style の lightPreset を設定
             setMapboxLightPreset(targetMap, lightPreset)
 
-            // 太陽の位置を計算（ライティング設定用のみ）
-            let sunAltitude: number
-            if (position) {
-               const sunPosition = calculateSunPosition(
-                  currentTime,
-                  position.latitude,
-                  position.longitude,
-               )
-               sunAltitude = sunPosition.altitude
-            } else {
-               // デフォルトの太陽高度（時間ベース）
-               sunAltitude = currentHour >= 6 && currentHour < 18 ? 45 : -20
-            }
+            // 太陽高度を計算
+            const sunAltitude = calculateSunAltitude(currentTime, currentHour)
 
-            // ライティング設定を取得
+            // ライティング設定を更新
+            updateLightingConfig(sunAltitude)
+
+            // 天候調整済みライティングを取得（フォグ色用）
             const lighting = getLightingConfig(sunAltitude)
-
-            // 天候効果を適用
             const weatherAdjustedLighting = applyWeatherEffects(
                lighting,
                currentWeather,
             )
 
-            // 状態を更新
-            setCurrentLighting(weatherAdjustedLighting)
+            // 3D地形を初期化
+            initializeTerrain(targetMap)
 
-            // 3D地形を設定（初回のみ）
-            if (!terrainInitializedRef.current) {
-               try {
-                  if (!targetMap.getSource("mapbox-dem")) {
-                     targetMap.addSource("mapbox-dem", {
-                        type: "raster-dem",
-                        url: "mapbox://mapbox.mapbox-terrain-dem-v1",
-                        tileSize: 512,
-                        maxzoom: 12, // 詳細度を下げて高速化
-                     })
-                  }
+            // フォグ効果を適用
+            applyFogEffects(targetMap, weatherAdjustedLighting.fogColor)
 
-                  // 簡略化された地形設定
-                  const terrainConfig = {
-                     source: "mapbox-dem",
-                     exaggeration: 1.2, // 固定値で高速化
-                  }
-                  mapboxHelpers.setTerrain(targetMap, terrainConfig)
-                  terrainInitializedRef.current = true
-               } catch (error) {
-                  if (process.env.NODE_ENV === "development") {
-                     console.warn("⚠️ 地形設定エラー:", error)
-                  }
-                  // 地形設定エラーが発生しても続行
-               }
-            }
-
-            // 環境光を設定（簡略化）
-            try {
-               const fogConfig = {
-                  range: [0.8, 12],
-                  color: weatherAdjustedLighting.fogColor,
-                  "horizon-blend": 0.1,
-               }
-               mapboxHelpers.setFog(targetMap, fogConfig)
-            } catch (error) {
-               if (process.env.NODE_ENV === "development") {
-                  console.warn("⚠️ フォグ設定エラー:", error)
-               }
-               // フォグ設定エラーが発生しても続行
-            }
-
-            // 時間ベースで夜間の照明効果を適用
-            try {
-               const isNightTime = currentHour >= 22 || currentHour < 4
-               applyNightLighting(targetMap, isNightTime ? -20 : 45)
-            } catch (error) {
-               if (process.env.NODE_ENV === "development") {
-                  console.warn("⚠️ 照明設定エラー:", error)
-               }
-               // 照明設定エラーが発生しても続行
-            }
+            // 夜間照明効果を適用
+            applyNightLightingEffect(targetMap, currentHour)
          } catch (error) {
             console.error("光と影の更新エラー:", error)
          }
       },
-      [map, mapStyleLoaded, position, debugTimeOverride, mapboxHelpers],
+      [
+         map,
+         mapStyleLoaded,
+         debugTimeOverride,
+         getCurrentTimeAndHour,
+         calculateSunAltitude,
+         updateLightingConfig,
+         initializeTerrain,
+         applyFogEffects,
+         applyNightLightingEffect,
+      ],
    )
 
    // 定期的に光と影を更新（頻度を下げる）

@@ -3,7 +3,7 @@
  *
  * @description
  * スライダー完了時に右端から雫が落ちて波紋が広がるエフェクトの
- * プロパティを管理します。
+ * Propsを管理します。
  */
 
 /**
@@ -17,7 +17,7 @@ export type RippleColor = "blue" | "white" | "green" | "red"
 export type RippleSize = "small" | "medium" | "large"
 
 /**
- * DropRippleEffectコンポーネントのプロパティ
+ * DropRippleEffectコンポーネントのProps
  */
 export type DropRippleEffectProps = {
    /** エフェクトの有効状態 */

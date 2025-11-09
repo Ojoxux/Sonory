@@ -1,5 +1,5 @@
 /**
- * WaveformDisplayコンポーネントのプロパティ型定義
+ * WaveformDisplayコンポーネントのProps型定義
  */
 export interface WaveformDisplayProps {
    /**

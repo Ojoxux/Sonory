@@ -11,10 +11,10 @@ export type LocationData = {
 }
 
 /**
- * AudioPlaybackコンポーネントのプロパティ型
+ * AudioPlaybackコンポーネントのProps型
  *
  * @description
- * 録音完了後の音声処理オーケストレーターコンポーネントのプロパティ
+ * 録音完了後の音声処理オーケストレーターコンポーネントのProps
  * 3つの画面状態（録音確認、AI分析中、分析結果）を管理する
  */
 export type AudioPlaybackProps = {

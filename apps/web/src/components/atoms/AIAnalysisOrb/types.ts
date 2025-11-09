@@ -1,5 +1,5 @@
 /**
- * AIAnalysisOrbコンポーネントのプロパティ
+ * AIAnalysisOrbコンポーネントのProps
  */
 export interface AIAnalysisOrbProps {
    /**

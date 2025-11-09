@@ -1,5 +1,5 @@
 /**
- * BlinkingIndicatorコンポーネントのプロパティ型定義
+ * BlinkingIndicatorコンポーネントのProps型定義
  */
 export interface BlinkingIndicatorProps {
    /**

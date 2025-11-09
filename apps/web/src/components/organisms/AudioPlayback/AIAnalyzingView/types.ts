@@ -1,8 +1,8 @@
 /**
- * AIAnalyzingView コンポーネントのプロパティ型
+ * AIAnalyzingView コンポーネントのProps型
  *
  * @description
- * AI分析中画面のプロパティ
+ * AI分析中画面のProps
  * AI分析中は閉じる操作を無効化しているため、onCloseは不要
  */
 export type AIAnalyzingViewProps = {

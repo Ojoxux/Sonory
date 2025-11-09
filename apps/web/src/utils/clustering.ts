@@ -102,6 +102,76 @@ export function calculatePixelDistance(
 }
 
 /**
+ * 単一ピンのクラスタを作成
+ */
+function createSinglePinCluster(pin: SoundPin): PinCluster {
+   return {
+      id: pin.id,
+      center: {
+         latitude: pin.latitude,
+         longitude: pin.longitude,
+      },
+      pins: [pin],
+      count: 1,
+      isSingle: true,
+   }
+}
+
+/**
+ * 近くのピンを検出してクラスタに追加
+ */
+function findNearbyPins(
+   pin: SoundPin,
+   pinPixel: { x: number; y: number },
+   pins: SoundPin[],
+   pinPixels: Map<string, { x: number; y: number }>,
+   processed: Set<string>,
+   clusterRadius: number,
+): SoundPin[] {
+   const nearbyPins: SoundPin[] = []
+
+   for (const otherPin of pins) {
+      if (processed.has(otherPin.id)) continue
+
+      const otherPixel = pinPixels.get(otherPin.id)
+      if (!otherPixel) continue
+
+      const pixelDistance = calculatePixelDistance(pinPixel, otherPixel)
+      if (pixelDistance <= clusterRadius) {
+         nearbyPins.push(otherPin)
+         processed.add(otherPin.id)
+      }
+   }
+
+   return nearbyPins
+}
+
+/**
+ * クラスタの中心座標を計算（重心）
+ */
+function calculateClusterCenter(pins: SoundPin[]): {
+   latitude: number
+   longitude: number
+} {
+   const totalLat = pins.reduce((sum, p) => sum + p.latitude, 0)
+   const totalLng = pins.reduce((sum, p) => sum + p.longitude, 0)
+   return {
+      latitude: totalLat / pins.length,
+      longitude: totalLng / pins.length,
+   }
+}
+
+/**
+ * クラスタを含めるかどうかを判定
+ */
+function shouldIncludeCluster(
+   cluster: PinCluster,
+   minClusterSize: number,
+): boolean {
+   return cluster.count >= minClusterSize || cluster.count === 1
+}
+
+/**
  * ピンをクラスタリングする（最適化版）
  * @param pins - ピンの配列
  * @param map - Mapboxマップインスタンス
@@ -115,32 +185,9 @@ export function clusterPins(
 ): PinCluster[] {
    const currentZoom = map.getZoom()
 
-   // 高ズームレベルではクラスタリングしない
-   if (currentZoom >= config.maxZoom) {
-      return pins.map((pin) => ({
-         id: pin.id,
-         center: {
-            latitude: pin.latitude,
-            longitude: pin.longitude,
-         },
-         pins: [pin],
-         count: 1,
-         isSingle: true,
-      }))
-   }
-
-   // ピンが少ない場合は個別表示
-   if (pins.length <= 3) {
-      return pins.map((pin) => ({
-         id: pin.id,
-         center: {
-            latitude: pin.latitude,
-            longitude: pin.longitude,
-         },
-         pins: [pin],
-         count: 1,
-         isSingle: true,
-      }))
+   // 高ズームレベルまたはピンが少ない場合はクラスタリングしない
+   if (currentZoom >= config.maxZoom || pins.length <= 3) {
+      return pins.map(createSinglePinCluster)
    }
 
    const clusters: PinCluster[] = []
@@ -155,6 +202,9 @@ export function clusterPins(
    for (const pin of pins) {
       if (processed.has(pin.id)) continue
 
+      const pinPixel = pinPixels.get(pin.id)
+      if (!pinPixel) continue
+
       const cluster: PinCluster = {
          id: `cluster-${pin.id}`,
          center: {
@@ -168,39 +218,29 @@ export function clusterPins(
 
       processed.add(pin.id)
 
-      // 現在のピンのピクセル座標を取得
-      const pinPixel = pinPixels.get(pin.id)
-      if (!pinPixel) continue
+      // 近くのピンを検出
+      const nearbyPins = findNearbyPins(
+         pin,
+         pinPixel,
+         pins,
+         pinPixels,
+         processed,
+         config.clusterRadius,
+      )
 
-      // 他のピンとの距離を計算してクラスタに追加
-      for (const otherPin of pins) {
-         if (processed.has(otherPin.id)) continue
-
-         const otherPixel = pinPixels.get(otherPin.id)
-         if (!otherPixel) continue
-         const pixelDistance = calculatePixelDistance(pinPixel, otherPixel)
-
-         if (pixelDistance <= config.clusterRadius) {
-            cluster.pins.push(otherPin)
-            cluster.count++
-            processed.add(otherPin.id)
-         }
+      for (const otherPin of nearbyPins) {
+         cluster.pins.push(otherPin)
+         cluster.count++
       }
 
-      // クラスタの中心座標を計算（重心）
+      // クラスタの中心座標を計算（複数ピンの場合）
       if (cluster.count > 1) {
-         const totalLat = cluster.pins.reduce((sum, p) => sum + p.latitude, 0)
-         const totalLng = cluster.pins.reduce((sum, p) => sum + p.longitude, 0)
-
-         cluster.center = {
-            latitude: totalLat / cluster.count,
-            longitude: totalLng / cluster.count,
-         }
+         cluster.center = calculateClusterCenter(cluster.pins)
          cluster.isSingle = false
       }
 
       // 最小クラスタサイズ以上の場合のみクラスタとして扱う
-      if (cluster.count >= config.minClusterSize || cluster.count === 1) {
+      if (shouldIncludeCluster(cluster, config.minClusterSize)) {
          clusters.push(cluster)
       }
    }

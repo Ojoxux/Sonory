@@ -1,5 +1,5 @@
 /**
- * RecordingControlsコンポーネントのプロパティ型定義
+ * RecordingControlsコンポーネントのProps型定義
  */
 export interface RecordingControlsProps {
    /** 録音状態 */
