@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef } from "react"
-import type { WaveformDisplayProps } from "./type"
+import type { WaveformDisplayProps } from "./types"
 
 // 固定のバー設定（定数）
 const FIXED_BAR_WIDTH = 4

@@ -1,6 +1,6 @@
 "use client"
 
-import type { RecordButtonTextProps } from "./type"
+import type { RecordButtonTextProps } from "./types"
 
 /**
  * 録音ボタンテキストコンポーネント
