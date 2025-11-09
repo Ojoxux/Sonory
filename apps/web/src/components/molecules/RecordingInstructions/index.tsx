@@ -6,6 +6,13 @@ import { ConfirmationComplete } from "../ConfirmationComplete"
 import { InstructionsList } from "../InstructionsList"
 import { SlideToStart } from "../SlideToStart"
 import type { RecordingInstructionsProps } from "./types"
+import {
+   getClosingAnimation,
+   getClosingTransition,
+   getInitialAnimation,
+   getOpeningAnimation,
+   getOpeningTransition,
+} from "./utils"
 
 /**
  * 録音前の説明・確認コンポーネント
@@ -30,106 +37,18 @@ export function RecordingInstructions({
    onStartRecording,
    instructionsRef,
 }: RecordingInstructionsProps) {
+   const initialAnim = getInitialAnimation()
+   const animate = isClosing ? getClosingAnimation() : getOpeningAnimation()
+   const transition = isClosing
+      ? getClosingTransition()
+      : getOpeningTransition()
+
    return (
       <motion.div
          ref={instructionsRef}
-         initial={{
-            width: "12rem",
-            height:
-               typeof window !== "undefined" && window.innerWidth >= 640
-                  ? "5rem"
-                  : "4rem",
-            backgroundColor: "rgba(0, 0, 0, 0.95)",
-            borderRadius: "2rem",
-            scale: 1,
-         }}
-         animate={
-            isClosing
-               ? {
-                    // 閉じる時：高さから幅の順序で2段階アニメーション
-                    height: [
-                       "auto",
-                       typeof window !== "undefined" && window.innerWidth >= 640
-                          ? "5rem"
-                          : "4rem",
-                    ],
-                    width: ["90vw", "12rem"],
-                    backgroundColor: [
-                       "rgba(30, 30, 30, 0.95)",
-                       "rgba(0, 0, 0, 0.95)",
-                    ],
-                    borderRadius: ["2rem", "2rem"],
-                    scale: [1, 0.98, 1],
-                 }
-               : {
-                    // 開く時：幅から高さの順序で2段階アニメーション
-                    width: ["12rem", "90vw"],
-                    height: [
-                       typeof window !== "undefined" && window.innerWidth >= 640
-                          ? "5rem"
-                          : "4rem",
-                       "auto",
-                    ],
-                    backgroundColor: [
-                       "rgba(0, 0, 0, 0.95)",
-                       "rgba(20, 20, 20, 0.96)",
-                       "rgba(30, 30, 30, 0.95)",
-                    ],
-                    borderRadius: ["2rem", "1.9rem", "2rem"],
-                    scale: [1, 1.02, 1],
-                 }
-         }
-         transition={
-            isClosing
-               ? {
-                    // 閉じる時：高さを先に変化させてから幅を変化
-                    height: {
-                       duration: 0.6,
-                       ease: [0.4, 0, 0.2, 1],
-                    },
-                    width: {
-                       duration: 0.6,
-                       delay: 0.6,
-                       ease: [0.4, 0, 0.2, 1],
-                    },
-                    backgroundColor: {
-                       duration: 1.2,
-                       ease: [0.4, 0, 0.2, 1],
-                    },
-                    borderRadius: {
-                       duration: 1.2,
-                       ease: [0.4, 0, 0.2, 1],
-                    },
-                    scale: {
-                       duration: 1.2,
-                       ease: [0.4, 0, 0.2, 1],
-                    },
-                 }
-               : {
-                    // 開く時：幅を先に変化させてから高さを変化
-                    width: {
-                       duration: 0.5,
-                       ease: [0.4, 0, 0.2, 1],
-                    },
-                    height: {
-                       duration: 0.5,
-                       delay: 0.5,
-                       ease: [0.4, 0, 0.2, 1],
-                    },
-                    backgroundColor: {
-                       duration: 1.0,
-                       ease: [0.4, 0, 0.2, 1],
-                    },
-                    borderRadius: {
-                       duration: 1.0,
-                       ease: [0.4, 0, 0.2, 1],
-                    },
-                    scale: {
-                       duration: 1.0,
-                       ease: [0.4, 0, 0.2, 1],
-                    },
-                 }
-         }
+         initial={initialAnim}
+         animate={animate}
+         transition={transition}
          className="relative mx-auto mb-5 flex max-w-sm flex-col overflow-hidden border border-neutral-600/30 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.5)] backdrop-blur-xl sm:p-6"
          style={{
             backdropFilter: "blur(20px)",
@@ -157,7 +76,7 @@ export function RecordingInstructions({
                delay: isClosing ? 0 : 0.1,
                ease: [0.4, 0, 0.2, 1],
             }}
-            className="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-neutral-400/10 to-neutral-600/10 blur-xl"
+            className="absolute inset-0 rounded-4xl bg-linear-to-br from-neutral-400/10 to-neutral-600/10 blur-xl"
             style={{
                willChange: "transform, opacity",
                transform: "translate3d(0, 0, 0)",
