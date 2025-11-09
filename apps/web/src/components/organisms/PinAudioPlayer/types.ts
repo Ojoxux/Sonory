@@ -15,7 +15,7 @@ export type PlaybackState = "idle" | "playing" | "paused" | "ended"
  */
 export interface PinAudioPlayerProps {
    /** 再生する音声ピン */
-   pin: SoundPin | null
+   pin: SoundPin
    /** 閉じるボタンが押されたときのコールバック */
    onClose: () => void
 }
