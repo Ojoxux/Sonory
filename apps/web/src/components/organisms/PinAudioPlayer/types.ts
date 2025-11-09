@@ -11,7 +11,7 @@ export type AudioLoadingStatus = "idle" | "loading" | "ready" | "error"
 export type PlaybackState = "idle" | "playing" | "paused" | "ended"
 
 /**
- * PinAudioPlayerコンポーネントのプロパティ型
+ * PinAudioPlayerコンポーネントのProps型
  */
 export interface PinAudioPlayerProps {
    /** 再生する音声ピン */

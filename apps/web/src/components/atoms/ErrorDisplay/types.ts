@@ -1,5 +1,5 @@
 /**
- * ErrorDisplay コンポーネントのプロパティ
+ * ErrorDisplay コンポーネントのProps
  */
 export type ErrorDisplayProps = {
    /** エラーメッセージ */

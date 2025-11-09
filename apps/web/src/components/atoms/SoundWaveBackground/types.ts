@@ -1,5 +1,5 @@
 /**
- * SoundWaveBackgroundコンポーネントのプロパティ型定義
+ * SoundWaveBackgroundコンポーネントのProps型定義
  */
 export interface SoundWaveBackgroundProps {
    /** 背景の透明度 */

@@ -1,5 +1,5 @@
 /**
- * RecordButtonコンポーネントのプロパティ型定義
+ * RecordButtonコンポーネントのProps型定義
  */
 export interface RecordButtonProps {
    /** 録音の状態 */

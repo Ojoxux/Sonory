@@ -4,7 +4,7 @@ import type { UseRealtimeReturn } from "@/hooks/useRealtime"
 import type { SoundPin } from "@/store/useSoundPinStore"
 
 /**
- * DebugPanelコンポーネントのプロパティ
+ * DebugPanelコンポーネントのProps
  */
 export type DebugPanelProps = {
    /** 位置情報データ */

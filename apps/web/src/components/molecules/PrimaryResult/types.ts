@@ -9,7 +9,7 @@ export type AnalysisResult = {
 }
 
 /**
- * PrimaryResult コンポーネントのプロパティ
+ * PrimaryResult コンポーネントのProps
  */
 export type PrimaryResultProps = {
    /** 主要な分析結果 */

@@ -9,7 +9,7 @@ export type AnalysisResult = {
 }
 
 /**
- * OtherResultsAccordion コンポーネントのプロパティ
+ * OtherResultsAccordion コンポーネントのProps
  */
 export type OtherResultsAccordionProps = {
    /** 分析結果の配列（最初の要素が主要結果） */

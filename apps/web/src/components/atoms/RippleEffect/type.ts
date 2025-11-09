@@ -1,5 +1,5 @@
 /**
- * RippleEffectコンポーネントのプロパティ型定義
+ * RippleEffectコンポーネントのProps型定義
  */
 export interface RippleEffectProps {
    /**

@@ -4,7 +4,7 @@
 export type PinCreationStatus = "idle" | "creating" | "success" | "error"
 
 /**
- * ActionButtons コンポーネントのプロパティ
+ * ActionButtons コンポーネントのProps
  */
 export type ActionButtonsProps = {
    /** 分析結果が存在するか */

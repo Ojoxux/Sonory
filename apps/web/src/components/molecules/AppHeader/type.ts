@@ -1,5 +1,5 @@
 /**
- * AppHeaderコンポーネントのプロパティ型定義
+ * AppHeaderコンポーネントのProps型定義
  */
 export interface AppHeaderProps {
    /** 設定ボタンクリック時のハンドラー */

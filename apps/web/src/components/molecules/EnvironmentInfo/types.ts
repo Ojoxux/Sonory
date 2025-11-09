@@ -9,7 +9,7 @@ export type Environment = {
 }
 
 /**
- * EnvironmentInfo コンポーネントのプロパティ
+ * EnvironmentInfo コンポーネントのProps
  */
 export type EnvironmentInfoProps = {
    /** 環境情報 */

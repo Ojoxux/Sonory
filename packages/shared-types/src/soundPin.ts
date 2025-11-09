@@ -53,7 +53,7 @@ export type RecordingStatus =
    | "error"
 
 /**
- * 音声ピンマーカーのプロパティ
+ * 音声ピンマーカーのProps
  */
 export interface SoundPinMarkerProps {
    soundPin: SoundPinData
