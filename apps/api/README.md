@@ -33,6 +33,8 @@ cp .dev.vars.example .dev.vars
 # 実際のSupabaseキーを設定してください
 ```
 
+**💡 環境変数の詳細**: [ENV_FILES_README.md](./ENV_FILES_README.md)を参照してください
+
 #### Cloudflare Workers（ステージング・本番環境）
 ```bash
 # ステージング環境
@@ -68,7 +70,7 @@ task sonory:web:up        # Next.js起動（ポート3000）
 task sonory:python:up     # Python Audio Analyzer起動（ポート8000）
 
 # ターミナル2: APIサーバー起動
-task sonory:api:dev       # Wrangler起動（ポート8787）
+task sonory:api:up        # Wrangler起動（ポート8787）
 # または直接実行
 cd apps/api && npm run dev
 ```
