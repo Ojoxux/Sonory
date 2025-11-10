@@ -5,12 +5,12 @@ Cloudflare Workers上で動作するHono製APIサーバー
 ## 🎯 技術スタック
 
 - **ランタイム**: Cloudflare Workers
-- **フレームワーク**: Hono v4.9.9
+- **フレームワーク**: Hono v4.10
 - **言語**: TypeScript 5
-- **開発ツール**: Wrangler v4.40.0
-- **バリデーション**: Zod v3.25.28
+- **開発ツール**: Wrangler v4.46
+- **バリデーション**: Zod v4.1
 - **データベース**: Supabase (PostgreSQL + PostGIS)
-- **リンター/フォーマッター**: Biome 1.9.4
+- **リンター/フォーマッター**: Biome 2.3.4
 
 ## 🚀 セットアップ
 
