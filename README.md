@@ -63,7 +63,7 @@ Sonoryは4つのサービスで構成されています：
 ```bash
 # プロジェクトルートから（初回のみ依存関係インストール）
 npm install
-# ℹ️ ワークスペース設定により、全サービスの依存関係が自動でインストールされます
+# ワークスペース設定により、全サービスの依存関係が自動でインストールされます
 
 # 全サービス起動
 task sonory:up        # または task up
@@ -75,7 +75,7 @@ task sonory:up        # または task up
 - **API**: [http://localhost:8787](http://localhost:8787)
 - **Redis**: 127.0.0.1:6379（内部ネットワーク用、直接アクセス不要）
 
-**注意**: Python Audio Analyzerは内部ネットワーク専用で、ホストから直接アクセスできません。
+**注意**: Python Audio Analyzerは内部ネットワーク専用で、ホストから直接アクセスできません（ポート公開なし）。
 APIサービス経由でのみ利用可能です。
 
 ## 🛠 Development Tools
@@ -117,9 +117,12 @@ task --list
 ### Docker設定ファイル
 
 - `docker-compose.yml` - メイン設定
+- `docker-compose.override.yml` - ローカル開発用カスタマイズ
 - `docker-compose.dev.yml` - 開発環境用オーバーライド
 - `docker-compose.secrets.yml` - シークレット管理
 - `docker-compose.prod.yml` - 本番環境用設定
+- `docker-compose.networks.yml` - ネットワーク設定
+- `docker-compose.test.yml` - テスト環境用設定
 
 #### よくある問題
 
@@ -187,14 +190,14 @@ sonory/                               # プロジェクトルート（モノレ�
 ## 💻 Technical Stack
 
 - **フレームワーク**: Next.js 16.0.1 (Turbopack使用)
-- **UI**: React 19 + Tailwind CSS v4
+- **UI**: React 19.2 + Tailwind CSS v4.1
 - **PWA**: next-pwa（サービスワーカー、オフライン対応）
 - **音声処理**: MediaRecorder API + wavesurfer.js
 - **AI推論**: TensorFlow.js + YAMNet（量子化モデル）
 - **地図**: Mapbox GL JS v2
 - **データ永続化**: Supabase + IndexedDB (idb)
-- **状態管理**: Zustand 5.0.5
-- **リンター/フォーマッター**: Biome 1.9.4
+- **状態管理**: Zustand 5.0.8
+- **リンター/フォーマッター**: Biome 2.3.4
 - **型システム**: TypeScript 5
 - **コンテナ化**: Docker + Docker Compose
 - **APIランタイム**: Hono (Cloudflare Workers) + FastAPI (Python)
