@@ -27,7 +27,7 @@
       "@hono/zod-validator": "^0.7.4",
       "@sonory/shared-types": "file:../../packages/shared-types",
       "@sonory/utils": "file:../../packages/utils",
-      "@supabase/supabase-js": "^2.80.0",
+      "@supabase/supabase-js": "^2.81.0",
       "hono": "^4.10.4",
       "vite": "^7.2.2",
       "zod": "^4.1.12"
