@@ -229,7 +229,6 @@ export function usePinAudioPlayer(
       onClose()
    })
 
-   // biome-ignore lint/correctness/useExhaustiveDependencies(onCloseEvent): onCloseEvent は useEffectEvent でラップされているため依存配列に含めない（React公式ドキュメント推奨）
    const handleClose = useCallback((): void => {
       stopAudio()
       onCloseEvent()

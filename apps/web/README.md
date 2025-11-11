@@ -45,8 +45,8 @@ task --list
 
 ## 🏗️ 技術スタック
 
-- **Next.js 15** - App Router + TypeScript（Docker環境対応）
-- **Tailwind CSS v4** - ユーティリティファーストCSS
+- **Next.js 16** - App Router + TypeScript（Docker環境対応）
+- **Tailwind CSS v4.1** - ユーティリティファーストCSS
 - **PWA** - next-pwa によるサービスワーカー
 - **Map** - Mapbox GL JS による地図表示
 - **Audio** - Web Audio API による音声録音・再生

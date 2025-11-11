@@ -5,12 +5,12 @@ Cloudflare Workers上で動作するHono製APIサーバー
 ## 🎯 技術スタック
 
 - **ランタイム**: Cloudflare Workers
-- **フレームワーク**: Hono v4.9.9
+- **フレームワーク**: Hono v4.10
 - **言語**: TypeScript 5
-- **開発ツール**: Wrangler v4.40.0
-- **バリデーション**: Zod v3.25.28
+- **開発ツール**: Wrangler v4.46
+- **バリデーション**: Zod v4.1
 - **データベース**: Supabase (PostgreSQL + PostGIS)
-- **リンター/フォーマッター**: Biome 1.9.4
+- **リンター/フォーマッター**: Biome 2.3.4
 
 ## 🚀 セットアップ
 
@@ -32,6 +32,8 @@ APIサービスは2つの環境で動作します：
 cp .dev.vars.example .dev.vars
 # 実際のSupabaseキーを設定してください
 ```
+
+**💡 環境変数の詳細**: [ENV_FILES_README.md](./ENV_FILES_README.md)を参照してください
 
 #### Cloudflare Workers（ステージング・本番環境）
 ```bash
@@ -68,7 +70,7 @@ task sonory:web:up        # Next.js起動（ポート3000）
 task sonory:python:up     # Python Audio Analyzer起動（ポート8000）
 
 # ターミナル2: APIサーバー起動
-task sonory:api:dev       # Wrangler起動（ポート8787）
+task sonory:api:up        # Wrangler起動（ポート8787）
 # または直接実行
 cd apps/api && npm run dev
 ```
