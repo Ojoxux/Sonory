@@ -123,7 +123,6 @@ export function useRecordingInterface(
       onExpandedChange?.(expanded)
    })
 
-   // biome-ignore lint/correctness/useExhaustiveDependencies(onExpandedChangeEvent): onExpandedChangeEvent は useEffectEvent でラップされているため依存配列に含めない（React公式ドキュメント推奨）
    useEffect(() => {
       onExpandedChangeEvent(isExpanded && status !== "idle")
    }, [isExpanded, status])

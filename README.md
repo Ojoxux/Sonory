@@ -36,25 +36,34 @@ cd Sonory
 export DOCKER_BUILDKIT=1
 export COMPOSE_DOCKER_CLI_BUILD=1
 
-# シークレットファイルの設定
-./setup-secrets.sh
+# シークレットファイルの設定（実行権限付与が必要な場合）
+chmod +x scripts/setup-secrets.sh
+./scripts/setup-secrets.sh
 
 # Docker用環境変数ファイルの作成
 cp .env.example .env
 # 必要な環境変数を設定してください
+
+# API用環境変数の設定（Wrangler開発サーバー用）
+cd apps/api
+cp .dev.vars.example .dev.vars
+# Supabase設定を.dev.varsに記入してください
+cd ../..
 ```
 
 3. **開発環境の起動**
 
-Sonoryは3つのサービスで構成されています：
+Sonoryは4つのサービスで構成されています：
 - **Web (Next.js)**: Docker Compose
-- **API (Wrangler)**: ローカルプロセス
-- **Python Audio Analyzer**: Docker Compose
+- **API (Hono + Wrangler)**: ローカルプロセス
+- **Python Audio Analyzer (FastAPI + YAMNet)**: Docker Compose
+- **Redis**: Docker Compose（キャッシュ用）
 
 **推奨: 一括起動**
 ```bash
 # プロジェクトルートから（初回のみ依存関係インストール）
-cd apps/api && npm install
+npm install
+# ワークスペース設定により、全サービスの依存関係が自動でインストールされます
 
 # 全サービス起動
 task sonory:up        # または task up
@@ -62,9 +71,12 @@ task sonory:up        # または task up
 ```
 
 開発環境が起動したら、以下にアクセスできます：
-- Web: [http://localhost:3000](http://localhost:3000)
-- API: [http://localhost:8787](http://localhost:8787)
-- Python Audio Analyzer: [http://localhost:8000](http://localhost:8000)
+- **Web**: [http://localhost:3000](http://localhost:3000)
+- **API**: [http://localhost:8787](http://localhost:8787)
+- **Redis**: 127.0.0.1:6379（内部ネットワーク用、直接アクセス不要）
+
+**注意**: Python Audio Analyzerは内部ネットワーク専用で、ホストから直接アクセスできません（ポート公開なし）。
+APIサービス経由でのみ利用可能です。
 
 ## 🛠 Development Tools
 
@@ -81,7 +93,7 @@ task sonory:rebuild      # 再ビルド
 # 個別サービス管理
 task sonory:web:up       # Webのみ起動
 task sonory:python:up    # Python Audio Analyzerのみ起動
-task sonory:api:up      # APIのみ起動
+task sonory:api:up      # APIのみ起動（wranglerを直接起動）
 
 # ログ確認
 task sonory:logs         # Docker Composeサービスログ（Web + Python）
@@ -105,9 +117,12 @@ task --list
 ### Docker設定ファイル
 
 - `docker-compose.yml` - メイン設定
+- `docker-compose.override.yml` - ローカル開発用カスタマイズ
 - `docker-compose.dev.yml` - 開発環境用オーバーライド
 - `docker-compose.secrets.yml` - シークレット管理
 - `docker-compose.prod.yml` - 本番環境用設定
+- `docker-compose.networks.yml` - ネットワーク設定
+- `docker-compose.test.yml` - テスト環境用設定
 
 #### よくある問題
 
@@ -131,8 +146,8 @@ docker system prune -a
 
 ```
 sonory/                               # プロジェクトルート（モノレポ）
-├── apps/                            # アプリケーション
-│   ├── web/                         # Next.js フロントエンド
+├── apps/                            # アプリケーション（4サービス）
+│   ├── web/                         # 🌐 Next.js フロントエンド（Docker Compose）
 │   │   ├── src/
 │   │   │   ├── app/                 # Next.js App Router
 │   │   │   ├── components/          # UIコンポーネント
@@ -142,15 +157,17 @@ sonory/                               # プロジェクトルート（モノレ�
 │   │   │   └── store/               # 状態管理（Zustand）
 │   │   ├── public/                  # 静的ファイル（PWA用アイコンなど）
 │   │   └── Dockerfile               # Next.js用Docker設定
-│   ├── api/                         # Hono API (Cloudflare Workers)
+│   ├── api/                         # 🔗 Hono API（ローカルプロセス - Wrangler）
 │   │   ├── src/
 │   │   │   ├── config/              # 設定ファイル（シークレット管理）
 │   │   │   ├── routes/              # APIルート
 │   │   │   ├── services/            # ビジネスロジック
 │   │   │   └── middleware/          # ミドルウェア
 │   │   ├── wrangler.toml            # Cloudflare Workers設定
+│   │   ├── .dev.vars.example        # ローカル開発用環境変数テンプレート
+│   │   ├── ENV_FILES_README.md      # 環境変数設定ガイド
 │   │   └── tsconfig-paths.json      # TSパスエイリアス設定
-│   └── python-audio-analyzer/       # Python音声分析サービス
+│   └── python-audio-analyzer/       # 🐍 Python音声分析サービス（Docker Compose）
 │       ├── src/                     # FastAPI + YAMNet
 │       └── Dockerfile               # Python用Docker設定
 ├── packages/                        # 共有パッケージ
@@ -158,23 +175,29 @@ sonory/                               # プロジェクトルート（モノレ�
 │   ├── utils/                       # 共有ユーティリティ
 │   └── config/                      # 共有設定
 ├── secrets/                         # Docker Secrets（gitignore済み）
-├── docker-compose.yml               # メインDocker Compose設定
+├── docker-compose.yml               # メインDocker Compose設定（Web + Python + Redis）
 ├── docker-compose.*.yml             # 環境別設定ファイル
 ├── Taskfile.yml                     # Task自動化設定
 └── turbo.json                       # Turborepo設定
+
+💡 サービス構成:
+  - Web（Next.js）: Docker Compose - ポート 3000
+  - API（Hono）: ローカルプロセス（Wrangler） - ポート 8787
+  - Python API（FastAPI + YAMNet）: Docker Compose - 内部ネットワークのみ
+  - Redis: Docker Compose - ポート 6379（キャッシュ用）
 ```
 
 ## 💻 Technical Stack
 
-- **フレームワーク**: Next.js 15.5.4 (Turbopack使用)
-- **UI**: React 19 + Tailwind CSS v4
+- **フレームワーク**: Next.js 16.0.1 (Turbopack使用)
+- **UI**: React 19.2 + Tailwind CSS v4.1
 - **PWA**: next-pwa（サービスワーカー、オフライン対応）
 - **音声処理**: MediaRecorder API + wavesurfer.js
 - **AI推論**: TensorFlow.js + YAMNet（量子化モデル）
 - **地図**: Mapbox GL JS v2
 - **データ永続化**: Supabase + IndexedDB (idb)
-- **状態管理**: Zustand 5.0.5
-- **リンター/フォーマッター**: Biome 1.9.4
+- **状態管理**: Zustand 5.0.8
+- **リンター/フォーマッター**: Biome 2.3.4
 - **型システム**: TypeScript 5
 - **コンテナ化**: Docker + Docker Compose
 - **APIランタイム**: Hono (Cloudflare Workers) + FastAPI (Python)
@@ -187,7 +210,8 @@ sonory/                               # プロジェクトルート（モノレ�
 task sonory:shell:web       # Webコンテナ
 task sonory:shell:python    # Python APIコンテナ
 
-# APIはローカルプロセスなので直接アクセス
+# APIはDockerを使わないローカルプロセスなので、シェルは不要
+# 起動ターミナルで直接確認、または以下でディレクトリ移動:
 cd apps/api
 ```
 
