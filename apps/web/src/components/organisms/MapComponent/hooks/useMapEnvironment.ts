@@ -364,7 +364,7 @@ export function useMapEnvironment({
       )
 
       return () => clearInterval(interval)
-   }, [map, mapStyleLoaded, updateEvent])
+   }, [map, mapStyleLoaded])
 
    // デバッグ時間が変更された時に即座に更新
    useEffect(() => {
@@ -379,7 +379,7 @@ export function useMapEnvironment({
       }
 
       setTimeout(updateWithStyleCheck, 1000)
-   }, [map, mapStyleLoaded, updateEvent])
+   }, [map, mapStyleLoaded])
 
    return {
       currentLighting,

@@ -249,7 +249,6 @@ export function useRealtime(
       })
    })
 
-   // biome-ignore lint/correctness/useExhaustiveDependencies(connectEvent): connectEvent は useEffectEvent でラップされているため依存配列に含めない（React公式ドキュメント推奨）
    useEffect(() => {
       if (autoConnect && !isConnected && connectionStatus === "disconnected") {
          connectEvent()
@@ -263,7 +262,6 @@ export function useRealtime(
       })
    })
 
-   // biome-ignore lint/correctness/useExhaustiveDependencies(requestPermissionEvent): requestPermissionEvent は useEffectEvent でラップされているため依存配列に含めない（React公式ドキュメント推奨）
    useEffect(() => {
       if (autoRequestPermission && isConnected) {
          requestPermissionEvent()
@@ -296,7 +294,6 @@ export function useRealtime(
       disconnect()
    })
 
-   // biome-ignore lint/correctness/useExhaustiveDependencies(disconnectEvent): disconnectEvent は useEffectEvent でラップされているため依存配列に含めない（React公式ドキュメント推奨）
    useEffect(() => {
       return () => {
          if (isConnected) {

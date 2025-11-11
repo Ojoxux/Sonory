@@ -232,18 +232,15 @@ export function useWaveformPlayer({
    /**
     * 再生終了処理
     */
-   const handlePlaybackFinish = useCallback(
-      (wavesurfer: WaveSurfer): void => {
-         if (wavesurfer.isPlaying()) {
-            wavesurfer.pause()
-            setIsPlaying(false)
-            wavesurfer.seekTo(0)
-            setCurrentTime(0)
-            onFinishEvent()
-         }
-      },
-      [onFinishEvent],
-   )
+   const handlePlaybackFinish = useCallback((wavesurfer: WaveSurfer): void => {
+      if (wavesurfer.isPlaying()) {
+         wavesurfer.pause()
+         setIsPlaying(false)
+         wavesurfer.seekTo(0)
+         setCurrentTime(0)
+         onFinishEvent()
+      }
+   }, [])
 
    /**
     * 現在時刻を更新する（再生終了チェック付き）
@@ -352,7 +349,7 @@ export function useWaveformPlayer({
             setIsInitialized(false)
          })
       },
-      [setupDurationTracking, updateCurrentTime, onReadyEvent],
+      [setupDurationTracking, updateCurrentTime],
    )
 
    /**
