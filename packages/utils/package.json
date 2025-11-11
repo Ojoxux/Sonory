@@ -8,8 +8,8 @@
    "scripts": {
       "build": "tsc",
       "dev": "tsc --watch",
-      "lint": "biome check --write .",
-      "lint:check": "biome check .",
+      "lint": "biome check --write src",
+      "lint:check": "biome check src",
       "format": "biome format . --write",
       "type-check": "tsc --noEmit",
       "clean": "rm -rf dist"
