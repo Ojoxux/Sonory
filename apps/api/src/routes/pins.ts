@@ -165,7 +165,7 @@ app.post("/upload", async (c) => {
       }
 
       // 音声ファイルをSupabase Storageにアップロード
-      console.log("🔄 音声ファイルアップロード開始:", {
+      console.log("音声ファイルアップロード開始:", {
          fileName: audioFile.name,
          fileSize: audioFile.size,
          fileType: audioFile.type,
@@ -173,7 +173,7 @@ app.post("/upload", async (c) => {
 
       const uploadResult = await audioService.uploadAudio(audioFile)
 
-      console.log("✅ 音声ファイルアップロード完了:", {
+      console.log("音声ファイルアップロード完了:", {
          audioId: uploadResult.audioId,
          audioUrl: uploadResult.audioUrl,
       })
@@ -207,7 +207,7 @@ app.post("/upload", async (c) => {
       const pin = await service.createPin(pinData)
 
       // 非同期でAI分析ジョブをキューに投入
-      console.log("🤖 AI分析ジョブをキューに投入:", pin.id)
+      console.log("AI分析ジョブをキューに投入:", pin.id)
 
       // executionCtx.waitUntil()を使って、レスポンス後も処理を継続
       c.executionCtx.waitUntil(
@@ -219,7 +219,7 @@ app.post("/upload", async (c) => {
                   uploadResult.audioUrl,
                )
 
-               console.log("✅ AI分析ジョブ投入完了:", {
+               console.log("AI分析ジョブ投入完了:", {
                   audioId: uploadResult.audioId,
                   pinId: pin.id,
                })
@@ -229,14 +229,14 @@ app.post("/upload", async (c) => {
                   c.env.ENVIRONMENT === "development" || !c.env.ENVIRONMENT
 
                if (isDevelopment) {
-                  console.log("🔧 開発環境: キュー処理を同期的に実行")
+                  console.log("開発環境: キュー処理を同期的に実行")
                   await new Promise((resolve) => setTimeout(resolve, 500))
                   const processedCount =
                      await audioService.processAnalysisQueue()
-                  console.log("✅ キュー処理完了:", { processedCount })
+                  console.log("キュー処理完了:", { processedCount })
                }
             } catch (error) {
-               console.error("❌ AI分析ジョブ投入エラー:", error)
+               console.error("AI分析ジョブ投入エラー:", error)
             }
          })(),
       )
