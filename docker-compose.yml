@@ -17,7 +17,6 @@ services:
     environment:
       - NODE_ENV=development
       - NEXT_PUBLIC_API_URL=http://host.docker.internal:8787
-      - NEXT_PUBLIC_PYTHON_API_URL=http://python-api:8000
       - NEXT_PUBLIC_MAPBOX_TOKEN=${NEXT_PUBLIC_MAPBOX_TOKEN}
     volumes:
       - ./apps/web:/app/apps/web
