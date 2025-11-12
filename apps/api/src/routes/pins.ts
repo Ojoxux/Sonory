@@ -206,58 +206,40 @@ app.post("/upload", async (c) => {
 
       const pin = await service.createPin(pinData)
 
-      // 非同期でAI分析を実行（Node.js環境）
-      console.log("🤖 AI分析を非同期で開始:", pin.id)
-      ;(async (): Promise<void> => {
-         try {
-            // 少し待機してからAI分析を実行
-            await new Promise((resolve) => setTimeout(resolve, 1000))
+      // 非同期でAI分析ジョブをキューに投入
+      console.log("🤖 AI分析ジョブをキューに投入:", pin.id)
 
-            const analysisResponse = await fetch(
-               `http://localhost:8787/api/audio/${uploadResult.audioId}/analyze`,
-               {
-                  method: "POST",
-                  headers: {
-                     "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({
-                     audioUrl: uploadResult.audioUrl,
-                     topK: 5,
-                  }),
-               },
-            )
+      // executionCtx.waitUntil()を使って、レスポンス後も処理を継続
+      c.executionCtx.waitUntil(
+         (async (): Promise<void> => {
+            try {
+               // キューに分析ジョブを投入
+               await audioService.scheduleAnalysis(
+                  uploadResult.audioId,
+                  uploadResult.audioUrl,
+               )
 
-            if (analysisResponse.ok) {
-               const analysisResult = (await analysisResponse.json()) as {
-                  success: boolean
-                  data?: {
-                     transcription: string
-                     categories: {
-                        emotion: string
-                        topic: string
-                        language: string
-                        confidence: number
-                     }
-                     summary?: string
-                  }
+               console.log("✅ AI分析ジョブ投入完了:", {
+                  audioId: uploadResult.audioId,
+                  pinId: pin.id,
+               })
+
+               // 開発環境では即座にキュー処理を実行
+               const isDevelopment =
+                  c.env.ENVIRONMENT === "development" || !c.env.ENVIRONMENT
+
+               if (isDevelopment) {
+                  console.log("🔧 開発環境: キュー処理を同期的に実行")
+                  await new Promise((resolve) => setTimeout(resolve, 500))
+                  const processedCount =
+                     await audioService.processAnalysisQueue()
+                  console.log("✅ キュー処理完了:", { processedCount })
                }
-
-               if (analysisResult.success && analysisResult.data) {
-                  // 分析結果でピンを更新
-                  await service.updatePin(pin.id, {
-                     aiAnalysis: analysisResult.data,
-                  })
-
-                  console.log("✅ AI分析完了・ピン更新:", {
-                     pinId: pin.id,
-                     analysis: analysisResult.data,
-                  })
-               }
+            } catch (error) {
+               console.error("❌ AI分析ジョブ投入エラー:", error)
             }
-         } catch (error) {
-            console.error("❌ AI分析エラー:", error)
-         }
-      })()
+         })(),
+      )
 
       return c.json({
          success: true,
