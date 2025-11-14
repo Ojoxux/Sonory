@@ -38,6 +38,6 @@
       "tsc-alias": "^1.8.16",
       "typescript": "^5.9.3",
       "vitest": "^4.0.8",
-      "wrangler": "^4.47.0"
+      "wrangler": "^4.48.0"
    }
 }
