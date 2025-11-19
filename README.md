@@ -1,14 +1,15 @@
-<div align="center">
-  <img src="apps/web/public/Sonory-App-Icon-PNG.png" width="360" alt="Sonory Logo">
-  <h1>Sonory</h1>
-  <p><strong>~ あなたの過ぎ去った10秒の軌跡を、地図に静かに印す ~</strong></p>
-  
-  <p>
-    Sonoryは、あなたの周りの環境音を10秒間録音し、AIが自動分類してスタンプ化、地図上に記録するPWA対応のウェブアプリケーションです。<br>
-    日常の一瞬を音で残します。
-  </p>
-  <a href="https://deepwiki.com/Ojoxux/Sonory"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
+<div align=center>
+   <img src="apps/web/public/Sonory-App-Icon-PNG.png" width="360" alt="Sonory Logo">
 </div>
+<div align=center>
+   <a href="https://deepwiki.com/Ojoxux/Sonory"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki" />
+</div>
+<h1>Sonory</h1>
+  
+<p>
+   Sonoryは、あなたの周りの環境音を10秒間録音し、AIが自動分類してスタンプ化、地図上に記録するPWA対応のウェブアプリケーションです。<br>
+   日常の一瞬を音で残します。
+</p>
 
 ## 🚀 Getting Started
 
