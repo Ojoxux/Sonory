@@ -22,7 +22,7 @@ jobs:
     steps:
       # 1. リポジトリをチェックアウト
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       # 2. Python をセットアップ
       - name: Set up Python
@@ -74,7 +74,7 @@ jobs:
     steps:
       # 1. リポジトリをチェックアウト
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       # 2. Docker Buildx セットアップ
       - name: Set up Docker Buildx

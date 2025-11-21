@@ -17,7 +17,7 @@ jobs:
           preview_url_regexp: '\[Visit Preview\]\(https://(.*?.app)\)'
 
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Add comment to PR
         id: loading_comment_to_pr
