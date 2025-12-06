@@ -35,13 +35,10 @@ chmod +x scripts/setup-secrets.sh
 
 # Docker用環境変数ファイルの作成
 cp .env.example .env
-# 必要な環境変数を設定してください
 
 # API用環境変数の設定（Wrangler開発サーバー用）
 cd apps/api
 cp .dev.vars.example .dev.vars
-# Supabase設定を.dev.varsに記入してください
-cd ../..
 ```
 
 3. **開発環境の起動**
