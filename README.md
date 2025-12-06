@@ -11,16 +11,7 @@
    日常の一瞬を音で残します。
 </p>
 
-## 🚀 Getting Started
-
-### 必要条件
-
-- Docker 20.0.0以上
-- Docker Compose v2以上
-- Node.js 18以上
-- npm 9以上
-- [Task](https://taskfile.dev/) (推奨)
-- Git
+## Getting Started
 
 ### 環境構築
 
@@ -80,7 +71,7 @@ task sonory:up        # または task up
 **注意**: Python Audio Analyzerは内部ネットワーク専用で、ホストから直接アクセスできません（ポート公開なし）。
 APIサービス経由でのみ利用可能です。
 
-## 🛠 Development Tools
+## Development Tools
 
 ### よく使うコマンド
 
@@ -115,114 +106,6 @@ task sonory:clean        # クリーンアップ
 # 利用可能な全コマンドを確認
 task --list
 ```
-
-### Docker設定ファイル
-
-- `docker-compose.yml` - メイン設定
-- `docker-compose.override.yml` - ローカル開発用カスタマイズ
-- `docker-compose.dev.yml` - 開発環境用オーバーライド
-- `docker-compose.secrets.yml` - シークレット管理
-- `docker-compose.prod.yml` - 本番環境用設定
-- `docker-compose.networks.yml` - ネットワーク設定
-- `docker-compose.test.yml` - テスト環境用設定
-
-#### よくある問題
-
-**BuildKitエラーが発生する場合:**
-```bash
-# BuildKitが無効になっている可能性
-export DOCKER_BUILDKIT=1
-export COMPOSE_DOCKER_CLI_BUILD=1
-```
-
-**ビルドキャッシュをクリアしたい場合:**
-```bash
-# 全体的なクリーンアップ
-task sonory:clean
-
-# Docker システム全体のクリーンアップ
-docker system prune -a
-```
-
-## 🗂 Project Structure
-
-```
-sonory/                               # プロジェクトルート（モノレポ）
-├── apps/                            # アプリケーション（4サービス）
-│   ├── web/                         # 🌐 Next.js フロントエンド（Docker Compose）
-│   │   ├── src/
-│   │   │   ├── app/                 # Next.js App Router
-│   │   │   ├── components/          # UIコンポーネント
-│   │   │   │   ├── atoms/           # 最小単位のコンポーネント
-│   │   │   │   ├── molecules/       # atomsの組み合わせ
-│   │   │   │   └── organisms/       # 複雑な機能を持つコンポーネント
-│   │   │   └── store/               # 状態管理（Zustand）
-│   │   ├── public/                  # 静的ファイル（PWA用アイコンなど）
-│   │   └── Dockerfile               # Next.js用Docker設定
-│   ├── api/                         # 🔗 Hono API（ローカルプロセス - Wrangler）
-│   │   ├── src/
-│   │   │   ├── config/              # 設定ファイル（シークレット管理）
-│   │   │   ├── routes/              # APIルート
-│   │   │   ├── services/            # ビジネスロジック
-│   │   │   └── middleware/          # ミドルウェア
-│   │   ├── wrangler.toml            # Cloudflare Workers設定
-│   │   ├── .dev.vars.example        # ローカル開発用環境変数テンプレート
-│   │   ├── ENV_FILES_README.md      # 環境変数設定ガイド
-│   │   └── tsconfig-paths.json      # TSパスエイリアス設定
-│   └── python-audio-analyzer/       # 🐍 Python音声分析サービス（Docker Compose）
-│       ├── src/                     # FastAPI + YAMNet
-│       └── Dockerfile               # Python用Docker設定
-├── packages/                        # 共有パッケージ
-│   ├── shared-types/                # 共有型定義
-│   ├── utils/                       # 共有ユーティリティ
-│   └── config/                      # 共有設定
-├── secrets/                         # Docker Secrets（gitignore済み）
-├── docker-compose.yml               # メインDocker Compose設定（Web + Python + Redis）
-├── docker-compose.*.yml             # 環境別設定ファイル
-├── Taskfile.yml                     # Task自動化設定
-└── turbo.json                       # Turborepo設定
-
-💡 サービス構成:
-  - Web（Next.js）: Docker Compose - ポート 3000
-  - API（Hono）: ローカルプロセス（Wrangler） - ポート 8787
-  - Python API（FastAPI + YAMNet）: Docker Compose - 内部ネットワークのみ
-  - Redis: Docker Compose - ポート 6379（キャッシュ用）
-```
-
-## 💻 Technical Stack
-
-- **フレームワーク**: Next.js 16.0.1 (Turbopack使用)
-- **UI**: React 19.2 + Tailwind CSS v4.1
-- **PWA**: next-pwa（サービスワーカー、オフライン対応）
-- **音声処理**: MediaRecorder API + wavesurfer.js
-- **AI推論**: TensorFlow.js + YAMNet（量子化モデル）
-- **地図**: Mapbox GL JS v2
-- **データ永続化**: Supabase + IndexedDB (idb)
-- **状態管理**: Zustand 5.0.8
-- **リンター/フォーマッター**: Biome 2.3.4
-- **型システム**: TypeScript 5
-- **コンテナ化**: Docker + Docker Compose
-- **APIランタイム**: Hono (Cloudflare Workers) + FastAPI (Python)
-- **自動化**: Task (Taskfile) + Turborepo
-
-### シェルアクセス
-
-```bash
-# Dockerコンテナのシェルを開く
-task sonory:shell:web       # Webコンテナ
-task sonory:shell:python    # Python APIコンテナ
-
-# APIはDockerを使わないローカルプロセスなので、シェルは不要
-# 起動ターミナルで直接確認、または以下でディレクトリ移動:
-cd apps/api
-```
-
-または`task sonory:dev`で開発モードでサービスを起動すると、全サービスのログが統合表示された状態で起動します。
-
-### 個別アプリケーション詳細
-- **フロントエンド**: [apps/web/README.md](apps/web/README.md)
-- **API**: [apps/api/README.md](apps/api/README.md)  
-- **Python音声分析**: [apps/python-audio-analyzer/README.md](apps/python-audio-analyzer/README.md)
 
 ## 🏗 Build and Deploy
 
