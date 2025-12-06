@@ -7,7 +7,7 @@ authors = [
 ]
 requires-python = ">=3.9"
 dependencies = [
-    "fastapi[all]>=0.123.10",
+    "fastapi[all]>=0.124.0",
     "uvicorn[standard]>=0.38.0",
     "tensorflow>=2.20.0",
     "tensorflow-hub>=0.16.1",
