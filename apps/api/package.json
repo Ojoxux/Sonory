@@ -27,7 +27,7 @@
       "@hono/zod-validator": "^0.7.6",
       "@sonory/shared-types": "file:../../packages/shared-types",
       "@sonory/utils": "file:../../packages/utils",
-      "@supabase/supabase-js": "^2.88.0",
+      "@supabase/supabase-js": "^2.89.0",
       "hono": "^4.11.1",
       "vite": "^7.3.0",
       "zod": "^4.2.1"
@@ -38,6 +38,6 @@
       "tsc-alias": "^1.8.16",
       "typescript": "^5.9.3",
       "vitest": "^4.0.16",
-      "wrangler": "^4.55.0"
+      "wrangler": "^4.56.0"
    }
 }
