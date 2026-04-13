@@ -78,7 +78,7 @@ jobs:
 
       # 2. Docker Buildx セットアップ
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       # 3. Docker イメージビルド
       - name: Build Docker image
