@@ -27,8 +27,8 @@
       "@hono/zod-validator": "^0.7.6",
       "@sonory/shared-types": "file:../../packages/shared-types",
       "@sonory/utils": "file:../../packages/utils",
-      "@supabase/supabase-js": "^2.101.1",
-      "hono": "^4.12.12",
+      "@supabase/supabase-js": "^2.103.1",
+      "hono": "^4.12.14",
       "vite": "^7.3.2",
       "zod": "^4.3.6"
    },
@@ -37,7 +37,7 @@
       "@types/node": "^24.12.2",
       "tsc-alias": "^1.8.16",
       "typescript": "^5.9.3",
-      "vitest": "^4.1.2",
-      "wrangler": "^4.79.0"
+      "vitest": "^4.1.4",
+      "wrangler": "^4.82.2"
    }
 }
