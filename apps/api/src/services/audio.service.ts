@@ -1,29 +1,13 @@
-import type { AudioMetadata, AudioUploadResult } from "@sonory/shared-types"
+import type {
+   AudioMetadata,
+   AudioUploadResult,
+   PythonAnalysisResult,
+} from "@sonory/shared-types"
 import { ERROR_CODES } from "@sonory/shared-types"
 import { joinUrl } from "@sonory/utils"
 import { APIException } from "../middleware/error"
 import { BaseService } from "./base.service"
 import { getSupabaseAdmin } from "./supabase"
-
-/**
- * Python YAMNet分析結果の型定義
- */
-interface PythonAnalysisResult {
-   classifications: Array<{
-      label: string
-      confidence: number
-   }>
-   environment: {
-      primary_type: string
-      type_scores: Record<string, number>
-      description: string
-   }
-   performance_metrics: {
-      yamnet_inference_time: number
-      total_time: number
-      processing_ratio: number
-   }
-}
 
 /**
  * 分析ジョブのステータス型

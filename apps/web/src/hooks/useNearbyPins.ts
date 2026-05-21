@@ -1,19 +1,12 @@
 "use client"
 
-import type { SoundPinAPI } from "@sonory/shared-types"
+import type { MapBounds, SoundPinAPI } from "@sonory/shared-types"
 import {
    keepPreviousData,
    useQuery,
    useQueryClient,
 } from "@tanstack/react-query"
 import { useCallback, useEffect, useEffectEvent, useMemo, useRef } from "react"
-
-interface MapBounds {
-   north: number
-   south: number
-   east: number
-   west: number
-}
 
 interface UseNearbyPinsOptions {
    bounds: MapBounds
