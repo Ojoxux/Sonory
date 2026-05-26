@@ -1,19 +1,8 @@
-version: '3.8'
-
-# 開発ローカルで Cloudflare Workers (wrangler dev) や
-# ホスト上の Python API へ到達させるための上書き設定です。
-# 本番や共有環境ではこのファイルを読み込まないでください。
+# ローカル開発用オーバーライド（docker compose up で自動読み込み）
+#
+# Wrangler dev をホストで実行する場合にpython-apiのポートを公開
 
 services:
-  web:
-    environment:
-      - NEXT_PUBLIC_API_URL=http://host.docker.internal:8787
-    # API コンテナへの依存を削除（wrangler dev を使用）
-    depends_on:
-      python-api:
-        condition: service_started
-
   python-api:
-    # Wrangler dev からホスト経由でアクセスできるようにポートを公開
     ports:
       - "8000:8000"

@@ -2,9 +2,6 @@ version: '3'
 
 vars:
   COMPOSE_FILE: docker-compose.yml
-  OVERRIDE_COMPOSE_FILE: docker-compose.override.yml
-  SECRETS_COMPOSE_FILE: docker-compose.secrets.yml
-  TEST_COMPOSE_FILE: docker-compose.test.yml
   PROD_COMPOSE_FILE: docker-compose.prod.yml
 
 tasks:
@@ -12,10 +9,9 @@ tasks:
     desc: "全てのSonoryサービスを起動(Web + Python + API)"
     cmds:
       - 'echo "Sonory開発環境を起動しています..."'
-      - docker-compose -f {{.COMPOSE_FILE}} -f {{.OVERRIDE_COMPOSE_FILE}} -f {{.SECRETS_COMPOSE_FILE}} up -d
+      - docker compose up -d
       - 'echo "Web + Python Audio Analyzer起動完了"'
       - 'echo "APIサーバーを起動中..."'
-      - 'echo ""'
       - task: sonory:status
       - 'echo ""'
       - 'echo "APIサーバーを起動します(Ctrl+Cで停止)"'
@@ -24,7 +20,7 @@ tasks:
   sonory:down:
     desc: "全てのSonoryサービスを停止(Docker + Wrangler)"
     cmds:
-      - docker-compose -f {{.COMPOSE_FILE}} -f {{.OVERRIDE_COMPOSE_FILE}} -f {{.SECRETS_COMPOSE_FILE}} down
+      - docker compose down
       - 'pkill -f "wrangler dev" || true'
       - 'echo "Sonoryサービスを停止しました"'
 
@@ -33,54 +29,30 @@ tasks:
     cmds:
       - 'echo "Sonory開発環境を起動しています(フォアグラウンド)..."'
       - 'echo "Ctrl+Cで全サービスを停止できます"'
-      - 'echo ""'
       - |
-        trap 'docker-compose -f {{.COMPOSE_FILE}} -f {{.OVERRIDE_COMPOSE_FILE}} -f {{.SECRETS_COMPOSE_FILE}} down; exit' SIGINT SIGTERM
-        docker-compose -f {{.COMPOSE_FILE}} -f {{.OVERRIDE_COMPOSE_FILE}} -f {{.SECRETS_COMPOSE_FILE}} up &
+        trap 'docker compose down; exit' SIGINT SIGTERM
+        docker compose up &
         cd apps/api && npm run dev
 
-  sonory:test:
-    desc: "軽量テスト環境を起動(web + api のみ)"
-    cmds:
-      - docker-compose -f {{.TEST_COMPOSE_FILE}} up
-      - 'echo "テスト環境を起動しました"'
-
-  sonory:test:build:
-    desc: "テスト環境をリビルドして起動"
-    cmds:
-      - docker-compose -f {{.TEST_COMPOSE_FILE}} up --build
-      - 'echo "テスト環境を起動しました(リビルド実行)"'
-
   sonory:prod:
-    desc: "本番モードでサービスを起動(Docker Composeサービスのみ: Web + Python)"
+    desc: "本番モードでサービスを起動"
     cmds:
-      - docker-compose -f {{.COMPOSE_FILE}} -f {{.PROD_COMPOSE_FILE}} up -d
+      - docker compose -f {{.COMPOSE_FILE}} -f {{.PROD_COMPOSE_FILE}} up -d
       - 'echo "APIはCloudflare Workersにデプロイしてください: task sonory:deploy:api"'
 
   sonory:deploy:
     desc: "全サービスをデプロイ(Web + Python + API)"
     cmds:
       - 'echo "Sonoryサービスをデプロイしています..."'
-      - 'echo ""'
-      - 'echo "Step 1: Docker Composeサービスをデプロイ(Web + Python)"'
-      - docker-compose -f {{.COMPOSE_FILE}} -f {{.PROD_COMPOSE_FILE}} up -d --build
-      - 'echo ""'
-      - 'echo "Step 2: APIをCloudflare Workersにデプロイ"'
+      - docker compose -f {{.COMPOSE_FILE}} -f {{.PROD_COMPOSE_FILE}} up -d --build
       - cd apps/api && npm run deploy:production
-      - 'echo ""'
       - 'echo "全サービスのデプロイが完了しました"'
 
   sonory:deploy:staging:
     desc: "ステージング環境に全サービスをデプロイ"
     cmds:
-      - 'echo "ステージング環境にデプロイしています..."'
-      - 'echo ""'
-      - 'echo "Docker Composeサービス(Web + Python)"'
-      - docker-compose -f {{.COMPOSE_FILE}} -f {{.PROD_COMPOSE_FILE}} up -d --build
-      - 'echo ""'
-      - 'echo "APIをCloudflare Workers(staging)にデプロイ"'
+      - docker compose -f {{.COMPOSE_FILE}} -f {{.PROD_COMPOSE_FILE}} up -d --build
       - cd apps/api && npm run deploy:staging
-      - 'echo ""'
       - 'echo "ステージング環境へのデプロイが完了しました"'
 
   sonory:deploy:api:
@@ -94,88 +66,71 @@ tasks:
       - cd apps/api && npm run deploy:staging
 
   sonory:rebuild:
-    desc: "全サービスをリビルドして再起動(Docker Composeサービスのみ)"
-    prompt: |
-      注意事項:
-      - この操作は全てのサービスを停止し、キャッシュを使わずにリビルドします。
-      - 重要なデータが失われる可能性があるため、事前にバックアップを取ってください。
-      - 実行してよろしいですか？ (y/N)
+    desc: "全サービスをリビルドして再起動"
+    prompt: "全サービスを停止してリビルドします。実行してよろしいですか？"
     cmds:
-      - docker-compose -f {{.COMPOSE_FILE}} -f {{.OVERRIDE_COMPOSE_FILE}} -f {{.SECRETS_COMPOSE_FILE}} down
-      - docker-compose -f {{.COMPOSE_FILE}} -f {{.OVERRIDE_COMPOSE_FILE}} -f {{.SECRETS_COMPOSE_FILE}} build --no-cache
-      - docker-compose -f {{.COMPOSE_FILE}} -f {{.OVERRIDE_COMPOSE_FILE}} -f {{.SECRETS_COMPOSE_FILE}} up -d
-      - 'echo "Docker Composeサービスをリビルドして再起動しました"'
-      - 'echo "APIを再ビルド: cd apps/api && npm run build"'
+      - docker compose down
+      - docker compose build --no-cache
+      - docker compose up -d
+      - 'echo "リビルドして再起動しました"'
 
   sonory:logs:
     desc: "全サービスのログを表示"
     cmds:
-      - docker-compose -f {{.COMPOSE_FILE}} -f {{.OVERRIDE_COMPOSE_FILE}} -f {{.SECRETS_COMPOSE_FILE}} logs -f
+      - docker compose logs -f
 
   sonory:logs:web:
-    desc: "Webサービスのログのみ表示(Docker Compose)"
+    desc: "Webサービスのログのみ表示"
     cmds:
-      - docker-compose -f {{.COMPOSE_FILE}} -f {{.OVERRIDE_COMPOSE_FILE}} -f {{.SECRETS_COMPOSE_FILE}} logs -f web
+      - docker compose logs -f web
 
   sonory:logs:python:
     desc: "Python APIサービスのログのみ表示"
     cmds:
-      - docker-compose -f {{.COMPOSE_FILE}} -f {{.OVERRIDE_COMPOSE_FILE}} -f {{.SECRETS_COMPOSE_FILE}} logs -f python-api
-
-  sonory:logs:test:
-    desc: "テスト環境のログを表示"
-    cmds:
-      - docker-compose -f {{.TEST_COMPOSE_FILE}} logs -f
+      - docker compose logs -f python-api
 
   sonory:status:
     desc: "全サービスのステータスを表示"
     cmds:
       - 'echo "Sonory サービス状態"'
       - 'echo "================================"'
-      - docker-compose -f {{.COMPOSE_FILE}} -f {{.OVERRIDE_COMPOSE_FILE}} -f {{.SECRETS_COMPOSE_FILE}} ps
+      - docker compose ps
       - 'echo ""'
       - 'echo "Web (Next.js):          http://localhost:3000"'
       - 'echo "API (Wrangler):         http://localhost:8787"'
-      - 'echo "Python Audio Analyzer:  内部ネットワークのみ(API経由でアクセス)"'
-      - 'echo "Redis:                  127.0.0.1:6379(内部ネットワーク用)"'
-      - 'echo ""'
-      - 'echo "Web/APIの起動状態を確認: ps aux | grep -E \"(next dev|wrangler dev)\""'
+      - 'echo "Python Audio Analyzer:  内部ネットワーク(API経由)"'
+      - 'echo "Redis:                  127.0.0.1:6379"'
 
   sonory:clean:
     desc: "コンテナ、ボリューム、イメージをクリーンアップ"
-    prompt: |
-      注意事項:
-      - この操作は全てのコンテナ、ボリューム、未使用イメージを削除します。
-      - 重要なデータが失われる可能性があるため、事前にバックアップを取ってください。
-      - 実行してよろしいですか？ (y/N)
+    prompt: "全てのコンテナとボリュームを削除します。実行してよろしいですか？"
     cmds:
-      - docker-compose -f {{.COMPOSE_FILE}} -f {{.OVERRIDE_COMPOSE_FILE}} -f {{.SECRETS_COMPOSE_FILE}} down -v
-      - docker-compose -f {{.TEST_COMPOSE_FILE}} down -v
+      - docker compose down -v
       - docker system prune -f
       - 'echo "クリーンアップが完了しました"'
 
   sonory:shell:web:
     desc: "Webコンテナのシェルを開く"
     cmds:
-      - docker-compose -f {{.COMPOSE_FILE}} -f {{.OVERRIDE_COMPOSE_FILE}} -f {{.SECRETS_COMPOSE_FILE}} exec web /bin/bash
+      - docker compose exec web /bin/bash
 
   sonory:shell:python:
     desc: "Python APIコンテナのシェルを開く"
     cmds:
-      - docker-compose -f {{.COMPOSE_FILE}} -f {{.OVERRIDE_COMPOSE_FILE}} -f {{.SECRETS_COMPOSE_FILE}} exec python-api /bin/bash
+      - docker compose exec python-api /bin/bash
 
   # ==================== 個別サービス管理 ====================
-  
+
   sonory:web:up:
     desc: "Webサービスを起動"
     cmds:
-      - docker-compose -f {{.COMPOSE_FILE}} -f {{.OVERRIDE_COMPOSE_FILE}} -f {{.SECRETS_COMPOSE_FILE}} up -d web
+      - docker compose up -d web
       - 'echo "Web起動: http://localhost:3000"'
 
   sonory:web:down:
     desc: "Webサービスを停止"
     cmds:
-      - docker-compose -f {{.COMPOSE_FILE}} -f {{.OVERRIDE_COMPOSE_FILE}} -f {{.SECRETS_COMPOSE_FILE}} stop web
+      - docker compose stop web
 
   sonory:api:up:
     desc: "APIサービスを起動"
@@ -191,16 +146,15 @@ tasks:
   sonory:python:up:
     desc: "Python Audio Analyzerを起動"
     cmds:
-      - docker-compose -f {{.COMPOSE_FILE}} -f {{.OVERRIDE_COMPOSE_FILE}} -f {{.SECRETS_COMPOSE_FILE}} up -d python-api
-      - 'echo "Python Audio Analyzer起動: http://localhost:8000"'
+      - docker compose up -d python-api
 
   sonory:python:down:
     desc: "Python Audio Analyzerを停止"
     cmds:
-      - docker-compose -f {{.COMPOSE_FILE}} -f {{.OVERRIDE_COMPOSE_FILE}} -f {{.SECRETS_COMPOSE_FILE}} stop python-api
+      - docker compose stop python-api
 
-  # ==================== クイックショートカット ====================
-  
+  # ==================== ショートカット ====================
+
   up:
     desc: "クイック起動(sonory:upのエイリアス)"
     cmds:
@@ -217,39 +171,33 @@ tasks:
       - task: sonory:status
 
   # ==================== 開発ヘルパー ====================
-  
+
   sonory:install:
     desc: "全サービスの依存関係をインストール"
     cmds:
       - 'echo "依存関係をインストール中..."'
-      - docker-compose -f {{.COMPOSE_FILE}} -f {{.OVERRIDE_COMPOSE_FILE}} -f {{.SECRETS_COMPOSE_FILE}} run --rm web npm install
+      - docker compose run --rm web npm install
       - cd apps/api && npm install
-      - docker-compose -f {{.COMPOSE_FILE}} -f {{.OVERRIDE_COMPOSE_FILE}} -f {{.SECRETS_COMPOSE_FILE}} run --rm python-api pip install -e .[dev]
+      - docker compose run --rm python-api pip install -e .[dev]
       - 'echo "依存関係をインストールしました"'
 
   sonory:build:
     desc: "全サービスをビルド"
     cmds:
-      - 'echo "ビルド中..."'
-      - docker-compose -f {{.COMPOSE_FILE}} -f {{.OVERRIDE_COMPOSE_FILE}} -f {{.SECRETS_COMPOSE_FILE}} build
+      - docker compose build
       - cd apps/api && npm run build
       - 'echo "ビルドが完了しました"'
 
   sonory:lint:
     desc: "全サービスのLintを実行"
     cmds:
-      - 'echo "Lint中..."'
-      - docker-compose -f {{.COMPOSE_FILE}} -f {{.OVERRIDE_COMPOSE_FILE}} -f {{.SECRETS_COMPOSE_FILE}} run --rm web npm run lint
+      - docker compose run --rm web npm run lint
       - cd apps/api && npm run lint
-      - docker-compose -f {{.COMPOSE_FILE}} -f {{.OVERRIDE_COMPOSE_FILE}} -f {{.SECRETS_COMPOSE_FILE}} run --rm python-api npm run lint
       - 'echo "Lintが完了しました"'
 
   sonory:type-check:
     desc: "全サービスの型チェックを実行"
     cmds:
-      - 'echo "型チェック中..."'
-      - docker-compose -f {{.COMPOSE_FILE}} -f {{.OVERRIDE_COMPOSE_FILE}} -f {{.SECRETS_COMPOSE_FILE}} run --rm web npm run type-check
+      - docker compose run --rm web npm run type-check
       - cd apps/api && npm run type-check
-      - docker-compose -f {{.COMPOSE_FILE}} -f {{.OVERRIDE_COMPOSE_FILE}} -f {{.SECRETS_COMPOSE_FILE}} run --rm python-api npm run lint:typecheck
       - 'echo "型チェックが完了しました"'
-
