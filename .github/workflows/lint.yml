@@ -55,3 +55,9 @@ jobs:
       # 6. TS の型チェックを実行
       - name: Run tsc
         run: npm run type-check
+
+      # 7. shared-types から Python 型が生成できることを検証
+      - name: Verify Python types generation
+        run: |
+          npm run build -w @sonory/shared-types
+          npm run verify -w @sonory/python-types
