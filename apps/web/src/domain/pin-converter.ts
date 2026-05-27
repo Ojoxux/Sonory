@@ -4,10 +4,9 @@
  * DB/APIレスポンスとフロントエンドのSoundPin間の変換を行う
  */
 
-import type { DbPin, PinApiResponse } from "../services/pin-api"
-import { buildClassificationResults } from "../services/pin-api"
 import type { InferenceResult } from "../store/types"
 import type { SoundPin } from "../store/useSoundPinStore"
+import type { DbPin, PinApiResponse } from "./pin-types"
 
 /**
  * APIレスポンスをSoundPinに変換
@@ -42,6 +41,34 @@ export function convertApiResponseToPin(
       environment: primaryResult?.label || "unknown",
       weather: result.data.weather,
    }
+}
+
+/**
+ * 分類結果を構築（DBピンから）
+ */
+export function buildClassificationResults(pin: DbPin): InferenceResult[] {
+   if (pin.title && pin.title !== "音声ピン" && pin.title.trim() !== "") {
+      return [
+         {
+            label: pin.title,
+            confidence: pin.aiAnalysis?.categories?.confidence ?? 0.8,
+         },
+      ]
+   }
+
+   if (
+      pin.aiAnalysis?.categories?.topic &&
+      pin.aiAnalysis.categories.topic !== "unknown"
+   ) {
+      return [
+         {
+            label: pin.aiAnalysis.categories.topic,
+            confidence: pin.aiAnalysis.categories.confidence ?? 0,
+         },
+      ]
+   }
+
+   return [{ label: "未分類", confidence: 0 }]
 }
 
 /**

@@ -5,57 +5,7 @@
  */
 
 import type { MapBounds, WeatherData } from "@sonory/shared-types"
-import type { InferenceResult } from "../store/types"
-
-/**
- * ピン作成APIレスポンスの型
- */
-export interface PinApiResponse {
-   success: boolean
-   data?: {
-      id: string
-      audio_url: string
-      location: {
-         lat: number
-         lng: number
-      }
-      audio: {
-         url: string
-      }
-      createdAt: string
-      timeTag?: "朝" | "昼" | "夕" | "夜"
-      weather?: WeatherData
-   }
-   error?: string
-}
-
-/**
- * DBから取得したピンの型
- */
-export interface DbPin {
-   id: string
-   location: { lat: number; lng: number }
-   audio: { url: string; duration: number; format: string }
-   title?: string
-   timeTag?: "朝" | "昼" | "夕" | "夜"
-   weather?: WeatherData
-   aiAnalysis?: {
-      transcription: string
-      categories: {
-         confidence: number
-         topic: string
-         emotion: string
-         language: string
-      }
-      summary?: string
-   }
-   status: "active" | "processing" | "deleted" | "reported"
-   createdAt: string
-   updatedAt: string
-   metadata?: {
-      deviceInfo: string
-   }
-}
+import type { PinApiResponse } from "../domain/pin-types"
 
 interface PinCreateParams {
    audioFilePath: string
@@ -194,32 +144,4 @@ export async function deletePin(pinId: string): Promise<void> {
    if (!result.success) {
       throw new Error("ピン削除結果が不正です")
    }
-}
-
-/**
- * 分類結果を構築（DBピンから）
- */
-export function buildClassificationResults(pin: DbPin): InferenceResult[] {
-   if (pin.title && pin.title !== "音声ピン" && pin.title.trim() !== "") {
-      return [
-         {
-            label: pin.title,
-            confidence: pin.aiAnalysis?.categories?.confidence ?? 0.8,
-         },
-      ]
-   }
-
-   if (
-      pin.aiAnalysis?.categories?.topic &&
-      pin.aiAnalysis.categories.topic !== "unknown"
-   ) {
-      return [
-         {
-            label: pin.aiAnalysis.categories.topic,
-            confidence: pin.aiAnalysis.categories.confidence ?? 0,
-         },
-      ]
-   }
-
-   return [{ label: "未分類", confidence: 0 }]
 }
