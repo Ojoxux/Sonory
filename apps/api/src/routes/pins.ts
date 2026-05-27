@@ -1,18 +1,15 @@
-import { zValidator } from "@hono/zod-validator"
+import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi"
 import {
    ERROR_CODES,
    type NearbyPinsQuery,
    type SearchPinsQuery,
 } from "@sonory/shared-types"
-import { Hono } from "hono"
-import { z } from "zod"
 import { APIException } from "../middleware/error"
-import { onZodValidationError } from "../middleware/validation"
 import { AudioService } from "../services/audio.service"
 import { PinService } from "../services/pin.service"
 import type { Env } from "../types/api"
 
-const app = new Hono<{ Bindings: Env }>()
+const app = new OpenAPIHono<{ Bindings: Env }>()
 
 /**
  * Request validation schemas
@@ -24,11 +21,10 @@ const createPinSchema = z.object({
       lng: z.number().min(-180).max(180),
       accuracy: z.number().positive().optional(),
    }),
-   // audio.urlまたはaudio_file_pathのどちらかが必須
    audio: z
       .object({
          url: z.string().url(),
-         duration: z.number().min(9.9).max(600), // タイマー精度を考慮して9.9秒以上
+         duration: z.number().min(9.9).max(600),
          format: z.enum(["webm", "mp3", "wav"]),
       })
       .optional(),
@@ -107,34 +103,242 @@ const reportPinSchema = z.object({
 // HACK: 複雑な配列スキーマは事前に定義して型推論の深さを抑える
 const createPinsBatchSchema: z.ZodTypeAny = z.array(createPinSchema)
 
+const successResponseSchema = z.object({
+   success: z.literal(true),
+   data: z.unknown(),
+})
+
+const successWithMetaResponseSchema = z.object({
+   success: z.literal(true),
+   data: z.unknown(),
+   meta: z.record(z.string(), z.unknown()).optional(),
+})
+
 /**
- * POST /api/pins - Create a new pin
+ * Route definitions
  */
-app.post(
-   "/",
-   zValidator("json", createPinSchema, onZodValidationError),
-   async (c) => {
-      const service = new PinService(c)
-      const data = await c.req.json()
-
-      const pin = await service.createPin(data)
-
-      return c.json({
-         success: true,
-         data: pin,
-      })
+const createPinRoute = createRoute({
+   method: "post",
+   path: "/",
+   tags: ["Pins"],
+   summary: "ピン作成",
+   description: "新しい音声ピンを作成",
+   request: {
+      body: {
+         content: {
+            "application/json": { schema: createPinSchema },
+         },
+      },
    },
-)
+   responses: {
+      200: {
+         content: { "application/json": { schema: successResponseSchema } },
+         description: "作成されたピン",
+      },
+   },
+})
+
+const uploadPinRoute = createRoute({
+   method: "post",
+   path: "/upload",
+   tags: ["Pins"],
+   summary: "音声アップロード付きピン作成",
+   description: "音声ファイルをアップロードしてピンを作成",
+   responses: {
+      200: {
+         content: { "application/json": { schema: successResponseSchema } },
+         description: "作成されたピン",
+      },
+   },
+})
+
+const nearbyPinsRoute = createRoute({
+   method: "get",
+   path: "/nearby",
+   tags: ["Pins"],
+   summary: "周辺ピン取得",
+   description: "指定された境界内のピンを取得",
+   request: {
+      query: nearbyPinsSchema,
+   },
+   responses: {
+      200: {
+         content: {
+            "application/json": { schema: successWithMetaResponseSchema },
+         },
+         description: "周辺ピン一覧",
+      },
+   },
+})
+
+const searchPinsRoute = createRoute({
+   method: "get",
+   path: "/search",
+   tags: ["Pins"],
+   summary: "ピン検索",
+   description: "条件を指定してピンを検索",
+   request: {
+      query: searchPinsSchema,
+   },
+   responses: {
+      200: {
+         content: { "application/json": { schema: successResponseSchema } },
+         description: "検索結果",
+      },
+   },
+})
+
+const getUserPinsRoute = createRoute({
+   method: "get",
+   path: "/user/{userId}",
+   tags: ["Pins"],
+   summary: "ユーザーのピン取得",
+   description: "指定ユーザーのピン一覧を取得",
+   request: {
+      params: z.object({
+         userId: z.string(),
+      }),
+   },
+   responses: {
+      200: {
+         content: { "application/json": { schema: successResponseSchema } },
+         description: "ユーザーのピン一覧",
+      },
+   },
+})
+
+const batchCreatePinsRoute = createRoute({
+   method: "post",
+   path: "/batch",
+   tags: ["Pins"],
+   summary: "複数ピン一括作成",
+   description: "複数のピンを一括で作成",
+   request: {
+      body: {
+         content: {
+            "application/json": {
+               schema: createPinsBatchSchema,
+            },
+         },
+      },
+   },
+   responses: {
+      200: {
+         content: {
+            "application/json": { schema: successWithMetaResponseSchema },
+         },
+         description: "作成されたピン一覧",
+      },
+   },
+})
+
+const getPinByIdRoute = createRoute({
+   method: "get",
+   path: "/{id}",
+   tags: ["Pins"],
+   summary: "ピン詳細取得",
+   description: "IDでピンを取得",
+   request: {
+      params: z.object({
+         id: z.string(),
+      }),
+   },
+   responses: {
+      200: {
+         content: { "application/json": { schema: successResponseSchema } },
+         description: "ピン詳細",
+      },
+   },
+})
+
+const updatePinRoute = createRoute({
+   method: "put",
+   path: "/{id}",
+   tags: ["Pins"],
+   summary: "ピン更新",
+   description: "ピンの情報を更新",
+   request: {
+      params: z.object({
+         id: z.string(),
+      }),
+      body: {
+         content: {
+            "application/json": { schema: updatePinSchema },
+         },
+      },
+   },
+   responses: {
+      200: {
+         content: { "application/json": { schema: successResponseSchema } },
+         description: "更新されたピン",
+      },
+   },
+})
+
+const deletePinRoute = createRoute({
+   method: "delete",
+   path: "/{id}",
+   tags: ["Pins"],
+   summary: "ピン削除",
+   description: "ピンを削除",
+   request: {
+      params: z.object({
+         id: z.string(),
+      }),
+   },
+   responses: {
+      200: {
+         content: { "application/json": { schema: successResponseSchema } },
+         description: "削除結果",
+      },
+   },
+})
+
+const reportPinRoute = createRoute({
+   method: "post",
+   path: "/{id}/report",
+   tags: ["Pins"],
+   summary: "ピン報告",
+   description: "不適切なピンを報告",
+   request: {
+      params: z.object({
+         id: z.string(),
+      }),
+      body: {
+         content: {
+            "application/json": { schema: reportPinSchema },
+         },
+      },
+   },
+   responses: {
+      200: {
+         content: { "application/json": { schema: successResponseSchema } },
+         description: "報告結果",
+      },
+   },
+})
 
 /**
- * POST /api/pins/upload - Create a new pin with audio upload
+ * Route handlers
  */
-app.post("/upload", async (c) => {
+
+app.openapi(createPinRoute, async (c) => {
+   const service = new PinService(c)
+   const data = await c.req.json()
+
+   const pin = await service.createPin(data)
+
+   return c.json({
+      success: true as const,
+      data: pin,
+   })
+})
+
+app.openapi(uploadPinRoute, async (c) => {
    const service = new PinService(c)
    const audioService = new AudioService(c)
 
    try {
-      // FormDataから音声ファイルと位置情報を取得
       const formData = await c.req.formData()
       const audioFile = formData.get("audio") as unknown as File
       const locationStr = formData.get("location") as string
@@ -164,7 +368,6 @@ app.post("/upload", async (c) => {
          )
       }
 
-      // 音声ファイルをSupabase Storageにアップロード
       console.log("音声ファイルアップロード開始:", {
          fileName: audioFile.name,
          fileSize: audioFile.size,
@@ -178,7 +381,6 @@ app.post("/upload", async (c) => {
          audioUrl: uploadResult.audioUrl,
       })
 
-      // 音声フォーマットを決定
       let audioFormat: "webm" | "mp3" | "wav" = "webm"
       if (audioFile.type.includes("mp3")) {
          audioFormat = "mp3"
@@ -186,7 +388,6 @@ app.post("/upload", async (c) => {
          audioFormat = "wav"
       }
 
-      // ピンデータを作成
       const pinData = {
          location: {
             lat: location.lat,
@@ -198,7 +399,7 @@ app.post("/upload", async (c) => {
             duration: metadata.duration || 10,
             format: audioFormat,
          },
-         weather: metadata.weather, // 天気情報を追加
+         weather: metadata.weather,
          timeTag: metadata.timeTag,
          title: metadata.title,
          deviceInfo: metadata.deviceInfo,
@@ -206,14 +407,11 @@ app.post("/upload", async (c) => {
 
       const pin = await service.createPin(pinData)
 
-      // 非同期でAI分析ジョブをキューに投入
       console.log("AI分析ジョブをキューに投入:", pin.id)
 
-      // executionCtx.waitUntil()を使って、レスポンス後も処理を継続
       c.executionCtx.waitUntil(
          (async (): Promise<void> => {
             try {
-               // キューに分析ジョブを投入
                await audioService.scheduleAnalysis(
                   uploadResult.audioId,
                   uploadResult.audioUrl,
@@ -224,7 +422,6 @@ app.post("/upload", async (c) => {
                   pinId: pin.id,
                })
 
-               // 開発環境では即座にキュー処理を実行
                const isDevelopment =
                   c.env.ENVIRONMENT === "development" || !c.env.ENVIRONMENT
 
@@ -242,7 +439,7 @@ app.post("/upload", async (c) => {
       )
 
       return c.json({
-         success: true,
+         success: true as const,
          data: pin,
       })
    } catch (error) {
@@ -257,136 +454,105 @@ app.post("/upload", async (c) => {
    }
 })
 
-/**
- * GET /api/pins/nearby - Get nearby pins
- */
-app.get(
-   "/nearby",
-   zValidator("query", nearbyPinsSchema, onZodValidationError),
-   async (c) => {
-      const service = new PinService(c)
-      const validated = c.req.valid("query")
-
-      const nearbyQuery: NearbyPinsQuery = {
-         bounds: {
-            north: validated.north,
-            south: validated.south,
-            east: validated.east,
-            west: validated.west,
-         },
-         limit: validated.limit ?? 50,
-         categories: validated.categories,
-      }
-
-      const pins = await service.getNearbyPins(nearbyQuery)
-
-      // 積極的なキャッシュヘッダーを設定
-      c.header(
-         "Cache-Control",
-         "public, s-maxage=120, stale-while-revalidate=300",
-      )
-      c.header("X-API-Version", "1.0")
-      c.header("X-Response-Time", Date.now().toString())
-
-      return c.json({
-         success: true,
-         data: pins,
-         meta: {
-            count: pins.length,
-            bounds: nearbyQuery.bounds,
-            limit: nearbyQuery.limit,
-         },
-      })
-   },
-)
-
-/**
- * GET /api/pins/search - Search pins with filters
- */
-app.get(
-   "/search",
-   zValidator("query", searchPinsSchema, onZodValidationError),
-   async (c) => {
-      const service = new PinService(c)
-      const validated = c.req.valid("query")
-
-      const searchQuery: SearchPinsQuery = {
-         ...(validated.lat && validated.lng && validated.radius
-            ? {
-                 location: {
-                    lat: validated.lat,
-                    lng: validated.lng,
-                    radius: validated.radius,
-                 },
-              }
-            : {}),
-         ...(validated.startTime && validated.endTime
-            ? {
-                 timeRange: {
-                    start: validated.startTime,
-                    end: validated.endTime,
-                 },
-              }
-            : {}),
-         categories: validated.categories,
-         weather: validated.weather,
-         limit: validated.limit ?? 50,
-         offset: validated.offset ?? 0,
-      }
-
-      const pins = await service.searchPins(searchQuery)
-
-      return c.json({
-         success: true,
-         data: pins,
-      })
-   },
-)
-
-/**
- * GET /api/pins/user/:userId - Get user's pins
- */
-app.get("/user/:userId", async (c) => {
+app.openapi(nearbyPinsRoute, async (c) => {
    const service = new PinService(c)
-   const userId = c.req.param("userId")
+   const validated = c.req.valid("query")
 
-   const pins = await service.getUserPins(userId)
+   const nearbyQuery: NearbyPinsQuery = {
+      bounds: {
+         north: validated.north,
+         south: validated.south,
+         east: validated.east,
+         west: validated.west,
+      },
+      limit: validated.limit ?? 50,
+      categories: validated.categories,
+   }
+
+   const pins = await service.getNearbyPins(nearbyQuery)
+
+   c.header("Cache-Control", "public, s-maxage=120, stale-while-revalidate=300")
+   c.header("X-API-Version", "1.0")
+   c.header("X-Response-Time", Date.now().toString())
 
    return c.json({
-      success: true,
+      success: true as const,
+      data: pins,
+      meta: {
+         count: pins.length,
+         bounds: nearbyQuery.bounds,
+         limit: nearbyQuery.limit,
+      },
+   })
+})
+
+app.openapi(searchPinsRoute, async (c) => {
+   const service = new PinService(c)
+   const validated = c.req.valid("query")
+
+   const searchQuery: SearchPinsQuery = {
+      ...(validated.lat && validated.lng && validated.radius
+         ? {
+              location: {
+                 lat: validated.lat,
+                 lng: validated.lng,
+                 radius: validated.radius,
+              },
+           }
+         : {}),
+      ...(validated.startTime && validated.endTime
+         ? {
+              timeRange: {
+                 start: validated.startTime,
+                 end: validated.endTime,
+              },
+           }
+         : {}),
+      categories: validated.categories,
+      weather: validated.weather,
+      limit: validated.limit ?? 50,
+      offset: validated.offset ?? 0,
+   }
+
+   const pins = await service.searchPins(searchQuery)
+
+   return c.json({
+      success: true as const,
       data: pins,
    })
 })
 
-/**
- * POST /api/pins/batch - Create multiple pins
- */
-app.post(
-   "/batch",
-   zValidator("json", createPinsBatchSchema, onZodValidationError),
-   async (c) => {
-      const service = new PinService(c)
-      const data = await c.req.json()
-
-      const pins = await service.createPinsBatch(data)
-
-      return c.json({
-         success: true,
-         data: pins,
-         meta: {
-            requested: data.length,
-            created: pins.length,
-         },
-      })
-   },
-)
-
-/**
- * GET /api/pins/:id - Get pin by ID
- */
-app.get("/:id", async (c) => {
+app.openapi(getUserPinsRoute, async (c) => {
    const service = new PinService(c)
-   const id = c.req.param("id")
+   const { userId } = c.req.valid("param")
+
+   const pins = await service.getUserPins(userId)
+
+   return c.json({
+      success: true as const,
+      data: pins,
+   })
+})
+
+app.openapi(batchCreatePinsRoute, async (c) => {
+   const service = new PinService(c)
+   const data = await c.req.json()
+
+   const pins = await service.createPinsBatch(data)
+
+   return c.json({
+      success: true as const,
+      data: pins,
+      meta: {
+         requested: data.length,
+         created: pins.length,
+      },
+   })
+})
+
+app.openapi(getPinByIdRoute, async (c) => {
+   const service = new PinService(c)
+   const { id } = c.req.valid("param")
 
    const pin = await service.getPinById(id)
 
@@ -395,45 +561,31 @@ app.get("/:id", async (c) => {
    }
 
    return c.json({
-      success: true,
+      success: true as const,
       data: pin,
    })
 })
 
-/**
- * PUT /api/pins/:id - Update pin
- */
-app.put(
-   "/:id",
-   zValidator("json", updatePinSchema, onZodValidationError),
-   async (c) => {
-      const service = new PinService(c)
-      const id = c.req.param("id")
-      const data = await c.req.json()
-
-      const pin = await service.updatePin(id, data)
-
-      if (!pin) {
-         throw new APIException(
-            ERROR_CODES.DATABASE_ERROR,
-            "Pin not found",
-            404,
-         )
-      }
-
-      return c.json({
-         success: true,
-         data: pin,
-      })
-   },
-)
-
-/**
- * DELETE /api/pins/:id - Delete pin
- */
-app.delete("/:id", async (c) => {
+app.openapi(updatePinRoute, async (c) => {
    const service = new PinService(c)
-   const id = c.req.param("id")
+   const { id } = c.req.valid("param")
+   const data = await c.req.json()
+
+   const pin = await service.updatePin(id, data)
+
+   if (!pin) {
+      throw new APIException(ERROR_CODES.DATABASE_ERROR, "Pin not found", 404)
+   }
+
+   return c.json({
+      success: true as const,
+      data: pin,
+   })
+})
+
+app.openapi(deletePinRoute, async (c) => {
+   const service = new PinService(c)
+   const { id } = c.req.valid("param")
 
    const deleted = await service.deletePin(id)
 
@@ -442,37 +594,26 @@ app.delete("/:id", async (c) => {
    }
 
    return c.json({
-      success: true,
+      success: true as const,
       data: { deleted: true },
    })
 })
 
-/**
- * POST /api/pins/:id/report - Report a pin
- */
-app.post(
-   "/:id/report",
-   zValidator("json", reportPinSchema, onZodValidationError),
-   async (c) => {
-      const service = new PinService(c)
-      const id = c.req.param("id")
-      const { reason } = await c.req.json()
+app.openapi(reportPinRoute, async (c) => {
+   const service = new PinService(c)
+   const { id } = c.req.valid("param")
+   const { reason } = c.req.valid("json")
 
-      const reported = await service.reportPin(id, reason)
+   const reported = await service.reportPin(id, reason)
 
-      if (!reported) {
-         throw new APIException(
-            ERROR_CODES.DATABASE_ERROR,
-            "Pin not found",
-            404,
-         )
-      }
+   if (!reported) {
+      throw new APIException(ERROR_CODES.DATABASE_ERROR, "Pin not found", 404)
+   }
 
-      return c.json({
-         success: true,
-         data: { reported: true },
-      })
-   },
-)
+   return c.json({
+      success: true as const,
+      data: { reported: true },
+   })
+})
 
 export default app

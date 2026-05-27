@@ -1,4 +1,4 @@
-import { Hono } from "hono"
+import { OpenAPIHono } from "@hono/zod-openapi"
 import { logger as honoLogger } from "hono/logger"
 import { requestId } from "hono/request-id"
 import { timing } from "hono/timing"
@@ -37,9 +37,9 @@ export interface Env {
 }
 
 /**
- * Honoアプリケーションの初期化
+ * OpenAPIHonoアプリケーションの初期化
  */
-const app = new Hono<{ Bindings: Env }>()
+const app = new OpenAPIHono<{ Bindings: Env }>()
 
 // グローバルミドルウェア
 app.use("*", requestId())
@@ -100,6 +100,37 @@ app.get("/", (c) => {
 app.route("/api/health", healthRoutes)
 app.route("/api/audio", audioRoutes)
 app.route("/api/pins", pinsRoutes)
+
+// OpenAPI Spec エンドポイント
+app.doc("/api/openapi.json", {
+   openapi: "3.0.0",
+   info: {
+      title: "Sonory API",
+      version: "0.1.0",
+      description:
+         "音声ピン管理・AI分析のためのAPI。Hono + Cloudflare Workers上で動作。",
+   },
+   servers: [{ url: "http://localhost:8787", description: "ローカル開発環境" }],
+})
+
+// Swagger UI（開発環境のみ）
+app.get("/api/docs", (c) => {
+   return c.html(`<!DOCTYPE html>
+<html>
+<head>
+  <title>Sonory API Docs</title>
+  <meta charset="utf-8"/>
+  <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" >
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"> </script>
+  <script>
+    SwaggerUIBundle({ url: "/api/openapi.json", dom_id: '#swagger-ui' })
+  </script>
+</body>
+</html>`)
+})
 
 // 404ハンドラー
 app.notFound((c) => {

@@ -24,6 +24,7 @@
       "clean": "rm -rf dist .wrangler"
    },
    "dependencies": {
+      "@hono/zod-openapi": "^1.4.0",
       "@hono/zod-validator": "^0.8.0",
       "@sonory/shared-types": "file:../../packages/shared-types",
       "@sonory/utils": "file:../../packages/utils",
