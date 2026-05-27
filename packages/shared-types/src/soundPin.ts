@@ -1,5 +1,11 @@
+import type { InferenceResult } from "./audio.js"
+import type { LocationCoordinates } from "./location.js"
+import type { WeatherData } from "./weather.js"
+
 /**
- * 音声ピンの基本データ型
+ * 音声ピンの基本データ型（API間共通）
+ *
+ * フロントエンド表示・バックエンドDB保存の両方で参照される標準形
  */
 export interface SoundPinData {
    id: string
@@ -9,94 +15,52 @@ export interface SoundPinData {
    primaryConfidence: number
    recordedAt: string
    audioFilePath?: string
-   classificationResults?: unknown[]
-   weatherData?: {
-      temperature: number
-      condition: string
-      windSpeed?: number
-      humidity?: number
-   }
+   classificationResults?: InferenceResult[]
+   weatherData?: WeatherData
    timeTag?: string
    createdAt: string
    updatedAt: string
 }
 
 /**
- * 音声分類結果
+ * API音声情報
  */
-export interface AudioClassification {
-   label: string
-   confidence: number
-   category: "music" | "speech" | "nature" | "urban" | "mechanical" | "other"
-}
-
-/**
- * 音声録音データ
- */
-export interface AudioData {
-   blob: Blob
+export interface SoundPinAudio {
    url: string
    duration: number
-   format: string
-   size: number
-   createdAt: Date
+   format: "webm" | "mp3" | "wav" | "mp4" | "m4a" | "flac" | "ogg"
 }
 
 /**
- * 録音状態
+ * AI分析結果
  */
-export type RecordingStatus =
-   | "idle"
-   | "recording"
-   | "processing"
-   | "completed"
-   | "error"
-
-/**
- * 音声ピンマーカーのProps
- */
-export interface SoundPinMarkerProps {
-   soundPin: SoundPinData
-   isSelected?: boolean
-   onClick?: (soundPin: SoundPinData) => void
-   onPlay?: (soundPin: SoundPinData) => void
+export interface AIAnalysis {
+   transcription: string
+   categories: {
+      emotion: string
+      topic: string
+      language: string
+      confidence: number
+   }
+   summary?: string
 }
 
 /**
- * 地理的境界
+ * Sound pin APIレスポンス型（Backend API用ドメインモデル）
  */
-export interface GeoBounds {
-   north: number
-   south: number
-   east: number
-   west: number
-}
-
-/**
- * 位置情報
- */
-export interface LocationData {
-   latitude: number
-   longitude: number
-   accuracy: number
-   timestamp: number
-}
-
-/**
- * 音声ピンストアの状態
- */
-export interface SoundPinStore {
-   pins: SoundPinData[]
-   selectedPin: SoundPinData | null
-   isLoading: boolean
-   error: string | null
-
-   // アクション
-   addPin: (pin: SoundPinData) => void
-   removePin: (id: string) => void
-   updatePin: (id: string, updates: Partial<SoundPinData>) => void
-   selectPin: (pin: SoundPinData | null) => void
-   loadPins: (bounds: GeoBounds) => Promise<void>
-   clearPins: () => void
-   setError: (error: string | null) => void
+export interface SoundPinAPI {
+   id: string
+   userId?: string
+   location: LocationCoordinates
+   audio: SoundPinAudio
+   weather?: WeatherData
+   timeTag?: "朝" | "昼" | "夕" | "夜"
+   aiAnalysis?: AIAnalysis
+   status: "active" | "processing" | "deleted" | "reported"
+   title?: string
+   metadata?: {
+      deviceInfo?: string
+   }
+   createdAt: string
+   updatedAt: string
 }

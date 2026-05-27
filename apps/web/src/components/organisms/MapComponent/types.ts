@@ -2,18 +2,15 @@
  * MapComponent型定義
  */
 
+import type { MapBounds } from "@sonory/shared-types"
 import type mapboxgl from "mapbox-gl"
 import type { RefObject } from "react"
 import type { SoundPin } from "@/store/useSoundPinStore"
 import type { LocationData } from "./mapbox.types"
 import type { LightingConfig } from "./utils/sunCalculations"
 
-export interface MapBounds {
-   north: number
-   south: number
-   east: number
-   west: number
-}
+// shared-types からの再エクスポート
+export type { MapBounds }
 
 export type UseMapComponentProps = {
    /** 位置情報取得準備完了時のコールバック */

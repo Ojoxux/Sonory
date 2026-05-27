@@ -1,23 +1,17 @@
+import type { MapBounds } from "@sonory/shared-types"
 import { create } from "zustand"
 import type { AudioData, InferenceResult } from "./types"
 
+// shared-types からの再エクスポート（既存の利用箇所との互換性維持）
+export type { MapBounds }
+
 /**
- * 位置情報の型定義
+ * 位置情報の型定義（フロントエンド固有：latitude/longitude形式）
  */
 export interface LocationData {
    latitude: number
    longitude: number
    accuracy?: number
-}
-
-/**
- * 地図境界の型定義
- */
-export interface MapBounds {
-   north: number
-   south: number
-   east: number
-   west: number
 }
 
 /**

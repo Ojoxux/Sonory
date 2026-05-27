@@ -22,6 +22,7 @@
       "precommit": "npm run lint:fix && npm run format:fix"
    },
    "dependencies": {
+      "@sonory/shared-types": "*",
       "@ducanh2912/next-pwa": "^10.2.9",
       "@mapbox/mapbox-gl-geocoder": "^5.1.2",
       "@supabase/supabase-js": "^2.106.1",
