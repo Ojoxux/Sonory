@@ -8,11 +8,12 @@
       "build": "tsc",
       "dev": "tsc --watch",
       "generate": "node dist/generate-python-types.js",
-      "verify": "npm run build && npm run generate",
+      "verify": "npm run build && npm run generate && npm run verify:python",
+      "verify:python": "python3 scripts/verify-generated-python.py",
       "clean": "rm -rf dist/ && rm -rf ../../apps/python-audio-analyzer/src/types/generated/",
-      "lint": "biome check --write .",
-      "lint:check": "biome check .",
-      "format": "biome format . --write",
+      "lint": "biome check --write src package.json scripts",
+      "lint:check": "biome check src package.json scripts",
+      "format": "biome format src package.json scripts --write",
       "type-check": "tsc --noEmit"
    },
    "dependencies": {

@@ -12,8 +12,11 @@ const TYPE_MAPPINGS: Record<string, string> = {
    Date: "datetime",
    unknown: "Any",
    any: "Any",
+   dict: "dict[str, Any]",
    null: "None",
    undefined: "None",
+   AudioFormat: "str",
+   Record: "dict[str, Any]",
 }
 
 const REQUIRED_PYTHON_TYPES = [
@@ -21,6 +24,7 @@ const REQUIRED_PYTHON_TYPES = [
    "WeatherData",
    "AudioMetadata",
    "AIAnalysis",
+   "SoundPinAudio",
    "SoundPinAPI",
 ] as const
 
@@ -43,13 +47,29 @@ interface GenerateResult {
 }
 
 function convertType(tsType: string): string {
-   if (tsType.endsWith("[]")) {
-      const baseType = tsType.slice(0, -2)
+   const normalizedType = tsType.trim().replace(/[,;]$/, "")
+
+   if (normalizedType.startsWith("{")) {
+      return "dict[str, Any]"
+   }
+
+   const recordMatch = normalizedType.match(/^Record<\s*string\s*,\s*(.+)>$/)
+   if (recordMatch?.[1]) {
+      return `dict[str, ${convertType(recordMatch[1])}]`
+   }
+
+   if (normalizedType.startsWith("Array<") && normalizedType.endsWith(">")) {
+      const baseType = normalizedType.slice("Array<".length, -1)
       return `list[${convertType(baseType)}]`
    }
 
-   if (tsType.includes(" | ")) {
-      const types = tsType.split(" | ").map((t) => t.trim())
+   if (normalizedType.endsWith("[]")) {
+      const baseType = normalizedType.slice(0, -2)
+      return `list[${convertType(baseType)}]`
+   }
+
+   if (normalizedType.includes(" | ")) {
+      const types = normalizedType.split(" | ").map((t) => t.trim())
       if (types.includes("null") || types.includes("undefined")) {
          const nonNullTypes = types.filter(
             (t) => t !== "null" && t !== "undefined",
@@ -58,10 +78,19 @@ function convertType(tsType: string): string {
             return `Optional[${convertType(nonNullTypes[0])}]`
          }
       }
+
+      if (types.every((type) => /^".*"$/.test(type))) {
+         return `Literal[${types.join(", ")}]`
+      }
+
       return `Union[${types.map(convertType).join(", ")}]`
    }
 
-   return TYPE_MAPPINGS[tsType] || tsType
+   if (/^".*"$/.test(normalizedType)) {
+      return `Literal[${normalizedType}]`
+   }
+
+   return TYPE_MAPPINGS[normalizedType] || normalizedType
 }
 
 function generatePydanticModel(typeDef: TypeDefinition): {
@@ -128,17 +157,52 @@ function extractBalancedBlock(
    return null
 }
 
+function getDepthDelta(text: string): number {
+   let depth = 0
+   for (const char of text) {
+      if (char === "{" || char === "(" || char === "[") {
+         depth++
+      } else if (char === "}" || char === ")" || char === "]") {
+         depth--
+      }
+   }
+   return depth
+}
+
+function splitTopLevelMembers(propertiesText: string): string[] {
+   const members: string[] = []
+   let current = ""
+   let depth = 0
+
+   for (const rawLine of propertiesText.split("\n")) {
+      const line = rawLine.trim()
+      if (!line || line.startsWith("//") || line.startsWith("*")) {
+         continue
+      }
+
+      current = current ? `${current} ${line}` : line
+      depth += getDepthDelta(line)
+
+      if (depth <= 0) {
+         members.push(current.replace(/[,;]$/, "").trim())
+         current = ""
+         depth = 0
+      }
+   }
+
+   if (current) {
+      members.push(current.replace(/[,;]$/, "").trim())
+   }
+
+   return members
+}
+
 function parseInterfaceProperties(propertiesText: string): Property[] {
    const properties: Property[] = []
-   const propertyLines = propertiesText
-      .split("\n")
-      .map((line) => line.trim())
-      .filter((line) => line && !line.startsWith("//") && !line.startsWith("*"))
+   const propertyLines = splitTopLevelMembers(propertiesText)
 
    for (const line of propertyLines) {
-      const propertyMatch = line.match(
-         /^(\w+)(\?)?:\s*(.+?)(?:\/\/\s*(.+?))?(?:,|;)?$/,
-      )
+      const propertyMatch = line.match(/^(\w+)(\?)?:\s*(.+?)(?:\/\/\s*(.+?))?$/)
       if (propertyMatch) {
          const [, name, optional, type, description] = propertyMatch
          if (name && type) {
@@ -311,8 +375,10 @@ Generated Python types from TypeScript shared types.
 Do not edit manually - this file is auto-generated.
 """
 
+from __future__ import annotations
+
 from datetime import datetime
-from typing import Any, Optional, Union, List
+from typing import Any, Literal, Optional, Union
 from pydantic import BaseModel
 
 `
