@@ -40,7 +40,7 @@
 		"generate-types": {
 			"dependsOn": ["^build"],
 			"inputs": ["$TURBO_DEFAULT$", "../shared-types/src/**"],
-			"outputs": ["../python-audio-analyzer/src/types/generated/**"]
+			"outputs": ["src/types/generated/**"]
 		},
 		"python:install": {
 			"cache": false,
