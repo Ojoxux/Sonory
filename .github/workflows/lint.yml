@@ -55,3 +55,7 @@ jobs:
       # 6. TS の型チェックを実行
       - name: Run tsc
         run: npm run type-check
+
+      # 7. OpenAPI Spec と生成型の整合性を検証
+      - name: Verify generated OpenAPI types
+        run: npm run check:generated --workspace=@sonory/shared-types

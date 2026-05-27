@@ -1,0 +1,1607 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Sonory API",
+    "version": "0.1.0",
+    "description": "音声ピン管理・AI分析のためのAPI。Hono + Cloudflare Workers上で動作。"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8787",
+      "description": "ローカル開発環境"
+    }
+  ],
+  "components": {
+    "schemas": {},
+    "parameters": {}
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "基本ヘルスチェック",
+        "description": "Supabase接続確認付きの基本的なヘルスチェック",
+        "responses": {
+          "200": {
+            "description": "サービス状態",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "healthy",
+                            "degraded",
+                            "unhealthy"
+                          ]
+                        },
+                        "timestamp": {
+                          "type": "string"
+                        },
+                        "version": {
+                          "type": "string"
+                        },
+                        "services": {
+                          "type": "object",
+                          "properties": {
+                            "database": {
+                              "type": "string",
+                              "enum": [
+                                "connected",
+                                "disconnected"
+                              ]
+                            },
+                            "storage": {
+                              "type": "string",
+                              "enum": [
+                                "connected",
+                                "disconnected"
+                              ]
+                            },
+                            "ai": {
+                              "type": "string",
+                              "enum": [
+                                "available",
+                                "unavailable"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "database",
+                            "storage",
+                            "ai"
+                          ]
+                        },
+                        "uptime": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "status",
+                        "timestamp",
+                        "version",
+                        "services",
+                        "uptime"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/health/detailed": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "詳細ヘルスチェック",
+        "description": "管理者用の詳細なヘルスチェック",
+        "responses": {
+          "200": {
+            "description": "詳細サービス状態（正常時）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "healthy",
+                            "degraded",
+                            "unhealthy"
+                          ]
+                        },
+                        "timestamp": {
+                          "type": "string"
+                        },
+                        "version": {
+                          "type": "string"
+                        },
+                        "services": {
+                          "type": "object",
+                          "properties": {
+                            "database": {
+                              "type": "string",
+                              "enum": [
+                                "connected",
+                                "disconnected"
+                              ]
+                            },
+                            "storage": {
+                              "type": "string",
+                              "enum": [
+                                "connected",
+                                "disconnected"
+                              ]
+                            },
+                            "ai": {
+                              "type": "string",
+                              "enum": [
+                                "available",
+                                "unavailable"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "database",
+                            "storage",
+                            "ai"
+                          ]
+                        },
+                        "uptime": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "status",
+                        "timestamp",
+                        "version",
+                        "services",
+                        "uptime"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "サービス異常時",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "healthy",
+                            "degraded",
+                            "unhealthy"
+                          ]
+                        },
+                        "timestamp": {
+                          "type": "string"
+                        },
+                        "version": {
+                          "type": "string"
+                        },
+                        "services": {
+                          "type": "object",
+                          "properties": {
+                            "database": {
+                              "type": "string",
+                              "enum": [
+                                "connected",
+                                "disconnected"
+                              ]
+                            },
+                            "storage": {
+                              "type": "string",
+                              "enum": [
+                                "connected",
+                                "disconnected"
+                              ]
+                            },
+                            "ai": {
+                              "type": "string",
+                              "enum": [
+                                "available",
+                                "unavailable"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "database",
+                            "storage",
+                            "ai"
+                          ]
+                        },
+                        "uptime": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "status",
+                        "timestamp",
+                        "version",
+                        "services",
+                        "uptime"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/audio/upload-url": {
+      "post": {
+        "tags": [
+          "Audio"
+        ],
+        "summary": "Presigned URL生成",
+        "description": "Supabase Storageへの直接アップロード用Presigned URLを生成",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fileName": {
+                    "type": "string"
+                  },
+                  "userId": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "fileName"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Presigned URLと関連情報",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/audio/upload": {
+      "post": {
+        "tags": [
+          "Audio"
+        ],
+        "summary": "音声ファイルアップロード",
+        "description": "音声ファイルを直接アップロード（FormData）",
+        "responses": {
+          "200": {
+            "description": "アップロード結果",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/audio/{filePath}": {
+      "delete": {
+        "tags": [
+          "Audio"
+        ],
+        "summary": "音声ファイル削除",
+        "description": "音声ファイルを削除",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "filePath",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "削除結果",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/audio/{audioId}/metadata": {
+      "get": {
+        "tags": [
+          "Audio"
+        ],
+        "summary": "音声メタデータ取得",
+        "description": "音声ファイルのメタデータを取得",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "audioId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "メタデータ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/audio/{audioId}/analyze": {
+      "post": {
+        "tags": [
+          "Audio"
+        ],
+        "summary": "音声分析ジョブ投入",
+        "description": "音声分析ジョブを非同期で投入（Cloudflare Workers 30秒制限対応）",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "audioId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "audioUrl": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "topK": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "audioUrl"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ジョブ投入結果とステータスURL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/audio/{audioId}/analysis/{jobId}/status": {
+      "get": {
+        "tags": [
+          "Audio"
+        ],
+        "summary": "分析ステータス取得",
+        "description": "分析ジョブのステータスと結果を取得",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "audioId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "jobId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ジョブステータスと分析結果",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/audio/internal/process-queue": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "summary": "キュー処理",
+        "description": "キューから分析ジョブを取得して処理（内部用・Cron Trigger用）",
+        "responses": {
+          "200": {
+            "description": "処理結果",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pins": {
+      "post": {
+        "tags": [
+          "Pins"
+        ],
+        "summary": "ピン作成",
+        "description": "新しい音声ピンを作成",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "location": {
+                    "type": "object",
+                    "properties": {
+                      "lat": {
+                        "type": "number",
+                        "minimum": -90,
+                        "maximum": 90
+                      },
+                      "lng": {
+                        "type": "number",
+                        "minimum": -180,
+                        "maximum": 180
+                      },
+                      "accuracy": {
+                        "type": "number",
+                        "minimum": 0,
+                        "exclusiveMinimum": true
+                      }
+                    },
+                    "required": [
+                      "lat",
+                      "lng"
+                    ]
+                  },
+                  "audio": {
+                    "type": "object",
+                    "properties": {
+                      "url": {
+                        "type": "string",
+                        "format": "uri"
+                      },
+                      "duration": {
+                        "type": "number",
+                        "minimum": 9.9,
+                        "maximum": 600
+                      },
+                      "format": {
+                        "type": "string",
+                        "enum": [
+                          "webm",
+                          "mp3",
+                          "wav"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "url",
+                      "duration",
+                      "format"
+                    ]
+                  },
+                  "audio_file_path": {
+                    "type": "string"
+                  },
+                  "metadata": {
+                    "type": "object",
+                    "properties": {
+                      "duration": {
+                        "type": "number",
+                        "minimum": 0,
+                        "exclusiveMinimum": true
+                      },
+                      "timeTag": {
+                        "type": "string",
+                        "enum": [
+                          "朝",
+                          "昼",
+                          "夕",
+                          "夜"
+                        ]
+                      },
+                      "title": {
+                        "type": "string",
+                        "maxLength": 200
+                      },
+                      "deviceInfo": {
+                        "type": "string"
+                      },
+                      "weather": {
+                        "type": "object",
+                        "properties": {
+                          "temperature": {
+                            "type": "number"
+                          },
+                          "condition": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "windSpeed": {
+                            "type": "number",
+                            "nullable": true
+                          },
+                          "humidity": {
+                            "type": "number",
+                            "nullable": true,
+                            "minimum": 0,
+                            "maximum": 100
+                          }
+                        },
+                        "required": [
+                          "temperature"
+                        ]
+                      }
+                    }
+                  },
+                  "weather": {
+                    "type": "object",
+                    "properties": {
+                      "temperature": {
+                        "type": "number"
+                      },
+                      "condition": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "windSpeed": {
+                        "type": "number",
+                        "nullable": true
+                      },
+                      "humidity": {
+                        "type": "number",
+                        "nullable": true,
+                        "minimum": 0,
+                        "maximum": 100
+                      }
+                    },
+                    "required": [
+                      "temperature"
+                    ]
+                  },
+                  "timeTag": {
+                    "type": "string",
+                    "enum": [
+                      "朝",
+                      "昼",
+                      "夕",
+                      "夜"
+                    ]
+                  },
+                  "title": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "deviceInfo": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "location"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "作成されたピン",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pins/upload": {
+      "post": {
+        "tags": [
+          "Pins"
+        ],
+        "summary": "音声アップロード付きピン作成",
+        "description": "音声ファイルをアップロードしてピンを作成",
+        "responses": {
+          "200": {
+            "description": "作成されたピン",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pins/nearby": {
+      "get": {
+        "tags": [
+          "Pins"
+        ],
+        "summary": "周辺ピン取得",
+        "description": "指定された境界内のピンを取得",
+        "parameters": [
+          {
+            "schema": {
+              "type": "number",
+              "nullable": true,
+              "minimum": -90,
+              "maximum": 90
+            },
+            "required": false,
+            "name": "north",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "number",
+              "nullable": true,
+              "minimum": -90,
+              "maximum": 90
+            },
+            "required": false,
+            "name": "south",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "number",
+              "nullable": true,
+              "minimum": -180,
+              "maximum": 180
+            },
+            "required": false,
+            "name": "east",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "number",
+              "nullable": true,
+              "minimum": -180,
+              "maximum": 180
+            },
+            "required": false,
+            "name": "west",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "number",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "maximum": 100
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "required": false,
+            "name": "categories",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "周辺ピン一覧",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "nullable": true
+                    },
+                    "meta": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pins/search": {
+      "get": {
+        "tags": [
+          "Pins"
+        ],
+        "summary": "ピン検索",
+        "description": "条件を指定してピンを検索",
+        "parameters": [
+          {
+            "schema": {
+              "type": "number",
+              "nullable": true,
+              "minimum": -90,
+              "maximum": 90
+            },
+            "required": false,
+            "name": "lat",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "number",
+              "nullable": true,
+              "minimum": -180,
+              "maximum": 180
+            },
+            "required": false,
+            "name": "lng",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "number",
+              "minimum": 0,
+              "exclusiveMinimum": true
+            },
+            "required": false,
+            "name": "radius",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "required": false,
+            "name": "startTime",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "required": false,
+            "name": "endTime",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "required": false,
+            "name": "categories",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "required": false,
+            "name": "weather",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "number",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "maximum": 100
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "number",
+              "nullable": true,
+              "minimum": 0
+            },
+            "required": false,
+            "name": "offset",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "検索結果",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pins/user/{userId}": {
+      "get": {
+        "tags": [
+          "Pins"
+        ],
+        "summary": "ユーザーのピン取得",
+        "description": "指定ユーザーのピン一覧を取得",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "userId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ユーザーのピン一覧",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pins/batch": {
+      "post": {
+        "tags": [
+          "Pins"
+        ],
+        "summary": "複数ピン一括作成",
+        "description": "複数のピンを一括で作成",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "userId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "location": {
+                      "type": "object",
+                      "properties": {
+                        "lat": {
+                          "type": "number",
+                          "minimum": -90,
+                          "maximum": 90
+                        },
+                        "lng": {
+                          "type": "number",
+                          "minimum": -180,
+                          "maximum": 180
+                        },
+                        "accuracy": {
+                          "type": "number",
+                          "minimum": 0,
+                          "exclusiveMinimum": true
+                        }
+                      },
+                      "required": [
+                        "lat",
+                        "lng"
+                      ]
+                    },
+                    "audio": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "duration": {
+                          "type": "number",
+                          "minimum": 9.9,
+                          "maximum": 600
+                        },
+                        "format": {
+                          "type": "string",
+                          "enum": [
+                            "webm",
+                            "mp3",
+                            "wav"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "url",
+                        "duration",
+                        "format"
+                      ]
+                    },
+                    "audio_file_path": {
+                      "type": "string"
+                    },
+                    "metadata": {
+                      "type": "object",
+                      "properties": {
+                        "duration": {
+                          "type": "number",
+                          "minimum": 0,
+                          "exclusiveMinimum": true
+                        },
+                        "timeTag": {
+                          "type": "string",
+                          "enum": [
+                            "朝",
+                            "昼",
+                            "夕",
+                            "夜"
+                          ]
+                        },
+                        "title": {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        "deviceInfo": {
+                          "type": "string"
+                        },
+                        "weather": {
+                          "type": "object",
+                          "properties": {
+                            "temperature": {
+                              "type": "number"
+                            },
+                            "condition": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "windSpeed": {
+                              "type": "number",
+                              "nullable": true
+                            },
+                            "humidity": {
+                              "type": "number",
+                              "nullable": true,
+                              "minimum": 0,
+                              "maximum": 100
+                            }
+                          },
+                          "required": [
+                            "temperature"
+                          ]
+                        }
+                      }
+                    },
+                    "weather": {
+                      "type": "object",
+                      "properties": {
+                        "temperature": {
+                          "type": "number"
+                        },
+                        "condition": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "windSpeed": {
+                          "type": "number",
+                          "nullable": true
+                        },
+                        "humidity": {
+                          "type": "number",
+                          "nullable": true,
+                          "minimum": 0,
+                          "maximum": 100
+                        }
+                      },
+                      "required": [
+                        "temperature"
+                      ]
+                    },
+                    "timeTag": {
+                      "type": "string",
+                      "enum": [
+                        "朝",
+                        "昼",
+                        "夕",
+                        "夜"
+                      ]
+                    },
+                    "title": {
+                      "type": "string",
+                      "maxLength": 200
+                    },
+                    "deviceInfo": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "location"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "作成されたピン一覧",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "nullable": true
+                    },
+                    "meta": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pins/{id}": {
+      "get": {
+        "tags": [
+          "Pins"
+        ],
+        "summary": "ピン詳細取得",
+        "description": "IDでピンを取得",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ピン詳細",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Pins"
+        ],
+        "summary": "ピン更新",
+        "description": "ピンの情報を更新",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "active",
+                      "processing",
+                      "deleted",
+                      "reported"
+                    ]
+                  },
+                  "aiAnalysis": {
+                    "type": "object",
+                    "properties": {
+                      "transcription": {
+                        "type": "string"
+                      },
+                      "categories": {
+                        "type": "object",
+                        "properties": {
+                          "emotion": {
+                            "type": "string"
+                          },
+                          "topic": {
+                            "type": "string"
+                          },
+                          "language": {
+                            "type": "string"
+                          },
+                          "confidence": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          }
+                        },
+                        "required": [
+                          "emotion",
+                          "topic",
+                          "language",
+                          "confidence"
+                        ]
+                      },
+                      "summary": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "transcription",
+                      "categories"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新されたピン",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Pins"
+        ],
+        "summary": "ピン削除",
+        "description": "ピンを削除",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "削除結果",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pins/{id}/report": {
+      "post": {
+        "tags": [
+          "Pins"
+        ],
+        "summary": "ピン報告",
+        "description": "不適切なピンを報告",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "minLength": 10,
+                    "maxLength": 1000
+                  }
+                },
+                "required": [
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "報告結果",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
