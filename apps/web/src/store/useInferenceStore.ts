@@ -1,7 +1,6 @@
 import { create } from "zustand"
 import {
    callBackendAnalysis,
-   convertAnalysisResult,
    generateClassificationResults,
    uploadAudioToStorage,
 } from "../services/analysis"
@@ -13,12 +12,6 @@ import type {
    PythonAnalysisResult,
 } from "./types"
 import { useRecorderStore } from "./useRecorderStore"
-
-interface APIClassification {
-   label: string
-   confidence: number
-   category?: string
-}
 
 /**
  * AI推論機能を管理するZustandストア
@@ -131,45 +124,22 @@ export const useInferenceStore = create<InferenceState>((set, _get) => ({
             lastAnalyzedAudioId: audioId,
          })
 
-         const response = await fetch(`/api/audio/${audioId}/analyze`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ audioUrl, topK: 5 }),
-         })
-
-         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}))
-            throw new Error(
-               (errorData as { message?: string }).message ||
-                  `分析失敗: ${response.status}`,
-            )
+         const inferenceResults = await callBackendAnalysis(audioId, audioUrl)
+         const pythonResult: PythonAnalysisResult = {
+            classifications: inferenceResults.map((result) => ({
+               label: result.label,
+               confidence: result.confidence,
+            })),
          }
-
-         const result = await response.json()
-
-         if (!result.success || !(result as { data?: unknown }).data) {
-            throw new Error("分析結果が不正です")
-         }
-
-         const data = (result as { data: PythonAnalysisResult }).data
 
          set({
-            backendAnalysisResult: data,
+            results: inferenceResults,
+            backendAnalysisResult: pythonResult,
             analysisStatus: "success",
             fallbackUsed: false,
+            error: null,
          })
 
-         const inferenceResults: InferenceResult[] =
-            (
-               data as {
-                  allClassifications?: APIClassification[]
-               }
-            ).allClassifications?.map((classification: APIClassification) => ({
-               label: classification.label,
-               confidence: classification.confidence,
-            })) || convertAnalysisResult(data)
-
-         set({ results: inferenceResults })
          return inferenceResults
       } catch (error) {
          const errorMessage =
@@ -184,7 +154,10 @@ export const useInferenceStore = create<InferenceState>((set, _get) => ({
          })
 
          const fallbackResults = generateClassificationResults()
-         set({ results: fallbackResults })
+         set({
+            results: fallbackResults,
+            error: new Error(errorMessage),
+         })
          return fallbackResults
       }
    },
