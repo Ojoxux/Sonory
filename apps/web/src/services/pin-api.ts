@@ -122,3 +122,26 @@ export async function fetchNearbyPins(
 
    return response.json()
 }
+
+/**
+ * ピンを削除
+ */
+export async function deletePin(pinId: string): Promise<void> {
+   const response = await fetch(`/api/pins/${pinId}`, {
+      method: "DELETE",
+   })
+
+   if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(
+         (errorData as { message?: string }).message ||
+            `ピン削除失敗: ${response.status}`,
+      )
+   }
+
+   const result = await response.json()
+
+   if (!result.success) {
+      throw new Error("ピン削除結果が不正です")
+   }
+}
