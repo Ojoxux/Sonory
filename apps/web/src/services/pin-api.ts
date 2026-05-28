@@ -111,7 +111,9 @@ export async function deletePin(
    pinId: string,
    client: ApiClient = defaultApiClient,
 ): Promise<void> {
-   const result = await client.delete<{ success: boolean }>(`/api/pins/${pinId}`)
+   const result = await client.delete<{ success: boolean }>(
+      `/api/pins/${pinId}`,
+   )
 
    if (!result.success) {
       throw new Error("ピン削除結果が不正です")
