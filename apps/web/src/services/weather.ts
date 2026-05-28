@@ -5,6 +5,7 @@
  */
 
 import type { WeatherData } from "@sonory/shared-types"
+import { type ApiClient, defaultApiClient } from "./api-client"
 
 const WEATHER_CONDITIONS: Readonly<Record<number, string>> = {
    0: "晴れ",
@@ -32,27 +33,32 @@ export function getWeatherCondition(weatherCode: number): string {
    return WEATHER_CONDITIONS[weatherCode] ?? "不明"
 }
 
+interface OpenMeteoResponse {
+   current_weather?: {
+      temperature: number
+      weathercode: number
+      windspeed: number
+      humidity?: number
+   }
+}
+
 /**
  * Open-Meteo APIから天気情報を取得
  *
  * @param lat - 緯度
  * @param lng - 経度
+ * @param client - APIクライアント（テスト時に差し替え可能）
  * @returns 天気データ（取得失敗時はundefined）
  */
 export async function fetchWeatherData(
    lat: number,
    lng: number,
+   client: ApiClient = defaultApiClient,
 ): Promise<WeatherData | undefined> {
    try {
-      const response = await fetch(
+      const data = await client.get<OpenMeteoResponse>(
          `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true&timezone=auto`,
       )
-
-      if (!response.ok) {
-         throw new Error(`天気情報の取得に失敗: ${response.status}`)
-      }
-
-      const data = await response.json()
 
       if (data.current_weather) {
          return {

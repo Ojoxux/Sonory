@@ -6,6 +6,7 @@
 
 import type { MapBounds, WeatherData } from "@sonory/shared-types"
 import type { PinApiResponse } from "../domain/pin-types"
+import { type ApiClient, defaultApiClient } from "./api-client"
 
 interface PinCreateParams {
    audioFilePath: string
@@ -29,42 +30,36 @@ interface PinUploadParams {
 
 /**
  * storage:// URLからピンを作成（メタデータのみ送信）
+ *
+ * @param params - ピン作成パラメータ
+ * @param client - APIクライアント（テスト時に差し替え可能）
  */
 export async function createPinFromStorageUrl(
    params: PinCreateParams,
+   client: ApiClient = defaultApiClient,
 ): Promise<PinApiResponse> {
-   const response = await fetch("/api/pins", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-         audio_file_path: params.audioFilePath,
-         location: params.location,
-         metadata: {
-            duration: params.duration,
-            timeTag: params.timeTag,
-            title: params.title,
-            deviceInfo: params.deviceInfo,
-            ...(params.weather ? { weather: params.weather } : {}),
-         },
-      }),
+   return client.post<PinApiResponse>("/api/pins", {
+      audio_file_path: params.audioFilePath,
+      location: params.location,
+      metadata: {
+         duration: params.duration,
+         timeTag: params.timeTag,
+         title: params.title,
+         deviceInfo: params.deviceInfo,
+         ...(params.weather ? { weather: params.weather } : {}),
+      },
    })
-
-   if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(
-         (errorData as { message?: string }).message ||
-            `ピン作成失敗: ${response.status}`,
-      )
-   }
-
-   return response.json()
 }
 
 /**
  * 音声ファイルをアップロードしてピンを作成
+ *
+ * @param params - アップロードパラメータ
+ * @param client - APIクライアント（テスト時に差し替え可能）
  */
 export async function uploadPinWithAudio(
    params: PinUploadParams,
+   client: ApiClient = defaultApiClient,
 ): Promise<PinApiResponse> {
    const formData = new FormData()
    formData.append("audio", params.audioBlob, "audio.webm")
@@ -80,27 +75,18 @@ export async function uploadPinWithAudio(
       }),
    )
 
-   const response = await fetch("/api/pins/upload", {
-      method: "POST",
-      body: formData,
-   })
-
-   if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(
-         (errorData as { message?: string }).message ||
-            `ピン作成失敗: ${response.status}`,
-      )
-   }
-
-   return response.json()
+   return client.postFormData<PinApiResponse>("/api/pins/upload", formData)
 }
 
 /**
  * 周辺ピンを取得
+ *
+ * @param bounds - 地図の境界
+ * @param client - APIクライアント（テスト時に差し替え可能）
  */
 export async function fetchNearbyPins(
    bounds: MapBounds,
+   client: ApiClient = defaultApiClient,
 ): Promise<{ success: boolean; data?: unknown[] }> {
    const params = new URLSearchParams({
       north: bounds.north.toString(),
@@ -110,36 +96,24 @@ export async function fetchNearbyPins(
       limit: "50",
    })
 
-   const response = await fetch(`/api/pins/nearby?${params}`)
-
-   if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(
-         (errorData as { message?: string }).message ||
-            `ピン取得失敗: ${response.status}`,
-      )
-   }
-
-   return response.json()
+   return client.get<{ success: boolean; data?: unknown[] }>(
+      `/api/pins/nearby?${params}`,
+   )
 }
 
 /**
  * ピンを削除
+ *
+ * @param pinId - 削除するピンID
+ * @param client - APIクライアント（テスト時に差し替え可能）
  */
-export async function deletePin(pinId: string): Promise<void> {
-   const response = await fetch(`/api/pins/${pinId}`, {
-      method: "DELETE",
-   })
-
-   if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(
-         (errorData as { message?: string }).message ||
-            `ピン削除失敗: ${response.status}`,
-      )
-   }
-
-   const result = await response.json()
+export async function deletePin(
+   pinId: string,
+   client: ApiClient = defaultApiClient,
+): Promise<void> {
+   const result = await client.delete<{ success: boolean }>(
+      `/api/pins/${pinId}`,
+   )
 
    if (!result.success) {
       throw new Error("ピン削除結果が不正です")
