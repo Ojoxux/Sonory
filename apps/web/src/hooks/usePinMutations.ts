@@ -9,6 +9,7 @@
 
 import type { UseMutationResult } from "@tanstack/react-query"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { deletePin } from "../services/pin-api"
 import type { InferenceResult } from "../store/types"
 import type { LocationData, SoundPin } from "../store/useSoundPinStore"
 import { useSoundPinStore } from "../store/useSoundPinStore"
@@ -57,6 +58,7 @@ export function useDeletePin(): UseMutationResult<void, Error, string> {
 
    return useMutation({
       mutationFn: async (pinId: string) => {
+         await deletePin(pinId)
          const store = useSoundPinStore.getState()
          store.removePin(pinId)
       },

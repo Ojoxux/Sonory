@@ -19,7 +19,7 @@ jobs:
     
     steps:
       - name: Ensure single progress label
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -95,7 +95,7 @@ jobs:
     steps:
       - name: Get Project Item ID
         id: get-item
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           github-token: ${{ secrets.PROJECT_PAT }}
           script: |

@@ -238,6 +238,13 @@ export function useMapComponent({
       onUpdateLighting: () => updateLightingAndShadows(),
    })
 
+   // 位置情報に基づくマップの自動センタリング
+   const { resetAutoCentering } = useMapCentering({
+      map,
+      position,
+      mapStyleLoaded,
+   })
+
    /**
     * 初期ライトプリセットを決定
     */
@@ -454,6 +461,8 @@ export function useMapComponent({
          // コールバック関数を設定
          onGeolocationReady?.(attemptGeolocation)
          onReturnToLocationReady?.(() => {
+            resetAutoCentering()
+
             const currentPosition =
                customPosition && isValidPosition(customPosition)
                   ? customPosition
@@ -504,10 +513,8 @@ export function useMapComponent({
       setMapBounds,
       determineInitialLightPreset,
       updateMapBounds,
+      resetAutoCentering,
    ]) // 依存関係を追加。mapInitializedRefでガードされているため再初期化は発生しない
-
-   // 位置情報に基づくマップの自動センタリング
-   useMapCentering({ map, position, mapStyleLoaded })
 
    // マップ境界の管理
    useMapBoundsManager({ map, mapStyleLoaded, setMapBounds })
