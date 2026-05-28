@@ -1,37 +1,16 @@
 /**
- * fpユーティリティ
+ * ユーティリティ関数
  *
  * @description
- * Option、Either、TaskEitherパターンを使用した関数群を提供
+ * 位置情報の選択・バリデーション・距離計算などの純粋関数群
  */
 
-import * as E from "fp-ts/Either"
-import { pipe } from "fp-ts/function"
-import * as O from "fp-ts/Option"
-import * as te from "fp-ts/TaskEither"
-
 // =============================================================================
-// Option型ユーティリティ
+// エラー型
 // =============================================================================
 
 /**
- * null/undefinedをOptionに変換
- */
-export const fromNullable = <T>(value: T | null | undefined): O.Option<T> =>
-   O.fromNullable(value)
-
-/**
- * 複数のOptionから最初の有効な値を取得
- */
-export const firstSome = <T>(...options: O.Option<T>[]): O.Option<T> =>
-   options.reduce((acc, curr) => (O.isSome(acc) ? acc : curr), O.none)
-
-// =============================================================================
-// Either型ユーティリティ
-// =============================================================================
-
-/**
- * エラーハンドリング用のEither型
+ * アプリケーションエラー型
  */
 export type AppError = {
    readonly type: "ValidationError" | "NetworkError" | "UnknownError"
@@ -52,99 +31,43 @@ export const createError = (
    details,
 })
 
-/**
- * try-catchをEitherに変換
- */
-export const tryCatch = <T>(fn: () => T): E.Either<AppError, T> => {
-   try {
-      return E.right(fn())
-   } catch (error) {
-      return E.left(
-         createError(
-            "UnknownError",
-            error instanceof Error ? error.message : "Unknown error occurred",
-            error,
-         ),
-      )
-   }
-}
-
 // =============================================================================
-// TaskEither型ユーティリティ
+// 位置情報ユーティリティ
 // =============================================================================
 
 /**
- * 非同期処理をTaskEitherに変換
- */
-export const tryCatchTask = <T>(
-   task: () => Promise<T>,
-): te.TaskEither<AppError, T> =>
-   te.tryCatch(task, (error) =>
-      createError(
-         "NetworkError",
-         error instanceof Error ? error.message : "Network error occurred",
-         error,
-      ),
-   )
-
-/**
- * 位置情報取得をTaskEitherで包装
- */
-export const getGeolocationTE = (
-   options?: PositionOptions,
-): te.TaskEither<AppError, GeolocationPosition> =>
-   te.tryCatch(
-      () =>
-         new Promise<GeolocationPosition>((resolve, reject) => {
-            if (!("geolocation" in navigator)) {
-               reject(new Error("Geolocation is not supported"))
-               return
-            }
-
-            navigator.geolocation.getCurrentPosition(resolve, reject, options)
-         }),
-      (error) =>
-         createError(
-            "ValidationError",
-            error instanceof Error ? error.message : "Geolocation failed",
-            error,
-         ),
-   )
-
-// =============================================================================
-// 純粋関数ユーティリティ
-// =============================================================================
-
-/**
- * 位置情報の優先順位付き選択（純粋関数）
+ * 位置情報の優先順位付き選択
+ *
+ * mapbox → browser → saved の順で最初の非null値を返す。
+ * 精度が1km以内のもののみ有効。
  */
 export const selectBestPosition = (
-   mapboxPos: O.Option<LocationData>,
-   browserPos: O.Option<LocationData>,
-   savedPos: O.Option<LocationData>,
-): O.Option<LocationData> =>
-   pipe(
-      firstSome(mapboxPos, browserPos, savedPos),
-      O.filter((pos) => pos.accuracy < 1000), // 精度1km以内のみ有効
-   )
+   mapboxPos: LocationData | null | undefined,
+   browserPos: LocationData | null | undefined,
+   savedPos: LocationData | null | undefined,
+): LocationData | null => {
+   const candidates = [mapboxPos, browserPos, savedPos]
+   for (const pos of candidates) {
+      if (pos != null && pos.accuracy < 1000) {
+         return pos
+      }
+   }
+   return null
+}
 
 /**
- * 位置情報の有効性チェック（純粋関数）
+ * 位置情報の有効性チェック
  */
 export const isValidPosition = (position: LocationData): boolean =>
-   pipe(
-      position,
-      (pos) =>
-         pos.latitude >= -90 &&
-         pos.latitude <= 90 &&
-         pos.longitude >= -180 &&
-         pos.longitude <= 180 &&
-         pos.accuracy > 0 &&
-         Date.now() - pos.timestamp < 24 * 60 * 60 * 1000, // 24時間以内
-   )
+   position.latitude >= -90 &&
+   position.latitude <= 90 &&
+   position.longitude >= -180 &&
+   position.longitude <= 180 &&
+   position.accuracy > 0 &&
+   Date.now() - position.timestamp < 24 * 60 * 60 * 1000 // 24時間以内
 
 /**
- * 座標の距離計算（純粋関数）
+ * 座標の距離計算（メートル）
  */
 export const calculateDistance = (
    pos1: LocationData,
@@ -163,6 +86,24 @@ export const calculateDistance = (
 
    return R * c
 }
+
+// =============================================================================
+// 非同期ユーティリティ
+// =============================================================================
+
+/**
+ * 位置情報取得をPromiseで包装
+ */
+export const getGeolocation = (
+   options?: PositionOptions,
+): Promise<GeolocationPosition> =>
+   new Promise<GeolocationPosition>((resolve, reject) => {
+      if (!("geolocation" in navigator)) {
+         reject(new Error("Geolocation is not supported"))
+         return
+      }
+      navigator.geolocation.getCurrentPosition(resolve, reject, options)
+   })
 
 // =============================================================================
 // 型定義

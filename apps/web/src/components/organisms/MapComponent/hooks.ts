@@ -30,8 +30,7 @@
  */
 
 import { useQueryClient } from "@tanstack/react-query"
-import { pipe } from "fp-ts/function"
-import * as O from "fp-ts/Option"
+
 import mapboxgl from "mapbox-gl"
 import { useCallback, useEffect, useMemo, useRef } from "react"
 import { useNearbyPins } from "@/hooks/useNearbyPins"
@@ -55,11 +54,7 @@ import type {
    UseMapComponentProps,
    UseMapComponentReturn,
 } from "./types"
-import {
-   fromNullable,
-   isValidPosition,
-   selectBestPosition,
-} from "./utils/functional"
+import { isValidPosition, selectBestPosition } from "./utils/functional"
 import { mapboxHelpers } from "./utils/mapboxHelpers"
 import { convertApiPinToLocal } from "./utils/pinConverters"
 
@@ -225,23 +220,22 @@ export function useMapComponent({
       map,
    })
 
-   // 実際に使用する位置情報（fpで優先順位付き選択）
    const position = useMemo((): LocationData | null => {
-      const mapboxOpt = fromNullable(mapboxPosition)
-      const customOpt = fromNullable(customPosition)
-      const savedOpt = fromNullable(savedPosition)
-
-      return pipe(
-         selectBestPosition(mapboxOpt, customOpt, savedOpt),
-         O.filter(isValidPosition),
-         O.getOrElse(() => null as LocationData | null),
+      const best = selectBestPosition(
+         mapboxPosition,
+         customPosition,
+         savedPosition,
       )
+      if (best != null && isValidPosition(best)) {
+         return best
+      }
+      return null
    }, [mapboxPosition, customPosition, savedPosition])
 
    // 位置情報の状態を管理
    const positionState = useMemo(
       () => ({
-         hasMapboxPosition: O.isSome(fromNullable(mapboxPosition)),
+         hasMapboxPosition: mapboxPosition != null,
          hasValidPosition: position !== null,
          positionSource: mapboxPosition
             ? ("mapbox" as const)
