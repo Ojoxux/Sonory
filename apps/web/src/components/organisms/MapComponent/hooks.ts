@@ -2,34 +2,7 @@
  * MapComponent統合管理フック
  *
  * @description MapComponentの主要なロジックを統合管理するカスタムフック
- * fpのエッセンス（Option/Either/TaskEither）を適用
- * @example
- * ```tsx
- * const {
- *   mapContainerRef,
- *   map,
- *   mapStyleLoaded,
- *   position,
- *   currentLighting,
- *   debugMode,
- *   pins,
- *   selectedPinId,
- *   permissionStatus,
- *   geolocateInitialized,
- *   geolocateAttempted,
- *   debugTimeOverride,
- *   selectPin,
- *   setDebugTimeOverride,
- *   updateLightingAndShadows,
- * } = useMapComponent({
- *   onGeolocationReady,
- *   onReturnToLocationReady,
- *   onBearingChange,
- * })
- * ```
  */
-
-import { useQueryClient } from "@tanstack/react-query"
 
 import mapboxgl from "mapbox-gl"
 import { useCallback, useEffect, useMemo, useRef } from "react"
@@ -38,17 +11,16 @@ import { useSoundPinStore } from "@/store/useSoundPinStore"
 import { useBrowserGeolocation } from "./hooks/useBrowserGeolocation"
 import { useLocationIntegration } from "./hooks/useLocationIntegration"
 import { useLocationStorage } from "./hooks/useLocationStorage"
+import { useMapBoundsManager } from "./hooks/useMapBoundsManager"
 import { useMapboxInitialization } from "./hooks/useMapboxInitialization"
+import { useMapCentering } from "./hooks/useMapCentering"
 import { useMapControls } from "./hooks/useMapControls"
 import { useMapDebug } from "./hooks/useMapDebug"
 import { useMapEnvironment } from "./hooks/useMapEnvironment"
 import { useMapNotifications } from "./hooks/useMapNotifications"
 import { useMapState } from "./hooks/useMapState"
-import type {
-   GeoJSONLineStringFeature,
-   LocationData,
-   MapboxMapOptions,
-} from "./mapbox.types"
+import { useNewPinHandler } from "./hooks/useNewPinHandler"
+import type { LocationData, MapboxMapOptions } from "./mapbox.types"
 import type {
    MapBounds,
    UseMapComponentProps,
@@ -120,11 +92,6 @@ export function useMapComponent({
    const mapContainerRef = useRef<HTMLDivElement | null>(null)
    const mapInitializedRef = useRef<boolean>(false)
    const geolocateControlRef = useRef<mapboxgl.GeolocateControl | null>(null)
-   const hasInitialPositionSet = useRef<boolean>(false)
-   const userInteractionRef = useRef<boolean>(false)
-   const lastInteractionTimeRef = useRef<number>(0)
-   const userInteractionHandlerRef = useRef<(() => void) | null>(null)
-   const handledCreatedPinIdRef = useRef<string | null>(null)
 
    // カスタムフック: 状態管理
    const {
@@ -154,9 +121,6 @@ export function useMapComponent({
       persistedPins,
       tempPins,
    } = useSoundPinStore()
-
-   // TanStack Query
-   const queryClient = useQueryClient()
 
    // カスタムフック
    const { position: customPosition, permissionStatus } =
@@ -274,6 +238,13 @@ export function useMapComponent({
       onUpdateLighting: () => updateLightingAndShadows(),
    })
 
+   // 位置情報に基づくマップの自動センタリング
+   const { resetAutoCentering } = useMapCentering({
+      map,
+      position,
+      mapStyleLoaded,
+   })
+
    /**
     * 初期ライトプリセットを決定
     */
@@ -385,27 +356,6 @@ export function useMapComponent({
          mapInstance.addControl(geolocateControl, "bottom-right")
          geolocateControlRef.current = geolocateControl
 
-         // HACK: ユーザーの地図操作をリスナーで検知するようにした
-         const handleUserInteraction = () => {
-            userInteractionRef.current = true
-            lastInteractionTimeRef.current = Date.now()
-         }
-
-         // refに保存してクリーンアップで使用
-         userInteractionHandlerRef.current = handleUserInteraction
-
-         // 各種ユーザー操作イベントを監視
-         const eventTypes = [
-            "dragstart",
-            "zoomstart",
-            "rotatestart",
-            "pitchstart",
-            "touchstart",
-         ] as const
-         for (const eventType of eventTypes) {
-            mapInstance.on(eventType, handleUserInteraction)
-         }
-
          // イベントリスナー設定
          mapInstance.on("load", () => {
             console.log("🔍 MapComponent: マップロード完了")
@@ -511,11 +461,8 @@ export function useMapComponent({
          // コールバック関数を設定
          onGeolocationReady?.(attemptGeolocation)
          onReturnToLocationReady?.(() => {
-            // ユーザー操作フラグをリセットして自動センタリングを有効化
-            userInteractionRef.current = false
-            lastInteractionTimeRef.current = 0
+            resetAutoCentering()
 
-            // 現在の位置情報を取得（シンプルなアプローチ）
             const currentPosition =
                customPosition && isValidPosition(customPosition)
                   ? customPosition
@@ -524,17 +471,15 @@ export function useMapComponent({
                     : null
 
             if (currentPosition) {
-               // 位置情報がある場合は即座に移動
                mapInstance.flyTo({
                   center: [currentPosition.longitude, currentPosition.latitude],
                   zoom: 18,
                   pitch: 50,
                   bearing: -20,
                   essential: true,
-                  duration: 1500, // 少し短縮してレスポンシブに
+                  duration: 1500,
                })
             } else {
-               // 位置情報がない場合は取得を試行
                attemptGeolocation()
             }
          })
@@ -542,38 +487,11 @@ export function useMapComponent({
          console.error("マップの初期化に失敗:", error)
       }
 
-      /**
-       * イベントリスナーをクリーンアップ
-       */
-      const cleanupEventListeners = (
-         mapInstance: mapboxgl.Map,
-         handler: (() => void) | null,
-      ): void => {
-         if (!handler) return
-
-         const eventTypes = [
-            "dragstart",
-            "zoomstart",
-            "rotatestart",
-            "pitchstart",
-            "touchstart",
-         ] as const
-
-         for (const eventType of eventTypes) {
-            mapInstance.off(eventType, handler)
-         }
-      }
-
-      /**
-       * マップをクリーンアップ
-       */
       const cleanupMap = (): void => {
          if (mapInitializedRef.current && map) {
-            cleanupEventListeners(map, userInteractionHandlerRef.current)
             map.remove()
             setMap(null)
             mapInitializedRef.current = false
-            hasInitialPositionSet.current = false
          }
       }
 
@@ -595,261 +513,19 @@ export function useMapComponent({
       setMapBounds,
       determineInitialLightPreset,
       updateMapBounds,
+      resetAutoCentering,
    ]) // 依存関係を追加。mapInitializedRefでガードされているため再初期化は発生しない
 
-   // 位置情報が取得できたらマップの中心を移動（ユーザー操作を考慮）
-   // positionは外部のhooksから来ており、その変更に反応する必要があるため、useEffectが適切
-   useEffect(() => {
-      if (!map || !position || !mapStyleLoaded) return
+   // マップ境界の管理
+   useMapBoundsManager({ map, mapStyleLoaded, setMapBounds })
 
-      const now = Date.now()
-      const timeSinceLastInteraction = now - lastInteractionTimeRef.current
-      const shouldAutoCenter =
-         !userInteractionRef.current || timeSinceLastInteraction > 30000 // 30秒以上操作がない場合
-
-      if (process.env.NODE_ENV === "development") {
-         // TODO: 位置設定のデバッグログを実装
-      }
-
-      // 初回の位置設定は必ず実行
-      if (!hasInitialPositionSet.current) {
-         // 初回は即座に移動（アニメーションなし）
-         map.jumpTo({
-            center: [position.longitude, position.latitude],
-            zoom: 18,
-            pitch: 50,
-         })
-         hasInitialPositionSet.current = true
-      } else if (shouldAutoCenter) {
-         // ユーザーが操作していない、または30秒以上操作がない場合のみ自動センタリング
-         map.flyTo({
-            center: [position.longitude, position.latitude],
-            zoom: 18,
-            pitch: 50,
-            essential: true,
-            duration: 2000,
-         })
-      }
-
-      // ユーザーパスを更新
-      if (map.getSource("user-path")) {
-         const source = map.getSource("user-path") as mapboxgl.GeoJSONSource
-
-         const updatePath = (currentCoordinates: [number, number][]): void => {
-            const newCoord: [number, number] = [
-               position.longitude,
-               position.latitude,
-            ]
-
-            // 最後の座標と異なる場合のみ追加
-            const lastCoord = currentCoordinates[currentCoordinates.length - 1]
-            if (
-               !lastCoord ||
-               lastCoord[0] !== newCoord[0] ||
-               lastCoord[1] !== newCoord[1]
-            ) {
-               const updatedCoordinates = [...currentCoordinates, newCoord]
-
-               // 最大100ポイントまで保持
-               if (updatedCoordinates.length > 100) {
-                  updatedCoordinates.shift()
-               }
-
-               const pathData: GeoJSONLineStringFeature = {
-                  type: "Feature",
-                  properties: {},
-                  geometry: {
-                     type: "LineString",
-                     coordinates: updatedCoordinates,
-                  },
-               }
-
-               source.setData(pathData)
-            }
-         }
-
-         // 現在のパスデータを取得して更新
-         updatePath([])
-      }
-   }, [map, position, mapStyleLoaded])
-
-   // マップ境界の管理とピン取得
-   useEffect(() => {
-      console.log("🔍 MapComponent: 境界管理useEffect呼び出し", {
-         mapExists: !!map,
-         mapStyleLoaded,
-         mapLoaded: map?.loaded(),
-         mapIsStyleLoaded: map?.isStyleLoaded(),
-      })
-
-      if (!map || !mapStyleLoaded) {
-         console.log("🔍 MapComponent: マップまたはスタイルが未準備", {
-            mapExists: !!map,
-            mapStyleLoaded,
-            mapLoaded: map?.loaded(),
-            mapIsStyleLoaded: map?.isStyleLoaded(),
-         })
-         return
-      }
-
-      console.log("🔍 MapComponent: 境界管理useEffect開始", {
-         mapExists: !!map,
-         mapStyleLoaded,
-         mapLoaded: map?.loaded(),
-         mapIsStyleLoaded: map?.isStyleLoaded(),
-      })
-
-      let lastBounds: MapBounds | null = null
-
-      const isSignificantChange = (
-         oldBounds: MapBounds | null,
-         newBounds: MapBounds,
-      ): boolean => {
-         if (!oldBounds) return true
-
-         const threshold = 0.001 // 約100mの変化
-         return (
-            Math.abs(oldBounds.north - newBounds.north) > threshold ||
-            Math.abs(oldBounds.south - newBounds.south) > threshold ||
-            Math.abs(oldBounds.east - newBounds.east) > threshold ||
-            Math.abs(oldBounds.west - newBounds.west) > threshold
-         )
-      }
-
-      const handleMapMove = () => {
-         console.log("🔍 MapComponent: handleMapMove実行開始", {
-            mapExists: !!map,
-            mapLoaded: map?.loaded(),
-            mapIsStyleLoaded: map?.isStyleLoaded(),
-         })
-
-         const bounds = map.getBounds()
-         if (!bounds) {
-            console.log("🔍 MapComponent: マップ境界が取得できません", {
-               mapExists: !!map,
-               mapLoaded: map?.loaded(),
-               mapIsStyleLoaded: map?.isStyleLoaded(),
-               boundsValue: bounds,
-            })
-            return
-         }
-
-         const newBounds: MapBounds = {
-            north: bounds.getNorth(),
-            south: bounds.getSouth(),
-            east: bounds.getEast(),
-            west: bounds.getWest(),
-         }
-
-         console.log("🔍 MapComponent: handleMapMove", {
-            newBounds: {
-               north: newBounds.north.toFixed(4),
-               south: newBounds.south.toFixed(4),
-               east: newBounds.east.toFixed(4),
-               west: newBounds.west.toFixed(4),
-            },
-            lastBounds: lastBounds
-               ? {
-                    north: lastBounds.north.toFixed(4),
-                    south: lastBounds.south.toFixed(4),
-                    east: lastBounds.east.toFixed(4),
-                    west: lastBounds.west.toFixed(4),
-                 }
-               : null,
-         })
-
-         // 変化が小さい場合はスキップ
-         if (!isSignificantChange(lastBounds, newBounds)) {
-            console.log("🔍 MapComponent: 境界変更が小さいためスキップ")
-            return
-         }
-
-         console.log("🔍 MapComponent: 境界を更新", {
-            newBounds: {
-               north: newBounds.north.toFixed(4),
-               south: newBounds.south.toFixed(4),
-               east: newBounds.east.toFixed(4),
-               west: newBounds.west.toFixed(4),
-            },
-         })
-
-         lastBounds = newBounds
-         console.log("🔍 MapComponent: setMapBounds実行", { newBounds })
-         setMapBounds(newBounds)
-      }
-
-      // 地図移動イベントをリスナーに追加
-      map.on("moveend", handleMapMove)
-      map.on("zoomend", handleMapMove)
-
-      // マップとスタイルが準備できたらすぐに初回境界を設定
-      console.log("🔍 MapComponent: マップとスタイルが準備完了、境界を設定")
-
-      // 少し遅延を入れてから境界を設定（Mapboxの完全な初期化を待つ）
-      setTimeout(() => {
-         console.log("🔍 MapComponent: 遅延後のhandleMapMove実行")
-         handleMapMove()
-      }, 100)
-
-      return () => {
-         map.off("moveend", handleMapMove)
-         map.off("zoomend", handleMapMove)
-      }
-   }, [map, mapStyleLoaded, setMapBounds]) // mapStyleLoadedの依存を追加
-
-   // 新しいピンが作成されたときの処理を最適化
-   useEffect(() => {
-      if (!lastCreatedPinId || !map || !mapStyleLoaded) return
-
-      // 同じピンIDに対する重複flyToを防止
-      if (handledCreatedPinIdRef.current === lastCreatedPinId) {
-         return
-      }
-
-      console.log(
-         "🔄 新しいピンが作成されました。楽観的更新を実行:",
-         lastCreatedPinId,
-      )
-
-      // 新しいピンの位置にマップを移動（即座に実行）
-      // ストアから直接全てのピンを検索
-      const allPins = [...localPins, ...persistedPins, ...tempPins]
-      const newPin = allPins.find((p) => p.id === lastCreatedPinId)
-
-      if (newPin && map) {
-         console.log("🎯 新しいピンの位置にマップを移動:", {
-            pinId: newPin.id,
-            location: { lat: newPin.latitude, lng: newPin.longitude },
-         })
-         map.flyTo({
-            center: [newPin.longitude, newPin.latitude],
-            zoom: 18,
-            pitch: 50,
-            bearing: -20,
-            essential: true,
-            duration: 1000,
-         })
-
-         // このIDは処理済みとして記録
-         handledCreatedPinIdRef.current = lastCreatedPinId
-      }
-
-      // TanStack Queryのキャッシュを即座に無効化（遅延なし）
-      // 楽観的更新により、ピンは既に表示されているため、
-      // バックグラウンドでデータを同期するだけ
-      queryClient.invalidateQueries({
-         queryKey: ["nearby-pins"],
-         refetchType: "active", // アクティブなクエリのみ再取得
-      })
-   }, [
-      lastCreatedPinId,
+   // 新しいピンが作成されたときの処理
+   useNewPinHandler({
       map,
       mapStyleLoaded,
-      localPins,
-      persistedPins,
-      tempPins,
-      queryClient,
-   ])
+      lastCreatedPinId,
+      allPins: [...localPins, ...persistedPins, ...tempPins],
+   })
 
    return {
       mapContainerRef,
