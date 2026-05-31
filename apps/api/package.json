@@ -11,6 +11,7 @@
       "deploy:staging": "wrangler deploy --env staging",
       "deploy:production": "wrangler deploy --env production",
       "generate-types": "wrangler types",
+      "extract-openapi": "tsx scripts/extract-openapi.ts",
       "pretype-check": "npm run generate-types",
       "lint": "biome check src",
       "lint:fix": "biome check --fix --unsafe src",
@@ -37,6 +38,7 @@
       "@biomejs/biome": "2.3.8",
       "@types/node": "^24.12.4",
       "tsc-alias": "^1.8.17",
+      "tsx": "^4.22.3",
       "typescript": "^5.9.3",
       "vitest": "^4.1.7",
       "wrangler": "^4.93.1"

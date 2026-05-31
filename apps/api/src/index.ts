@@ -39,7 +39,7 @@ export interface Env {
 /**
  * OpenAPIHonoアプリケーションの初期化
  */
-const app = new OpenAPIHono<{ Bindings: Env }>()
+export const app = new OpenAPIHono<{ Bindings: Env }>()
 
 // グローバルミドルウェア
 app.use("*", requestId())
