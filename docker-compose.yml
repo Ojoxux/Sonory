@@ -1,78 +1,52 @@
-version: '3.8'
-
+# Sonory Docker Compose 共通設定
+#
+# 使い方:
+#   docker compose up        — 開発環境起動（override.yml自動読み込み）
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up — 本番
+#
 # 環境変数は.envファイルから自動読み込みされます
 # .env.exampleを.envにコピーして設定してください
 
-# Docker BuildKitを有効化してセキュアビルドを実現
-# 環境変数: export DOCKER_BUILDKIT=1 && export COMPOSE_DOCKER_CLI_BUILD=1
 services:
   # Next.js Web Application
   web:
     build:
       context: .
       dockerfile: ./apps/web/Dockerfile
-      target: development
-    ports:
-      - "3000:3000"
+      target: runner
     environment:
-      - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=http://host.docker.internal:8787
       - NEXT_PUBLIC_MAPBOX_TOKEN=${NEXT_PUBLIC_MAPBOX_TOKEN}
-    volumes:
-      - ./apps/web:/app/apps/web
-      - ./packages:/app/packages
-      - /app/node_modules
-      - web_next:/app/apps/web/.next
+      - NEXT_TELEMETRY_DISABLED=1
     depends_on:
       python-api:
         condition: service_started
-    networks:
-      - sonory-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://localhost:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\"",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 1G
-        reservations:
-          cpus: '0.5'
-          memory: 512M
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-        labels: "service=web,environment=development"
 
   # Python Audio Analyzer (FastAPI)
   python-api:
     build:
       context: ./apps/python-audio-analyzer
       dockerfile: Dockerfile
-      target: development
-    # No external port exposure - internal network only
+      target: production
     expose:
       - "8000"
-    env_file:
-      - ./apps/python-audio-analyzer/.env
     environment:
-      - ENVIRONMENT=development
-      - LOG_LEVEL=debug
       - REDIS_URL=redis://:${REDIS_PASSWORD:-dev_redis_password}@redis:6379
     volumes:
-      - ./apps/python-audio-analyzer/src:/app/src
       - tf_hub_cache:/app/tf_hub_cache
     depends_on:
       redis:
         condition: service_healthy
-    networks:
-      - sonory-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
@@ -80,33 +54,14 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    deploy:
-      resources:
-        limits:
-          cpus: '2.0'
-          memory: 2G
-        reservations:
-          cpus: '1.0'
-          memory: 1G
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "20m"
-        max-file: "5"
-        labels: "service=python-api,environment=development"
 
   # Redis for caching
   redis:
     image: redis:7.2-alpine3.19
-    # Bind to localhost only for security
-    ports:
-      - "127.0.0.1:6379:6379"
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD:-dev_redis_password}
     volumes:
       - redis_data:/data
-    networks:
-      - sonory-network
     restart: unless-stopped
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-dev_redis_password}
     healthcheck:
@@ -115,29 +70,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 256M
-        reservations:
-          cpus: '0.1'
-          memory: 64M
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "5m"
-        max-file: "3"
-        labels: "service=redis,environment=development"
 
 volumes:
   redis_data:
-    driver: local
   tf_hub_cache:
-    driver: local
-  web_next:
-    driver: local
-
-networks:
-  sonory-network:
-    driver: bridge
