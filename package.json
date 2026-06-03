@@ -54,30 +54,5 @@
 		"turbo": "^2.9.6",
 		"typescript": "^5.9.3"
 	},
-	"lint-staged": {
-		"apps/web/**/*.{js,jsx,ts,tsx}": [
-			"bash -c 'cd apps/web && npx biome check --fix --unsafe . && npx biome format . --write --unsafe'",
-			"bash -c 'cd apps/web && npx tsc --noEmit'"
-		],
-		"apps/api/**/*.{js,jsx,ts,tsx}": [
-			"bash -c 'cd apps/api && npx biome check --fix --unsafe . && npx biome format . --write --unsafe'",
-			"bash -c 'cd apps/api && npx tsc --noEmit'"
-		],
-		"packages/shared-types/**/*.{js,jsx,ts,tsx}": [
-			"bash -c 'cd packages/shared-types && npx biome check --fix --unsafe . && npx biome format . --write --unsafe'",
-			"bash -c 'cd packages/shared-types && npx tsc --noEmit'"
-		],
-		"packages/utils/**/*.{js,jsx,ts,tsx}": [
-			"bash -c 'cd packages/utils && npx biome check --fix --unsafe . && npx biome format . --write --unsafe'",
-			"bash -c 'cd packages/utils && npx tsc --noEmit'"
-		],
-		"packages/python-types/**/*.{js,jsx,ts,tsx}": [
-			"bash -c 'cd packages/python-types && npx biome check --fix --unsafe . && npx biome format . --write --unsafe'",
-			"bash -c 'cd packages/python-types && npx tsc --noEmit'"
-		],
-		"packages/config/**/*.{js,jsx,ts,tsx}": [
-			"npx biome check --fix --unsafe packages/config && npx biome format packages/config --write --unsafe"
-		]
-	},
 	"packageManager": "npm@10.9.4"
 }
