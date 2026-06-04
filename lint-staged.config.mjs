@@ -2,38 +2,29 @@
  * lint-staged v16対応設定
  *
  * v16ではコマンドがシェルなしで実行されるため、
- * `cd dir && cmd` パターンは使用不可。
- * 関数ベース設定で各ワークスペースのCWDを指定。
- *
- * biomeの`extends`パスは設定ファイルからの相対パスで解決されるため、
- * biomeのCWDをワークスペースディレクトリに合わせる必要がある。
+ * シェルのビルトインや演算子に依存するパターンは使用不可。
+ * `npm --prefix` と `tsc --project` でワークスペースを明示する。
  */
 
-/**
- * ワークスペース用のlint-stagedコマンド生成
- * @param {string} workspace - ワークスペースのパス（例: "apps/web"）
- * @param {boolean} withTsc - tsc --noEmitを実行するかどうか
- */
-function workspaceCommands(workspace, withTsc = true) {
-	return (filenames) => {
-		const files = filenames.join(" ")
-		const commands = [
-			`bash -c "cd ${workspace} && npx biome check --fix --unsafe ${files}"`,
-		]
-		if (withTsc) {
-			commands.push(
-				`bash -c "cd ${workspace} && npx tsc --noEmit"`,
-			)
-		}
-		return commands
-	}
-}
+const packageTasks = (directory, lintScript, formatScript) => [
+	`npm --prefix ${directory} run ${lintScript}`,
+	`npm --prefix ${directory} run ${formatScript}`,
+	`npm --prefix ${directory} exec -- tsc --noEmit --project ${directory}/tsconfig.json`,
+]
 
 export default {
-	"apps/web/**/*.{js,jsx,ts,tsx}": workspaceCommands("apps/web"),
-	"apps/api/**/*.{js,jsx,ts,tsx}": workspaceCommands("apps/api"),
-	"packages/shared-types/**/*.{js,jsx,ts,tsx}": workspaceCommands("packages/shared-types"),
-	"packages/utils/**/*.{js,jsx,ts,tsx}": workspaceCommands("packages/utils"),
-	"packages/python-types/**/*.{js,jsx,ts,tsx}": workspaceCommands("packages/python-types"),
-	"packages/config/**/*.{js,jsx,ts,tsx}": workspaceCommands("packages/config", false),
+	"apps/web/**/*.{js,jsx,ts,tsx}": () =>
+		packageTasks("apps/web", "lint:biome:fix", "format:fix"),
+	"apps/api/**/*.{js,jsx,ts,tsx}": () =>
+		packageTasks("apps/api", "lint:fix", "format:fix"),
+	"packages/shared-types/**/*.{js,jsx,ts,tsx}": () =>
+		packageTasks("packages/shared-types", "lint", "format"),
+	"packages/utils/**/*.{js,jsx,ts,tsx}": () =>
+		packageTasks("packages/utils", "lint", "format"),
+	"packages/python-types/**/*.{js,jsx,ts,tsx}": () =>
+		packageTasks("packages/python-types", "lint", "format"),
+	"packages/config/**/*.{js,jsx,ts,tsx}": () => [
+		"npx biome check --fix --unsafe packages/config",
+		"npx biome format packages/config --write --unsafe",
+	],
 }
