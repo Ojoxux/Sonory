@@ -1,13 +1,14 @@
-# Production overrides
-# Note: API service is deployed to Cloudflare Workers, not Docker Compose
+# 本番環境オーバーライド
+#
+# 使い方: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
 services:
   web:
-    build:
-      target: production
+    ports:
+      - "3000:3000"
     environment:
       - NODE_ENV=production
       - NEXT_TELEMETRY_DISABLED=1
-    volumes: []
     restart: always
 
   python-api:
@@ -17,23 +18,10 @@ services:
       - ENVIRONMENT=production
       - LOG_LEVEL=info
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
-    volumes:
-      - tf_hub_cache:/app/tf_hub_cache
     restart: always
-    # Remove external port exposure in production
-    ports: []
 
   redis:
     restart: always
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru --requirepass ${REDIS_PASSWORD}
-    # Remove external port exposure in production
-    ports: []
-
-# Production secrets (same as development)
-secrets:
-  supabase_service_key:
-    file: ./secrets/supabase_service_key.txt
-  supabase_anon_key:
-    file: ./secrets/supabase_anon_key.txt

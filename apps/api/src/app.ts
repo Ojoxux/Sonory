@@ -73,6 +73,10 @@ export function createApp(): OpenAPIHono<{ Bindings: Env }> {
    app.doc("/api/openapi.json", openApiDocumentConfig)
 
    app.get("/api/docs", (c) => {
+      if (c.env.ENVIRONMENT !== "development") {
+         return c.notFound()
+      }
+
       return c.html(`<!DOCTYPE html>
 <html>
 <head>

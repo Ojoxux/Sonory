@@ -1,6 +1,17 @@
 /**
  * Sonoryアプリケーションのグローバル状態管理のための型定義
+ *
+ * ドメイン型（InferenceResult, PythonAnalysisResult等）は
+ * @sonory/shared-types から再エクスポート
  */
+
+import type {
+   InferenceResult,
+   PythonAnalysisResult,
+} from "@sonory/shared-types"
+
+// shared-types から再エクスポート（既存の利用箇所との互換性維持）
+export type { InferenceResult, PythonAnalysisResult }
 
 /**
  * 録音状態を表す型
@@ -23,7 +34,7 @@ export type AnalysisStatus =
    | "fallback"
 
 /**
- * 音声データを表す型
+ * 音声データを表す型（フロントエンド固有：Blobを含む）
  */
 export type AudioData = {
    /** 音声データのBlob */
@@ -36,36 +47,6 @@ export type AudioData = {
    id: string
    /** 音声の長さ（秒） */
    duration?: number
-}
-
-/**
- * AI推論結果を表す型
- */
-export type InferenceResult = {
-   /** 推論結果のラベル */
-   label: string
-   /** 推論結果の確信度 (0-1) */
-   confidence: number
-}
-
-/**
- * Python YAMNet分析結果の型定義
- */
-export type PythonAnalysisResult = {
-   classifications: Array<{
-      label: string
-      confidence: number
-   }>
-   environment?: {
-      primary_type: string
-      type_scores: Record<string, number>
-      description: string
-   }
-   performance_metrics?: {
-      yamnet_inference_time: number
-      total_time: number
-      processing_ratio: number
-   }
 }
 
 /**

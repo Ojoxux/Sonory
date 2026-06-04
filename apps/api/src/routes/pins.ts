@@ -5,11 +5,101 @@ import {
    type SearchPinsQuery,
 } from "@sonory/shared-types"
 import { APIException } from "../middleware/error"
+import { onOpenAPIValidationError } from "../middleware/validation"
 import { AudioService } from "../services/audio.service"
 import { PinService } from "../services/pin.service"
 import type { Env } from "../types/api"
 
-const app = new OpenAPIHono<{ Bindings: Env }>()
+type CreatePinRequest = Parameters<PinService["createPin"]>[0]
+type UpdatePinRequest = Parameters<PinService["updatePin"]>[1]
+
+const app = new OpenAPIHono<{ Bindings: Env }>({
+   defaultHook: onOpenAPIValidationError,
+})
+
+const weatherSchema = z.object({
+   temperature: z.number(),
+   condition: z.string().optional().nullable(),
+   windSpeed: z.number().optional().nullable(),
+   humidity: z.number().min(0).max(100).optional().nullable(),
+})
+
+const aiAnalysisSchema = z.object({
+   transcription: z.string(),
+   categories: z.object({
+      emotion: z.string(),
+      topic: z.string(),
+      language: z.string(),
+      confidence: z.number().min(0).max(1),
+   }),
+   summary: z.string().optional(),
+})
+
+const soundPinSchema = z.object({
+   id: z.string(),
+   userId: z.string().optional(),
+   location: z.object({
+      lat: z.number(),
+      lng: z.number(),
+      accuracy: z.number().positive().optional(),
+   }),
+   audio: z.object({
+      url: z.string(),
+      duration: z.number(),
+      format: z.enum(["webm", "mp3", "wav", "mp4", "m4a", "flac", "ogg"]),
+   }),
+   weather: weatherSchema.optional(),
+   timeTag: z.enum(["朝", "昼", "夕", "夜"]).optional(),
+   aiAnalysis: aiAnalysisSchema.optional(),
+   status: z.enum(["active", "processing", "deleted", "reported"]),
+   title: z.string().optional(),
+   metadata: z
+      .object({
+         deviceInfo: z.string().optional(),
+      })
+      .optional(),
+   createdAt: z.string(),
+   updatedAt: z.string(),
+})
+
+const errorResponseSchema = z.object({
+   success: z.literal(false),
+   error: z.object({
+      code: z.string(),
+      message: z.string(),
+      details: z.unknown().optional(),
+      timestamp: z.string(),
+      requestId: z.string(),
+   }),
+})
+
+const standardErrorResponses = {
+   400: {
+      content: { "application/json": { schema: errorResponseSchema } },
+      description: "リクエスト不正",
+   },
+   404: {
+      content: { "application/json": { schema: errorResponseSchema } },
+      description: "対象が見つからない",
+   },
+   500: {
+      content: { "application/json": { schema: errorResponseSchema } },
+      description: "サーバーエラー",
+   },
+}
+
+const successResponseSchema = <T extends z.ZodType>(data: T) =>
+   z.object({
+      success: z.literal(true),
+      data,
+   })
+
+const successWithMetaResponseSchema = <T extends z.ZodType>(data: T) =>
+   z.object({
+      success: z.literal(true),
+      data,
+      meta: z.record(z.string(), z.unknown()).optional(),
+   })
 
 /**
  * Request validation schemas
@@ -35,24 +125,10 @@ const createPinSchema = z.object({
          timeTag: z.enum(["朝", "昼", "夕", "夜"]).optional(),
          title: z.string().max(200).optional(),
          deviceInfo: z.string().optional(),
-         weather: z
-            .object({
-               temperature: z.number(),
-               condition: z.string().optional().nullable(),
-               windSpeed: z.number().optional().nullable(),
-               humidity: z.number().min(0).max(100).optional().nullable(),
-            })
-            .optional(),
+         weather: weatherSchema.optional(),
       })
       .optional(),
-   weather: z
-      .object({
-         temperature: z.number(),
-         condition: z.string().optional().nullable(),
-         windSpeed: z.number().optional().nullable(),
-         humidity: z.number().min(0).max(100).optional().nullable(),
-      })
-      .optional(),
+   weather: weatherSchema.optional(),
    timeTag: z.enum(["朝", "昼", "夕", "夜"]).optional(),
    title: z.string().max(200).optional(),
    deviceInfo: z.string().optional(),
@@ -61,18 +137,7 @@ const createPinSchema = z.object({
 const updatePinSchema = z.object({
    title: z.string().max(200).optional(),
    status: z.enum(["active", "processing", "deleted", "reported"]).optional(),
-   aiAnalysis: z
-      .object({
-         transcription: z.string(),
-         categories: z.object({
-            emotion: z.string(),
-            topic: z.string(),
-            language: z.string(),
-            confidence: z.number().min(0).max(1),
-         }),
-         summary: z.string().optional(),
-      })
-      .optional(),
+   aiAnalysis: aiAnalysisSchema.optional(),
 })
 
 const nearbyPinsSchema = z.object({
@@ -103,17 +168,6 @@ const reportPinSchema = z.object({
 // HACK: 複雑な配列スキーマは事前に定義して型推論の深さを抑える
 const createPinsBatchSchema: z.ZodTypeAny = z.array(createPinSchema)
 
-const successResponseSchema = z.object({
-   success: z.literal(true),
-   data: z.unknown(),
-})
-
-const successWithMetaResponseSchema = z.object({
-   success: z.literal(true),
-   data: z.unknown(),
-   meta: z.record(z.string(), z.unknown()).optional(),
-})
-
 /**
  * Route definitions
  */
@@ -125,6 +179,7 @@ const createPinRoute = createRoute({
    description: "新しい音声ピンを作成",
    request: {
       body: {
+         required: true,
          content: {
             "application/json": { schema: createPinSchema },
          },
@@ -132,9 +187,14 @@ const createPinRoute = createRoute({
    },
    responses: {
       200: {
-         content: { "application/json": { schema: successResponseSchema } },
+         content: {
+            "application/json": {
+               schema: successResponseSchema(soundPinSchema),
+            },
+         },
          description: "作成されたピン",
       },
+      ...standardErrorResponses,
    },
 })
 
@@ -144,11 +204,30 @@ const uploadPinRoute = createRoute({
    tags: ["Pins"],
    summary: "音声アップロード付きピン作成",
    description: "音声ファイルをアップロードしてピンを作成",
+   request: {
+      body: {
+         required: true,
+         content: {
+            "multipart/form-data": {
+               schema: z.object({
+                  audio: z.any(),
+                  location: z.string(),
+                  metadata: z.string().optional(),
+               }),
+            },
+         },
+      },
+   },
    responses: {
       200: {
-         content: { "application/json": { schema: successResponseSchema } },
+         content: {
+            "application/json": {
+               schema: successResponseSchema(soundPinSchema),
+            },
+         },
          description: "作成されたピン",
       },
+      ...standardErrorResponses,
    },
 })
 
@@ -164,10 +243,13 @@ const nearbyPinsRoute = createRoute({
    responses: {
       200: {
          content: {
-            "application/json": { schema: successWithMetaResponseSchema },
+            "application/json": {
+               schema: successWithMetaResponseSchema(z.array(soundPinSchema)),
+            },
          },
          description: "周辺ピン一覧",
       },
+      ...standardErrorResponses,
    },
 })
 
@@ -182,9 +264,14 @@ const searchPinsRoute = createRoute({
    },
    responses: {
       200: {
-         content: { "application/json": { schema: successResponseSchema } },
+         content: {
+            "application/json": {
+               schema: successResponseSchema(z.array(soundPinSchema)),
+            },
+         },
          description: "検索結果",
       },
+      ...standardErrorResponses,
    },
 })
 
@@ -201,9 +288,14 @@ const getUserPinsRoute = createRoute({
    },
    responses: {
       200: {
-         content: { "application/json": { schema: successResponseSchema } },
+         content: {
+            "application/json": {
+               schema: successResponseSchema(z.array(soundPinSchema)),
+            },
+         },
          description: "ユーザーのピン一覧",
       },
+      ...standardErrorResponses,
    },
 })
 
@@ -215,6 +307,7 @@ const batchCreatePinsRoute = createRoute({
    description: "複数のピンを一括で作成",
    request: {
       body: {
+         required: true,
          content: {
             "application/json": {
                schema: createPinsBatchSchema,
@@ -225,10 +318,13 @@ const batchCreatePinsRoute = createRoute({
    responses: {
       200: {
          content: {
-            "application/json": { schema: successWithMetaResponseSchema },
+            "application/json": {
+               schema: successWithMetaResponseSchema(z.array(soundPinSchema)),
+            },
          },
          description: "作成されたピン一覧",
       },
+      ...standardErrorResponses,
    },
 })
 
@@ -245,9 +341,14 @@ const getPinByIdRoute = createRoute({
    },
    responses: {
       200: {
-         content: { "application/json": { schema: successResponseSchema } },
+         content: {
+            "application/json": {
+               schema: successResponseSchema(soundPinSchema),
+            },
+         },
          description: "ピン詳細",
       },
+      ...standardErrorResponses,
    },
 })
 
@@ -262,6 +363,7 @@ const updatePinRoute = createRoute({
          id: z.string(),
       }),
       body: {
+         required: true,
          content: {
             "application/json": { schema: updatePinSchema },
          },
@@ -269,9 +371,14 @@ const updatePinRoute = createRoute({
    },
    responses: {
       200: {
-         content: { "application/json": { schema: successResponseSchema } },
+         content: {
+            "application/json": {
+               schema: successResponseSchema(soundPinSchema),
+            },
+         },
          description: "更新されたピン",
       },
+      ...standardErrorResponses,
    },
 })
 
@@ -288,9 +395,16 @@ const deletePinRoute = createRoute({
    },
    responses: {
       200: {
-         content: { "application/json": { schema: successResponseSchema } },
+         content: {
+            "application/json": {
+               schema: successResponseSchema(
+                  z.object({ deleted: z.boolean() }),
+               ),
+            },
+         },
          description: "削除結果",
       },
+      ...standardErrorResponses,
    },
 })
 
@@ -305,6 +419,7 @@ const reportPinRoute = createRoute({
          id: z.string(),
       }),
       body: {
+         required: true,
          content: {
             "application/json": { schema: reportPinSchema },
          },
@@ -312,9 +427,16 @@ const reportPinRoute = createRoute({
    },
    responses: {
       200: {
-         content: { "application/json": { schema: successResponseSchema } },
+         content: {
+            "application/json": {
+               schema: successResponseSchema(
+                  z.object({ reported: z.boolean() }),
+               ),
+            },
+         },
          description: "報告結果",
       },
+      ...standardErrorResponses,
    },
 })
 
@@ -324,14 +446,17 @@ const reportPinRoute = createRoute({
 
 app.openapi(createPinRoute, async (c) => {
    const service = new PinService(c)
-   const data = await c.req.json()
+   const data = c.req.valid("json") as CreatePinRequest
 
    const pin = await service.createPin(data)
 
-   return c.json({
-      success: true as const,
-      data: pin,
-   })
+   return c.json(
+      {
+         success: true as const,
+         data: pin,
+      },
+      200,
+   )
 })
 
 app.openapi(uploadPinRoute, async (c) => {
@@ -339,10 +464,14 @@ app.openapi(uploadPinRoute, async (c) => {
    const audioService = new AudioService(c)
 
    try {
-      const formData = await c.req.formData()
-      const audioFile = formData.get("audio") as unknown as File
-      const locationStr = formData.get("location") as string
-      const metadataStr = formData.get("metadata") as string
+      const formData = c.req.valid("form") as {
+         audio?: File | string
+         location?: string
+         metadata?: string
+      }
+      const audioFile = formData.audio as unknown as File
+      const locationStr = formData.location
+      const metadataStr = formData.metadata
 
       if (!audioFile || !(audioFile instanceof File)) {
          throw new APIException(
@@ -438,10 +567,13 @@ app.openapi(uploadPinRoute, async (c) => {
          })(),
       )
 
-      return c.json({
-         success: true as const,
-         data: pin,
-      })
+      return c.json(
+         {
+            success: true as const,
+            data: pin,
+         },
+         200,
+      )
    } catch (error) {
       if (error instanceof APIException) {
          throw error
@@ -475,15 +607,18 @@ app.openapi(nearbyPinsRoute, async (c) => {
    c.header("X-API-Version", "1.0")
    c.header("X-Response-Time", Date.now().toString())
 
-   return c.json({
-      success: true as const,
-      data: pins,
-      meta: {
-         count: pins.length,
-         bounds: nearbyQuery.bounds,
-         limit: nearbyQuery.limit,
+   return c.json(
+      {
+         success: true as const,
+         data: pins,
+         meta: {
+            count: pins.length,
+            bounds: nearbyQuery.bounds,
+            limit: nearbyQuery.limit,
+         },
       },
-   })
+      200,
+   )
 })
 
 app.openapi(searchPinsRoute, async (c) => {
@@ -516,10 +651,13 @@ app.openapi(searchPinsRoute, async (c) => {
 
    const pins = await service.searchPins(searchQuery)
 
-   return c.json({
-      success: true as const,
-      data: pins,
-   })
+   return c.json(
+      {
+         success: true as const,
+         data: pins,
+      },
+      200,
+   )
 })
 
 app.openapi(getUserPinsRoute, async (c) => {
@@ -528,26 +666,32 @@ app.openapi(getUserPinsRoute, async (c) => {
 
    const pins = await service.getUserPins(userId)
 
-   return c.json({
-      success: true as const,
-      data: pins,
-   })
+   return c.json(
+      {
+         success: true as const,
+         data: pins,
+      },
+      200,
+   )
 })
 
 app.openapi(batchCreatePinsRoute, async (c) => {
    const service = new PinService(c)
-   const data = await c.req.json()
+   const data = c.req.valid("json") as CreatePinRequest[]
 
    const pins = await service.createPinsBatch(data)
 
-   return c.json({
-      success: true as const,
-      data: pins,
-      meta: {
-         requested: data.length,
-         created: pins.length,
+   return c.json(
+      {
+         success: true as const,
+         data: pins,
+         meta: {
+            requested: data.length,
+            created: pins.length,
+         },
       },
-   })
+      200,
+   )
 })
 
 app.openapi(getPinByIdRoute, async (c) => {
@@ -560,16 +704,26 @@ app.openapi(getPinByIdRoute, async (c) => {
       throw new APIException(ERROR_CODES.DATABASE_ERROR, "Pin not found", 404)
    }
 
-   return c.json({
-      success: true as const,
-      data: pin,
-   })
+   return c.json(
+      {
+         success: true as const,
+         data: pin,
+      },
+      200,
+   )
 })
 
 app.openapi(updatePinRoute, async (c) => {
    const service = new PinService(c)
    const { id } = c.req.valid("param")
-   const data = await c.req.json()
+   const validated = c.req.valid("json")
+   const data = {
+      ...(validated.title !== undefined ? { title: validated.title } : {}),
+      ...(validated.status !== undefined ? { status: validated.status } : {}),
+      ...(validated.aiAnalysis !== undefined
+         ? { aiAnalysis: validated.aiAnalysis }
+         : {}),
+   } as UpdatePinRequest
 
    const pin = await service.updatePin(id, data)
 
@@ -577,10 +731,13 @@ app.openapi(updatePinRoute, async (c) => {
       throw new APIException(ERROR_CODES.DATABASE_ERROR, "Pin not found", 404)
    }
 
-   return c.json({
-      success: true as const,
-      data: pin,
-   })
+   return c.json(
+      {
+         success: true as const,
+         data: pin,
+      },
+      200,
+   )
 })
 
 app.openapi(deletePinRoute, async (c) => {
@@ -593,10 +750,13 @@ app.openapi(deletePinRoute, async (c) => {
       throw new APIException(ERROR_CODES.DATABASE_ERROR, "Pin not found", 404)
    }
 
-   return c.json({
-      success: true as const,
-      data: { deleted: true },
-   })
+   return c.json(
+      {
+         success: true as const,
+         data: { deleted: true },
+      },
+      200,
+   )
 })
 
 app.openapi(reportPinRoute, async (c) => {
@@ -610,10 +770,13 @@ app.openapi(reportPinRoute, async (c) => {
       throw new APIException(ERROR_CODES.DATABASE_ERROR, "Pin not found", 404)
    }
 
-   return c.json({
-      success: true as const,
-      data: { reported: true },
-   })
+   return c.json(
+      {
+         success: true as const,
+         data: { reported: true },
+      },
+      200,
+   )
 })
 
 export default app

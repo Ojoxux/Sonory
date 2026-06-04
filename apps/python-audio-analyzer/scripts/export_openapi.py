@@ -30,7 +30,7 @@ document = app.openapi()
 output = Path({str(OUTPUT_PATH)!r})
 output.parent.mkdir(parents=True, exist_ok=True)
 output.write_text(
-    json.dumps(document, indent=2, ensure_ascii=False) + "\\n",
+    json.dumps(document, indent=3, ensure_ascii=False) + "\\n",
     encoding="utf-8",
 )
 print(f"✅ Python OpenAPI spec exported: {{output}}")

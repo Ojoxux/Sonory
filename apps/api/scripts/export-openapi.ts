@@ -22,7 +22,7 @@ const outputPath = path.resolve(
 function exportOpenApiSpec(): void {
    const document = app.getOpenAPIDocument(openApiDocumentConfig)
    fs.mkdirSync(path.dirname(outputPath), { recursive: true })
-   fs.writeFileSync(outputPath, `${JSON.stringify(document, null, 2)}\n`)
+   fs.writeFileSync(outputPath, `${JSON.stringify(document, null, 3)}\n`)
    console.log(`✅ Hono OpenAPI spec exported: ${outputPath}`)
 }
 

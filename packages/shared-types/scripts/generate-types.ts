@@ -1,5 +1,5 @@
 /**
- * OpenAPI Spec から TypeScript 型定義 (.d.ts) を生成する。
+ * OpenAPI Spec から TypeScript 型定義を生成する。
  */
 
 import { execSync } from "node:child_process"
@@ -15,12 +15,12 @@ const generatedDir = path.join(packageRoot, "src", "generated")
 const SPECS = [
    {
       input: path.join(openapiDir, "hono-api.json"),
-      output: path.join(generatedDir, "hono-api.d.ts"),
+      output: path.join(generatedDir, "hono-api.ts"),
       label: "Hono API",
    },
    {
       input: path.join(openapiDir, "python-api.json"),
-      output: path.join(generatedDir, "python-api.d.ts"),
+      output: path.join(generatedDir, "python-api.ts"),
       label: "Python API",
    },
 ] as const
@@ -36,6 +36,11 @@ function generateTypes(): void {
       }
 
       execSync(`npx openapi-typescript "${spec.input}" -o "${spec.output}"`, {
+         cwd: packageRoot,
+         stdio: "inherit",
+      })
+
+      execSync(`npx biome format "${spec.output}" --write`, {
          cwd: packageRoot,
          stdio: "inherit",
       })

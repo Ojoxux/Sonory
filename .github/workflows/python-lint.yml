@@ -63,6 +63,12 @@ jobs:
         run: python -m pytest
         continue-on-error: true  # テストがない場合でも継続
 
+      # 9. Python OpenAPI Spec が最新であることを検証
+      - name: Verify Python OpenAPI spec
+        run: |
+          python scripts/export_openapi.py
+          git diff --exit-code -- ../../packages/shared-types/openapi/python-api.json
+
   build-docker:
     runs-on: ubuntu-latest
     needs: lint-and-test
