@@ -1,32 +1,383 @@
+import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi"
 import { ERROR_CODES } from "@sonory/shared-types"
 import type { Context } from "hono"
-import { Hono } from "hono"
 import type { Env } from "../index"
 import { APIException } from "../middleware/error"
 import { rateLimits } from "../middleware/rateLimit"
+import { onOpenAPIValidationError } from "../middleware/validation"
 import { AudioService } from "../services/audio.service"
 
-const app = new Hono<{ Bindings: Env }>()
+const app = new OpenAPIHono<{ Bindings: Env }>({
+   defaultHook: onOpenAPIValidationError,
+})
+
+const audioFormatSchema = z.enum([
+   "webm",
+   "mp3",
+   "wav",
+   "mp4",
+   "m4a",
+   "flac",
+   "ogg",
+])
+
+const audioMetadataSchema = z.object({
+   id: z.string(),
+   filename: z.string(),
+   size: z.number(),
+   format: audioFormatSchema,
+   duration: z.number(),
+   url: z.string().optional(),
+   uploadedAt: z.string(),
+})
+
+const uploadUrlDataSchema = z.object({
+   uploadUrl: z.string(),
+   filePath: z.string(),
+   expiresAt: z.string(),
+   maxFileSize: z.number(),
+})
+
+const audioUploadResultSchema = z.object({
+   audioId: z.string(),
+   audioUrl: z.string(),
+   audioFilePath: z.string(),
+   metadata: audioMetadataSchema,
+})
+
+const analysisJobResultSchema = z.object({
+   jobId: z.string(),
+   status: z.enum(["queued", "processing", "completed", "failed"]),
+   estimatedDuration: z.string().optional(),
+   statusUrl: z.string(),
+})
+
+const pythonAnalysisResultSchema = z.object({
+   classifications: z.array(
+      z.object({
+         label: z.string(),
+         confidence: z.number(),
+      }),
+   ),
+   environment: z
+      .object({
+         primary_type: z.string(),
+         type_scores: z.record(z.string(), z.number()),
+         description: z.string(),
+      })
+      .optional(),
+   performance_metrics: z
+      .object({
+         yamnet_inference_time: z.number(),
+         total_time: z.number(),
+         processing_ratio: z.number(),
+      })
+      .optional(),
+})
+
+const analysisStatusSchema = z.object({
+   jobId: z.string(),
+   status: z.enum(["queued", "processing", "completed", "failed"]),
+   result: pythonAnalysisResultSchema.optional(),
+   error: z
+      .object({
+         message: z.string(),
+         code: z.string().optional(),
+      })
+      .optional(),
+   createdAt: z.string(),
+   startedAt: z.string().optional(),
+   completedAt: z.string().optional(),
+   retryCount: z.number(),
+})
+
+const errorResponseSchema = z.object({
+   success: z.literal(false),
+   error: z.object({
+      code: z.string(),
+      message: z.string(),
+      details: z.unknown().optional(),
+      timestamp: z.string(),
+      requestId: z.string(),
+   }),
+})
+
+const standardErrorResponses = {
+   400: {
+      content: { "application/json": { schema: errorResponseSchema } },
+      description: "リクエスト不正",
+   },
+   500: {
+      content: { "application/json": { schema: errorResponseSchema } },
+      description: "サーバーエラー",
+   },
+}
+
+const successResponseSchema = <T extends z.ZodType>(data: T) =>
+   z.object({
+      success: z.literal(true),
+      data,
+   })
+
+const deleteAudioData = async (
+   c: Context<{ Bindings: Env }>,
+   encodedFilePath?: string,
+) => {
+   const audioService = new AudioService(c)
+
+   try {
+      if (!encodedFilePath) {
+         throw new APIException(
+            ERROR_CODES.INVALID_AUDIO_FORMAT,
+            "File path is required",
+            400,
+         )
+      }
+
+      const filePath = decodeURIComponent(encodedFilePath)
+      const success = await audioService.deleteAudio(filePath)
+
+      return {
+         deleted: success,
+         deletedPath: filePath,
+      }
+   } catch (error) {
+      if (error instanceof APIException) {
+         throw error
+      }
+
+      throw new APIException(
+         ERROR_CODES.STORAGE_ERROR,
+         "Failed to delete audio file",
+         500,
+         error instanceof Error ? { message: error.message } : undefined,
+      )
+   }
+}
 
 /**
- * POST /api/audio/upload-url
- * @description Presigned URLを生成して直接Supabase Storageにアップロード
- * @tags Audio
- * @param {string} fileName - アップロードするファイル名
- * @param {string} [userId] - ユーザーID（オプション）
- * @returns {object} Presigned URLと関連情報
+ * Route definitions
  */
-app.post("/upload-url", rateLimits.default, async (c) => {
+const uploadUrlRoute = createRoute({
+   method: "post",
+   path: "/upload-url",
+   tags: ["Audio"],
+   summary: "Presigned URL生成",
+   description: "Supabase Storageへの直接アップロード用Presigned URLを生成",
+   middleware: [rateLimits.default],
+   request: {
+      body: {
+         required: true,
+         content: {
+            "application/json": {
+               schema: z.object({
+                  fileName: z.string(),
+                  userId: z.string().optional(),
+               }),
+            },
+         },
+      },
+   },
+   responses: {
+      200: {
+         content: {
+            "application/json": {
+               schema: successResponseSchema(uploadUrlDataSchema),
+            },
+         },
+         description: "Presigned URLと関連情報",
+      },
+      ...standardErrorResponses,
+   },
+})
+
+const uploadRoute = createRoute({
+   method: "post",
+   path: "/upload",
+   tags: ["Audio"],
+   summary: "音声ファイルアップロード",
+   description: "音声ファイルを直接アップロード（FormData）",
+   middleware: [rateLimits.audioUpload],
+   request: {
+      body: {
+         required: true,
+         content: {
+            "multipart/form-data": {
+               schema: z.object({
+                  audio: z.any(),
+                  userId: z.string().optional(),
+               }),
+            },
+         },
+      },
+   },
+   responses: {
+      200: {
+         content: {
+            "application/json": {
+               schema: successResponseSchema(audioUploadResultSchema),
+            },
+         },
+         description: "アップロード結果",
+      },
+      ...standardErrorResponses,
+   },
+})
+
+const deleteAudioRoute = createRoute({
+   method: "delete",
+   path: "/{filePath}",
+   tags: ["Audio"],
+   summary: "音声ファイル削除",
+   description: "音声ファイルを削除",
+   middleware: [rateLimits.default],
+   request: {
+      params: z.object({
+         filePath: z.string(),
+      }),
+   },
+   responses: {
+      200: {
+         content: {
+            "application/json": {
+               schema: successResponseSchema(
+                  z.object({
+                     deleted: z.boolean(),
+                     deletedPath: z.string(),
+                  }),
+               ),
+            },
+         },
+         description: "削除結果",
+      },
+      ...standardErrorResponses,
+   },
+})
+
+const getAudioMetadataRoute = createRoute({
+   method: "get",
+   path: "/{audioId}/metadata",
+   tags: ["Audio"],
+   summary: "音声メタデータ取得",
+   description: "音声ファイルのメタデータを取得",
+   middleware: [rateLimits.default],
+   request: {
+      params: z.object({
+         audioId: z.string(),
+      }),
+   },
+   responses: {
+      200: {
+         content: {
+            "application/json": {
+               schema: successResponseSchema(audioMetadataSchema),
+            },
+         },
+         description: "メタデータ",
+      },
+      ...standardErrorResponses,
+   },
+})
+
+const analyzeAudioRoute = createRoute({
+   method: "post",
+   path: "/{audioId}/analyze",
+   tags: ["Audio"],
+   summary: "音声分析ジョブ投入",
+   description:
+      "音声分析ジョブを非同期で投入（Cloudflare Workers 30秒制限対応）",
+   middleware: [rateLimits.default],
+   request: {
+      params: z.object({
+         audioId: z.string(),
+      }),
+      body: {
+         required: true,
+         content: {
+            "application/json": {
+               schema: z.object({
+                  audioUrl: z.string().url(),
+                  topK: z.number().optional(),
+               }),
+            },
+         },
+      },
+   },
+   responses: {
+      200: {
+         content: {
+            "application/json": {
+               schema: successResponseSchema(analysisJobResultSchema),
+            },
+         },
+         description: "ジョブ投入結果とステータスURL",
+      },
+      ...standardErrorResponses,
+   },
+})
+
+const analysisStatusRoute = createRoute({
+   method: "get",
+   path: "/{audioId}/analysis/{jobId}/status",
+   tags: ["Audio"],
+   summary: "分析ステータス取得",
+   description: "分析ジョブのステータスと結果を取得",
+   middleware: [rateLimits.default],
+   request: {
+      params: z.object({
+         audioId: z.string(),
+         jobId: z.string(),
+      }),
+   },
+   responses: {
+      200: {
+         content: {
+            "application/json": {
+               schema: successResponseSchema(analysisStatusSchema),
+            },
+         },
+         description: "ジョブステータスと分析結果",
+      },
+      ...standardErrorResponses,
+   },
+})
+
+const processQueueRoute = createRoute({
+   method: "post",
+   path: "/internal/process-queue",
+   tags: ["Internal"],
+   summary: "キュー処理",
+   description: "キューから分析ジョブを取得して処理（内部用・Cron Trigger用）",
+   responses: {
+      200: {
+         content: {
+            "application/json": {
+               schema: successResponseSchema(
+                  z.object({
+                     processedCount: z.number(),
+                     message: z.string(),
+                  }),
+               ),
+            },
+         },
+         description: "処理結果",
+      },
+      ...standardErrorResponses,
+   },
+})
+
+/**
+ * Route handlers
+ */
+
+app.openapi(uploadUrlRoute, async (c) => {
    const audioService = new AudioService(
       c as unknown as Context<{ Bindings: Env }>,
    )
 
    try {
-      const body = await c.req.json()
-      const fileName = body.fileName
-      const userId = body.userId
+      const { fileName, userId } = c.req.valid("json")
 
-      // ファイル名が存在しない場合はエラースロー
       if (!fileName) {
          throw new APIException(
             ERROR_CODES.INVALID_AUDIO_FORMAT,
@@ -35,13 +386,15 @@ app.post("/upload-url", rateLimits.default, async (c) => {
          )
       }
 
-      // Presigned URL生成
       const result = await audioService.generateUploadUrl(fileName, userId)
 
-      return c.json({
-         success: true,
-         data: result,
-      })
+      return c.json(
+         {
+            success: true as const,
+            data: result,
+         },
+         200,
+      )
    } catch (error) {
       if (error instanceof APIException) {
          throw error
@@ -56,33 +409,25 @@ app.post("/upload-url", rateLimits.default, async (c) => {
    }
 })
 
-/**
- * POST /api/audio/upload
- * @description 音声ファイルをアップロード（従来の直接アップロード方式）
- * @tags Audio
- * @param {File} file - アップロードする音声ファイル（FormData）
- * @param {string} [userId] - ユーザーID（オプション）
- * @returns {AudioUploadResult} アップロード結果
- */
-app.post("/upload", rateLimits.audioUpload, async (c) => {
+app.openapi(uploadRoute, async (c) => {
    const audioService = new AudioService(
       c as unknown as Context<{ Bindings: Env }>,
    )
 
    try {
-      // FormDataからファイルを取得
-      const formData = await c.req.formData()
-      const fileEntry = formData.get("audio")
-      const userIdEntry = formData.get("userId")
+      const formData = c.req.valid("form") as {
+         audio?: File | string
+         userId?: string
+      }
+      const fileEntry = formData.audio
+      const userIdEntry = formData.userId
 
-      // ファイルの型チェック
       const file =
          fileEntry && typeof fileEntry === "object" && "name" in fileEntry
             ? (fileEntry as File)
             : null
       const userId = typeof userIdEntry === "string" ? userIdEntry : null
 
-      // ファイルの存在確認
       if (!file) {
          throw new APIException(
             ERROR_CODES.INVALID_AUDIO_FORMAT,
@@ -91,7 +436,6 @@ app.post("/upload", rateLimits.audioUpload, async (c) => {
          )
       }
 
-      // ファイルサイズの基本チェック
       if (file.size === 0) {
          throw new APIException(
             ERROR_CODES.INVALID_AUDIO_FORMAT,
@@ -100,13 +444,15 @@ app.post("/upload", rateLimits.audioUpload, async (c) => {
          )
       }
 
-      // 音声ファイルをアップロード
       const result = await audioService.uploadAudio(file, userId || undefined)
 
-      return c.json({
-         success: true,
-         data: result,
-      })
+      return c.json(
+         {
+            success: true as const,
+            data: result,
+         },
+         200,
+      )
    } catch (error) {
       if (error instanceof APIException) {
          throw error
@@ -121,63 +467,39 @@ app.post("/upload", rateLimits.audioUpload, async (c) => {
    }
 })
 
-/**
- * DELETE /api/audio/:filePath
- * @description 音声ファイルを削除
- * @tags Audio
- * @param {string} filePath - 削除する音声ファイルのパス（URLエンコード済み）
- * @returns {object} 削除結果
- */
-app.delete("/:filePath{.+}", rateLimits.default, async (c) => {
-   const audioService = new AudioService(
+app.openapi(deleteAudioRoute, async (c) => {
+   const { filePath: encodedFilePath } = c.req.valid("param")
+   const data = await deleteAudioData(
       c as unknown as Context<{ Bindings: Env }>,
+      encodedFilePath,
    )
-   const encodedFilePath = c.req.param("filePath")
 
-   try {
-      if (!encodedFilePath) {
-         throw new APIException(
-            ERROR_CODES.INVALID_AUDIO_FORMAT,
-            "File path is required",
-            400,
-         )
-      }
-
-      // URLデコードしてファイルパスを取得
-      const filePath = decodeURIComponent(encodedFilePath)
-
-      const success = await audioService.deleteAudio(filePath)
-
-      return c.json({
-         success: true,
-         data: {
-            deleted: success,
-            deletedPath: filePath,
-         },
-      })
-   } catch (error) {
-      if (error instanceof APIException) {
-         throw error
-      }
-
-      throw new APIException(
-         ERROR_CODES.STORAGE_ERROR,
-         "Failed to delete audio file",
-         500,
-         error instanceof Error ? { message: error.message } : undefined,
-      )
-   }
+   return c.json(
+      {
+         success: true as const,
+         data,
+      },
+      200,
+   )
 })
 
-/**
- * GET /api/audio/:audioId/metadata
- * @description 音声ファイルのメタデータを取得
- * @tags Audio
- * @param {string} audioId - 音声ファイルのID
- * @returns {AudioMetadata} メタデータ
- */
-app.get("/:audioId/metadata", rateLimits.default, async (c) => {
-   const audioId = c.req.param("audioId")
+app.delete("/:filePath{.+}", rateLimits.default, async (c) => {
+   const data = await deleteAudioData(
+      c as unknown as Context<{ Bindings: Env }>,
+      c.req.param("filePath"),
+   )
+
+   return c.json(
+      {
+         success: true as const,
+         data,
+      },
+      200,
+   )
+})
+
+app.openapi(getAudioMetadataRoute, async (c) => {
+   const { audioId } = c.req.valid("param")
 
    try {
       if (!audioId) {
@@ -188,8 +510,6 @@ app.get("/:audioId/metadata", rateLimits.default, async (c) => {
          )
       }
 
-      // TODO: データベースからメタデータを取得するロジックを実装
-      // 現在は簡易的な実装
       const metadata = {
          id: audioId,
          filename: `audio-${audioId}`,
@@ -199,10 +519,13 @@ app.get("/:audioId/metadata", rateLimits.default, async (c) => {
          uploadedAt: new Date().toISOString(),
       }
 
-      return c.json({
-         success: true,
-         data: metadata,
-      })
+      return c.json(
+         {
+            success: true as const,
+            data: metadata,
+         },
+         200,
+      )
    } catch (error) {
       if (error instanceof APIException) {
          throw error
@@ -217,20 +540,11 @@ app.get("/:audioId/metadata", rateLimits.default, async (c) => {
    }
 })
 
-/**
- * POST /api/audio/:audioId/analyze
- * @description 音声分析ジョブを非同期で投入（Cloudflare Workers 30秒制限対応）
- * @tags Audio
- * @param {string} audioId - 分析する音声ファイルのID
- * @param {object} body - リクエストボディ
- * @param {string} body.audioUrl - 分析対象の音声URL（公開アクセス可能）
- * @returns {object} ジョブ投入結果とステータスURL
- */
-app.post("/:audioId/analyze", rateLimits.default, async (c) => {
+app.openapi(analyzeAudioRoute, async (c) => {
    const audioService = new AudioService(
       c as unknown as Context<{ Bindings: Env }>,
    )
-   const audioId = c.req.param("audioId")
+   const { audioId } = c.req.valid("param")
 
    try {
       if (!audioId) {
@@ -241,8 +555,7 @@ app.post("/:audioId/analyze", rateLimits.default, async (c) => {
          )
       }
 
-      // リクエストボディから音声URLを取得
-      const body = await c.req.json().catch(() => ({}))
+      const body = c.req.valid("json")
       const audioUrl = body.audioUrl
 
       if (!audioUrl) {
@@ -253,15 +566,12 @@ app.post("/:audioId/analyze", rateLimits.default, async (c) => {
          )
       }
 
-      // 非同期分析ジョブを投入
       const jobResult = await audioService.scheduleAnalysis(audioId, audioUrl)
 
-      // 開発環境では即座にキュー処理を実行（自動処理）
       const env = c.env as Env
       const isDevelopment =
          env.ENVIRONMENT === "development" || !env.ENVIRONMENT
 
-      // 本番環境では Cloudflare Cron Trigger で /api/audio/internal/process-queue を定期実行する
       if (isDevelopment) {
          console.log("🔧 開発環境: 同期的にキュー処理を実行します")
          await new Promise((resolve) => setTimeout(resolve, 500))
@@ -273,10 +583,13 @@ app.post("/:audioId/analyze", rateLimits.default, async (c) => {
          }
       }
 
-      return c.json({
-         success: true,
-         data: jobResult,
-      })
+      return c.json(
+         {
+            success: true as const,
+            data: jobResult,
+         },
+         200,
+      )
    } catch (error) {
       if (error instanceof APIException) {
          throw error
@@ -291,20 +604,11 @@ app.post("/:audioId/analyze", rateLimits.default, async (c) => {
    }
 })
 
-/**
- * GET /api/audio/:audioId/analysis/:jobId/status
- * @description 分析ジョブのステータスと結果を取得
- * @tags Audio
- * @param {string} audioId - 音声ファイルのID
- * @param {string} jobId - 分析ジョブのID
- * @returns {object} ジョブステータスと分析結果
- */
-app.get("/:audioId/analysis/:jobId/status", rateLimits.default, async (c) => {
+app.openapi(analysisStatusRoute, async (c) => {
    const audioService = new AudioService(
       c as unknown as Context<{ Bindings: Env }>,
    )
-   const audioId = c.req.param("audioId")
-   const jobId = c.req.param("jobId")
+   const { audioId, jobId } = c.req.valid("param")
 
    try {
       if (!audioId) {
@@ -323,13 +627,15 @@ app.get("/:audioId/analysis/:jobId/status", rateLimits.default, async (c) => {
          )
       }
 
-      // 分析ジョブのステータスを取得
       const jobStatus = await audioService.getAnalysisStatus(jobId)
 
-      return c.json({
-         success: true,
-         data: jobStatus,
-      })
+      return c.json(
+         {
+            success: true as const,
+            data: jobStatus,
+         },
+         200,
+      )
    } catch (error) {
       if (error instanceof APIException) {
          throw error
@@ -344,28 +650,24 @@ app.get("/:audioId/analysis/:jobId/status", rateLimits.default, async (c) => {
    }
 })
 
-/**
- * POST /api/audio/internal/process-queue
- * @description キューから分析ジョブを取得して処理（内部用・Cron Trigger用）
- * @tags Internal
- * @returns {object} 処理結果
- */
-app.post("/internal/process-queue", async (c) => {
+app.openapi(processQueueRoute, async (c) => {
    const audioService = new AudioService(
       c as unknown as Context<{ Bindings: Env }>,
    )
 
    try {
-      // キューから分析ジョブを処理
       const processedCount = await audioService.processAnalysisQueue()
 
-      return c.json({
-         success: true,
-         data: {
-            processedCount,
-            message: `Processed ${processedCount} analysis jobs`,
+      return c.json(
+         {
+            success: true as const,
+            data: {
+               processedCount,
+               message: `Processed ${processedCount} analysis jobs`,
+            },
          },
-      })
+         200,
+      )
    } catch (error) {
       if (error instanceof APIException) {
          throw error

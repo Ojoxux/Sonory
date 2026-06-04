@@ -1,4 +1,4 @@
-import type { Hook } from "@hono/zod-validator"
+import type { Hook as ZodValidatorHook } from "@hono/zod-validator"
 import type { Env, ValidationTargets } from "hono"
 import { APIException, BACKEND_ERROR_CODES } from "./error"
 
@@ -21,38 +21,57 @@ export const formatValidationErrors = (
 /**
  * zValidator 用の共通エラーハンドラ
  */
-export const onZodValidationError: Hook<
+const throwValidationError = (result: { error?: unknown }): void => {
+   const errorObj = result.error
+
+   if (errorObj && typeof errorObj === "object" && "issues" in errorObj) {
+      const fieldErrors: Record<string, unknown> = {}
+      for (const issue of errorObj.issues as Array<{
+         path?: Array<string | number>
+         message: string
+      }>) {
+         const path = (issue.path ?? []).join(".") || "_root"
+         const prev = fieldErrors[path]
+         fieldErrors[path] = prev
+            ? Array.isArray(prev)
+               ? [...prev, issue.message]
+               : [prev, issue.message]
+            : issue.message
+      }
+      throw new APIException(
+         BACKEND_ERROR_CODES.INVALID_REQUEST,
+         formatValidationErrors(fieldErrors),
+         400,
+         { errors: fieldErrors },
+      )
+   }
+
+   throw new APIException(
+      BACKEND_ERROR_CODES.INVALID_REQUEST,
+      "Validation failed",
+      400,
+   )
+}
+
+export const onZodValidationError: ZodValidatorHook<
    unknown,
    Env,
    string,
    keyof ValidationTargets
 > = (result, _c) => {
    if (!result.success) {
-      // エラーをフィールドごとに集約
-      const errorObj = result.error
-      if ("issues" in errorObj) {
-         const fieldErrors: Record<string, unknown> = {}
-         for (const issue of errorObj.issues) {
-            const path = (issue.path ?? []).join(".") || "_root"
-            const prev = fieldErrors[path]
-            fieldErrors[path] = prev
-               ? Array.isArray(prev)
-                  ? [...prev, issue.message]
-                  : [prev, issue.message]
-               : issue.message
-         }
-         throw new APIException(
-            BACKEND_ERROR_CODES.INVALID_REQUEST,
-            formatValidationErrors(fieldErrors),
-            400,
-            { errors: fieldErrors },
-         )
-      }
-      // 予備: issues が無い型でも安全に文字列化
-      throw new APIException(
-         BACKEND_ERROR_CODES.INVALID_REQUEST,
-         "Validation failed",
-         400,
-      )
+      throwValidationError(result)
+   }
+}
+
+type OpenAPIValidationResult =
+   | { success: true }
+   | { success: false; error: unknown }
+
+export const onOpenAPIValidationError = (
+   result: OpenAPIValidationResult,
+): void => {
+   if (!result.success) {
+      throwValidationError(result)
    }
 }

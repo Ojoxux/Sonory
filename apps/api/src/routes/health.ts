@@ -1,43 +1,99 @@
+import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi"
 import type { APIResponse } from "@sonory/shared-types"
-import { Hono } from "hono"
 import type { Env } from "../index"
 import { getSupabaseAdmin } from "../services/supabase"
 import { logger } from "../utils/logger"
 
+const ServiceStatusSchema = z.object({
+   database: z.enum(["connected", "disconnected"]),
+   storage: z.enum(["connected", "disconnected"]),
+   ai: z.enum(["available", "unavailable"]),
+})
+
+const HealthCheckResponseSchema = z.object({
+   status: z.enum(["healthy", "degraded", "unhealthy"]),
+   timestamp: z.string(),
+   version: z.string(),
+   services: ServiceStatusSchema,
+   uptime: z.number(),
+})
+
 interface HealthCheckResponse {
-   status: "healthy" | "degraded" | "unhealthy" // healthy: 正常, degraded: 警告, unhealthy: 異常
+   status: "healthy" | "degraded" | "unhealthy"
    timestamp: string
    version: string
    services: {
-      database: "connected" | "disconnected" // connected: 接続済み, disconnected: 未接続
-      storage: "connected" | "disconnected" // connected: 接続済み, disconnected: 未接続
-      ai: "available" | "unavailable" // available: 利用可能, unavailable: 利用不可
+      database: "connected" | "disconnected"
+      storage: "connected" | "disconnected"
+      ai: "available" | "unavailable"
    }
    uptime: number
 }
 
-// 起動時刻を記録
 const startTime = Date.now()
 
-/**
- * ヘルスチェックルート
- * @description システムの健全性を確認するエンドポイント
- */
-export const healthRoutes = new Hono<{ Bindings: Env }>()
+const healthRoute = createRoute({
+   method: "get",
+   path: "/",
+   tags: ["Health"],
+   summary: "基本ヘルスチェック",
+   description: "Supabase接続確認付きの基本的なヘルスチェック",
+   responses: {
+      200: {
+         content: {
+            "application/json": {
+               schema: z.object({
+                  success: z.literal(true),
+                  data: HealthCheckResponseSchema,
+               }),
+            },
+         },
+         description: "サービス状態",
+      },
+   },
+})
 
-/**
- * GET /health
- * @description 基本的なヘルスチェック（実際のSupabase接続確認付き）
- */
-healthRoutes.get("/", async (c) => {
-   // Supabase接続確認
+const healthDetailedRoute = createRoute({
+   method: "get",
+   path: "/detailed",
+   tags: ["Health"],
+   summary: "詳細ヘルスチェック",
+   description: "管理者用の詳細なヘルスチェック",
+   responses: {
+      200: {
+         content: {
+            "application/json": {
+               schema: z.object({
+                  success: z.literal(true),
+                  data: HealthCheckResponseSchema,
+               }),
+            },
+         },
+         description: "詳細サービス状態（正常時）",
+      },
+      503: {
+         content: {
+            "application/json": {
+               schema: z.object({
+                  success: z.literal(true),
+                  data: HealthCheckResponseSchema,
+               }),
+            },
+         },
+         description: "サービス異常時",
+      },
+   },
+})
+
+export const healthRoutes = new OpenAPIHono<{ Bindings: Env }>()
+
+healthRoutes.openapi(healthRoute, async (c) => {
    let dbStatus: "connected" | "disconnected" = "disconnected"
    let storageStatus: "connected" | "disconnected" = "disconnected"
 
    try {
       const supabase = getSupabaseAdmin(c.env)
 
-      // データベース接続確認（シンプルなクエリ）
       const { error: dbError } = await supabase
          .from("sound_pins")
          .select("id")
@@ -52,7 +108,6 @@ healthRoutes.get("/", async (c) => {
          })
       }
 
-      // ストレージ接続確認
       const { error: storageError } = await supabase.storage
          .from("sonory-audio")
          .list("", { limit: 1 })
@@ -94,24 +149,16 @@ healthRoutes.get("/", async (c) => {
    return c.json(response)
 })
 
-/**
- * GET /health/detailed
- * @description 詳細なヘルスチェック（管理者用）
- */
-healthRoutes.get("/detailed", async (c) => {
-   // TODO: 実際のサービスチェックを実装
+healthRoutes.openapi(healthDetailedRoute, async (c) => {
    const checkDatabase = async (): Promise<boolean> => {
-      // Supabaseへの接続チェック
       return true
    }
 
    const checkStorage = async (): Promise<boolean> => {
-      // ストレージへの接続チェック
       return true
    }
 
    const checkAI = async (): Promise<boolean> => {
-      // AI APIの可用性チェック
       return true
    }
 
