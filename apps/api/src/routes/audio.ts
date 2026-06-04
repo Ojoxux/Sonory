@@ -59,16 +59,20 @@ const pythonAnalysisResultSchema = z.object({
          confidence: z.number(),
       }),
    ),
-   environment: z.object({
-      primary_type: z.string(),
-      type_scores: z.record(z.string(), z.number()),
-      description: z.string(),
-   }),
-   performance_metrics: z.object({
-      yamnet_inference_time: z.number(),
-      total_time: z.number(),
-      processing_ratio: z.number(),
-   }),
+   environment: z
+      .object({
+         primary_type: z.string(),
+         type_scores: z.record(z.string(), z.number()),
+         description: z.string(),
+      })
+      .optional(),
+   performance_metrics: z
+      .object({
+         yamnet_inference_time: z.number(),
+         total_time: z.number(),
+         processing_ratio: z.number(),
+      })
+      .optional(),
 })
 
 const analysisStatusSchema = z.object({
