@@ -45,7 +45,7 @@ export function useNewPinHandler({
       }
 
       queryClient.invalidateQueries({
-         queryKey: ["nearby-pins"],
+         queryKey: ["pins"],
          refetchType: "active",
       })
    }, [lastCreatedPinId, map, mapStyleLoaded, allPins, queryClient])

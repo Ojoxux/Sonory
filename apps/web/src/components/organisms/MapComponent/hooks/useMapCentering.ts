@@ -1,13 +1,17 @@
 "use client"
 
 import type mapboxgl from "mapbox-gl"
-import { useEffect, useRef } from "react"
+import { useCallback, useEffect, useRef } from "react"
 import type { GeoJSONLineStringFeature, LocationData } from "../mapbox.types"
 
 interface UseMapCenteringOptions {
    map: mapboxgl.Map | null
    position: LocationData | null
    mapStyleLoaded: boolean
+}
+
+interface UseMapCenteringResult {
+   resetAutoCentering: () => void
 }
 
 /**
@@ -17,10 +21,15 @@ export function useMapCentering({
    map,
    position,
    mapStyleLoaded,
-}: UseMapCenteringOptions): void {
+}: UseMapCenteringOptions): UseMapCenteringResult {
    const hasInitialPositionSet = useRef<boolean>(false)
    const userInteractionRef = useRef<boolean>(false)
    const lastInteractionTimeRef = useRef<number>(0)
+
+   const resetAutoCentering = useCallback((): void => {
+      userInteractionRef.current = false
+      lastInteractionTimeRef.current = 0
+   }, [])
 
    useEffect(() => {
       if (!map) return
@@ -46,8 +55,10 @@ export function useMapCentering({
          for (const eventType of eventTypes) {
             map.off(eventType, handleUserInteraction)
          }
+         hasInitialPositionSet.current = false
+         resetAutoCentering()
       }
-   }, [map])
+   }, [map, resetAutoCentering])
 
    useEffect(() => {
       if (!map || !position || !mapStyleLoaded) return
@@ -94,4 +105,6 @@ export function useMapCentering({
          source.setData(pathData)
       }
    }, [map, position, mapStyleLoaded])
+
+   return { resetAutoCentering }
 }
