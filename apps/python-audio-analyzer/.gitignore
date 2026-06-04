@@ -113,6 +113,9 @@ dmypy.json
 cython_debug/
 
 # プロジェクト固有
+# shared-types から自動生成（CI / npm run verify -w @sonory/python-types）
+src/types/generated/
+
 # 音声ファイル（テスト用）
 *.wav
 *.mp3

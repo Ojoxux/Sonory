@@ -54,7 +54,7 @@ export function DebugPanel({
       orbState,
       toggleExpanded,
       setSelectedTab,
-      setOrbState,
+      changeOrbState,
       resetOrbToDefault,
       resetOrbToAnalyzing,
       resetOrbToError,
@@ -145,8 +145,6 @@ export function DebugPanel({
 
                {selectedTab === "yamnet" && (
                   <YAMNetTab
-                     selectedTab={selectedTab}
-                     isExpanded={isExpanded}
                      isInferring={isInferring}
                      results={results}
                      error={error}
@@ -160,7 +158,7 @@ export function DebugPanel({
                {selectedTab === "orb" && (
                   <OrbTab
                      orbState={orbState}
-                     setOrbState={setOrbState}
+                     onChangeOrbState={changeOrbState}
                      onResetDefault={resetOrbToDefault}
                      onResetAnalyzing={resetOrbToAnalyzing}
                      onResetError={resetOrbToError}

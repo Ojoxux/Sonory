@@ -1,14 +1,7 @@
 "use client"
 
 import type { ReactElement } from "react"
-import type { TabType } from "../types"
-
-const TABS: readonly { readonly id: TabType; readonly label: string }[] = [
-   { id: "main", label: "Main" },
-   { id: "map", label: "Map" },
-   { id: "yamnet", label: "YAMNet" },
-   { id: "orb", label: "Orb" },
-] as const
+import { DEBUG_TABS, type TabType } from "../types"
 
 type DebugTabSelectorProps = {
    readonly selectedTab: TabType
@@ -21,7 +14,7 @@ export function DebugTabSelector({
 }: DebugTabSelectorProps): ReactElement {
    return (
       <div className="pointer-events-auto mb-3 flex gap-1">
-         {TABS.map((tab) => (
+         {DEBUG_TABS.map((tab) => (
             <button
                key={tab.id}
                type="button"

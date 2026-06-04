@@ -1,4 +1,4 @@
-# Sonory 開発環境 Docker Compose
+# Sonory Docker Compose 共通設定
 #
 # 使い方:
 #   docker compose up        — 開発環境起動（override.yml自動読み込み）
@@ -13,25 +13,20 @@ services:
     build:
       context: .
       dockerfile: ./apps/web/Dockerfile
-      target: development
-    ports:
-      - "3000:3000"
+      target: runner
     environment:
-      - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=http://host.docker.internal:8787
       - NEXT_PUBLIC_MAPBOX_TOKEN=${NEXT_PUBLIC_MAPBOX_TOKEN}
       - NEXT_TELEMETRY_DISABLED=1
-    volumes:
-      - ./apps/web:/app/apps/web:cached
-      - ./packages:/app/packages:cached
-      - /app/node_modules
-      - web_next:/app/apps/web/.next
     depends_on:
       python-api:
         condition: service_started
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://localhost:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\"",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -42,17 +37,12 @@ services:
     build:
       context: ./apps/python-audio-analyzer
       dockerfile: Dockerfile
-      target: development
+      target: production
     expose:
       - "8000"
-    env_file:
-      - ./apps/python-audio-analyzer/.env
     environment:
-      - ENVIRONMENT=development
-      - LOG_LEVEL=debug
       - REDIS_URL=redis://:${REDIS_PASSWORD:-dev_redis_password}@redis:6379
     volumes:
-      - ./apps/python-audio-analyzer/src:/app/src:cached
       - tf_hub_cache:/app/tf_hub_cache
     depends_on:
       redis:
@@ -68,8 +58,6 @@ services:
   # Redis for caching
   redis:
     image: redis:7.2-alpine3.19
-    ports:
-      - "127.0.0.1:6379:6379"
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD:-dev_redis_password}
     volumes:
@@ -86,4 +74,3 @@ services:
 volumes:
   redis_data:
   tf_hub_cache:
-  web_next:

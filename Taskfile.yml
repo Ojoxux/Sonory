@@ -193,6 +193,7 @@ tasks:
     cmds:
       - docker compose run --rm web npm run lint
       - cd apps/api && npm run lint
+      - docker compose run --rm python-api npm run lint
       - 'echo "Lintが完了しました"'
 
   sonory:type-check:
@@ -200,4 +201,5 @@ tasks:
     cmds:
       - docker compose run --rm web npm run type-check
       - cd apps/api && npm run type-check
+      - docker compose run --rm python-api npm run lint:typecheck
       - 'echo "型チェックが完了しました"'

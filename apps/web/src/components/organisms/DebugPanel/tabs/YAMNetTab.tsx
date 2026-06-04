@@ -6,8 +6,6 @@ import type { DebugLog, PerformanceData } from "../types"
 import { formatRecordedAt } from "../utils"
 
 type YAMNetTabProps = {
-   readonly selectedTab: string
-   readonly isExpanded: boolean
    readonly isInferring: boolean
    readonly results: readonly InferenceResult[]
    readonly error: { message: string } | null
@@ -18,8 +16,6 @@ type YAMNetTabProps = {
 }
 
 export function YAMNetTab({
-   selectedTab,
-   isExpanded,
    isInferring,
    results,
    error,
@@ -30,14 +26,6 @@ export function YAMNetTab({
 }: YAMNetTabProps): ReactElement {
    return (
       <div className="pointer-events-auto max-h-80 space-y-2 overflow-y-auto">
-         <div className="rounded border border-yellow-500/30 bg-yellow-500/20 p-2">
-            <div className="font-bold text-xs text-yellow-300">Debug Info</div>
-            <div className="text-xs text-yellow-200">
-               Selected Tab: {selectedTab} | Expanded:{" "}
-               {isExpanded ? "Yes" : "No"}
-            </div>
-         </div>
-
          <div className="grid grid-cols-2 gap-2">
             <div className="rounded bg-white/5 p-2">
                <div className="text-gray-400">AI Analysis</div>

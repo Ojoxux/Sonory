@@ -1,12 +1,15 @@
 "use client"
 
-import type { Dispatch, ReactElement, SetStateAction } from "react"
+import type { ReactElement } from "react"
 import { AIAnalysisOrb } from "@/components/atoms/AIAnalysisOrb"
 import type { OrbState } from "../types"
 
 type OrbTabProps = {
    readonly orbState: OrbState
-   readonly setOrbState: Dispatch<SetStateAction<OrbState>>
+   readonly onChangeOrbState: <K extends keyof OrbState>(
+      key: K,
+      value: OrbState[K],
+   ) => void
    readonly onResetDefault: () => void
    readonly onResetAnalyzing: () => void
    readonly onResetError: () => void
@@ -15,7 +18,7 @@ type OrbTabProps = {
 
 export function OrbTab({
    orbState,
-   setOrbState,
+   onChangeOrbState,
    onResetDefault,
    onResetAnalyzing,
    onResetError,
@@ -54,10 +57,7 @@ export function OrbTab({
                   max="360"
                   value={orbState.hue}
                   onChange={(e) =>
-                     setOrbState((prev) => ({
-                        ...prev,
-                        hue: Number(e.target.value),
-                     }))
+                     onChangeOrbState("hue", Number(e.target.value))
                   }
                   className="w-full"
                />
@@ -74,10 +74,7 @@ export function OrbTab({
                   step="0.05"
                   value={orbState.hoverIntensity}
                   onChange={(e) =>
-                     setOrbState((prev) => ({
-                        ...prev,
-                        hoverIntensity: Number(e.target.value),
-                     }))
+                     onChangeOrbState("hoverIntensity", Number(e.target.value))
                   }
                   className="w-full"
                />
@@ -87,10 +84,7 @@ export function OrbTab({
                label="Rotate On Hover"
                value={orbState.rotateOnHover}
                onToggle={() =>
-                  setOrbState((prev) => ({
-                     ...prev,
-                     rotateOnHover: !prev.rotateOnHover,
-                  }))
+                  onChangeOrbState("rotateOnHover", !orbState.rotateOnHover)
                }
             />
 
@@ -98,22 +92,14 @@ export function OrbTab({
                label="Force Hover State"
                value={orbState.forceHoverState}
                onToggle={() =>
-                  setOrbState((prev) => ({
-                     ...prev,
-                     forceHoverState: !prev.forceHoverState,
-                  }))
+                  onChangeOrbState("forceHoverState", !orbState.forceHoverState)
                }
             />
 
             <ToggleRow
                label="Cycle Hue (色相サイクル)"
                value={orbState.cycleHue}
-               onToggle={() =>
-                  setOrbState((prev) => ({
-                     ...prev,
-                     cycleHue: !prev.cycleHue,
-                  }))
-               }
+               onToggle={() => onChangeOrbState("cycleHue", !orbState.cycleHue)}
             />
 
             {orbState.cycleHue && (
@@ -128,10 +114,10 @@ export function OrbTab({
                      step="10"
                      value={orbState.hueCycleSpeed}
                      onChange={(e) =>
-                        setOrbState((prev) => ({
-                           ...prev,
-                           hueCycleSpeed: Number(e.target.value),
-                        }))
+                        onChangeOrbState(
+                           "hueCycleSpeed",
+                           Number(e.target.value),
+                        )
                      }
                      className="w-full"
                   />
@@ -149,10 +135,7 @@ export function OrbTab({
                   step="20"
                   value={orbState.size}
                   onChange={(e) =>
-                     setOrbState((prev) => ({
-                        ...prev,
-                        size: Number(e.target.value),
-                     }))
+                     onChangeOrbState("size", Number(e.target.value))
                   }
                   className="w-full"
                />

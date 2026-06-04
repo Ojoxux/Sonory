@@ -11,6 +11,7 @@ export interface ApiClient {
    readonly get: <T>(url: string) => Promise<T>
    readonly post: <T>(url: string, body: unknown) => Promise<T>
    readonly postFormData: <T>(url: string, formData: FormData) => Promise<T>
+   readonly delete: <T>(url: string) => Promise<T>
 }
 
 /**
@@ -61,6 +62,12 @@ export function createApiClient(
          const response = await fetchFn(url, {
             method: "POST",
             body: formData,
+         })
+         return handleResponse<T>(response)
+      },
+      delete: async <T>(url: string): Promise<T> => {
+         const response = await fetchFn(url, {
+            method: "DELETE",
          })
          return handleResponse<T>(response)
       },
