@@ -14,8 +14,8 @@ COPY turbo.json ./
 COPY apps/web/package*.json ./apps/web/
 COPY packages/ ./packages/
 
-# Install dependencies
-RUN npm ci --only=production
+# Install dependencies required for the production build
+RUN npm ci
 
 # Rebuild the source code only when needed
 FROM base AS builder

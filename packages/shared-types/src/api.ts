@@ -1,29 +1,16 @@
 import { z } from "zod"
-
-/**
- * 位置情報のスキーマ
- */
-export const LocationSchema = z.object({
-   lat: z.number().min(-90).max(90),
-   lng: z.number().min(-180).max(180),
-   accuracy: z.number().positive().optional(),
-})
-
-/**
- * 天気情報のスキーマ
- */
-export const WeatherDataSchema = z.object({
-   temperature: z.number(),
-   condition: z.enum(["sunny", "cloudy", "rainy", "snowy", "foggy", "windy"]),
-   windSpeed: z.number().optional(),
-   humidity: z.number().min(0).max(100).optional(),
-})
+import {
+   LocationCoordinatesSchema,
+   MapBoundsSchema,
+   TimeTagSchema,
+} from "./location.js"
+import { WeatherDataSchema } from "./weather.js"
 
 /**
  * 音声ピン作成リクエストのスキーマ
  */
 export const SoundPinCreateRequestSchema = z.object({
-   location: LocationSchema,
+   location: LocationCoordinatesSchema,
    audio: z.object({
       file: z.instanceof(File),
       duration: z.number().positive(),
@@ -32,7 +19,7 @@ export const SoundPinCreateRequestSchema = z.object({
    context: z
       .object({
          weather: WeatherDataSchema.optional(),
-         timeTag: z.enum(["朝", "昼", "夕", "夜"]),
+         timeTag: TimeTagSchema,
          deviceInfo: z.string().optional(),
       })
       .optional(),
@@ -74,12 +61,7 @@ export const SoundPinSchema = z.object({
  * 近隣ピン検索クエリのスキーマ
  */
 export const NearbyPinsQuerySchema = z.object({
-   bounds: z.object({
-      north: z.number(),
-      south: z.number(),
-      east: z.number(),
-      west: z.number(),
-   }),
+   bounds: MapBoundsSchema,
    limit: z.number().positive().max(100).default(50),
    categories: z.array(z.string()).optional(),
 })
@@ -92,7 +74,7 @@ export const SearchPinsQuerySchema = z.object({
       .object({
          lat: z.number(),
          lng: z.number(),
-         radius: z.number().positive(), // km
+         radius: z.number().positive(),
       })
       .optional(),
    timeRange: z
@@ -134,9 +116,7 @@ export interface APIErrorResponse {
    error: APIError
 }
 
-// 型エクスポート
-export type Location = z.infer<typeof LocationSchema>
-export type WeatherData = z.infer<typeof WeatherDataSchema>
+// Zodスキーマから推論した型
 export type SoundPinCreateRequest = z.infer<typeof SoundPinCreateRequestSchema>
 export type AIAnalysisResult = z.infer<typeof AIAnalysisResultSchema>
 export type SoundPin = z.infer<typeof SoundPinSchema>
@@ -169,88 +149,3 @@ export const ERROR_CODES = {
 } as const
 
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES]
-
-/**
- * Location coordinates for API requests (Backend API用)
- */
-export interface LocationCoordinates {
-   lat: number
-   lng: number
-   accuracy?: number
-}
-
-/**
- * Weather context for sound pins (Backend API用)
- */
-export interface WeatherContext {
-   temperature: number
-   condition?: string
-   windSpeed?: number
-   humidity?: number
-}
-
-/**
- * Audio metadata for sound pins (Backend API用)
- */
-export interface AudioMetadata {
-   id: string
-   filename: string
-   size: number
-   format: "webm" | "mp3" | "wav" | "mp4" | "m4a" | "flac" | "ogg"
-   duration: number
-   url: string
-   uploadedAt: string
-}
-
-/**
- * Audio upload result (Backend API用)
- */
-export interface AudioUploadResult {
-   audioId: string
-   audioUrl: string
-   audioFilePath: string // Permanent file path in storage
-   metadata: AudioMetadata
-}
-
-/**
- * AI analysis result for sound pins (Backend API用)
- */
-export interface AIAnalysis {
-   transcription: string
-   categories: {
-      emotion: string
-      topic: string
-      language: string
-      confidence: number
-   }
-   summary?: string
-}
-
-/**
- * Audio data for sound pins (simplified for API responses)
- */
-export interface SoundPinAudio {
-   url: string
-   duration: number
-   format: "webm" | "mp3" | "wav" | "mp4" | "m4a" | "flac" | "ogg"
-}
-
-/**
- * Sound pin domain model (Backend API用)
- */
-export interface SoundPinAPI {
-   id: string
-   userId?: string
-   location: LocationCoordinates
-   audio: SoundPinAudio
-   weather?: WeatherContext
-   timeTag?: "朝" | "昼" | "夕" | "夜"
-   aiAnalysis?: AIAnalysis
-   status: "active" | "processing" | "deleted" | "reported"
-   title?: string
-   metadata?: {
-      deviceInfo?: string
-   }
-   createdAt: string
-   updatedAt: string
-}

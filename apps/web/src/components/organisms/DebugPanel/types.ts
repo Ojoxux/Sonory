@@ -62,9 +62,19 @@ export type PerformanceData = {
 }
 
 /**
+ * DebugPanelのタブ定義
+ */
+export const DEBUG_TABS = [
+   { id: "main", label: "Main" },
+   { id: "map", label: "Map" },
+   { id: "yamnet", label: "YAMNet" },
+   { id: "orb", label: "Orb" },
+] as const
+
+/**
  * DebugPanelのタブタイプ
  */
-export type TabType = "main" | "yamnet" | "map" | "orb"
+export type TabType = (typeof DEBUG_TABS)[number]["id"]
 
 /**
  * AIAnalysisOrbの設定状態
