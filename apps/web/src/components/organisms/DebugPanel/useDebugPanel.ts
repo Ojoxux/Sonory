@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import type {
    DebugLog,
    DebugPanelProps,
@@ -76,6 +76,13 @@ export function useDebugPanelState() {
       })
    }
 
+   const changeOrbState = useCallback(
+      <K extends keyof OrbState>(key: K, value: OrbState[K]) => {
+         setOrbState((prev) => ({ ...prev, [key]: value }))
+      },
+      [],
+   )
+
    return {
       isExpanded,
       selectedTab,
@@ -83,7 +90,7 @@ export function useDebugPanelState() {
       setIsExpanded,
       setSelectedTab,
       toggleExpanded,
-      setOrbState,
+      changeOrbState,
       resetOrbToDefault,
       resetOrbToAnalyzing,
       resetOrbToError,
