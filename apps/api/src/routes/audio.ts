@@ -4,14 +4,116 @@ import type { Context } from "hono"
 import type { Env } from "../index"
 import { APIException } from "../middleware/error"
 import { rateLimits } from "../middleware/rateLimit"
+import { onOpenAPIValidationError } from "../middleware/validation"
 import { AudioService } from "../services/audio.service"
 
-const app = new OpenAPIHono<{ Bindings: Env }>()
-
-const successResponseSchema = z.object({
-   success: z.literal(true),
-   data: z.unknown(),
+const app = new OpenAPIHono<{ Bindings: Env }>({
+   defaultHook: onOpenAPIValidationError,
 })
+
+const audioFormatSchema = z.enum([
+   "webm",
+   "mp3",
+   "wav",
+   "mp4",
+   "m4a",
+   "flac",
+   "ogg",
+])
+
+const audioMetadataSchema = z.object({
+   id: z.string(),
+   filename: z.string(),
+   size: z.number(),
+   format: audioFormatSchema,
+   duration: z.number(),
+   url: z.string().optional(),
+   uploadedAt: z.string(),
+})
+
+const uploadUrlDataSchema = z.object({
+   uploadUrl: z.string(),
+   filePath: z.string(),
+   expiresAt: z.string(),
+   maxFileSize: z.number(),
+})
+
+const audioUploadResultSchema = z.object({
+   audioId: z.string(),
+   audioUrl: z.string(),
+   audioFilePath: z.string(),
+   metadata: audioMetadataSchema,
+})
+
+const analysisJobResultSchema = z.object({
+   jobId: z.string(),
+   status: z.enum(["queued", "processing", "completed", "failed"]),
+   estimatedDuration: z.string().optional(),
+   statusUrl: z.string(),
+})
+
+const pythonAnalysisResultSchema = z.object({
+   classifications: z.array(
+      z.object({
+         label: z.string(),
+         confidence: z.number(),
+      }),
+   ),
+   environment: z.object({
+      primary_type: z.string(),
+      type_scores: z.record(z.string(), z.number()),
+      description: z.string(),
+   }),
+   performance_metrics: z.object({
+      yamnet_inference_time: z.number(),
+      total_time: z.number(),
+      processing_ratio: z.number(),
+   }),
+})
+
+const analysisStatusSchema = z.object({
+   jobId: z.string(),
+   status: z.enum(["queued", "processing", "completed", "failed"]),
+   result: pythonAnalysisResultSchema.optional(),
+   error: z
+      .object({
+         message: z.string(),
+         code: z.string().optional(),
+      })
+      .optional(),
+   createdAt: z.string(),
+   startedAt: z.string().optional(),
+   completedAt: z.string().optional(),
+   retryCount: z.number(),
+})
+
+const errorResponseSchema = z.object({
+   success: z.literal(false),
+   error: z.object({
+      code: z.string(),
+      message: z.string(),
+      details: z.unknown().optional(),
+      timestamp: z.string(),
+      requestId: z.string(),
+   }),
+})
+
+const standardErrorResponses = {
+   400: {
+      content: { "application/json": { schema: errorResponseSchema } },
+      description: "リクエスト不正",
+   },
+   500: {
+      content: { "application/json": { schema: errorResponseSchema } },
+      description: "サーバーエラー",
+   },
+}
+
+const successResponseSchema = <T extends z.ZodType>(data: T) =>
+   z.object({
+      success: z.literal(true),
+      data,
+   })
 
 /**
  * Route definitions
@@ -25,6 +127,7 @@ const uploadUrlRoute = createRoute({
    middleware: [rateLimits.default],
    request: {
       body: {
+         required: true,
          content: {
             "application/json": {
                schema: z.object({
@@ -37,9 +140,14 @@ const uploadUrlRoute = createRoute({
    },
    responses: {
       200: {
-         content: { "application/json": { schema: successResponseSchema } },
+         content: {
+            "application/json": {
+               schema: successResponseSchema(uploadUrlDataSchema),
+            },
+         },
          description: "Presigned URLと関連情報",
       },
+      ...standardErrorResponses,
    },
 })
 
@@ -50,11 +158,28 @@ const uploadRoute = createRoute({
    summary: "音声ファイルアップロード",
    description: "音声ファイルを直接アップロード（FormData）",
    middleware: [rateLimits.audioUpload],
+   request: {
+      body: {
+         content: {
+            "multipart/form-data": {
+               schema: z.object({
+                  audio: z.any(),
+                  userId: z.string().optional(),
+               }),
+            },
+         },
+      },
+   },
    responses: {
       200: {
-         content: { "application/json": { schema: successResponseSchema } },
+         content: {
+            "application/json": {
+               schema: successResponseSchema(audioUploadResultSchema),
+            },
+         },
          description: "アップロード結果",
       },
+      ...standardErrorResponses,
    },
 })
 
@@ -72,9 +197,19 @@ const deleteAudioRoute = createRoute({
    },
    responses: {
       200: {
-         content: { "application/json": { schema: successResponseSchema } },
+         content: {
+            "application/json": {
+               schema: successResponseSchema(
+                  z.object({
+                     deleted: z.boolean(),
+                     deletedPath: z.string(),
+                  }),
+               ),
+            },
+         },
          description: "削除結果",
       },
+      ...standardErrorResponses,
    },
 })
 
@@ -92,9 +227,14 @@ const getAudioMetadataRoute = createRoute({
    },
    responses: {
       200: {
-         content: { "application/json": { schema: successResponseSchema } },
+         content: {
+            "application/json": {
+               schema: successResponseSchema(audioMetadataSchema),
+            },
+         },
          description: "メタデータ",
       },
+      ...standardErrorResponses,
    },
 })
 
@@ -111,6 +251,7 @@ const analyzeAudioRoute = createRoute({
          audioId: z.string(),
       }),
       body: {
+         required: true,
          content: {
             "application/json": {
                schema: z.object({
@@ -123,9 +264,14 @@ const analyzeAudioRoute = createRoute({
    },
    responses: {
       200: {
-         content: { "application/json": { schema: successResponseSchema } },
+         content: {
+            "application/json": {
+               schema: successResponseSchema(analysisJobResultSchema),
+            },
+         },
          description: "ジョブ投入結果とステータスURL",
       },
+      ...standardErrorResponses,
    },
 })
 
@@ -144,9 +290,14 @@ const analysisStatusRoute = createRoute({
    },
    responses: {
       200: {
-         content: { "application/json": { schema: successResponseSchema } },
+         content: {
+            "application/json": {
+               schema: successResponseSchema(analysisStatusSchema),
+            },
+         },
          description: "ジョブステータスと分析結果",
       },
+      ...standardErrorResponses,
    },
 })
 
@@ -158,9 +309,19 @@ const processQueueRoute = createRoute({
    description: "キューから分析ジョブを取得して処理（内部用・Cron Trigger用）",
    responses: {
       200: {
-         content: { "application/json": { schema: successResponseSchema } },
+         content: {
+            "application/json": {
+               schema: successResponseSchema(
+                  z.object({
+                     processedCount: z.number(),
+                     message: z.string(),
+                  }),
+               ),
+            },
+         },
          description: "処理結果",
       },
+      ...standardErrorResponses,
    },
 })
 
@@ -186,10 +347,13 @@ app.openapi(uploadUrlRoute, async (c) => {
 
       const result = await audioService.generateUploadUrl(fileName, userId)
 
-      return c.json({
-         success: true as const,
-         data: result,
-      })
+      return c.json(
+         {
+            success: true as const,
+            data: result,
+         },
+         200,
+      )
    } catch (error) {
       if (error instanceof APIException) {
          throw error
@@ -210,9 +374,12 @@ app.openapi(uploadRoute, async (c) => {
    )
 
    try {
-      const formData = await c.req.formData()
-      const fileEntry = formData.get("audio")
-      const userIdEntry = formData.get("userId")
+      const formData = c.req.valid("form") as {
+         audio?: File | string
+         userId?: string
+      }
+      const fileEntry = formData.audio
+      const userIdEntry = formData.userId
 
       const file =
          fileEntry && typeof fileEntry === "object" && "name" in fileEntry
@@ -238,10 +405,13 @@ app.openapi(uploadRoute, async (c) => {
 
       const result = await audioService.uploadAudio(file, userId || undefined)
 
-      return c.json({
-         success: true as const,
-         data: result,
-      })
+      return c.json(
+         {
+            success: true as const,
+            data: result,
+         },
+         200,
+      )
    } catch (error) {
       if (error instanceof APIException) {
          throw error
@@ -275,13 +445,16 @@ app.openapi(deleteAudioRoute, async (c) => {
 
       const success = await audioService.deleteAudio(filePath)
 
-      return c.json({
-         success: true as const,
-         data: {
-            deleted: success,
-            deletedPath: filePath,
+      return c.json(
+         {
+            success: true as const,
+            data: {
+               deleted: success,
+               deletedPath: filePath,
+            },
          },
-      })
+         200,
+      )
    } catch (error) {
       if (error instanceof APIException) {
          throw error
@@ -317,10 +490,13 @@ app.openapi(getAudioMetadataRoute, async (c) => {
          uploadedAt: new Date().toISOString(),
       }
 
-      return c.json({
-         success: true as const,
-         data: metadata,
-      })
+      return c.json(
+         {
+            success: true as const,
+            data: metadata,
+         },
+         200,
+      )
    } catch (error) {
       if (error instanceof APIException) {
          throw error
@@ -378,10 +554,13 @@ app.openapi(analyzeAudioRoute, async (c) => {
          }
       }
 
-      return c.json({
-         success: true as const,
-         data: jobResult,
-      })
+      return c.json(
+         {
+            success: true as const,
+            data: jobResult,
+         },
+         200,
+      )
    } catch (error) {
       if (error instanceof APIException) {
          throw error
@@ -421,10 +600,13 @@ app.openapi(analysisStatusRoute, async (c) => {
 
       const jobStatus = await audioService.getAnalysisStatus(jobId)
 
-      return c.json({
-         success: true as const,
-         data: jobStatus,
-      })
+      return c.json(
+         {
+            success: true as const,
+            data: jobStatus,
+         },
+         200,
+      )
    } catch (error) {
       if (error instanceof APIException) {
          throw error
@@ -447,13 +629,16 @@ app.openapi(processQueueRoute, async (c) => {
    try {
       const processedCount = await audioService.processAnalysisQueue()
 
-      return c.json({
-         success: true as const,
-         data: {
-            processedCount,
-            message: `Processed ${processedCount} analysis jobs`,
+      return c.json(
+         {
+            success: true as const,
+            data: {
+               processedCount,
+               message: `Processed ${processedCount} analysis jobs`,
+            },
          },
-      })
+         200,
+      )
    } catch (error) {
       if (error instanceof APIException) {
          throw error

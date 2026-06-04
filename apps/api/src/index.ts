@@ -115,6 +115,10 @@ app.doc("/api/openapi.json", {
 
 // Swagger UI（開発環境のみ）
 app.get("/api/docs", (c) => {
+   if (c.env.ENVIRONMENT !== "development") {
+      return c.notFound()
+   }
+
    return c.html(`<!DOCTYPE html>
 <html>
 <head>
