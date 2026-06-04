@@ -187,7 +187,6 @@ export interface components {
       Body_analyze_audio_upload_api_v1_analyze_audio_upload_post: {
          /**
           * File
-          * Format: binary
           * @description 音声ファイル
           */
          file: string
@@ -289,6 +288,10 @@ export interface components {
          msg: string
          /** Error Type */
          type: string
+         /** Input */
+         input?: unknown
+         /** Context */
+         ctx?: Record<string, never>
       }
    }
    responses: never
