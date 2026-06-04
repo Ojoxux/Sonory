@@ -119,6 +119,42 @@ const successResponseSchema = <T extends z.ZodType>(data: T) =>
       data,
    })
 
+const deleteAudioData = async (
+   c: Context<{ Bindings: Env }>,
+   encodedFilePath?: string,
+) => {
+   const audioService = new AudioService(c)
+
+   try {
+      if (!encodedFilePath) {
+         throw new APIException(
+            ERROR_CODES.INVALID_AUDIO_FORMAT,
+            "File path is required",
+            400,
+         )
+      }
+
+      const filePath = decodeURIComponent(encodedFilePath)
+      const success = await audioService.deleteAudio(filePath)
+
+      return {
+         deleted: success,
+         deletedPath: filePath,
+      }
+   } catch (error) {
+      if (error instanceof APIException) {
+         throw error
+      }
+
+      throw new APIException(
+         ERROR_CODES.STORAGE_ERROR,
+         "Failed to delete audio file",
+         500,
+         error instanceof Error ? { message: error.message } : undefined,
+      )
+   }
+}
+
 /**
  * Route definitions
  */
@@ -164,6 +200,7 @@ const uploadRoute = createRoute({
    middleware: [rateLimits.audioUpload],
    request: {
       body: {
+         required: true,
          content: {
             "multipart/form-data": {
                schema: z.object({
@@ -431,46 +468,34 @@ app.openapi(uploadRoute, async (c) => {
 })
 
 app.openapi(deleteAudioRoute, async (c) => {
-   const audioService = new AudioService(
-      c as unknown as Context<{ Bindings: Env }>,
-   )
    const { filePath: encodedFilePath } = c.req.valid("param")
+   const data = await deleteAudioData(
+      c as unknown as Context<{ Bindings: Env }>,
+      encodedFilePath,
+   )
 
-   try {
-      if (!encodedFilePath) {
-         throw new APIException(
-            ERROR_CODES.INVALID_AUDIO_FORMAT,
-            "File path is required",
-            400,
-         )
-      }
+   return c.json(
+      {
+         success: true as const,
+         data,
+      },
+      200,
+   )
+})
 
-      const filePath = decodeURIComponent(encodedFilePath)
+app.delete("/:filePath{.+}", rateLimits.default, async (c) => {
+   const data = await deleteAudioData(
+      c as unknown as Context<{ Bindings: Env }>,
+      c.req.param("filePath"),
+   )
 
-      const success = await audioService.deleteAudio(filePath)
-
-      return c.json(
-         {
-            success: true as const,
-            data: {
-               deleted: success,
-               deletedPath: filePath,
-            },
-         },
-         200,
-      )
-   } catch (error) {
-      if (error instanceof APIException) {
-         throw error
-      }
-
-      throw new APIException(
-         ERROR_CODES.STORAGE_ERROR,
-         "Failed to delete audio file",
-         500,
-         error instanceof Error ? { message: error.message } : undefined,
-      )
-   }
+   return c.json(
+      {
+         success: true as const,
+         data,
+      },
+      200,
+   )
 })
 
 app.openapi(getAudioMetadataRoute, async (c) => {

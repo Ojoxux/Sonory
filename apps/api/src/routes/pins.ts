@@ -206,6 +206,7 @@ const uploadPinRoute = createRoute({
    description: "音声ファイルをアップロードしてピンを作成",
    request: {
       body: {
+         required: true,
          content: {
             "multipart/form-data": {
                schema: z.object({
