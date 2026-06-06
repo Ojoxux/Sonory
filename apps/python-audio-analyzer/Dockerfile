@@ -3,11 +3,15 @@
 # Use specific version for security
 FROM python:3.13-slim AS base
 
+COPY --from=ghcr.io/astral-sh/uv:0.11.16 /uv /uvx /bin/
+
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    UV_PYTHON_DOWNLOADS=0 \
+    UV_LINK_MODE=copy \
     NUMBA_CACHE_DIR=/tmp/numba_cache \
     LIBROSA_CACHE_DIR=/tmp/librosa_cache \
     TFHUB_CACHE_DIR=/app/tf_hub_cache
@@ -41,7 +45,8 @@ RUN apt-get update && apt-get install -y \
 
 # Copy requirements and install dependencies
 COPY pyproject.toml ./
-RUN pip install -e .[dev]
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv pip install --system -e .[dev]
 
 # Copy source code
 COPY . .
@@ -61,7 +66,8 @@ FROM base AS production
 
 # Copy requirements and install dependencies (production only)
 COPY pyproject.toml ./
-RUN pip install .
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv pip install --system .
 
 # Copy source code
 COPY src/ ./src/
@@ -78,4 +84,4 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 # Command for production
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"] 
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
