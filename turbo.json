@@ -42,6 +42,19 @@
 			"inputs": ["$TURBO_DEFAULT$", "../shared-types/src/**"],
 			"outputs": ["src/types/generated/**"]
 		},
+		"generate:openapi-types": {
+			"dependsOn": ["^build"],
+			"inputs": [
+				"$TURBO_DEFAULT$",
+				"../../apps/api/src/**",
+				"../../apps/python-audio-analyzer/src/**"
+			],
+			"outputs": ["openapi/**", "src/generated/**"]
+		},
+		"check:generated": {
+			"dependsOn": ["^build"],
+			"cache": false
+		},
 		"python:install": {
 			"cache": false,
 			"inputs": ["pyproject.toml", "requirements*.txt"]

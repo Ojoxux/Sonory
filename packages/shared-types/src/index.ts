@@ -4,6 +4,8 @@
 export * from "./api.js"
 // 音声・分析関連
 export * from "./audio.js"
+// OpenAPI から自動生成された API 型
+export * from "./generated/index.js"
 export * from "./location.js"
 
 // 音声ピン関連

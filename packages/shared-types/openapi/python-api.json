@@ -1,0 +1,444 @@
+{
+   "openapi": "3.1.0",
+   "info": {
+      "title": "Sonory Audio Analyzer",
+      "description": "YAMNet-based audio classification service for environmental sound analysis",
+      "version": "0.1.0"
+   },
+   "paths": {
+      "/api/v1/analyze/audio": {
+         "post": {
+            "summary": "音響分析実行",
+            "description": "音声ファイルをYAMNetで分析し、日本語カテゴリと環境タイプを返却します",
+            "operationId": "analyze_audio_url_api_v1_analyze_audio_post",
+            "requestBody": {
+               "content": {
+                  "application/json": {
+                     "schema": {
+                        "$ref": "#/components/schemas/AudioAnalysisRequest"
+                     }
+                  }
+               },
+               "required": true
+            },
+            "responses": {
+               "200": {
+                  "description": "Successful Response",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/AnalysisResult"
+                        }
+                     }
+                  }
+               },
+               "422": {
+                  "description": "Validation Error",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/HTTPValidationError"
+                        }
+                     }
+                  }
+               }
+            }
+         }
+      },
+      "/api/v1/analyze/audio/upload": {
+         "post": {
+            "summary": "音響分析実行（ファイルアップロード）",
+            "description": "アップロードされた音声ファイルをYAMNetで分析します",
+            "operationId": "analyze_audio_upload_api_v1_analyze_audio_upload_post",
+            "requestBody": {
+               "content": {
+                  "multipart/form-data": {
+                     "schema": {
+                        "$ref": "#/components/schemas/Body_analyze_audio_upload_api_v1_analyze_audio_upload_post"
+                     }
+                  }
+               },
+               "required": true
+            },
+            "responses": {
+               "200": {
+                  "description": "Successful Response",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/AnalysisResult"
+                        }
+                     }
+                  }
+               },
+               "422": {
+                  "description": "Validation Error",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/HTTPValidationError"
+                        }
+                     }
+                  }
+               }
+            }
+         }
+      },
+      "/api/v1/health": {
+         "get": {
+            "summary": "ヘルスチェック",
+            "description": "サービスの健全性を確認します",
+            "operationId": "health_check_api_v1_health_get",
+            "responses": {
+               "200": {
+                  "description": "Successful Response",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/HealthResponse"
+                        }
+                     }
+                  }
+               }
+            }
+         }
+      },
+      "/api/v1/stats": {
+         "get": {
+            "summary": "分析統計取得",
+            "description": "音響分析の統計情報を取得します",
+            "operationId": "get_analysis_stats_api_v1_stats_get",
+            "responses": {
+               "200": {
+                  "description": "Successful Response",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "additionalProperties": true,
+                           "type": "object",
+                           "title": "Response Get Analysis Stats Api V1 Stats Get"
+                        }
+                     }
+                  }
+               }
+            }
+         }
+      }
+   },
+   "components": {
+      "schemas": {
+         "AnalysisResult": {
+            "properties": {
+               "classifications": {
+                  "items": {
+                     "$ref": "#/components/schemas/ClassificationResult"
+                  },
+                  "type": "array",
+                  "title": "Classifications",
+                  "description": "分類結果リスト"
+               },
+               "environment": {
+                  "$ref": "#/components/schemas/EnvironmentAnalysis",
+                  "description": "環境分析結果"
+               },
+               "audio_metadata": {
+                  "$ref": "#/components/schemas/AudioMetadata",
+                  "description": "音声メタデータ"
+               },
+               "processing_info": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Processing Info",
+                  "description": "処理情報"
+               },
+               "performance_metrics": {
+                  "additionalProperties": {
+                     "type": "number"
+                  },
+                  "type": "object",
+                  "title": "Performance Metrics",
+                  "description": "パフォーマンス指標"
+               },
+               "timestamp": {
+                  "type": "number",
+                  "title": "Timestamp",
+                  "description": "分析実行時刻"
+               }
+            },
+            "type": "object",
+            "required": [
+               "classifications",
+               "environment",
+               "audio_metadata",
+               "processing_info",
+               "performance_metrics"
+            ],
+            "title": "AnalysisResult",
+            "description": "総合分析結果\n\n音響分析の完全な結果を表現します。"
+         },
+         "AudioAnalysisRequest": {
+            "properties": {
+               "audio_url": {
+                  "type": "string",
+                  "maxLength": 2083,
+                  "minLength": 1,
+                  "format": "uri",
+                  "title": "Audio Url",
+                  "description": "音声ファイルのURL"
+               },
+               "top_k": {
+                  "type": "integer",
+                  "maximum": 20.0,
+                  "minimum": 1.0,
+                  "title": "Top K",
+                  "description": "返却する上位分類結果数",
+                  "default": 5
+               },
+               "max_retries": {
+                  "type": "integer",
+                  "maximum": 10.0,
+                  "minimum": 0.0,
+                  "title": "Max Retries",
+                  "description": "最大リトライ回数",
+                  "default": 3
+               }
+            },
+            "type": "object",
+            "required": [
+               "audio_url"
+            ],
+            "title": "AudioAnalysisRequest",
+            "description": "音響分析リクエスト（URL指定）\n\n音声URLを指定して分析を要求するためのスキーマ。"
+         },
+         "AudioMetadata": {
+            "properties": {
+               "duration": {
+                  "type": "number",
+                  "title": "Duration",
+                  "description": "音声長さ（秒）"
+               },
+               "sample_rate": {
+                  "type": "integer",
+                  "title": "Sample Rate",
+                  "description": "サンプリングレート（Hz）"
+               },
+               "channels": {
+                  "type": "integer",
+                  "title": "Channels",
+                  "description": "チャンネル数"
+               },
+               "format": {
+                  "anyOf": [
+                     {
+                        "type": "string"
+                     },
+                     {
+                        "type": "null"
+                     }
+                  ],
+                  "title": "Format",
+                  "description": "音声フォーマット"
+               },
+               "file_size": {
+                  "anyOf": [
+                     {
+                        "type": "integer"
+                     },
+                     {
+                        "type": "null"
+                     }
+                  ],
+                  "title": "File Size",
+                  "description": "ファイルサイズ（バイト）"
+               }
+            },
+            "type": "object",
+            "required": [
+               "duration",
+               "sample_rate",
+               "channels"
+            ],
+            "title": "AudioMetadata",
+            "description": "音声メタデータ\n\n音声ファイルの基本情報を格納します。"
+         },
+         "Body_analyze_audio_upload_api_v1_analyze_audio_upload_post": {
+            "properties": {
+               "file": {
+                  "type": "string",
+                  "contentMediaType": "application/octet-stream",
+                  "title": "File",
+                  "description": "音声ファイル"
+               },
+               "top_k": {
+                  "type": "integer",
+                  "title": "Top K",
+                  "description": "返却する上位分類結果数",
+                  "default": 5
+               }
+            },
+            "type": "object",
+            "required": [
+               "file"
+            ],
+            "title": "Body_analyze_audio_upload_api_v1_analyze_audio_upload_post"
+         },
+         "ClassificationResult": {
+            "properties": {
+               "label": {
+                  "type": "string",
+                  "title": "Label",
+                  "description": "分類ラベル（日本語）"
+               },
+               "confidence": {
+                  "type": "number",
+                  "maximum": 1.0,
+                  "minimum": 0.0,
+                  "title": "Confidence",
+                  "description": "信頼度（0-1）"
+               }
+            },
+            "type": "object",
+            "required": [
+               "label",
+               "confidence"
+            ],
+            "title": "ClassificationResult",
+            "description": "分類結果\n\nYAMNetによる音響分類の個別結果を表現します。"
+         },
+         "EnvironmentAnalysis": {
+            "properties": {
+               "primary_type": {
+                  "type": "string",
+                  "title": "Primary Type",
+                  "description": "主要環境タイプ"
+               },
+               "type_scores": {
+                  "additionalProperties": {
+                     "type": "number"
+                  },
+                  "type": "object",
+                  "title": "Type Scores",
+                  "description": "環境タイプ別信頼度"
+               },
+               "description": {
+                  "anyOf": [
+                     {
+                        "type": "string"
+                     },
+                     {
+                        "type": "null"
+                     }
+                  ],
+                  "title": "Description",
+                  "description": "環境の説明"
+               }
+            },
+            "type": "object",
+            "required": [
+               "primary_type",
+               "type_scores"
+            ],
+            "title": "EnvironmentAnalysis",
+            "description": "環境分析結果\n\n音響環境の特徴分析結果を表現します。"
+         },
+         "HTTPValidationError": {
+            "properties": {
+               "detail": {
+                  "items": {
+                     "$ref": "#/components/schemas/ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+               }
+            },
+            "type": "object",
+            "title": "HTTPValidationError"
+         },
+         "HealthResponse": {
+            "properties": {
+               "status": {
+                  "type": "string",
+                  "title": "Status",
+                  "description": "サービス状態"
+               },
+               "service": {
+                  "type": "string",
+                  "title": "Service",
+                  "description": "サービス名"
+               },
+               "version": {
+                  "type": "string",
+                  "title": "Version",
+                  "description": "バージョン"
+               },
+               "timestamp": {
+                  "type": "number",
+                  "title": "Timestamp",
+                  "description": "チェック時刻"
+               },
+               "details": {
+                  "anyOf": [
+                     {
+                        "additionalProperties": true,
+                        "type": "object"
+                     },
+                     {
+                        "type": "null"
+                     }
+                  ],
+                  "title": "Details",
+                  "description": "詳細情報"
+               }
+            },
+            "type": "object",
+            "required": [
+               "status",
+               "service",
+               "version"
+            ],
+            "title": "HealthResponse",
+            "description": "ヘルスチェックレスポンス\n\nサービスの健全性情報を表現します。"
+         },
+         "ValidationError": {
+            "properties": {
+               "loc": {
+                  "items": {
+                     "anyOf": [
+                        {
+                           "type": "string"
+                        },
+                        {
+                           "type": "integer"
+                        }
+                     ]
+                  },
+                  "type": "array",
+                  "title": "Location"
+               },
+               "msg": {
+                  "type": "string",
+                  "title": "Message"
+               },
+               "type": {
+                  "type": "string",
+                  "title": "Error Type"
+               },
+               "input": {
+                  "title": "Input"
+               },
+               "ctx": {
+                  "type": "object",
+                  "title": "Context"
+               }
+            },
+            "type": "object",
+            "required": [
+               "loc",
+               "msg",
+               "type"
+            ],
+            "title": "ValidationError"
+         }
+      }
+   }
+}

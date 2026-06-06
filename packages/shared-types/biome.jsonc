@@ -1,7 +1,13 @@
 {
-   "$schema": "https://biomejs.dev/schemas/2.3.4/schema.json",
+   "$schema": "https://biomejs.dev/schemas/2.3.8/schema.json",
    "extends": ["../config/biome.json"],
    "files": {
-      "experimentalScannerIgnores": ["dist/**", "*.d.ts", "*.d.ts.map"]
+      "includes": [
+         "**",
+         "!!dist/**",
+         "!!openapi/**",
+         "!!**/*.d.ts",
+         "!!**/*.d.ts.map"
+      ]
    }
 }

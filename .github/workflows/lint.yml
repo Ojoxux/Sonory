@@ -61,3 +61,7 @@ jobs:
         run: |
           npm run build -w @sonory/shared-types
           npm run verify -w @sonory/python-types
+
+      # 8. OpenAPI Spec と生成型の整合性を検証
+      - name: Verify generated OpenAPI types
+        run: npm run check:generated --workspace=@sonory/shared-types
