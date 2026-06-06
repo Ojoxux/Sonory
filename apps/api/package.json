@@ -19,7 +19,7 @@
       "format:fix": "biome format . --write",
       "type-check": "tsc --noEmit",
       "validate": "npm run lint && npm run type-check",
-      "test": "vitest",
+      "test": "vitest --passWithNoTests",
       "test:watch": "vitest --watch",
       "precommit": "npm run lint:fix && npm run format:fix",
       "clean": "rm -rf dist .wrangler"
@@ -41,6 +41,7 @@
       "tsx": "^4.21.0",
       "typescript": "^5.9.3",
       "vitest": "^4.1.7",
+      "vitest-environment-miniflare": "^2.14.4",
       "wrangler": "^4.93.1"
    }
 }
