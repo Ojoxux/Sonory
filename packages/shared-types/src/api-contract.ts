@@ -78,7 +78,6 @@ export const SoundPinApiSchema = z.object({
 })
 
 export const CreatePinRequestSchema = z.object({
-   userId: z.string().uuid().optional(),
    location: LocationCoordinatesSchema,
    audio: z
       .object({

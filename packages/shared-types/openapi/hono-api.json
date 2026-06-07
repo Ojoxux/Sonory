@@ -1613,10 +1613,6 @@
                      "schema": {
                         "type": "object",
                         "properties": {
-                           "userId": {
-                              "type": "string",
-                              "format": "uuid"
-                           },
                            "location": {
                               "type": "object",
                               "properties": {
@@ -3735,10 +3731,6 @@
                         "items": {
                            "type": "object",
                            "properties": {
-                              "userId": {
-                                 "type": "string",
-                                 "format": "uuid"
-                              },
                               "location": {
                                  "type": "object",
                                  "properties": {

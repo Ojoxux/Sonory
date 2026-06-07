@@ -426,7 +426,6 @@ export class PinService extends BaseService {
     * @returns Database insert format
     */
    private toDatabaseInsert(request: CreatePinRequest): SoundPinInsert {
-      const userId = request.userId ?? null
       // PostGISのPOINT関数を使用してGeography型に変換
       const locationWKT = `POINT(${request.location.lng} ${request.location.lat})`
 
@@ -437,7 +436,7 @@ export class PinService extends BaseService {
 
          return {
             // 必須フィールド
-            user_id: userId,
+            user_id: null,
             location: locationWKT,
             audio_url: placeholderUrl,
             audio_duration: request.metadata?.duration ?? 10,
@@ -485,7 +484,7 @@ export class PinService extends BaseService {
 
       return {
          // 必須フィールド
-         user_id: userId,
+         user_id: null,
          location: locationWKT,
          audio_url: request.audio.url,
          audio_duration: request.audio.duration,

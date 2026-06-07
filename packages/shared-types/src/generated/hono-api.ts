@@ -850,8 +850,6 @@ export interface paths {
          requestBody: {
             content: {
                "application/json": {
-                  /** Format: uuid */
-                  userId?: string
                   location: {
                      lat: number
                      lng: number
@@ -1659,8 +1657,6 @@ export interface paths {
          requestBody: {
             content: {
                "application/json": {
-                  /** Format: uuid */
-                  userId?: string
                   location: {
                      lat: number
                      lng: number

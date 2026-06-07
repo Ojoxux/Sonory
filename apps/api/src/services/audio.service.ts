@@ -48,6 +48,7 @@ interface QueueMessage {
    audioId: string
    audioUrl: string
    retryCount?: number
+   rootMessageId?: number
    metadata?: Record<string, unknown>
 }
 
@@ -805,12 +806,13 @@ export class AudioService extends BaseService {
    ): Promise<void> {
       const messageId = queueMessage.msg_id
       const message = queueMessage.message
+      const jobId = message.rootMessageId ?? messageId
       const retryCount = message.retryCount || 0
 
       try {
          // 分析結果テーブルに処理中レコードを挿入
          await this.supabaseClient.from("analysis_results").upsert({
-            message_id: messageId,
+            message_id: jobId,
             audio_id: message.audioId,
             status: "processing",
             retry_count: retryCount,
@@ -837,7 +839,7 @@ export class AudioService extends BaseService {
                result: analysisResult,
                completed_at: new Date().toISOString(),
             })
-            .eq("message_id", messageId)
+            .eq("message_id", jobId)
 
          // キューからメッセージを削除
          await this.supabaseClient.rpc("queue_delete", {
@@ -868,7 +870,7 @@ export class AudioService extends BaseService {
 
          if (canRetry) {
             await this.supabaseClient.from("analysis_results").upsert({
-               message_id: messageId,
+               message_id: jobId,
                audio_id: message.audioId,
                status: "queued",
                retry_count: retryCount + 1,
@@ -882,6 +884,7 @@ export class AudioService extends BaseService {
             const retryMessage: QueueMessage = {
                ...message,
                retryCount: retryCount + 1,
+               rootMessageId: jobId,
             }
 
             await this.supabaseClient.rpc("queue_send", {
@@ -903,7 +906,7 @@ export class AudioService extends BaseService {
          } else {
             // 最大リトライ回数に達したら失敗として記録
             await this.supabaseClient.from("analysis_results").upsert({
-               message_id: messageId,
+               message_id: jobId,
                audio_id: message.audioId,
                status: "failed",
                error_message: errorMessage,
@@ -920,6 +923,7 @@ export class AudioService extends BaseService {
 
             this.log("error", "Analysis job failed after max retries", {
                messageId,
+               jobId,
                retryCount,
             })
          }
