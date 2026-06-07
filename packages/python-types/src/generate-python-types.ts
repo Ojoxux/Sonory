@@ -46,6 +46,11 @@ interface GenerateResult {
    outputFile: string
 }
 
+const ZOD_SCHEMA_NAME_BY_TYPE: Partial<Record<string, string>> = {
+   AIAnalysis: "AiAnalysis",
+   SoundPinAPI: "SoundPinApi",
+}
+
 function convertType(tsType: string): string {
    const normalizedType = tsType.trim().replace(/[,;]$/, "")
 
@@ -338,6 +343,14 @@ function resolveTypeDefinition(
       const fromZod = parseZodObjectSchema(content, typeName)
       if (fromZod) {
          return fromZod
+      }
+
+      const schemaTypeName = ZOD_SCHEMA_NAME_BY_TYPE[typeName]
+      if (schemaTypeName) {
+         const fromMappedSchema = parseZodObjectSchema(content, schemaTypeName)
+         if (fromMappedSchema) {
+            return { ...fromMappedSchema, name: typeName }
+         }
       }
    }
 

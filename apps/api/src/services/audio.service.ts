@@ -867,6 +867,17 @@ export class AudioService extends BaseService {
          const canRetry = retryCount < this.maxRetries
 
          if (canRetry) {
+            await this.supabaseClient.from("analysis_results").upsert({
+               message_id: messageId,
+               audio_id: message.audioId,
+               status: "queued",
+               retry_count: retryCount + 1,
+               started_at: null,
+               completed_at: null,
+               error_message: null,
+               error_code: null,
+            })
+
             // メッセージを再キュー（リトライカウント増加）
             const retryMessage: QueueMessage = {
                ...message,

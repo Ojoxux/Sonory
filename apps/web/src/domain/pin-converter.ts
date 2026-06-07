@@ -4,9 +4,23 @@
  * DB/APIレスポンスとフロントエンドのSoundPin間の変換を行う
  */
 
+import type { WeatherData } from "@sonory/shared-types"
 import type { InferenceResult } from "../store/types"
 import type { SoundPin } from "../store/useSoundPinStore"
 import type { DbPin, PinApiResponse } from "./pin-types"
+
+function normalizeWeather(weather: DbPin["weather"]): WeatherData | undefined {
+   if (!weather) {
+      return undefined
+   }
+
+   return {
+      temperature: weather.temperature,
+      ...(weather.condition != null ? { condition: weather.condition } : {}),
+      ...(weather.windSpeed != null ? { windSpeed: weather.windSpeed } : {}),
+      ...(weather.humidity != null ? { humidity: weather.humidity } : {}),
+   }
+}
 
 /**
  * APIレスポンスをSoundPinに変換
@@ -39,7 +53,7 @@ export function convertApiResponseToPin(
       isPersisted: true,
       timeTag: result.data.timeTag,
       environment: primaryResult?.label || "unknown",
-      weather: result.data.weather,
+      weather: normalizeWeather(result.data.weather),
    }
 }
 
@@ -74,9 +88,7 @@ export function buildClassificationResults(pin: DbPin): InferenceResult[] {
 /**
  * DBピンをSoundPinに変換
  */
-export function convertDbPinToSoundPin(dbPin: unknown): SoundPin {
-   const pin = dbPin as DbPin
-
+export function convertDbPinToSoundPin(pin: DbPin): SoundPin {
    const classificationResults = buildClassificationResults(pin)
    const primaryLabel =
       pin.title || pin.aiAnalysis?.categories?.topic || "音声ピン"
@@ -98,7 +110,7 @@ export function convertDbPinToSoundPin(dbPin: unknown): SoundPin {
       primaryLabel,
       primaryConfidence: pin.aiAnalysis?.categories?.confidence ?? 0.8,
       isPersisted: true,
-      weather: pin.weather,
+      weather: normalizeWeather(pin.weather),
       timeTag: pin.timeTag,
       environment,
    }

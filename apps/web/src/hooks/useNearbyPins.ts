@@ -1,6 +1,10 @@
 "use client"
 
-import type { MapBounds, SoundPinAPI } from "@sonory/shared-types"
+import type {
+   MapBounds,
+   NearbyPin,
+   NearbyPinsResponse,
+} from "@sonory/shared-types"
 import {
    keepPreviousData,
    useQuery,
@@ -15,7 +19,7 @@ interface UseNearbyPinsOptions {
 }
 
 interface UseNearbyPinsResult {
-   pins: SoundPinAPI[]
+   pins: NearbyPin[]
    isLoading: boolean
    error: Error | null
    refetch: () => void
@@ -68,7 +72,7 @@ const generateAdjacentBounds = (bounds: MapBounds): MapBounds[] => {
 }
 
 // Request deduplication map
-const pendingRequests = new Map<string, Promise<SoundPinAPI[]>>()
+const pendingRequests = new Map<string, Promise<NearbyPin[]>>()
 
 /**
  * Fetches pins from API with ultra-optimized settings and request deduplication
@@ -77,7 +81,7 @@ const fetchPinsFromAPI = async (
    bounds: MapBounds,
    limit = 50,
    categories?: string[],
-): Promise<SoundPinAPI[]> => {
+): Promise<NearbyPin[]> => {
    const params = new URLSearchParams({
       north: bounds.north.toString(),
       south: bounds.south.toString(),
@@ -121,8 +125,13 @@ const fetchPinsFromAPI = async (
             throw new Error(`Failed to fetch pins: ${response.statusText}`)
          }
 
-         const data = await response.json()
-         return data.data || []
+         const data = (await response.json()) as NearbyPinsResponse
+
+         if (!data.success || !data.data) {
+            throw new Error("ピン取得結果が不正です")
+         }
+
+         return data.data
       } finally {
          clearTimeout(timeoutId)
          // Remove from pending requests

@@ -11,7 +11,7 @@ CORS_ORIGIN=http://localhost:3000
 # Python Audio Analyzer (YAMNet)
 # ローカル開発環境用
 PYTHON_AUDIO_ANALYZER_URL=http://localhost:8000
-PYTHON_AUDIO_ANALYZER_TIMEOUT=30000
+PYTHON_AUDIO_ANALYZER_TIMEOUT=120000
 
 # 環境設定
 ENVIRONMENT=development

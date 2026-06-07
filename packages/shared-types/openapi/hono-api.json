@@ -1660,6 +1660,9 @@
                                        "mp3",
                                        "wav"
                                     ]
+                                 },
+                                 "filePath": {
+                                    "type": "string"
                                  }
                               },
                               "required": [
@@ -1798,10 +1801,14 @@
                                        "type": "object",
                                        "properties": {
                                           "lat": {
-                                             "type": "number"
+                                             "type": "number",
+                                             "minimum": -90,
+                                             "maximum": 90
                                           },
                                           "lng": {
-                                             "type": "number"
+                                             "type": "number",
+                                             "minimum": -180,
+                                             "maximum": 180
                                           },
                                           "accuracy": {
                                              "type": "number",
@@ -2166,10 +2173,14 @@
                                        "type": "object",
                                        "properties": {
                                           "lat": {
-                                             "type": "number"
+                                             "type": "number",
+                                             "minimum": -90,
+                                             "maximum": 90
                                           },
                                           "lng": {
-                                             "type": "number"
+                                             "type": "number",
+                                             "minimum": -180,
+                                             "maximum": 180
                                           },
                                           "accuracy": {
                                              "type": "number",
@@ -2580,10 +2591,14 @@
                                           "type": "object",
                                           "properties": {
                                              "lat": {
-                                                "type": "number"
+                                                "type": "number",
+                                                "minimum": -90,
+                                                "maximum": 90
                                              },
                                              "lng": {
-                                                "type": "number"
+                                                "type": "number",
+                                                "minimum": -180,
+                                                "maximum": 180
                                              },
                                              "accuracy": {
                                                 "type": "number",
@@ -3028,10 +3043,14 @@
                                           "type": "object",
                                           "properties": {
                                              "lat": {
-                                                "type": "number"
+                                                "type": "number",
+                                                "minimum": -90,
+                                                "maximum": 90
                                              },
                                              "lng": {
-                                                "type": "number"
+                                                "type": "number",
+                                                "minimum": -180,
+                                                "maximum": 180
                                              },
                                              "accuracy": {
                                                 "type": "number",
@@ -3385,10 +3404,14 @@
                                           "type": "object",
                                           "properties": {
                                              "lat": {
-                                                "type": "number"
+                                                "type": "number",
+                                                "minimum": -90,
+                                                "maximum": 90
                                              },
                                              "lng": {
-                                                "type": "number"
+                                                "type": "number",
+                                                "minimum": -180,
+                                                "maximum": 180
                                              },
                                              "accuracy": {
                                                 "type": "number",
@@ -3759,6 +3782,9 @@
                                           "mp3",
                                           "wav"
                                        ]
+                                    },
+                                    "filePath": {
+                                       "type": "string"
                                     }
                                  },
                                  "required": [
@@ -3900,10 +3926,14 @@
                                           "type": "object",
                                           "properties": {
                                              "lat": {
-                                                "type": "number"
+                                                "type": "number",
+                                                "minimum": -90,
+                                                "maximum": 90
                                              },
                                              "lng": {
-                                                "type": "number"
+                                                "type": "number",
+                                                "minimum": -180,
+                                                "maximum": 180
                                              },
                                              "accuracy": {
                                                 "type": "number",
@@ -4261,10 +4291,14 @@
                                        "type": "object",
                                        "properties": {
                                           "lat": {
-                                             "type": "number"
+                                             "type": "number",
+                                             "minimum": -90,
+                                             "maximum": 90
                                           },
                                           "lng": {
-                                             "type": "number"
+                                             "type": "number",
+                                             "minimum": -180,
+                                             "maximum": 180
                                           },
                                           "accuracy": {
                                              "type": "number",
@@ -4678,10 +4712,14 @@
                                        "type": "object",
                                        "properties": {
                                           "lat": {
-                                             "type": "number"
+                                             "type": "number",
+                                             "minimum": -90,
+                                             "maximum": 90
                                           },
                                           "lng": {
-                                             "type": "number"
+                                             "type": "number",
+                                             "minimum": -180,
+                                             "maximum": 180
                                           },
                                           "accuracy": {
                                              "type": "number",

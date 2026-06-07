@@ -863,6 +863,7 @@ export interface paths {
                      duration: number
                      /** @enum {string} */
                      format: "webm" | "mp3" | "wav"
+                     filePath?: string
                   }
                   audio_file_path?: string
                   metadata?: {
@@ -1671,6 +1672,7 @@ export interface paths {
                      duration: number
                      /** @enum {string} */
                      format: "webm" | "mp3" | "wav"
+                     filePath?: string
                   }
                   audio_file_path?: string
                   metadata?: {

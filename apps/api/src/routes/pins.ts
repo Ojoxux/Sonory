@@ -1,8 +1,17 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi"
 import {
+   ApiErrorResponseSchema,
+   ApiSuccessResponseSchema,
+   ApiSuccessWithMetaResponseSchema,
+   CreatePinRequestSchema,
    ERROR_CODES,
+   NearbyPinsQueryParamsSchema,
+   ReportPinRequestSchema,
+   SearchPinsQueryParamsSchema,
+   SoundPinApiSchema,
    type NearbyPinsQuery,
    type SearchPinsQuery,
+   UpdatePinRequestSchema,
 } from "@sonory/shared-types"
 import { APIException } from "../middleware/error"
 import { onOpenAPIValidationError } from "../middleware/validation"
@@ -17,156 +26,23 @@ const app = new OpenAPIHono<{ Bindings: Env }>({
    defaultHook: onOpenAPIValidationError,
 })
 
-const weatherSchema = z.object({
-   temperature: z.number(),
-   condition: z.string().optional().nullable(),
-   windSpeed: z.number().optional().nullable(),
-   humidity: z.number().min(0).max(100).optional().nullable(),
-})
-
-const aiAnalysisSchema = z.object({
-   transcription: z.string(),
-   categories: z.object({
-      emotion: z.string(),
-      topic: z.string(),
-      language: z.string(),
-      confidence: z.number().min(0).max(1),
-   }),
-   summary: z.string().optional(),
-})
-
-const soundPinSchema = z.object({
-   id: z.string(),
-   userId: z.string().optional(),
-   location: z.object({
-      lat: z.number(),
-      lng: z.number(),
-      accuracy: z.number().positive().optional(),
-   }),
-   audio: z.object({
-      url: z.string(),
-      duration: z.number(),
-      format: z.enum(["webm", "mp3", "wav", "mp4", "m4a", "flac", "ogg"]),
-   }),
-   weather: weatherSchema.optional(),
-   timeTag: z.enum(["朝", "昼", "夕", "夜"]).optional(),
-   aiAnalysis: aiAnalysisSchema.optional(),
-   status: z.enum(["active", "processing", "deleted", "reported"]),
-   title: z.string().optional(),
-   metadata: z
-      .object({
-         deviceInfo: z.string().optional(),
-      })
-      .optional(),
-   createdAt: z.string(),
-   updatedAt: z.string(),
-})
-
-const errorResponseSchema = z.object({
-   success: z.literal(false),
-   error: z.object({
-      code: z.string(),
-      message: z.string(),
-      details: z.unknown().optional(),
-      timestamp: z.string(),
-      requestId: z.string(),
-   }),
-})
-
 const standardErrorResponses = {
    400: {
-      content: { "application/json": { schema: errorResponseSchema } },
+      content: { "application/json": { schema: ApiErrorResponseSchema } },
       description: "リクエスト不正",
    },
    404: {
-      content: { "application/json": { schema: errorResponseSchema } },
+      content: { "application/json": { schema: ApiErrorResponseSchema } },
       description: "対象が見つからない",
    },
    500: {
-      content: { "application/json": { schema: errorResponseSchema } },
+      content: { "application/json": { schema: ApiErrorResponseSchema } },
       description: "サーバーエラー",
    },
 }
 
-const successResponseSchema = <T extends z.ZodType>(data: T) =>
-   z.object({
-      success: z.literal(true),
-      data,
-   })
-
-const successWithMetaResponseSchema = <T extends z.ZodType>(data: T) =>
-   z.object({
-      success: z.literal(true),
-      data,
-      meta: z.record(z.string(), z.unknown()).optional(),
-   })
-
-/**
- * Request validation schemas
- */
-const createPinSchema = z.object({
-   userId: z.string().uuid().optional(),
-   location: z.object({
-      lat: z.number().min(-90).max(90),
-      lng: z.number().min(-180).max(180),
-      accuracy: z.number().positive().optional(),
-   }),
-   audio: z
-      .object({
-         url: z.string().url(),
-         duration: z.number().min(9.9).max(600),
-         format: z.enum(["webm", "mp3", "wav"]),
-      })
-      .optional(),
-   audio_file_path: z.string().optional(),
-   metadata: z
-      .object({
-         duration: z.number().positive().optional(),
-         timeTag: z.enum(["朝", "昼", "夕", "夜"]).optional(),
-         title: z.string().max(200).optional(),
-         deviceInfo: z.string().optional(),
-         weather: weatherSchema.optional(),
-      })
-      .optional(),
-   weather: weatherSchema.optional(),
-   timeTag: z.enum(["朝", "昼", "夕", "夜"]).optional(),
-   title: z.string().max(200).optional(),
-   deviceInfo: z.string().optional(),
-})
-
-const updatePinSchema = z.object({
-   title: z.string().max(200).optional(),
-   status: z.enum(["active", "processing", "deleted", "reported"]).optional(),
-   aiAnalysis: aiAnalysisSchema.optional(),
-})
-
-const nearbyPinsSchema = z.object({
-   north: z.coerce.number().min(-90).max(90),
-   south: z.coerce.number().min(-90).max(90),
-   east: z.coerce.number().min(-180).max(180),
-   west: z.coerce.number().min(-180).max(180),
-   limit: z.coerce.number().positive().max(100).optional(),
-   categories: z.array(z.string()).optional(),
-})
-
-const searchPinsSchema = z.object({
-   lat: z.coerce.number().min(-90).max(90).optional(),
-   lng: z.coerce.number().min(-180).max(180).optional(),
-   radius: z.coerce.number().positive().optional(),
-   startTime: z.string().datetime().optional(),
-   endTime: z.string().datetime().optional(),
-   categories: z.array(z.string()).optional(),
-   weather: z.array(z.string()).optional(),
-   limit: z.coerce.number().positive().max(100).optional(),
-   offset: z.coerce.number().nonnegative().optional(),
-})
-
-const reportPinSchema = z.object({
-   reason: z.string().min(10).max(1000),
-})
-
 // HACK: 複雑な配列スキーマは事前に定義して型推論の深さを抑える
-const createPinsBatchSchema: z.ZodTypeAny = z.array(createPinSchema)
+const createPinsBatchSchema: z.ZodTypeAny = z.array(CreatePinRequestSchema)
 
 /**
  * Route definitions
@@ -181,7 +57,7 @@ const createPinRoute = createRoute({
       body: {
          required: true,
          content: {
-            "application/json": { schema: createPinSchema },
+            "application/json": { schema: CreatePinRequestSchema },
          },
       },
    },
@@ -189,7 +65,7 @@ const createPinRoute = createRoute({
       200: {
          content: {
             "application/json": {
-               schema: successResponseSchema(soundPinSchema),
+               schema: ApiSuccessResponseSchema(SoundPinApiSchema),
             },
          },
          description: "作成されたピン",
@@ -222,7 +98,7 @@ const uploadPinRoute = createRoute({
       200: {
          content: {
             "application/json": {
-               schema: successResponseSchema(soundPinSchema),
+               schema: ApiSuccessResponseSchema(SoundPinApiSchema),
             },
          },
          description: "作成されたピン",
@@ -238,13 +114,13 @@ const nearbyPinsRoute = createRoute({
    summary: "周辺ピン取得",
    description: "指定された境界内のピンを取得",
    request: {
-      query: nearbyPinsSchema,
+      query: NearbyPinsQueryParamsSchema,
    },
    responses: {
       200: {
          content: {
             "application/json": {
-               schema: successWithMetaResponseSchema(z.array(soundPinSchema)),
+               schema: ApiSuccessWithMetaResponseSchema(z.array(SoundPinApiSchema)),
             },
          },
          description: "周辺ピン一覧",
@@ -260,13 +136,13 @@ const searchPinsRoute = createRoute({
    summary: "ピン検索",
    description: "条件を指定してピンを検索",
    request: {
-      query: searchPinsSchema,
+      query: SearchPinsQueryParamsSchema,
    },
    responses: {
       200: {
          content: {
             "application/json": {
-               schema: successResponseSchema(z.array(soundPinSchema)),
+               schema: ApiSuccessResponseSchema(z.array(SoundPinApiSchema)),
             },
          },
          description: "検索結果",
@@ -290,7 +166,7 @@ const getUserPinsRoute = createRoute({
       200: {
          content: {
             "application/json": {
-               schema: successResponseSchema(z.array(soundPinSchema)),
+               schema: ApiSuccessResponseSchema(z.array(SoundPinApiSchema)),
             },
          },
          description: "ユーザーのピン一覧",
@@ -319,7 +195,7 @@ const batchCreatePinsRoute = createRoute({
       200: {
          content: {
             "application/json": {
-               schema: successWithMetaResponseSchema(z.array(soundPinSchema)),
+               schema: ApiSuccessWithMetaResponseSchema(z.array(SoundPinApiSchema)),
             },
          },
          description: "作成されたピン一覧",
@@ -343,7 +219,7 @@ const getPinByIdRoute = createRoute({
       200: {
          content: {
             "application/json": {
-               schema: successResponseSchema(soundPinSchema),
+               schema: ApiSuccessResponseSchema(SoundPinApiSchema),
             },
          },
          description: "ピン詳細",
@@ -365,7 +241,7 @@ const updatePinRoute = createRoute({
       body: {
          required: true,
          content: {
-            "application/json": { schema: updatePinSchema },
+            "application/json": { schema: UpdatePinRequestSchema },
          },
       },
    },
@@ -373,7 +249,7 @@ const updatePinRoute = createRoute({
       200: {
          content: {
             "application/json": {
-               schema: successResponseSchema(soundPinSchema),
+               schema: ApiSuccessResponseSchema(SoundPinApiSchema),
             },
          },
          description: "更新されたピン",
@@ -397,7 +273,7 @@ const deletePinRoute = createRoute({
       200: {
          content: {
             "application/json": {
-               schema: successResponseSchema(
+               schema: ApiSuccessResponseSchema(
                   z.object({ deleted: z.boolean() }),
                ),
             },
@@ -421,7 +297,7 @@ const reportPinRoute = createRoute({
       body: {
          required: true,
          content: {
-            "application/json": { schema: reportPinSchema },
+            "application/json": { schema: ReportPinRequestSchema },
          },
       },
    },
@@ -429,7 +305,7 @@ const reportPinRoute = createRoute({
       200: {
          content: {
             "application/json": {
-               schema: successResponseSchema(
+               schema: ApiSuccessResponseSchema(
                   z.object({ reported: z.boolean() }),
                ),
             },
