@@ -5,12 +5,12 @@ import {
    ApiSuccessWithMetaResponseSchema,
    CreatePinRequestSchema,
    ERROR_CODES,
+   type NearbyPinsQuery,
    NearbyPinsQueryParamsSchema,
    ReportPinRequestSchema,
+   type SearchPinsQuery,
    SearchPinsQueryParamsSchema,
    SoundPinApiSchema,
-   type NearbyPinsQuery,
-   type SearchPinsQuery,
    UpdatePinRequestSchema,
 } from "@sonory/shared-types"
 import { APIException } from "../middleware/error"
@@ -120,7 +120,9 @@ const nearbyPinsRoute = createRoute({
       200: {
          content: {
             "application/json": {
-               schema: ApiSuccessWithMetaResponseSchema(z.array(SoundPinApiSchema)),
+               schema: ApiSuccessWithMetaResponseSchema(
+                  z.array(SoundPinApiSchema),
+               ),
             },
          },
          description: "周辺ピン一覧",
@@ -195,7 +197,9 @@ const batchCreatePinsRoute = createRoute({
       200: {
          content: {
             "application/json": {
-               schema: ApiSuccessWithMetaResponseSchema(z.array(SoundPinApiSchema)),
+               schema: ApiSuccessWithMetaResponseSchema(
+                  z.array(SoundPinApiSchema),
+               ),
             },
          },
          description: "作成されたピン一覧",

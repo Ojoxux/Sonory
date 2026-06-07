@@ -1,6 +1,6 @@
 import {
-   ERROR_CODES,
    type CreatePinRequest,
+   ERROR_CODES,
    type LocationCoordinates,
    type NearbyPinsQuery,
    type SearchPinsQuery,
