@@ -43,10 +43,9 @@ function createUploadFormData(
 /**
  * アップロードレスポンスを検証する
  */
-function validateUploadResponse(result: unknown): Pick<
-   UploadAudioResponse["data"],
-   "audioUrl" | "audioId"
-> {
+function validateUploadResponse(
+   result: unknown,
+): Pick<UploadAudioResponse["data"], "audioUrl" | "audioId"> {
    if (
       typeof result !== "object" ||
       result === null ||
