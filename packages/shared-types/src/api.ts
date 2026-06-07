@@ -1,10 +1,8 @@
-import { z } from "zod"
+import type { z } from "zod"
 import {
    AiAnalysisSchema,
    ApiErrorSchema,
    CreatePinRequestSchema,
-   NearbyPinsQuerySchema,
-   SearchPinsQuerySchema,
    SoundPinApiSchema,
 } from "./api-contract.js"
 

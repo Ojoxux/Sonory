@@ -1,8 +1,5 @@
 import type { z } from "zod"
-import {
-   AiAnalysisSchema,
-   SoundPinApiSchema,
-} from "./api-contract.js"
+import type { AiAnalysisSchema, SoundPinApiSchema } from "./api-contract.js"
 
 /**
  * API音声情報

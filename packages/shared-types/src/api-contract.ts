@@ -1,6 +1,10 @@
 import { z } from "zod"
 import { AudioFormatSchema, PythonAnalysisResultSchema } from "./audio.js"
-import { LocationCoordinatesSchema, MapBoundsSchema, TimeTagSchema } from "./location.js"
+import {
+   LocationCoordinatesSchema,
+   MapBoundsSchema,
+   TimeTagSchema,
+} from "./location.js"
 
 export const ApiWeatherDataSchema = z.object({
    temperature: z.number(),
