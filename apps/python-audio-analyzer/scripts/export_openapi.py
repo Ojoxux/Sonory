@@ -10,7 +10,11 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).resolve().parent
 APP_ROOT = SCRIPT_DIR.parent
 OUTPUT_PATH = (
-    APP_ROOT.parent.parent / "packages" / "shared-types" / "openapi" / "python-api.json"
+    APP_ROOT.parent.parent
+    / "packages"
+    / "shared-types"
+    / "openapi"
+    / "audio-analyzer.json"
 )
 
 

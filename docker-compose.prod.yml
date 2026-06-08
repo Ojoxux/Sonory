@@ -11,7 +11,7 @@ services:
       - NEXT_TELEMETRY_DISABLED=1
     restart: always
 
-  python-api:
+  audio-analyzer:
     build:
       target: production
     environment:

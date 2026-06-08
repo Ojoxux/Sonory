@@ -19,9 +19,9 @@ const SPECS = [
       label: "Hono API",
    },
    {
-      input: path.join(openapiDir, "python-api.json"),
-      output: path.join(generatedDir, "python-api.ts"),
-      label: "Python API",
+      input: path.join(openapiDir, "audio-analyzer.json"),
+      output: path.join(generatedDir, "audio-analyzer.ts"),
+      label: "Audio Analyzer",
    },
 ] as const
 

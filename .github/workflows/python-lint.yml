@@ -67,7 +67,7 @@ jobs:
       - name: Verify Python OpenAPI spec
         run: |
           python scripts/export_openapi.py
-          git diff --exit-code -- ../../packages/shared-types/openapi/python-api.json
+          git diff --exit-code -- ../../packages/shared-types/openapi/audio-analyzer.json
 
   build-docker:
     runs-on: ubuntu-latest

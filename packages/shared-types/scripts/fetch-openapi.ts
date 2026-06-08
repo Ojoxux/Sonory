@@ -15,11 +15,11 @@ const repoRoot = path.resolve(packageRoot, "../..")
 const openapiDir = path.join(packageRoot, "openapi")
 
 const HONO_OPENAPI_URL = "http://localhost:8787/api/openapi.json"
-const PYTHON_OPENAPI_URL = "http://localhost:8000/openapi.json"
+const AUDIO_ANALYZER_OPENAPI_URL = "http://localhost:8000/openapi.json"
 
 const OUTPUT_FILES = {
    hono: path.join(openapiDir, "hono-api.json"),
-   python: path.join(openapiDir, "python-api.json"),
+   audioAnalyzer: path.join(openapiDir, "audio-analyzer.json"),
 } as const
 
 async function fetchJson(url: string): Promise<unknown | null> {
@@ -50,7 +50,7 @@ function exportHonoSpec(): void {
    })
 }
 
-function exportPythonSpec(): void {
+function exportAudioAnalyzerSpec(): void {
    execSync("python3 apps/python-audio-analyzer/scripts/export_openapi.py", {
       cwd: repoRoot,
       stdio: "inherit",
@@ -76,7 +76,11 @@ async function syncSpec(
 
 async function fetchOpenApiSpecs(): Promise<void> {
    await syncSpec("hono", HONO_OPENAPI_URL, exportHonoSpec)
-   await syncSpec("python", PYTHON_OPENAPI_URL, exportPythonSpec)
+   await syncSpec(
+      "audioAnalyzer",
+      AUDIO_ANALYZER_OPENAPI_URL,
+      exportAudioAnalyzerSpec,
+   )
 }
 
 await fetchOpenApiSpecs()
