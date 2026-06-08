@@ -1,16 +1,8 @@
-# 本番環境オーバーライド
+# Python Audio Analyzer production override
 #
 # 使い方: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 services:
-  web:
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - NEXT_TELEMETRY_DISABLED=1
-    restart: always
-
   audio-analyzer:
     build:
       target: production

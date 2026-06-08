@@ -5,7 +5,7 @@
 ### 1. 依存関係のインストール
 
 ```bash
-cd apps/web && npm install
+npm install
 ```
 
 ### 2. 環境変数の設定
@@ -13,7 +13,7 @@ cd apps/web && npm install
 `.env`ファイルを作成して必要な環境変数を設定してください。
 
 ```bash
-cp .env.example .env
+cp ../../.env.example ../../.env
 ```
 
 ### 3. 開発環境の起動
@@ -21,20 +21,21 @@ cp .env.example .env
 ```bash
 
 # webサービス単体起動
-task sonory:web:up
+task sonory:web:dev
 
 # プロジェクトルートから
 task sonory:up         # 全サービス起動
-task sonory:logs:web   # Webアプリログ確認
 task sonory:down       # 停止
 ```
 
 ## 🔧 利用可能なコマンド
 
-Docker環境での開発コマンドは以下のコマンドで確認できます。
+Webはホスト上のNext.jsで開発し、OpenNextでCloudflare Workersランタイムを確認します。
 
 ```bash
-task --list
+npm run dev       # Next.js開発サーバー
+npm run preview   # OpenNext + Cloudflare Workers preview
+npm run deploy    # Cloudflare Workersへデプロイ
 ```
 
 ## 📱 PWA機能
@@ -46,13 +47,13 @@ task --list
 
 ## 🏗️ 技術スタック
 
-- **Next.js 16** - App Router + TypeScript（Docker環境対応）
+- **Next.js 16** - App Router + TypeScript
+- **OpenNext** - Cloudflare Workers向けNext.jsアダプター
 - **Tailwind CSS v4.1** - ユーティリティファーストCSS
 - **PWA** - next-pwa によるサービスワーカー
 - **Map** - Mapbox GL JS による地図表示
 - **Audio** - Web Audio API による音声録音・再生
 - **Realtime** - Supabase Realtime による同期
-- **Docker** - コンテナ化開発環境
 
 ## 📁 ディレクトリ構造
 
@@ -69,8 +70,7 @@ src/
 ├── store/              # Zustand状態管理
 ├── types/              # TypeScript型定義
 └── utils/              # ユーティリティ関数
-Dockerfile                # Docker設定
-docker-entrypoint-dev.sh  # Docker開発環境用エントリーポイント
+wrangler.toml             # Cloudflare Workers設定
 ```
 
 ## 🎯 主要機能

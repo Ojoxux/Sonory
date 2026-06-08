@@ -1,46 +1,26 @@
-# Sonory Docker Compose 共通設定
+# Sonory local dependency services
 #
 # 使い方:
-#   docker compose up        — 開発環境起動（override.yml自動読み込み）
-#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up — 本番
+#   docker compose up -d     — Python Audio Analyzer + Redis を起動
 #
 # 環境変数は.envファイルから自動読み込みされます
 # .env.exampleを.envにコピーして設定してください
 
 services:
-  # Next.js Web Application
-  web:
-    build:
-      context: .
-      dockerfile: ./apps/web/Dockerfile
-      target: runner
-    environment:
-      - NEXT_PUBLIC_MAPBOX_TOKEN=${NEXT_PUBLIC_MAPBOX_TOKEN}
-      - NEXT_TELEMETRY_DISABLED=1
-    depends_on:
-      audio-analyzer:
-        condition: service_started
-    restart: unless-stopped
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "node -e \"fetch('http://localhost:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\"",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
   # Audio Analyzer (FastAPI + YAMNet)
   audio-analyzer:
     build:
       context: ./apps/python-audio-analyzer
       dockerfile: Dockerfile
-      target: production
-    expose:
-      - "8000"
+      target: development
+    ports:
+      - "8000:8000"
+    env_file:
+      - path: ./apps/python-audio-analyzer/.env
+        required: false
     environment:
+      - ENVIRONMENT=development
+      - LOG_LEVEL=debug
       - REDIS_URL=redis://:${REDIS_PASSWORD:-dev_redis_password}@redis:6379
     volumes:
       - tf_hub_cache:/app/tf_hub_cache
@@ -58,6 +38,8 @@ services:
   # Redis for caching
   redis:
     image: redis:7.2-alpine3.19
+    ports:
+      - "127.0.0.1:6379:6379"
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD:-dev_redis_password}
     volumes:

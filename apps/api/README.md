@@ -57,7 +57,7 @@ wrangler secret put SUPABASE_SERVICE_KEY --env production
 ```bash
 # プロジェクトルートから
 task sonory:up            # または task up
-# → Web + Python + API が全て起動します（Ctrl+Cで停止）
+# → DockerでPython/Redis、ホストでWeb/APIが起動します（Ctrl+Cで停止）
 
 # 別ターミナルでサービス状態確認
 task status
@@ -70,13 +70,15 @@ task down
 
 ```bash
 # ターミナル1: Docker Composeサービス起動
-task sonory:web:up        # Next.js起動（ポート3000）
-task sonory:python:up     # Python Audio Analyzer起動（ポート8000）
+task sonory:infra:up      # Python Audio Analyzer + Redis
 
 # ターミナル2: APIサーバー起動
 task sonory:api:up        # Wrangler起動（ポート8787）
 # または直接実行
 cd apps/api && npm run dev
+
+# ターミナル3: Webサーバー起動
+task sonory:web:dev       # Next.js起動（ポート3000）
 ```
 
 ## 📁 ディレクトリ構造
@@ -122,9 +124,9 @@ npm run deploy:staging       # ステージング環境
 task sonory:deploy:api           # 本番環境
 task sonory:deploy:api:staging   # ステージング環境
 
-# 全サービス一括デプロイ（プロジェクトルートから）
-task sonory:deploy           # Web + Python + API（本番）
-task sonory:deploy:staging   # Web + Python + API（ステージング）
+# Web + API 一括デプロイ（プロジェクトルートから）
+task sonory:deploy           # Web + API（本番）
+task sonory:deploy:staging   # Web + API（ステージング）
 ```
 
 ### その他の便利なTaskコマンド
