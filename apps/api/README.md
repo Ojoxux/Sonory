@@ -10,7 +10,7 @@ Cloudflare Workers上で動作するHono製APIサーバー
 - **開発ツール**: Wrangler v4.46
 - **バリデーション**: Zod v4.1
 - **データベース**: Supabase (PostgreSQL + PostGIS)
-- **リンター/フォーマッター**: Biome 2.3.4
+- **リンター/フォーマッター**: Oxlint / Oxfmt
 
 ## 🚀 セットアップ
 
@@ -27,6 +27,7 @@ npm run generate-types  # Cloudflare Workers用の型定義を生成
 APIサービスは2つの環境で動作します：
 
 #### ローカル環境（Wrangler開発サーバー）
+
 ```bash
 # .dev.vars.exampleを参考に.dev.varsファイルを作成
 cp .dev.vars.example .dev.vars
@@ -36,6 +37,7 @@ cp .dev.vars.example .dev.vars
 **💡 環境変数の詳細**: [ENV_FILES_README.md](./ENV_FILES_README.md)を参照してください
 
 #### Cloudflare Workers（ステージング・本番環境）
+
 ```bash
 # ステージング環境
 wrangler secret put SUPABASE_URL --env staging
@@ -51,6 +53,7 @@ wrangler secret put SUPABASE_SERVICE_KEY --env production
 ### 3. 開発環境の起動
 
 #### 方法A: 一括起動（推奨）
+
 ```bash
 # プロジェクトルートから
 task sonory:up            # または task up
@@ -64,6 +67,7 @@ task down
 ```
 
 #### 方法B: 個別起動
+
 ```bash
 # ターミナル1: Docker Composeサービス起動
 task sonory:web:up        # Next.js起動（ポート3000）
@@ -94,6 +98,7 @@ tsconfig-paths.json # TSパスエイリアス設定
 ## 🔧 利用可能なコマンド
 
 ### 開発用コマンド
+
 `apps/api`ディレクトリで以下のコマンドを実行できます：
 
 ```bash
@@ -107,6 +112,7 @@ npm run test             # テスト実行
 ```
 
 ### デプロイコマンド
+
 ```bash
 # APIをCloudflare Workersにデプロイ
 npm run deploy:production    # 本番環境
@@ -122,6 +128,7 @@ task sonory:deploy:staging   # Web + Python + API（ステージング）
 ```
 
 ### その他の便利なTaskコマンド
+
 ```bash
 task sonory:install      # 全サービスの依存関係インストール
 task sonory:build        # 全サービスをビルド
@@ -136,16 +143,19 @@ task --list
 ## 🌐 APIエンドポイント
 
 ### ヘルスチェック
+
 - `GET /api/health` - 基本的なヘルスチェック
 - `GET /api/health/detailed` - 詳細なヘルスチェック
 
 ### 音声関連
+
 - `POST /api/audio/upload` - 音声ファイルアップロード
 - `DELETE /api/audio/:audioId` - 音声削除
 - `GET /api/audio/:audioId/metadata` - 音声メタデータ取得
 - `POST /api/audio/:audioId/analyze` - AI分析実行（Python YAMNet）
 
 ### ピン関連
+
 - `POST /api/pins` - ピン作成
 - `POST /api/pins/upload` - 音声アップロード付きピン作成
 - `GET /api/pins/nearby` - 範囲内ピン取得

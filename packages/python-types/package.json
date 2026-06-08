@@ -11,9 +11,10 @@
       "verify": "npm run build && npm run generate && npm run verify:python",
       "verify:python": "python3 scripts/verify-generated-python.py",
       "clean": "rm -rf dist/ && rm -rf ../../apps/python-audio-analyzer/src/types/generated/",
-      "lint": "biome check --write src package.json scripts",
-      "lint:check": "biome check src package.json scripts",
-      "format": "biome format src package.json scripts --write",
+      "lint": "oxlint src",
+      "lint:fix": "oxlint src --fix",
+      "format": "oxfmt --check src package.json",
+      "format:fix": "oxfmt src package.json",
       "type-check": "tsc --noEmit"
    },
    "dependencies": {
@@ -21,7 +22,6 @@
       "typescript": "^5.9.3"
    },
    "devDependencies": {
-      "@biomejs/biome": "2.3.8",
       "@types/node": "^24.13.1"
    }
 }

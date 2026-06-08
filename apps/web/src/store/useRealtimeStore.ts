@@ -572,11 +572,10 @@ export const useRealtimeStore = create<RealtimeState & RealtimeActions>(
        */
       markNotificationAsRead: (notificationId: string): void => {
          set((state) => ({
-            recentNotifications: state.recentNotifications.map(
-               (notification) =>
-                  notification.id === notificationId
-                     ? { ...notification, isRead: true }
-                     : notification,
+            recentNotifications: state.recentNotifications.map((notification) =>
+               notification.id === notificationId
+                  ? { ...notification, isRead: true }
+                  : notification,
             ),
          }))
       },

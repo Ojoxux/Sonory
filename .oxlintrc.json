@@ -1,0 +1,50 @@
+{
+   "$schema": "./node_modules/oxlint/configuration_schema.json",
+   "plugins": [
+      "eslint",
+      "typescript",
+      "unicorn",
+      "oxc",
+      "react",
+      "jsx-a11y",
+      "nextjs",
+      "vitest"
+   ],
+   "env": {
+      "browser": true,
+      "node": true,
+      "es2024": true
+   },
+   "ignorePatterns": [
+      ".next/**",
+      ".turbo/**",
+      ".wrangler/**",
+      "coverage/**",
+      "dist/**",
+      "node_modules/**",
+      "out/**",
+      "apps/web/public/sw.js",
+      "apps/web/public/workbox-*.js",
+      "apps/web/public/worker-*.js",
+      "apps/web/public/fallback-*.js",
+      "apps/web/public/*.map",
+      "**/*.d.ts",
+      "**/*.min.js"
+   ],
+   "settings": {
+      "next": {
+         "rootDir": "apps/web/"
+      }
+   },
+   "rules": {
+      "no-unused-vars": [
+         "warn",
+         {
+            "argsIgnorePattern": "^_",
+            "caughtErrorsIgnorePattern": "^_",
+            "varsIgnorePattern": "^_"
+         }
+      ],
+      "typescript/no-explicit-any": "warn"
+   }
+}

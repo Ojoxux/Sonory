@@ -40,7 +40,7 @@ function generateTypes(): void {
          stdio: "inherit",
       })
 
-      execSync(`npx biome format "${spec.output}" --write`, {
+      execSync(`npx oxfmt "${spec.output}"`, {
          cwd: packageRoot,
          stdio: "inherit",
       })

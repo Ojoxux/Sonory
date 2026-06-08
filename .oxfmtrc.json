@@ -1,0 +1,30 @@
+{
+   "$schema": "./node_modules/oxfmt/configuration_schema.json",
+   "printWidth": 80,
+   "tabWidth": 3,
+   "useTabs": false,
+   "endOfLine": "lf",
+   "semi": false,
+   "singleQuote": false,
+   "bracketSpacing": true,
+   "bracketSameLine": false,
+   "arrowParens": "always",
+   "trailingComma": "all",
+   "ignorePatterns": [
+      ".next/**",
+      ".turbo/**",
+      ".wrangler/**",
+      "coverage/**",
+      "dist/**",
+      "node_modules/**",
+      "out/**",
+      "apps/web/public/sw.js",
+      "apps/web/public/workbox-*.js",
+      "apps/web/public/worker-*.js",
+      "apps/web/public/fallback-*.js",
+      "apps/web/public/*.map",
+      "**/*.min.js",
+      "**/*.min.css",
+      "packages/shared-types/openapi/**"
+   ]
+}

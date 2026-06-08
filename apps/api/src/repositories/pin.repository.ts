@@ -852,5 +852,4 @@ export class PinRepository {
 }
 
 // 環境変数の型安全なアクセス
-// biome-ignore lint/complexity/useLiteralKeys: TypeScript noPropertyAccessFromIndexSignature設定により必要
 const isDevelopment = process.env["NODE_ENV"] === "development"
