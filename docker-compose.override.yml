@@ -1,6 +1,6 @@
 # ローカル開発用オーバーライド（docker compose up で自動読み込み）
 #
-# Wrangler dev をホストで実行する場合にpython-apiのポートを公開
+# Wrangler dev をホストで実行する場合に audio-analyzer のポートを公開
 
 services:
   web:
@@ -17,7 +17,7 @@ services:
       - /app/node_modules
       - web_next:/app/apps/web/.next
 
-  python-api:
+  audio-analyzer:
     build:
       target: development
     env_file:

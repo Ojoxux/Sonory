@@ -2,7 +2,7 @@
  * OpenAPI Spec と生成型が最新かを検証する（CI 用）。
  *
  * Hono API はコードから再エクスポートして整合性を確認する。
- * Python API はコミット済み openapi/python-api.json を基準とし、
+ * Audio Analyzer はコミット済み openapi/audio-analyzer.json を基準とし、
  * 変更時はローカルで `npm run fetch:openapi` を実行する。
  */
 

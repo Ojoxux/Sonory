@@ -8,6 +8,6 @@ export type {
 } from "./hono-api.js"
 
 export type {
-   components as PythonApiComponents,
-   paths as PythonApiPaths,
-} from "./python-api.js"
+   components as AudioAnalyzerComponents,
+   paths as AudioAnalyzerPaths,
+} from "./audio-analyzer.js"

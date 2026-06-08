@@ -87,7 +87,7 @@ tasks:
   sonory:logs:python:
     desc: "Python APIサービスのログのみ表示"
     cmds:
-      - docker compose logs -f python-api
+      - docker compose logs -f audio-analyzer
 
   sonory:status:
     desc: "全サービスのステータスを表示"
@@ -98,7 +98,7 @@ tasks:
       - 'echo ""'
       - 'echo "Web (Next.js):          http://localhost:3000"'
       - 'echo "API (Wrangler):         http://localhost:8787"'
-      - 'echo "Python Audio Analyzer:  内部ネットワーク(API経由)"'
+      - 'echo "Audio Analyzer:         http://localhost:8000"'
       - 'echo "Redis:                  127.0.0.1:6379"'
 
   sonory:clean:
@@ -117,7 +117,7 @@ tasks:
   sonory:shell:python:
     desc: "Python APIコンテナのシェルを開く"
     cmds:
-      - docker compose exec python-api /bin/bash
+      - docker compose exec audio-analyzer /bin/bash
 
   # ==================== 個別サービス管理 ====================
 
@@ -146,12 +146,12 @@ tasks:
   sonory:python:up:
     desc: "Python Audio Analyzerを起動"
     cmds:
-      - docker compose up -d python-api
+      - docker compose up -d audio-analyzer
 
   sonory:python:down:
     desc: "Python Audio Analyzerを停止"
     cmds:
-      - docker compose stop python-api
+      - docker compose stop audio-analyzer
 
   # ==================== ショートカット ====================
 
@@ -178,7 +178,7 @@ tasks:
       - 'echo "依存関係をインストール中..."'
       - docker compose run --rm web npm install
       - cd apps/api && npm install
-      - docker compose run --rm python-api pip install -e .[dev]
+      - docker compose run --rm audio-analyzer pip install -e .[dev]
       - 'echo "依存関係をインストールしました"'
 
   sonory:build:
@@ -193,7 +193,7 @@ tasks:
     cmds:
       - docker compose run --rm web npm run lint
       - cd apps/api && npm run lint
-      - docker compose run --rm python-api npm run lint
+      - docker compose run --rm audio-analyzer npm run lint
       - 'echo "Lintが完了しました"'
 
   sonory:type-check:
@@ -201,5 +201,5 @@ tasks:
     cmds:
       - docker compose run --rm web npm run type-check
       - cd apps/api && npm run type-check
-      - docker compose run --rm python-api npm run lint:typecheck
+      - docker compose run --rm audio-analyzer npm run lint:typecheck
       - 'echo "型チェックが完了しました"'

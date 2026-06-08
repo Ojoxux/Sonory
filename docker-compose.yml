@@ -18,7 +18,7 @@ services:
       - NEXT_PUBLIC_MAPBOX_TOKEN=${NEXT_PUBLIC_MAPBOX_TOKEN}
       - NEXT_TELEMETRY_DISABLED=1
     depends_on:
-      python-api:
+      audio-analyzer:
         condition: service_started
     restart: unless-stopped
     healthcheck:
@@ -32,8 +32,8 @@ services:
       retries: 3
       start_period: 40s
 
-  # Python Audio Analyzer (FastAPI)
-  python-api:
+  # Audio Analyzer (FastAPI + YAMNet)
+  audio-analyzer:
     build:
       context: ./apps/python-audio-analyzer
       dockerfile: Dockerfile
