@@ -14,7 +14,7 @@ crons = ["* * * * *"]
 [env.production.vars]
 ENVIRONMENT = "production"
 PYTHON_AUDIO_ANALYZER_URL = "https://python-audio-analyzer.onrender.com"
-PYTHON_AUDIO_ANALYZER_TIMEOUT = "30000"
+PYTHON_AUDIO_ANALYZER_TIMEOUT = "120000"
 
 # 本番環境の機密情報は以下のコマンドで設定:
 # wrangler secret put SUPABASE_URL --env production
@@ -31,7 +31,7 @@ crons = ["* * * * *"]
 [env.staging.vars]
 ENVIRONMENT = "staging"
 PYTHON_AUDIO_ANALYZER_URL = "https://python-audio-analyzer.onrender.com"
-PYTHON_AUDIO_ANALYZER_TIMEOUT = "30000"
+PYTHON_AUDIO_ANALYZER_TIMEOUT = "120000"
 
 # ステージング環境の機密情報は以下のコマンドで設定:
 # wrangler secret put SUPABASE_URL --env staging
@@ -45,7 +45,7 @@ name = "sonory-api-development"
 [env.development.vars]
 ENVIRONMENT = "development"
 PYTHON_AUDIO_ANALYZER_URL = "http://localhost:8000"
-PYTHON_AUDIO_ANALYZER_TIMEOUT = "30000"
+PYTHON_AUDIO_ANALYZER_TIMEOUT = "120000"
 # 開発環境のSupabase設定は.dev.varsファイルで管理
 
 # KVネームスペース（Phase 4以降で使用予定）

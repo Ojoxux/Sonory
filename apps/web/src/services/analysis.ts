@@ -5,10 +5,14 @@
  */
 
 import type {
-   AudioData,
+   AnalysisStatusData,
+   AnalysisStatusResponse,
    InferenceResult,
    PythonAnalysisResult,
-} from "../store/types"
+   SubmitAnalysisJobResponse,
+   UploadAudioResponse,
+} from "@sonory/shared-types"
+import type { AudioData } from "../store/types"
 import { type ApiClient, defaultApiClient } from "./api-client"
 
 interface APIClassification {
@@ -55,38 +59,37 @@ export function generateClassificationResults(): InferenceResult[] {
    )
 }
 
-interface UploadResponse {
-   success: boolean
-   data?: { audioUrl?: string }
-}
-
 /**
  * 音声ファイルをSupabase Storageにアップロード
  *
  * @param audioData - 音声データ
  * @param client - APIクライアント（テスト時に差し替え可能）
  */
+export interface UploadedAudioRef {
+   audioUrl: string
+   audioId: string
+}
+
 export async function uploadAudioToStorage(
    audioData: AudioData,
    client: ApiClient = defaultApiClient,
-): Promise<string> {
+): Promise<UploadedAudioRef> {
    const formData = new FormData()
    formData.append("audio", audioData.blob, `audio-${audioData.id}.webm`)
 
-   const result = await client.postFormData<UploadResponse>(
+   const result = await client.postFormData<UploadAudioResponse>(
       "/api/audio/upload",
       formData,
    )
 
-   if (!result.success || !result.data?.audioUrl) {
+   if (!result.success || !result.data?.audioUrl || !result.data.audioId) {
       throw new Error("アップロード結果が不正です")
    }
-   return result.data.audioUrl
-}
 
-interface AnalyzeResponse {
-   success: boolean
-   data?: { jobId?: string }
+   return {
+      audioUrl: result.data.audioUrl,
+      audioId: result.data.audioId,
+   }
 }
 
 /**
@@ -101,7 +104,7 @@ export async function submitAnalysisJob(
    audioUrl: string,
    client: ApiClient = defaultApiClient,
 ): Promise<string> {
-   const result = await client.post<AnalyzeResponse>(
+   const result = await client.post<SubmitAnalysisJobResponse>(
       `/api/audio/${audioId}/analyze`,
       { audioUrl, topK: 5 },
    )
@@ -133,15 +136,6 @@ export function convertAnalysisResult(
    return classifications
 }
 
-interface JobStatusResponse {
-   success: boolean
-   data?: {
-      status: string
-      result?: PythonAnalysisResult
-      error?: { message?: string }
-   }
-}
-
 /**
  * ジョブステータスを取得
  */
@@ -150,11 +144,11 @@ async function fetchJobStatus(
    jobId: string,
    client: ApiClient,
 ): Promise<{
-   status: string
-   result?: PythonAnalysisResult
-   error?: { message?: string }
+   status: AnalysisStatusData["status"]
+   result?: AnalysisStatusData["result"]
+   error?: AnalysisStatusData["error"]
 }> {
-   const result = await client.get<JobStatusResponse>(
+   const result = await client.get<AnalysisStatusResponse>(
       `/api/audio/${audioId}/analysis/${jobId}/status`,
    )
 
@@ -177,11 +171,13 @@ export async function pollJobStatus(
    jobId: string,
    client: ApiClient = defaultApiClient,
 ): Promise<InferenceResult[]> {
-   const maxAttempts = 60
+   const maxAttempts = 120
    const pollInterval = 1000
 
    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      await new Promise((resolve) => setTimeout(resolve, pollInterval))
+      if (attempt > 1) {
+         await new Promise((resolve) => setTimeout(resolve, pollInterval))
+      }
 
       const { status, result, error } = await fetchJobStatus(
          audioId,

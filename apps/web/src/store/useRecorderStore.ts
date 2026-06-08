@@ -1,3 +1,4 @@
+import type { UploadAudioResponse } from "@sonory/shared-types"
 import { create } from "zustand"
 import type { AudioData, RecorderState } from "./types"
 
@@ -42,10 +43,9 @@ function createUploadFormData(
 /**
  * アップロードレスポンスを検証する
  */
-function validateUploadResponse(result: unknown): {
-   audioUrl: string
-   audioId: string
-} {
+function validateUploadResponse(
+   result: unknown,
+): Pick<UploadAudioResponse["data"], "audioUrl" | "audioId"> {
    if (
       typeof result !== "object" ||
       result === null ||

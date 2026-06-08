@@ -1,9 +1,11 @@
 import {
+   type CreatePinRequest,
    ERROR_CODES,
    type LocationCoordinates,
    type NearbyPinsQuery,
    type SearchPinsQuery,
    type SoundPinAPI,
+   type UpdatePinRequest,
 } from "@sonory/shared-types"
 import type { Context } from "hono"
 import { APIException } from "../middleware/error"
@@ -390,7 +392,6 @@ export class PinService extends BaseService {
       url: string
       duration: number
       format: "webm" | "mp3" | "wav"
-      filePath?: string
    }): void {
       if (!audio.url || audio.url.trim() === "") {
          throw new APIException(
@@ -435,7 +436,7 @@ export class PinService extends BaseService {
 
          return {
             // 必須フィールド
-            user_id: null, // TODO: 認証実装後はコンテキストから取得
+            user_id: null,
             location: locationWKT,
             audio_url: placeholderUrl,
             audio_duration: request.metadata?.duration ?? 10,
@@ -483,7 +484,7 @@ export class PinService extends BaseService {
 
       return {
          // 必須フィールド
-         user_id: null, // TODO: 認証実装後はコンテキストから取得
+         user_id: null,
          location: locationWKT,
          audio_url: request.audio.url,
          audio_duration: request.audio.duration,
@@ -588,53 +589,5 @@ export class PinService extends BaseService {
               }
             : {}),
       }
-   }
-}
-
-// Type definitions for requests
-interface CreatePinRequest {
-   location: LocationCoordinates
-   audio?: {
-      url: string
-      duration: number
-      format: "webm" | "mp3" | "wav"
-      filePath?: string
-   }
-   audio_file_path?: string
-   metadata?: {
-      duration?: number
-      timeTag?: "朝" | "昼" | "夕" | "夜"
-      title?: string
-      deviceInfo?: string
-      weather?: {
-         temperature: number
-         condition?: string
-         windSpeed?: number
-         humidity?: number
-      }
-   }
-   weather?: {
-      temperature: number
-      condition?: string
-      windSpeed?: number
-      humidity?: number
-   }
-   timeTag?: "朝" | "昼" | "夕" | "夜"
-   title?: string
-   deviceInfo?: string
-}
-
-interface UpdatePinRequest {
-   title?: string
-   status?: "active" | "processing" | "deleted" | "reported"
-   aiAnalysis?: {
-      transcription: string
-      categories: {
-         emotion: string
-         topic: string
-         language: string
-         confidence: number
-      }
-      summary?: string
    }
 }

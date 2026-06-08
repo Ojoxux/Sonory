@@ -1,5 +1,14 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi"
-import { ERROR_CODES } from "@sonory/shared-types"
+import {
+   AnalysisJobResultSchema,
+   AnalysisStatusSchema,
+   ApiErrorResponseSchema,
+   ApiSuccessResponseSchema,
+   AudioMetadataSchema,
+   AudioUploadResultSchema,
+   ERROR_CODES,
+   UploadUrlDataSchema,
+} from "@sonory/shared-types"
 import type { Context } from "hono"
 import type { Env } from "../index"
 import { APIException } from "../middleware/error"
@@ -11,113 +20,16 @@ const app = new OpenAPIHono<{ Bindings: Env }>({
    defaultHook: onOpenAPIValidationError,
 })
 
-const audioFormatSchema = z.enum([
-   "webm",
-   "mp3",
-   "wav",
-   "mp4",
-   "m4a",
-   "flac",
-   "ogg",
-])
-
-const audioMetadataSchema = z.object({
-   id: z.string(),
-   filename: z.string(),
-   size: z.number(),
-   format: audioFormatSchema,
-   duration: z.number(),
-   url: z.string().optional(),
-   uploadedAt: z.string(),
-})
-
-const uploadUrlDataSchema = z.object({
-   uploadUrl: z.string(),
-   filePath: z.string(),
-   expiresAt: z.string(),
-   maxFileSize: z.number(),
-})
-
-const audioUploadResultSchema = z.object({
-   audioId: z.string(),
-   audioUrl: z.string(),
-   audioFilePath: z.string(),
-   metadata: audioMetadataSchema,
-})
-
-const analysisJobResultSchema = z.object({
-   jobId: z.string(),
-   status: z.enum(["queued", "processing", "completed", "failed"]),
-   estimatedDuration: z.string().optional(),
-   statusUrl: z.string(),
-})
-
-const pythonAnalysisResultSchema = z.object({
-   classifications: z.array(
-      z.object({
-         label: z.string(),
-         confidence: z.number(),
-      }),
-   ),
-   environment: z
-      .object({
-         primary_type: z.string(),
-         type_scores: z.record(z.string(), z.number()),
-         description: z.string(),
-      })
-      .optional(),
-   performance_metrics: z
-      .object({
-         yamnet_inference_time: z.number(),
-         total_time: z.number(),
-         processing_ratio: z.number(),
-      })
-      .optional(),
-})
-
-const analysisStatusSchema = z.object({
-   jobId: z.string(),
-   status: z.enum(["queued", "processing", "completed", "failed"]),
-   result: pythonAnalysisResultSchema.optional(),
-   error: z
-      .object({
-         message: z.string(),
-         code: z.string().optional(),
-      })
-      .optional(),
-   createdAt: z.string(),
-   startedAt: z.string().optional(),
-   completedAt: z.string().optional(),
-   retryCount: z.number(),
-})
-
-const errorResponseSchema = z.object({
-   success: z.literal(false),
-   error: z.object({
-      code: z.string(),
-      message: z.string(),
-      details: z.unknown().optional(),
-      timestamp: z.string(),
-      requestId: z.string(),
-   }),
-})
-
 const standardErrorResponses = {
    400: {
-      content: { "application/json": { schema: errorResponseSchema } },
+      content: { "application/json": { schema: ApiErrorResponseSchema } },
       description: "リクエスト不正",
    },
    500: {
-      content: { "application/json": { schema: errorResponseSchema } },
+      content: { "application/json": { schema: ApiErrorResponseSchema } },
       description: "サーバーエラー",
    },
 }
-
-const successResponseSchema = <T extends z.ZodType>(data: T) =>
-   z.object({
-      success: z.literal(true),
-      data,
-   })
 
 const deleteAudioData = async (
    c: Context<{ Bindings: Env }>,
@@ -182,7 +94,7 @@ const uploadUrlRoute = createRoute({
       200: {
          content: {
             "application/json": {
-               schema: successResponseSchema(uploadUrlDataSchema),
+               schema: ApiSuccessResponseSchema(UploadUrlDataSchema),
             },
          },
          description: "Presigned URLと関連情報",
@@ -215,7 +127,7 @@ const uploadRoute = createRoute({
       200: {
          content: {
             "application/json": {
-               schema: successResponseSchema(audioUploadResultSchema),
+               schema: ApiSuccessResponseSchema(AudioUploadResultSchema),
             },
          },
          description: "アップロード結果",
@@ -240,7 +152,7 @@ const deleteAudioRoute = createRoute({
       200: {
          content: {
             "application/json": {
-               schema: successResponseSchema(
+               schema: ApiSuccessResponseSchema(
                   z.object({
                      deleted: z.boolean(),
                      deletedPath: z.string(),
@@ -270,7 +182,7 @@ const getAudioMetadataRoute = createRoute({
       200: {
          content: {
             "application/json": {
-               schema: successResponseSchema(audioMetadataSchema),
+               schema: ApiSuccessResponseSchema(AudioMetadataSchema),
             },
          },
          description: "メタデータ",
@@ -307,7 +219,7 @@ const analyzeAudioRoute = createRoute({
       200: {
          content: {
             "application/json": {
-               schema: successResponseSchema(analysisJobResultSchema),
+               schema: ApiSuccessResponseSchema(AnalysisJobResultSchema),
             },
          },
          description: "ジョブ投入結果とステータスURL",
@@ -333,7 +245,7 @@ const analysisStatusRoute = createRoute({
       200: {
          content: {
             "application/json": {
-               schema: successResponseSchema(analysisStatusSchema),
+               schema: ApiSuccessResponseSchema(AnalysisStatusSchema),
             },
          },
          description: "ジョブステータスと分析結果",
@@ -352,7 +264,7 @@ const processQueueRoute = createRoute({
       200: {
          content: {
             "application/json": {
-               schema: successResponseSchema(
+               schema: ApiSuccessResponseSchema(
                   z.object({
                      processedCount: z.number(),
                      message: z.string(),

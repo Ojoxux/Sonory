@@ -2,15 +2,30 @@
  * ピン変換ユーティリティ
  */
 
-import type { SoundPinAPI } from "@sonory/shared-types"
+import type { NearbyPin, WeatherData } from "@sonory/shared-types"
 import type { SoundPin } from "@/store/useSoundPinStore"
+
+function normalizeWeather(apiPin: NearbyPin): WeatherData | undefined {
+   const weather = apiPin.weather
+
+   if (!weather) {
+      return undefined
+   }
+
+   return {
+      temperature: weather.temperature,
+      ...(weather.condition != null ? { condition: weather.condition } : {}),
+      ...(weather.windSpeed != null ? { windSpeed: weather.windSpeed } : {}),
+      ...(weather.humidity != null ? { humidity: weather.humidity } : {}),
+   }
+}
 
 /**
  * APIピンをローカルピン形式に変換
  * @param apiPin - APIピン
  * @returns ローカルピン
  */
-export const convertApiPinToLocal = (apiPin: SoundPinAPI): SoundPin => {
+export const convertApiPinToLocal = (apiPin: NearbyPin): SoundPin => {
    // デバッグ: APIピンの変換処理をログ出力
    if (process.env.NODE_ENV === "development") {
       console.log("🔄 Converting API pin to local format:", {
@@ -80,13 +95,6 @@ export const convertApiPinToLocal = (apiPin: SoundPinAPI): SoundPin => {
       isPersisted: true,
       timeTag: (apiPin.timeTag as "朝" | "昼" | "夕" | "夜") || undefined,
       environment,
-      weather: apiPin.weather
-         ? {
-              temperature: apiPin.weather.temperature,
-              condition: apiPin.weather.condition || "unknown",
-              windSpeed: apiPin.weather.windSpeed,
-              humidity: apiPin.weather.humidity,
-           }
-         : undefined,
+      weather: normalizeWeather(apiPin),
    }
 }

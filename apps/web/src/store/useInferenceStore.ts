@@ -47,16 +47,21 @@ export const useInferenceStore = create<InferenceState>((set, _get) => ({
 
          let results: InferenceResult[]
          let isUsingFallback = false
+         let resolvedAudioId = audioData.id
 
          try {
             const recorderState = useRecorderStore.getState()
             let audioUrl = recorderState.uploadedAudioUrl
+            let audioId = recorderState.uploadedAudioId
 
-            if (!audioUrl) {
-               audioUrl = await uploadAudioToStorage(audioData)
+            if (!audioUrl || !audioId) {
+               const uploaded = await uploadAudioToStorage(audioData)
+               audioUrl = uploaded.audioUrl
+               audioId = uploaded.audioId
             }
 
-            results = await callBackendAnalysis(audioData.id, audioUrl)
+            resolvedAudioId = audioId
+            results = await callBackendAnalysis(audioId, audioUrl)
 
             const pythonResult: PythonAnalysisResult = {
                classifications: results.map((r) => ({
@@ -68,6 +73,7 @@ export const useInferenceStore = create<InferenceState>((set, _get) => ({
             set({
                analysisStatus: "success",
                backendAnalysisResult: pythonResult,
+               lastAnalyzedAudioId: resolvedAudioId,
             })
          } catch (_backendError) {
             isUsingFallback = true

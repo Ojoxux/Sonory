@@ -1,13 +1,9 @@
 import type { MapBounds, WeatherData } from "@sonory/shared-types"
 import { create } from "zustand"
 import { calculateDistanceKm, generateTimeTag } from "../domain/geo"
-import {
-   convertApiResponseToPin,
-   convertDbPinToSoundPin,
-} from "../domain/pin-converter"
+import { convertApiResponseToPin } from "../domain/pin-converter"
 import {
    createPinFromStorageUrl,
-   fetchNearbyPins,
    uploadPinWithAudio,
 } from "../services/pin-api"
 import { fetchWeatherData } from "../services/weather"
@@ -58,8 +54,6 @@ export type SoundPinState = {
    pinCreationStatus: PinCreationStatus
    pinCreationError: string | null
    lastCreatedPinId: string | null
-   isLoadingNearbyPins: boolean
-   nearbyPinsError: string | null
    addPin: (
       pin: Omit<
          SoundPin,
@@ -83,7 +77,6 @@ export type SoundPinState = {
    setPinCreationStatus: (status: PinCreationStatus) => void
    setPinCreationError: (error: string | null) => void
    mergeLocalAndPersistedPins: () => SoundPin[]
-   loadNearbyPins: (bounds: MapBounds) => Promise<SoundPin[]>
    clearPinCreationState: () => void
 }
 
@@ -133,8 +126,6 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
    pinCreationStatus: "idle",
    pinCreationError: null,
    lastCreatedPinId: null,
-   isLoadingNearbyPins: false,
-   nearbyPinsError: null,
 
    addPin: (pin): void => {
       const primaryResult = pin.classificationResults[0]
@@ -300,37 +291,6 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
          if (!a.isPersisted && b.isPersisted) return 1
          return b.recordedAt.getTime() - a.recordedAt.getTime()
       })
-   },
-
-   loadNearbyPins: async (bounds: MapBounds): Promise<SoundPin[]> => {
-      try {
-         set({ isLoadingNearbyPins: true, nearbyPinsError: null })
-
-         const result = await fetchNearbyPins(bounds)
-
-         if (!result.success || !result.data) {
-            throw new Error("ピン取得結果が不正です")
-         }
-
-         const loadedPins: SoundPin[] = (result.data || []).map(
-            (dbPin: unknown) => convertDbPinToSoundPin(dbPin),
-         )
-
-         set({
-            persistedPins: loadedPins,
-            isLoadingNearbyPins: false,
-            nearbyPinsError: null,
-         })
-
-         return loadedPins
-      } catch (error) {
-         const errorMessage =
-            error instanceof Error ? error.message : "ピン取得に失敗しました"
-
-         set({ isLoadingNearbyPins: false, nearbyPinsError: errorMessage })
-
-         throw error
-      }
    },
 
    clearPinCreationState: (): void => {

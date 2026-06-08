@@ -4,15 +4,25 @@
  * バックエンドAPIとの通信ロジックを集約
  */
 
-import type { MapBounds, WeatherData } from "@sonory/shared-types"
+import type {
+   CreatePinRequestBody,
+   DeletePinResponse,
+   HonoFormRequestBody,
+   MapBounds,
+   NearbyPinsResponse,
+   WeatherData,
+} from "@sonory/shared-types"
 import type { PinApiResponse } from "../domain/pin-types"
 import { type ApiClient, defaultApiClient } from "./api-client"
+
+type PinTimeTag = NonNullable<CreatePinRequestBody["timeTag"]>
+type PinMetadata = NonNullable<CreatePinRequestBody["metadata"]>
 
 interface PinCreateParams {
    audioFilePath: string
    location: { lat: number; lng: number; accuracy?: number }
    duration: number
-   timeTag: string
+   timeTag: PinTimeTag
    title: string
    deviceInfo: string
    weather?: WeatherData
@@ -22,7 +32,7 @@ interface PinUploadParams {
    audioBlob: Blob
    location: { lat: number; lng: number; accuracy?: number }
    duration: number
-   timeTag: string
+   timeTag: PinTimeTag
    title: string
    deviceInfo: string
    weather?: WeatherData
@@ -38,7 +48,7 @@ export async function createPinFromStorageUrl(
    params: PinCreateParams,
    client: ApiClient = defaultApiClient,
 ): Promise<PinApiResponse> {
-   return client.post<PinApiResponse>("/api/pins", {
+   const body: CreatePinRequestBody = {
       audio_file_path: params.audioFilePath,
       location: params.location,
       metadata: {
@@ -48,7 +58,9 @@ export async function createPinFromStorageUrl(
          deviceInfo: params.deviceInfo,
          ...(params.weather ? { weather: params.weather } : {}),
       },
-   })
+   }
+
+   return client.post<PinApiResponse>("/api/pins", body)
 }
 
 /**
@@ -61,19 +73,23 @@ export async function uploadPinWithAudio(
    params: PinUploadParams,
    client: ApiClient = defaultApiClient,
 ): Promise<PinApiResponse> {
+   type UploadPinForm = HonoFormRequestBody<"/api/pins/upload", "post">
+   const metadata: PinMetadata = {
+      duration: params.duration,
+      timeTag: params.timeTag,
+      title: params.title,
+      deviceInfo: params.deviceInfo,
+      ...(params.weather ? { weather: params.weather } : {}),
+   }
+   const formShape: UploadPinForm = {
+      audio: params.audioBlob,
+      location: JSON.stringify(params.location),
+      metadata: JSON.stringify(metadata),
+   }
    const formData = new FormData()
-   formData.append("audio", params.audioBlob, "audio.webm")
-   formData.append("location", JSON.stringify(params.location))
-   formData.append(
-      "metadata",
-      JSON.stringify({
-         duration: params.duration,
-         timeTag: params.timeTag,
-         title: params.title,
-         deviceInfo: params.deviceInfo,
-         ...(params.weather ? { weather: params.weather } : {}),
-      }),
-   )
+   formData.append("audio", formShape.audio as Blob, "audio.webm")
+   formData.append("location", formShape.location)
+   formData.append("metadata", formShape.metadata ?? "{}")
 
    return client.postFormData<PinApiResponse>("/api/pins/upload", formData)
 }
@@ -87,7 +103,7 @@ export async function uploadPinWithAudio(
 export async function fetchNearbyPins(
    bounds: MapBounds,
    client: ApiClient = defaultApiClient,
-): Promise<{ success: boolean; data?: unknown[] }> {
+): Promise<NearbyPinsResponse> {
    const params = new URLSearchParams({
       north: bounds.north.toString(),
       south: bounds.south.toString(),
@@ -96,9 +112,7 @@ export async function fetchNearbyPins(
       limit: "50",
    })
 
-   return client.get<{ success: boolean; data?: unknown[] }>(
-      `/api/pins/nearby?${params}`,
-   )
+   return client.get<NearbyPinsResponse>(`/api/pins/nearby?${params}`)
 }
 
 /**
@@ -111,9 +125,7 @@ export async function deletePin(
    pinId: string,
    client: ApiClient = defaultApiClient,
 ): Promise<void> {
-   const result = await client.delete<{ success: boolean }>(
-      `/api/pins/${pinId}`,
-   )
+   const result = await client.delete<DeletePinResponse>(`/api/pins/${pinId}`)
 
    if (!result.success) {
       throw new Error("ピン削除結果が不正です")

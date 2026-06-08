@@ -29,11 +29,26 @@ class ApiError extends Error {
 
 async function handleResponse<T>(response: Response): Promise<T> {
    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
+      const rawBody = await response.text()
+      let errorData: unknown = {}
+
+      if (rawBody) {
+         try {
+            errorData = JSON.parse(rawBody) as unknown
+         } catch {
+            throw new ApiError(rawBody, response.status)
+         }
+      }
+
+      const parsed = errorData as {
+         message?: string
+         error?: { message?: string }
+      }
       const message =
-         (errorData as { message?: string }).message ??
-         (errorData as { error?: { message?: string } }).error?.message ??
+         parsed.message ??
+         parsed.error?.message ??
          `API error: ${response.status}`
+
       throw new ApiError(message, response.status)
    }
    return response.json() as Promise<T>
