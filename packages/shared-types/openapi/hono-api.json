@@ -18,9 +18,7 @@
    "paths": {
       "/api/health": {
          "get": {
-            "tags": [
-               "Health"
-            ],
+            "tags": ["Health"],
             "summary": "基本ヘルスチェック",
             "description": "Supabase接続確認付きの基本的なヘルスチェック",
             "responses": {
@@ -33,9 +31,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    true
-                                 ]
+                                 "enum": [true]
                               },
                               "data": {
                                  "type": "object",
@@ -79,11 +75,7 @@
                                              ]
                                           }
                                        },
-                                       "required": [
-                                          "database",
-                                          "storage",
-                                          "ai"
-                                       ]
+                                       "required": ["database", "storage", "ai"]
                                     },
                                     "uptime": {
                                        "type": "number"
@@ -98,10 +90,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "data"
-                           ]
+                           "required": ["success", "data"]
                         }
                      }
                   }
@@ -111,9 +100,7 @@
       },
       "/api/health/detailed": {
          "get": {
-            "tags": [
-               "Health"
-            ],
+            "tags": ["Health"],
             "summary": "詳細ヘルスチェック",
             "description": "管理者用の詳細なヘルスチェック",
             "responses": {
@@ -126,9 +113,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    true
-                                 ]
+                                 "enum": [true]
                               },
                               "data": {
                                  "type": "object",
@@ -172,11 +157,7 @@
                                              ]
                                           }
                                        },
-                                       "required": [
-                                          "database",
-                                          "storage",
-                                          "ai"
-                                       ]
+                                       "required": ["database", "storage", "ai"]
                                     },
                                     "uptime": {
                                        "type": "number"
@@ -191,10 +172,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "data"
-                           ]
+                           "required": ["success", "data"]
                         }
                      }
                   }
@@ -208,9 +186,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    true
-                                 ]
+                                 "enum": [true]
                               },
                               "data": {
                                  "type": "object",
@@ -254,11 +230,7 @@
                                              ]
                                           }
                                        },
-                                       "required": [
-                                          "database",
-                                          "storage",
-                                          "ai"
-                                       ]
+                                       "required": ["database", "storage", "ai"]
                                     },
                                     "uptime": {
                                        "type": "number"
@@ -273,10 +245,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "data"
-                           ]
+                           "required": ["success", "data"]
                         }
                      }
                   }
@@ -286,9 +255,7 @@
       },
       "/api/audio/upload-url": {
          "post": {
-            "tags": [
-               "Audio"
-            ],
+            "tags": ["Audio"],
             "summary": "Presigned URL生成",
             "description": "Supabase Storageへの直接アップロード用Presigned URLを生成",
             "requestBody": {
@@ -305,9 +272,7 @@
                               "type": "string"
                            }
                         },
-                        "required": [
-                           "fileName"
-                        ]
+                        "required": ["fileName"]
                      }
                   }
                }
@@ -322,9 +287,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    true
-                                 ]
+                                 "enum": [true]
                               },
                               "data": {
                                  "type": "object",
@@ -350,10 +313,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "data"
-                           ]
+                           "required": ["success", "data"]
                         }
                      }
                   }
@@ -367,9 +327,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -398,10 +356,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -415,9 +370,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -446,10 +399,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -459,9 +409,7 @@
       },
       "/api/audio/upload": {
          "post": {
-            "tags": [
-               "Audio"
-            ],
+            "tags": ["Audio"],
             "summary": "音声ファイルアップロード",
             "description": "音声ファイルを直接アップロード（FormData）",
             "requestBody": {
@@ -492,9 +440,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    true
-                                 ]
+                                 "enum": [true]
                               },
                               "data": {
                                  "type": "object",
@@ -560,10 +506,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "data"
-                           ]
+                           "required": ["success", "data"]
                         }
                      }
                   }
@@ -577,9 +520,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -608,10 +549,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -625,9 +563,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -656,10 +592,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -669,9 +602,7 @@
       },
       "/api/audio/{filePath}": {
          "delete": {
-            "tags": [
-               "Audio"
-            ],
+            "tags": ["Audio"],
             "summary": "音声ファイル削除",
             "description": "音声ファイルを削除",
             "parameters": [
@@ -694,9 +625,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    true
-                                 ]
+                                 "enum": [true]
                               },
                               "data": {
                                  "type": "object",
@@ -708,16 +637,10 @@
                                        "type": "string"
                                     }
                                  },
-                                 "required": [
-                                    "deleted",
-                                    "deletedPath"
-                                 ]
+                                 "required": ["deleted", "deletedPath"]
                               }
                            },
-                           "required": [
-                              "success",
-                              "data"
-                           ]
+                           "required": ["success", "data"]
                         }
                      }
                   }
@@ -731,9 +654,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -762,10 +683,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -779,9 +697,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -810,10 +726,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -823,9 +736,7 @@
       },
       "/api/audio/{audioId}/metadata": {
          "get": {
-            "tags": [
-               "Audio"
-            ],
+            "tags": ["Audio"],
             "summary": "音声メタデータ取得",
             "description": "音声ファイルのメタデータを取得",
             "parameters": [
@@ -848,9 +759,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    true
-                                 ]
+                                 "enum": [true]
                               },
                               "data": {
                                  "type": "object",
@@ -896,10 +805,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "data"
-                           ]
+                           "required": ["success", "data"]
                         }
                      }
                   }
@@ -913,9 +819,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -944,10 +848,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -961,9 +862,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -992,10 +891,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -1005,9 +901,7 @@
       },
       "/api/audio/{audioId}/analyze": {
          "post": {
-            "tags": [
-               "Audio"
-            ],
+            "tags": ["Audio"],
             "summary": "音声分析ジョブ投入",
             "description": "音声分析ジョブを非同期で投入（Cloudflare Workers 30秒制限対応）",
             "parameters": [
@@ -1035,9 +929,7 @@
                               "type": "number"
                            }
                         },
-                        "required": [
-                           "audioUrl"
-                        ]
+                        "required": ["audioUrl"]
                      }
                   }
                }
@@ -1052,9 +944,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    true
-                                 ]
+                                 "enum": [true]
                               },
                               "data": {
                                  "type": "object",
@@ -1078,17 +968,10 @@
                                        "type": "string"
                                     }
                                  },
-                                 "required": [
-                                    "jobId",
-                                    "status",
-                                    "statusUrl"
-                                 ]
+                                 "required": ["jobId", "status", "statusUrl"]
                               }
                            },
-                           "required": [
-                              "success",
-                              "data"
-                           ]
+                           "required": ["success", "data"]
                         }
                      }
                   }
@@ -1102,9 +985,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -1133,10 +1014,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -1150,9 +1028,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -1181,10 +1057,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -1194,9 +1067,7 @@
       },
       "/api/audio/{audioId}/analysis/{jobId}/status": {
          "get": {
-            "tags": [
-               "Audio"
-            ],
+            "tags": ["Audio"],
             "summary": "分析ステータス取得",
             "description": "分析ジョブのステータスと結果を取得",
             "parameters": [
@@ -1227,9 +1098,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    true
-                                 ]
+                                 "enum": [true]
                               },
                               "data": {
                                  "type": "object",
@@ -1309,9 +1178,7 @@
                                              ]
                                           }
                                        },
-                                       "required": [
-                                          "classifications"
-                                       ]
+                                       "required": ["classifications"]
                                     },
                                     "error": {
                                        "type": "object",
@@ -1323,9 +1190,7 @@
                                              "type": "string"
                                           }
                                        },
-                                       "required": [
-                                          "message"
-                                       ]
+                                       "required": ["message"]
                                     },
                                     "createdAt": {
                                        "type": "string"
@@ -1348,10 +1213,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "data"
-                           ]
+                           "required": ["success", "data"]
                         }
                      }
                   }
@@ -1365,9 +1227,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -1396,10 +1256,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -1413,9 +1270,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -1444,10 +1299,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -1457,9 +1309,7 @@
       },
       "/api/audio/internal/process-queue": {
          "post": {
-            "tags": [
-               "Internal"
-            ],
+            "tags": ["Internal"],
             "summary": "キュー処理",
             "description": "キューから分析ジョブを取得して処理（内部用・Cron Trigger用）",
             "responses": {
@@ -1472,9 +1322,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    true
-                                 ]
+                                 "enum": [true]
                               },
                               "data": {
                                  "type": "object",
@@ -1486,16 +1334,10 @@
                                        "type": "string"
                                     }
                                  },
-                                 "required": [
-                                    "processedCount",
-                                    "message"
-                                 ]
+                                 "required": ["processedCount", "message"]
                               }
                            },
-                           "required": [
-                              "success",
-                              "data"
-                           ]
+                           "required": ["success", "data"]
                         }
                      }
                   }
@@ -1509,9 +1351,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -1540,10 +1380,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -1557,9 +1394,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -1588,10 +1423,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -1601,9 +1433,7 @@
       },
       "/api/pins": {
          "post": {
-            "tags": [
-               "Pins"
-            ],
+            "tags": ["Pins"],
             "summary": "ピン作成",
             "description": "新しい音声ピンを作成",
             "requestBody": {
@@ -1632,10 +1462,7 @@
                                     "exclusiveMinimum": true
                                  }
                               },
-                              "required": [
-                                 "lat",
-                                 "lng"
-                              ]
+                              "required": ["lat", "lng"]
                            },
                            "audio": {
                               "type": "object",
@@ -1651,21 +1478,13 @@
                                  },
                                  "format": {
                                     "type": "string",
-                                    "enum": [
-                                       "webm",
-                                       "mp3",
-                                       "wav"
-                                    ]
+                                    "enum": ["webm", "mp3", "wav"]
                                  },
                                  "filePath": {
                                     "type": "string"
                                  }
                               },
-                              "required": [
-                                 "url",
-                                 "duration",
-                                 "format"
-                              ]
+                              "required": ["url", "duration", "format"]
                            },
                            "audio_file_path": {
                               "type": "string"
@@ -1680,12 +1499,7 @@
                                  },
                                  "timeTag": {
                                     "type": "string",
-                                    "enum": [
-                                       "朝",
-                                       "昼",
-                                       "夕",
-                                       "夜"
-                                    ]
+                                    "enum": ["朝", "昼", "夕", "夜"]
                                  },
                                  "title": {
                                     "type": "string",
@@ -1715,9 +1529,7 @@
                                           "maximum": 100
                                        }
                                     },
-                                    "required": [
-                                       "temperature"
-                                    ]
+                                    "required": ["temperature"]
                                  }
                               }
                            },
@@ -1742,18 +1554,11 @@
                                     "maximum": 100
                                  }
                               },
-                              "required": [
-                                 "temperature"
-                              ]
+                              "required": ["temperature"]
                            },
                            "timeTag": {
                               "type": "string",
-                              "enum": [
-                                 "朝",
-                                 "昼",
-                                 "夕",
-                                 "夜"
-                              ]
+                              "enum": ["朝", "昼", "夕", "夜"]
                            },
                            "title": {
                               "type": "string",
@@ -1763,9 +1568,7 @@
                               "type": "string"
                            }
                         },
-                        "required": [
-                           "location"
-                        ]
+                        "required": ["location"]
                      }
                   }
                }
@@ -1780,9 +1583,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    true
-                                 ]
+                                 "enum": [true]
                               },
                               "data": {
                                  "type": "object",
@@ -1812,10 +1613,7 @@
                                              "exclusiveMinimum": true
                                           }
                                        },
-                                       "required": [
-                                          "lat",
-                                          "lng"
-                                       ]
+                                       "required": ["lat", "lng"]
                                     },
                                     "audio": {
                                        "type": "object",
@@ -1839,11 +1637,7 @@
                                              ]
                                           }
                                        },
-                                       "required": [
-                                          "url",
-                                          "duration",
-                                          "format"
-                                       ]
+                                       "required": ["url", "duration", "format"]
                                     },
                                     "weather": {
                                        "type": "object",
@@ -1866,18 +1660,11 @@
                                              "maximum": 100
                                           }
                                        },
-                                       "required": [
-                                          "temperature"
-                                       ]
+                                       "required": ["temperature"]
                                     },
                                     "timeTag": {
                                        "type": "string",
-                                       "enum": [
-                                          "朝",
-                                          "昼",
-                                          "夕",
-                                          "夜"
-                                       ]
+                                       "enum": ["朝", "昼", "夕", "夜"]
                                     },
                                     "aiAnalysis": {
                                        "type": "object",
@@ -1956,10 +1743,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "data"
-                           ]
+                           "required": ["success", "data"]
                         }
                      }
                   }
@@ -1973,9 +1757,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -2004,10 +1786,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -2021,9 +1800,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -2052,10 +1829,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -2069,9 +1843,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -2100,10 +1872,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -2113,9 +1882,7 @@
       },
       "/api/pins/upload": {
          "post": {
-            "tags": [
-               "Pins"
-            ],
+            "tags": ["Pins"],
             "summary": "音声アップロード付きピン作成",
             "description": "音声ファイルをアップロードしてピンを作成",
             "requestBody": {
@@ -2135,9 +1902,7 @@
                               "type": "string"
                            }
                         },
-                        "required": [
-                           "location"
-                        ]
+                        "required": ["location"]
                      }
                   }
                }
@@ -2152,9 +1917,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    true
-                                 ]
+                                 "enum": [true]
                               },
                               "data": {
                                  "type": "object",
@@ -2184,10 +1947,7 @@
                                              "exclusiveMinimum": true
                                           }
                                        },
-                                       "required": [
-                                          "lat",
-                                          "lng"
-                                       ]
+                                       "required": ["lat", "lng"]
                                     },
                                     "audio": {
                                        "type": "object",
@@ -2211,11 +1971,7 @@
                                              ]
                                           }
                                        },
-                                       "required": [
-                                          "url",
-                                          "duration",
-                                          "format"
-                                       ]
+                                       "required": ["url", "duration", "format"]
                                     },
                                     "weather": {
                                        "type": "object",
@@ -2238,18 +1994,11 @@
                                              "maximum": 100
                                           }
                                        },
-                                       "required": [
-                                          "temperature"
-                                       ]
+                                       "required": ["temperature"]
                                     },
                                     "timeTag": {
                                        "type": "string",
-                                       "enum": [
-                                          "朝",
-                                          "昼",
-                                          "夕",
-                                          "夜"
-                                       ]
+                                       "enum": ["朝", "昼", "夕", "夜"]
                                     },
                                     "aiAnalysis": {
                                        "type": "object",
@@ -2328,10 +2077,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "data"
-                           ]
+                           "required": ["success", "data"]
                         }
                      }
                   }
@@ -2345,9 +2091,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -2376,10 +2120,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -2393,9 +2134,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -2424,10 +2163,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -2441,9 +2177,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -2472,10 +2206,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -2485,9 +2216,7 @@
       },
       "/api/pins/nearby": {
          "get": {
-            "tags": [
-               "Pins"
-            ],
+            "tags": ["Pins"],
             "summary": "周辺ピン取得",
             "description": "指定された境界内のピンを取得",
             "parameters": [
@@ -2568,9 +2297,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    true
-                                 ]
+                                 "enum": [true]
                               },
                               "data": {
                                  "type": "array",
@@ -2602,10 +2329,7 @@
                                                 "exclusiveMinimum": true
                                              }
                                           },
-                                          "required": [
-                                             "lat",
-                                             "lng"
-                                          ]
+                                          "required": ["lat", "lng"]
                                        },
                                        "audio": {
                                           "type": "object",
@@ -2656,18 +2380,11 @@
                                                 "maximum": 100
                                              }
                                           },
-                                          "required": [
-                                             "temperature"
-                                          ]
+                                          "required": ["temperature"]
                                        },
                                        "timeTag": {
                                           "type": "string",
-                                          "enum": [
-                                             "朝",
-                                             "昼",
-                                             "夕",
-                                             "夜"
-                                          ]
+                                          "enum": ["朝", "昼", "夕", "夜"]
                                        },
                                        "aiAnalysis": {
                                           "type": "object",
@@ -2753,10 +2470,7 @@
                                  }
                               }
                            },
-                           "required": [
-                              "success",
-                              "data"
-                           ]
+                           "required": ["success", "data"]
                         }
                      }
                   }
@@ -2770,9 +2484,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -2801,10 +2513,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -2818,9 +2527,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -2849,10 +2556,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -2866,9 +2570,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -2897,10 +2599,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -2910,9 +2609,7 @@
       },
       "/api/pins/search": {
          "get": {
-            "tags": [
-               "Pins"
-            ],
+            "tags": ["Pins"],
             "summary": "ピン検索",
             "description": "条件を指定してピンを検索",
             "parameters": [
@@ -3020,9 +2717,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    true
-                                 ]
+                                 "enum": [true]
                               },
                               "data": {
                                  "type": "array",
@@ -3054,10 +2749,7 @@
                                                 "exclusiveMinimum": true
                                              }
                                           },
-                                          "required": [
-                                             "lat",
-                                             "lng"
-                                          ]
+                                          "required": ["lat", "lng"]
                                        },
                                        "audio": {
                                           "type": "object",
@@ -3108,18 +2800,11 @@
                                                 "maximum": 100
                                              }
                                           },
-                                          "required": [
-                                             "temperature"
-                                          ]
+                                          "required": ["temperature"]
                                        },
                                        "timeTag": {
                                           "type": "string",
-                                          "enum": [
-                                             "朝",
-                                             "昼",
-                                             "夕",
-                                             "夜"
-                                          ]
+                                          "enum": ["朝", "昼", "夕", "夜"]
                                        },
                                        "aiAnalysis": {
                                           "type": "object",
@@ -3199,10 +2884,7 @@
                                  }
                               }
                            },
-                           "required": [
-                              "success",
-                              "data"
-                           ]
+                           "required": ["success", "data"]
                         }
                      }
                   }
@@ -3216,9 +2898,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -3247,10 +2927,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -3264,9 +2941,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -3295,10 +2970,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -3312,9 +2984,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -3343,10 +3013,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -3356,9 +3023,7 @@
       },
       "/api/pins/user/{userId}": {
          "get": {
-            "tags": [
-               "Pins"
-            ],
+            "tags": ["Pins"],
             "summary": "ユーザーのピン取得",
             "description": "指定ユーザーのピン一覧を取得",
             "parameters": [
@@ -3381,9 +3046,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    true
-                                 ]
+                                 "enum": [true]
                               },
                               "data": {
                                  "type": "array",
@@ -3415,10 +3078,7 @@
                                                 "exclusiveMinimum": true
                                              }
                                           },
-                                          "required": [
-                                             "lat",
-                                             "lng"
-                                          ]
+                                          "required": ["lat", "lng"]
                                        },
                                        "audio": {
                                           "type": "object",
@@ -3469,18 +3129,11 @@
                                                 "maximum": 100
                                              }
                                           },
-                                          "required": [
-                                             "temperature"
-                                          ]
+                                          "required": ["temperature"]
                                        },
                                        "timeTag": {
                                           "type": "string",
-                                          "enum": [
-                                             "朝",
-                                             "昼",
-                                             "夕",
-                                             "夜"
-                                          ]
+                                          "enum": ["朝", "昼", "夕", "夜"]
                                        },
                                        "aiAnalysis": {
                                           "type": "object",
@@ -3560,10 +3213,7 @@
                                  }
                               }
                            },
-                           "required": [
-                              "success",
-                              "data"
-                           ]
+                           "required": ["success", "data"]
                         }
                      }
                   }
@@ -3577,9 +3227,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -3608,10 +3256,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -3625,9 +3270,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -3656,10 +3299,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -3673,9 +3313,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -3704,10 +3342,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -3717,9 +3352,7 @@
       },
       "/api/pins/batch": {
          "post": {
-            "tags": [
-               "Pins"
-            ],
+            "tags": ["Pins"],
             "summary": "複数ピン一括作成",
             "description": "複数のピンを一括で作成",
             "requestBody": {
@@ -3750,10 +3383,7 @@
                                        "exclusiveMinimum": true
                                     }
                                  },
-                                 "required": [
-                                    "lat",
-                                    "lng"
-                                 ]
+                                 "required": ["lat", "lng"]
                               },
                               "audio": {
                                  "type": "object",
@@ -3769,21 +3399,13 @@
                                     },
                                     "format": {
                                        "type": "string",
-                                       "enum": [
-                                          "webm",
-                                          "mp3",
-                                          "wav"
-                                       ]
+                                       "enum": ["webm", "mp3", "wav"]
                                     },
                                     "filePath": {
                                        "type": "string"
                                     }
                                  },
-                                 "required": [
-                                    "url",
-                                    "duration",
-                                    "format"
-                                 ]
+                                 "required": ["url", "duration", "format"]
                               },
                               "audio_file_path": {
                                  "type": "string"
@@ -3798,12 +3420,7 @@
                                     },
                                     "timeTag": {
                                        "type": "string",
-                                       "enum": [
-                                          "朝",
-                                          "昼",
-                                          "夕",
-                                          "夜"
-                                       ]
+                                       "enum": ["朝", "昼", "夕", "夜"]
                                     },
                                     "title": {
                                        "type": "string",
@@ -3833,9 +3450,7 @@
                                              "maximum": 100
                                           }
                                        },
-                                       "required": [
-                                          "temperature"
-                                       ]
+                                       "required": ["temperature"]
                                     }
                                  }
                               },
@@ -3860,18 +3475,11 @@
                                        "maximum": 100
                                     }
                                  },
-                                 "required": [
-                                    "temperature"
-                                 ]
+                                 "required": ["temperature"]
                               },
                               "timeTag": {
                                  "type": "string",
-                                 "enum": [
-                                    "朝",
-                                    "昼",
-                                    "夕",
-                                    "夜"
-                                 ]
+                                 "enum": ["朝", "昼", "夕", "夜"]
                               },
                               "title": {
                                  "type": "string",
@@ -3881,9 +3489,7 @@
                                  "type": "string"
                               }
                            },
-                           "required": [
-                              "location"
-                           ]
+                           "required": ["location"]
                         }
                      }
                   }
@@ -3899,9 +3505,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    true
-                                 ]
+                                 "enum": [true]
                               },
                               "data": {
                                  "type": "array",
@@ -3933,10 +3537,7 @@
                                                 "exclusiveMinimum": true
                                              }
                                           },
-                                          "required": [
-                                             "lat",
-                                             "lng"
-                                          ]
+                                          "required": ["lat", "lng"]
                                        },
                                        "audio": {
                                           "type": "object",
@@ -3987,18 +3588,11 @@
                                                 "maximum": 100
                                              }
                                           },
-                                          "required": [
-                                             "temperature"
-                                          ]
+                                          "required": ["temperature"]
                                        },
                                        "timeTag": {
                                           "type": "string",
-                                          "enum": [
-                                             "朝",
-                                             "昼",
-                                             "夕",
-                                             "夜"
-                                          ]
+                                          "enum": ["朝", "昼", "夕", "夜"]
                                        },
                                        "aiAnalysis": {
                                           "type": "object",
@@ -4084,10 +3678,7 @@
                                  }
                               }
                            },
-                           "required": [
-                              "success",
-                              "data"
-                           ]
+                           "required": ["success", "data"]
                         }
                      }
                   }
@@ -4101,9 +3692,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -4132,10 +3721,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -4149,9 +3735,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -4180,10 +3764,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -4197,9 +3778,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -4228,10 +3807,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -4241,9 +3817,7 @@
       },
       "/api/pins/{id}": {
          "get": {
-            "tags": [
-               "Pins"
-            ],
+            "tags": ["Pins"],
             "summary": "ピン詳細取得",
             "description": "IDでピンを取得",
             "parameters": [
@@ -4266,9 +3840,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    true
-                                 ]
+                                 "enum": [true]
                               },
                               "data": {
                                  "type": "object",
@@ -4298,10 +3870,7 @@
                                              "exclusiveMinimum": true
                                           }
                                        },
-                                       "required": [
-                                          "lat",
-                                          "lng"
-                                       ]
+                                       "required": ["lat", "lng"]
                                     },
                                     "audio": {
                                        "type": "object",
@@ -4325,11 +3894,7 @@
                                              ]
                                           }
                                        },
-                                       "required": [
-                                          "url",
-                                          "duration",
-                                          "format"
-                                       ]
+                                       "required": ["url", "duration", "format"]
                                     },
                                     "weather": {
                                        "type": "object",
@@ -4352,18 +3917,11 @@
                                              "maximum": 100
                                           }
                                        },
-                                       "required": [
-                                          "temperature"
-                                       ]
+                                       "required": ["temperature"]
                                     },
                                     "timeTag": {
                                        "type": "string",
-                                       "enum": [
-                                          "朝",
-                                          "昼",
-                                          "夕",
-                                          "夜"
-                                       ]
+                                       "enum": ["朝", "昼", "夕", "夜"]
                                     },
                                     "aiAnalysis": {
                                        "type": "object",
@@ -4442,10 +4000,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "data"
-                           ]
+                           "required": ["success", "data"]
                         }
                      }
                   }
@@ -4459,9 +4014,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -4490,10 +4043,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -4507,9 +4057,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -4538,10 +4086,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -4555,9 +4100,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -4586,10 +4129,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -4597,9 +4137,7 @@
             }
          },
          "put": {
-            "tags": [
-               "Pins"
-            ],
+            "tags": ["Pins"],
             "summary": "ピン更新",
             "description": "ピンの情報を更新",
             "parameters": [
@@ -4667,10 +4205,7 @@
                                     "type": "string"
                                  }
                               },
-                              "required": [
-                                 "transcription",
-                                 "categories"
-                              ]
+                              "required": ["transcription", "categories"]
                            }
                         }
                      }
@@ -4687,9 +4222,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    true
-                                 ]
+                                 "enum": [true]
                               },
                               "data": {
                                  "type": "object",
@@ -4719,10 +4252,7 @@
                                              "exclusiveMinimum": true
                                           }
                                        },
-                                       "required": [
-                                          "lat",
-                                          "lng"
-                                       ]
+                                       "required": ["lat", "lng"]
                                     },
                                     "audio": {
                                        "type": "object",
@@ -4746,11 +4276,7 @@
                                              ]
                                           }
                                        },
-                                       "required": [
-                                          "url",
-                                          "duration",
-                                          "format"
-                                       ]
+                                       "required": ["url", "duration", "format"]
                                     },
                                     "weather": {
                                        "type": "object",
@@ -4773,18 +4299,11 @@
                                              "maximum": 100
                                           }
                                        },
-                                       "required": [
-                                          "temperature"
-                                       ]
+                                       "required": ["temperature"]
                                     },
                                     "timeTag": {
                                        "type": "string",
-                                       "enum": [
-                                          "朝",
-                                          "昼",
-                                          "夕",
-                                          "夜"
-                                       ]
+                                       "enum": ["朝", "昼", "夕", "夜"]
                                     },
                                     "aiAnalysis": {
                                        "type": "object",
@@ -4863,10 +4382,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "data"
-                           ]
+                           "required": ["success", "data"]
                         }
                      }
                   }
@@ -4880,9 +4396,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -4911,10 +4425,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -4928,9 +4439,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -4959,10 +4468,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -4976,9 +4482,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -5007,10 +4511,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -5018,9 +4519,7 @@
             }
          },
          "delete": {
-            "tags": [
-               "Pins"
-            ],
+            "tags": ["Pins"],
             "summary": "ピン削除",
             "description": "ピンを削除",
             "parameters": [
@@ -5043,9 +4542,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    true
-                                 ]
+                                 "enum": [true]
                               },
                               "data": {
                                  "type": "object",
@@ -5054,15 +4551,10 @@
                                        "type": "boolean"
                                     }
                                  },
-                                 "required": [
-                                    "deleted"
-                                 ]
+                                 "required": ["deleted"]
                               }
                            },
-                           "required": [
-                              "success",
-                              "data"
-                           ]
+                           "required": ["success", "data"]
                         }
                      }
                   }
@@ -5076,9 +4568,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -5107,10 +4597,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -5124,9 +4611,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -5155,10 +4640,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -5172,9 +4654,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -5203,10 +4683,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -5216,9 +4693,7 @@
       },
       "/api/pins/{id}/report": {
          "post": {
-            "tags": [
-               "Pins"
-            ],
+            "tags": ["Pins"],
             "summary": "ピン報告",
             "description": "不適切なピンを報告",
             "parameters": [
@@ -5244,9 +4719,7 @@
                               "maxLength": 1000
                            }
                         },
-                        "required": [
-                           "reason"
-                        ]
+                        "required": ["reason"]
                      }
                   }
                }
@@ -5261,9 +4734,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    true
-                                 ]
+                                 "enum": [true]
                               },
                               "data": {
                                  "type": "object",
@@ -5272,15 +4743,10 @@
                                        "type": "boolean"
                                     }
                                  },
-                                 "required": [
-                                    "reported"
-                                 ]
+                                 "required": ["reported"]
                               }
                            },
-                           "required": [
-                              "success",
-                              "data"
-                           ]
+                           "required": ["success", "data"]
                         }
                      }
                   }
@@ -5294,9 +4760,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -5325,10 +4789,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -5342,9 +4803,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -5373,10 +4832,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }
@@ -5390,9 +4846,7 @@
                            "properties": {
                               "success": {
                                  "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
+                                 "enum": [false]
                               },
                               "error": {
                                  "type": "object",
@@ -5421,10 +4875,7 @@
                                  ]
                               }
                            },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
+                           "required": ["success", "error"]
                         }
                      }
                   }

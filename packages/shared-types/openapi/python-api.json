@@ -204,9 +204,7 @@
                }
             },
             "type": "object",
-            "required": [
-               "audio_url"
-            ],
+            "required": ["audio_url"],
             "title": "AudioAnalysisRequest",
             "description": "音響分析リクエスト（URL指定）\n\n音声URLを指定して分析を要求するためのスキーマ。"
          },
@@ -253,11 +251,7 @@
                }
             },
             "type": "object",
-            "required": [
-               "duration",
-               "sample_rate",
-               "channels"
-            ],
+            "required": ["duration", "sample_rate", "channels"],
             "title": "AudioMetadata",
             "description": "音声メタデータ\n\n音声ファイルの基本情報を格納します。"
          },
@@ -277,9 +271,7 @@
                }
             },
             "type": "object",
-            "required": [
-               "file"
-            ],
+            "required": ["file"],
             "title": "Body_analyze_audio_upload_api_v1_analyze_audio_upload_post"
          },
          "ClassificationResult": {
@@ -298,10 +290,7 @@
                }
             },
             "type": "object",
-            "required": [
-               "label",
-               "confidence"
-            ],
+            "required": ["label", "confidence"],
             "title": "ClassificationResult",
             "description": "分類結果\n\nYAMNetによる音響分類の個別結果を表現します。"
          },
@@ -334,10 +323,7 @@
                }
             },
             "type": "object",
-            "required": [
-               "primary_type",
-               "type_scores"
-            ],
+            "required": ["primary_type", "type_scores"],
             "title": "EnvironmentAnalysis",
             "description": "環境分析結果\n\n音響環境の特徴分析結果を表現します。"
          },
@@ -391,11 +377,7 @@
                }
             },
             "type": "object",
-            "required": [
-               "status",
-               "service",
-               "version"
-            ],
+            "required": ["status", "service", "version"],
             "title": "HealthResponse",
             "description": "ヘルスチェックレスポンス\n\nサービスの健全性情報を表現します。"
          },
@@ -432,11 +414,7 @@
                }
             },
             "type": "object",
-            "required": [
-               "loc",
-               "msg",
-               "type"
-            ],
+            "required": ["loc", "msg", "type"],
             "title": "ValidationError"
          }
       }

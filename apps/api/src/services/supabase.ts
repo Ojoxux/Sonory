@@ -84,7 +84,9 @@ export function getSupabaseConfig(env?: Env): SupabaseConfig {
       )
    }
 
-   console.log("⚠️ Supabase設定を環境変数から取得しました（本番環境では非推奨）")
+   console.log(
+      "⚠️ Supabase設定を環境変数から取得しました（本番環境では非推奨）",
+   )
    return { url, anonKey, serviceKey } as const
 }
 
