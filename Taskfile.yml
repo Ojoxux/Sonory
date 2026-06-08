@@ -6,54 +6,61 @@ vars:
 
 tasks:
   sonory:up:
-    desc: "全てのSonoryサービスを起動(Web + Python + API)"
+    desc: "全てのSonoryサービスを起動(Web + API + Infra)"
     cmds:
       - 'echo "Sonory開発環境を起動しています..."'
-      - docker compose up -d
-      - 'echo "Web + Python Audio Analyzer起動完了"'
-      - 'echo "APIサーバーを起動中..."'
+      - task: sonory:infra:up
       - task: sonory:status
       - 'echo ""'
-      - 'echo "APIサーバーを起動します(Ctrl+Cで停止)"'
-      - cd apps/api && npm run dev
+      - 'echo "Web と API を起動します(Ctrl+Cで停止)"'
+      - npx concurrently "cd apps/api && npm run dev" "cd apps/web && npm run dev" --names "api,web" --prefix-colors "blue,green"
 
   sonory:down:
-    desc: "全てのSonoryサービスを停止(Docker + Wrangler)"
+    desc: "全てのSonoryサービスを停止(Infra + Web + API)"
     cmds:
       - docker compose down
-      - 'pkill -f "wrangler dev" || true'
+      - 'pkill -f "wrangler dev|next dev" || true'
       - 'echo "Sonoryサービスを停止しました"'
 
   sonory:dev:
-    desc: "開発モードでサービスを起動(Docker フォアグラウンド + API)"
+    desc: "開発モードでサービスを起動(Infra + Web + API)"
     cmds:
-      - 'echo "Sonory開発環境を起動しています(フォアグラウンド)..."'
+      - 'echo "Sonory開発環境を起動しています..."'
       - 'echo "Ctrl+Cで全サービスを停止できます"'
       - |
         trap 'docker compose down; exit' SIGINT SIGTERM
-        docker compose up &
-        cd apps/api && npm run dev
+        docker compose up -d audio-analyzer redis
+        npx concurrently "cd apps/api && npm run dev" "cd apps/web && npm run dev" --names "api,web" --prefix-colors "blue,green"
 
   sonory:prod:
-    desc: "本番モードでサービスを起動"
+    desc: "本番デプロイ(Web + API)"
     cmds:
-      - docker compose -f {{.COMPOSE_FILE}} -f {{.PROD_COMPOSE_FILE}} up -d
-      - 'echo "APIはCloudflare Workersにデプロイしてください: task sonory:deploy:api"'
+      - task: sonory:deploy
 
   sonory:deploy:
-    desc: "全サービスをデプロイ(Web + Python + API)"
+    desc: "CloudflareへWeb + APIをデプロイ"
     cmds:
       - 'echo "Sonoryサービスをデプロイしています..."'
-      - docker compose -f {{.COMPOSE_FILE}} -f {{.PROD_COMPOSE_FILE}} up -d --build
+      - cd apps/web && npm run deploy:production
       - cd apps/api && npm run deploy:production
-      - 'echo "全サービスのデプロイが完了しました"'
+      - 'echo "Web + APIのデプロイが完了しました"'
 
   sonory:deploy:staging:
-    desc: "ステージング環境に全サービスをデプロイ"
+    desc: "CloudflareステージングへWeb + APIをデプロイ"
     cmds:
-      - docker compose -f {{.COMPOSE_FILE}} -f {{.PROD_COMPOSE_FILE}} up -d --build
+      - cd apps/web && npm run deploy:staging
       - cd apps/api && npm run deploy:staging
       - 'echo "ステージング環境へのデプロイが完了しました"'
+
+  sonory:deploy:web:
+    desc: "WebのみをCloudflare Workersにデプロイ(本番環境)"
+    cmds:
+      - cd apps/web && npm run deploy:production
+
+  sonory:deploy:web:staging:
+    desc: "WebのみをCloudflare Workersにデプロイ(ステージング環境)"
+    cmds:
+      - cd apps/web && npm run deploy:staging
 
   sonory:deploy:api:
     desc: "APIのみをCloudflare Workersにデプロイ(本番環境)"
@@ -66,23 +73,23 @@ tasks:
       - cd apps/api && npm run deploy:staging
 
   sonory:rebuild:
-    desc: "全サービスをリビルドして再起動"
-    prompt: "全サービスを停止してリビルドします。実行してよろしいですか？"
+    desc: "Infraをリビルドして再起動"
+    prompt: "Infraコンテナを停止してリビルドします。実行してよろしいですか？"
     cmds:
       - docker compose down
       - docker compose build --no-cache
-      - docker compose up -d
+      - docker compose up -d audio-analyzer redis
       - 'echo "リビルドして再起動しました"'
 
   sonory:logs:
-    desc: "全サービスのログを表示"
+    desc: "Infraコンテナのログを表示"
     cmds:
       - docker compose logs -f
 
-  sonory:logs:web:
-    desc: "Webサービスのログのみ表示"
+  sonory:logs:infra:
+    desc: "Infraコンテナのログを表示"
     cmds:
-      - docker compose logs -f web
+      - docker compose logs -f
 
   sonory:logs:python:
     desc: "Python APIサービスのログのみ表示"
@@ -96,10 +103,11 @@ tasks:
       - 'echo "================================"'
       - docker compose ps
       - 'echo ""'
-      - 'echo "Web (Next.js):          http://localhost:3000"'
-      - 'echo "API (Wrangler):         http://localhost:8787"'
-      - 'echo "Audio Analyzer:         http://localhost:8000"'
-      - 'echo "Redis:                  127.0.0.1:6379"'
+      - 'echo "Web (Next.js):                 http://localhost:3000"'
+      - 'echo "Web Preview (OpenNext):        npm run preview --workspace @sonory/web"'
+      - 'echo "API (Wrangler):                http://localhost:8787"'
+      - 'echo "Audio Analyzer (Docker):       http://localhost:8000"'
+      - 'echo "Redis (Docker):                127.0.0.1:6379"'
 
   sonory:clean:
     desc: "コンテナ、ボリューム、イメージをクリーンアップ"
@@ -109,11 +117,6 @@ tasks:
       - docker system prune -f
       - 'echo "クリーンアップが完了しました"'
 
-  sonory:shell:web:
-    desc: "Webコンテナのシェルを開く"
-    cmds:
-      - docker compose exec web /bin/bash
-
   sonory:shell:python:
     desc: "Python APIコンテナのシェルを開く"
     cmds:
@@ -121,16 +124,38 @@ tasks:
 
   # ==================== 個別サービス管理 ====================
 
-  sonory:web:up:
-    desc: "Webサービスを起動"
+  sonory:infra:up:
+    desc: "Infraサービスを起動(Python Audio Analyzer + Redis)"
     cmds:
-      - docker compose up -d web
-      - 'echo "Web起動: http://localhost:3000"'
+      - docker compose up -d audio-analyzer redis
+      - 'echo "Infra起動: Audio Analyzer http://localhost:8000 / Redis 127.0.0.1:6379"'
+
+  sonory:infra:down:
+    desc: "Infraサービスを停止"
+    cmds:
+      - docker compose down
+
+  sonory:web:dev:
+    desc: "Web開発サーバーを起動"
+    dir: apps/web
+    cmds:
+      - npm run dev
+
+  sonory:web:preview:
+    desc: "OpenNext Cloudflare previewを起動"
+    dir: apps/web
+    cmds:
+      - npm run preview
+
+  sonory:web:deploy:
+    desc: "WebのみをCloudflare Workersにデプロイ(本番環境)"
+    cmds:
+      - task: sonory:deploy:web
 
   sonory:web:down:
     desc: "Webサービスを停止"
     cmds:
-      - docker compose stop web
+      - 'pkill -f "next dev|opennextjs-cloudflare preview" || true'
 
   sonory:api:up:
     desc: "APIサービスを起動"
@@ -176,30 +201,28 @@ tasks:
     desc: "全サービスの依存関係をインストール"
     cmds:
       - 'echo "依存関係をインストール中..."'
-      - docker compose run --rm web npm install
-      - cd apps/api && npm install
-      - docker compose run --rm audio-analyzer pip install -e .[dev]
+      - npm install
+      - docker compose build audio-analyzer
       - 'echo "依存関係をインストールしました"'
 
   sonory:build:
     desc: "全サービスをビルド"
     cmds:
-      - docker compose build
-      - cd apps/api && npm run build
+      - npm run build:web
+      - npm run build:api
+      - docker compose build audio-analyzer
       - 'echo "ビルドが完了しました"'
 
   sonory:lint:
     desc: "全サービスのLintを実行"
     cmds:
-      - docker compose run --rm web npm run lint
-      - cd apps/api && npm run lint
-      - docker compose run --rm audio-analyzer npm run lint
+      - npm run lint
+      - docker compose run --rm audio-analyzer ruff check src
       - 'echo "Lintが完了しました"'
 
   sonory:type-check:
     desc: "全サービスの型チェックを実行"
     cmds:
-      - docker compose run --rm web npm run type-check
-      - cd apps/api && npm run type-check
-      - docker compose run --rm audio-analyzer npm run lint:typecheck
+      - npm run type-check
+      - docker compose run --rm audio-analyzer mypy src
       - 'echo "型チェックが完了しました"'

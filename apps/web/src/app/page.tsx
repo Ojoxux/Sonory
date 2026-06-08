@@ -17,6 +17,10 @@ const MapComponent = dynamic(
    { ssr: false },
 )
 
+const SITE_URL =
+   process.env.NEXT_PUBLIC_SITE_URL ??
+   "https://sonory-web-production.workers.dev"
+
 /**
  * Sonoryのホーム画面コンポーネント
  *
@@ -49,17 +53,15 @@ export default function Home(): ReactElement {
       <>
          <Head>
             <script type="application/ld+json">
-               {`
-          {
-            "@context": "https://schema.org",
-            "@type": "WebApplication",
-            "name": "Sonory",
-            "url": "https://sonory.vercel.app",
-            "applicationCategory": "Productivity",
-            "operatingSystem": "All",
-            "browserRequirements": "Requires JavaScript"
-          }
-          `}
+               {JSON.stringify({
+                  "@context": "https://schema.org",
+                  "@type": "WebApplication",
+                  name: "Sonory",
+                  url: SITE_URL,
+                  applicationCategory: "Productivity",
+                  operatingSystem: "All",
+                  browserRequirements: "Requires JavaScript",
+               })}
             </script>
          </Head>
          <div className="relative h-screen w-screen overflow-hidden">

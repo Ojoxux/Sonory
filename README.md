@@ -22,18 +22,14 @@ git clone https://github.com/Ojoxux/Sonory.git
 cd Sonory
 ```
 
-2. **Docker環境のセットアップ**
+2. **環境変数のセットアップ**
 
 ```bash
-# BuildKitを有効化（セキュアビルドのため）
-export DOCKER_BUILDKIT=1
-export COMPOSE_DOCKER_CLI_BUILD=1
-
 # シークレットファイルの設定（実行権限付与が必要な場合）
 chmod +x scripts/setup-secrets.sh
 ./scripts/setup-secrets.sh
 
-# Docker用環境変数ファイルの作成
+# ルート環境変数の作成
 cp .env.example .env
 
 # API用環境変数の設定（Wrangler開発サーバー用）
@@ -51,13 +47,13 @@ npm install
 
 # 全サービス起動
 task sonory:up        # または task up
-# → Web + Python + API が全て起動する
+# → DockerでPython/Redis、ホストでWeb/APIが起動する
 ```
 
 開発環境が起動したら、以下にアクセスできます：
 - **Web**: [http://localhost:3000](http://localhost:3000)
 - **API**: [http://localhost:8787](http://localhost:8787)
-- **Redis**: 127.0.0.1:6379（内部ネットワーク用、直接アクセス不要）
+- **Audio Analyzer**: [http://localhost:8000](http://localhost:8000)
+- **Redis**: 127.0.0.1:6379
 
-**注意**: Python Audio Analyzerは内部ネットワーク専用で、ホストから直接アクセスできません（ポート公開なし）。
-APIサービス経由でのみ利用可能です。
+**注意**: WebはOpenNextでCloudflare Workersへデプロイする前提です。普段の開発は`next dev`、Workersランタイム確認は`cd apps/web && npm run preview`を使います。

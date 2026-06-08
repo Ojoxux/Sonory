@@ -5,7 +5,13 @@
       "build": {
          "dependsOn": ["^build"],
          "inputs": ["$TURBO_DEFAULT$", ".env*"],
-         "outputs": [".next/**", "!.next/cache/**", "dist/**", "*.tsbuildinfo"]
+         "outputs": [
+            ".next/**",
+            "!.next/cache/**",
+            ".open-next/**",
+            "dist/**",
+            "*.tsbuildinfo"
+         ]
       },
       "dev": {
          "cache": false,

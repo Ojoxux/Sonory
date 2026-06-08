@@ -11,12 +11,16 @@ const arialRoundedMTPro = localFont({
    display: "swap",
 })
 
+const siteUrl =
+   process.env.NEXT_PUBLIC_SITE_URL ??
+   "https://sonory-web-production.workers.dev"
+
 export const metadata: Metadata = {
    title: "Sonory",
    description:
       "周りの音を録音して、AI が分析し、時間・天気と一緒に記録するアプリ",
    manifest: "/manifest.json",
-   metadataBase: new URL("https://sonory.vercel.app"),
+   metadataBase: new URL(siteUrl),
    appleWebApp: {
       capable: true,
       statusBarStyle: "default",

@@ -38,7 +38,7 @@ alwaysApply: true
    - 天気: Open-Meteo API
 
 8. **デプロイ**  
-   - Vercel で `npm run build` → `.next` 配備
+   - OpenNext + Cloudflare Workers で `npm run deploy` 配備
 
 9. **コード品質**  
    - Biome + Husky + lint-staged で pre-commit  

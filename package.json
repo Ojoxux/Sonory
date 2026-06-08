@@ -30,16 +30,16 @@
       "postinstall": "turbo build --filter=@sonory/shared-types --filter=@sonory/utils",
       "setup": "npm install && npm run build",
       "setup:env": "bash scripts/setup-env.sh",
-      "start:all": "concurrently \"npm run start:python\" \"npm run start:api\" \"npm run start:frontend\" --names \"🐍Python,🔗API,📱Frontend\" --prefix-colors \"yellow,blue,green\"",
-      "start:backend": "concurrently \"npm run start:python\" \"npm run start:api\" --names \"🐍Python,🔗API\" --prefix-colors \"yellow,blue\"",
+      "start:all": "npm run start:infra && concurrently \"npm run start:api\" \"npm run start:frontend\" --names \"api,web\" --prefix-colors \"blue,green\"",
+      "start:backend": "npm run start:infra && npm run start:api",
+      "start:infra": "docker compose up -d audio-analyzer redis",
       "start:frontend": "cd apps/web && npm run dev",
       "start:api": "cd apps/api && npm run dev",
-      "start:python": "cd apps/python-audio-analyzer && python3 -m uvicorn src.main:app --reload --host 0.0.0.0 --port 8000",
-      "stop:all": "pkill -f 'next|wrangler|uvicorn' || echo 'All services stopped'",
+      "start:web:preview": "cd apps/web && npm run preview",
+      "stop:all": "docker compose down && pkill -f 'next|wrangler' || echo 'All services stopped'",
       "win:setup": "cd apps/python-audio-analyzer && setup-windows.bat",
       "win:debug": "cd apps/python-audio-analyzer && powershell -ExecutionPolicy Bypass -File debug-windows.ps1",
-      "win:start:python": "cd apps/python-audio-analyzer && python -m uvicorn src.main:app --reload --host 0.0.0.0 --port 8000",
-      "win:start:all": "concurrently \"npm run win:start:python\" \"npm run start:api\" \"npm run start:frontend\" --names \"🐍Python,🔗API,📱Frontend\" --prefix-colors \"yellow,blue,green\""
+      "win:start:all": "npm run start:all"
    },
    "dependencies": {
       "@sonory/config": "*",

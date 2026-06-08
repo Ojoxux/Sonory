@@ -1,0 +1,26 @@
+name = "sonory-web"
+main = ".open-next/worker.js"
+compatibility_date = "2026-05-29"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
+
+[vars]
+NEXT_PUBLIC_API_URL = "http://localhost:8787"
+NEXT_PUBLIC_SITE_URL = "http://localhost:3000"
+
+[env.staging]
+name = "sonory-web-staging"
+
+[env.staging.vars]
+NEXT_PUBLIC_API_URL = "https://sonory-api-staging.workers.dev"
+NEXT_PUBLIC_SITE_URL = "https://sonory-web-staging.workers.dev"
+
+[env.production]
+name = "sonory-web-production"
+
+[env.production.vars]
+NEXT_PUBLIC_API_URL = "https://sonory-api-production.workers.dev"
+NEXT_PUBLIC_SITE_URL = "https://sonory-web-production.workers.dev"
