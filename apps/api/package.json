@@ -13,10 +13,10 @@
       "export:openapi": "tsx scripts/export-openapi.ts",
       "generate-types": "wrangler types",
       "pretype-check": "npm run generate-types",
-      "lint": "biome check src",
-      "lint:fix": "biome check --fix --unsafe src",
-      "format": "biome format .",
-      "format:fix": "biome format . --write",
+      "lint": "oxlint src scripts",
+      "lint:fix": "oxlint src scripts --fix",
+      "format": "oxfmt --check .",
+      "format:fix": "oxfmt .",
       "type-check": "tsc --noEmit",
       "validate": "npm run lint && npm run type-check",
       "test": "vitest --passWithNoTests",
@@ -35,7 +35,6 @@
       "zod": "^4.4.3"
    },
    "devDependencies": {
-      "@biomejs/biome": "2.3.8",
       "@types/node": "^24.12.4",
       "tsc-alias": "^1.8.17",
       "tsx": "^4.22.4",

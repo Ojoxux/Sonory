@@ -1,107 +1,113 @@
 {
-	"$schema": "https://turbo.build/schema.json",
-	"ui": "tui",
-	"tasks": {
-		"build": {
-			"dependsOn": ["^build"],
-			"inputs": ["$TURBO_DEFAULT$", ".env*"],
-			"outputs": [".next/**", "!.next/cache/**", "dist/**", "*.tsbuildinfo"]
-		},
-		"dev": {
-			"cache": false,
-			"persistent": true
-		},
-		"lint": {
-			"dependsOn": ["^build"],
-			"inputs": ["$TURBO_DEFAULT$", ".eslintrc*", "biome.json*"]
-		},
-		"format": {
-			"inputs": ["$TURBO_DEFAULT$"],
-			"outputs": []
-		},
-		"type-check": {
-			"dependsOn": ["^build"],
-			"inputs": ["$TURBO_DEFAULT$", "tsconfig*.json"],
-			"outputs": []
-		},
-		"test": {
-			"dependsOn": ["^build"],
-			"inputs": ["$TURBO_DEFAULT$", "**/*.test.*", "**/*.spec.*"],
-			"outputs": ["coverage/**"]
-		},
-		"clean": {
-			"cache": false
-		},
-		"deploy": {
-			"dependsOn": ["build", "lint", "type-check"],
-			"inputs": ["$TURBO_DEFAULT$", ".env*"],
-			"outputs": []
-		},
-		"generate-types": {
-			"dependsOn": ["^build"],
-			"inputs": ["$TURBO_DEFAULT$", "../shared-types/src/**"],
-			"outputs": ["src/types/generated/**"]
-		},
-		"generate:openapi-types": {
-			"dependsOn": ["^build"],
-			"inputs": [
-				"$TURBO_DEFAULT$",
-				"../../apps/api/src/**",
-				"../../apps/python-audio-analyzer/src/**"
-			],
-			"outputs": ["openapi/**", "src/generated/**"]
-		},
-		"check:generated": {
-			"dependsOn": ["^build"],
-			"cache": false
-		},
-		"python:install": {
-			"cache": false,
-			"inputs": ["pyproject.toml", "requirements*.txt"]
-		},
-		"python:dev": {
-			"dependsOn": ["python:install", "generate-types"],
-			"cache": false,
-			"persistent": true
-		},
-		"python:lint": {
-			"dependsOn": ["python:install"],
-			"inputs": [
-				"$TURBO_DEFAULT$",
-				"pyproject.toml",
-				"ruff.toml",
-				".ruff.toml"
-			],
-			"outputs": []
-		},
-		"python:format": {
-			"dependsOn": ["python:install"],
-			"inputs": ["$TURBO_DEFAULT$"],
-			"outputs": []
-		},
-		"python:test": {
-			"dependsOn": ["python:install", "generate-types"],
-			"inputs": ["$TURBO_DEFAULT$", "**/*.py", "tests/**"],
-			"outputs": ["coverage/**", ".coverage", "htmlcov/**"]
-		},
-		"python:build": {
-			"dependsOn": [
-				"python:install",
-				"generate-types",
-				"python:lint",
-				"python:test"
-			],
-			"inputs": ["$TURBO_DEFAULT$", "Dockerfile*"],
-			"outputs": ["dist/**", "build/**"]
-		}
-	},
-	"globalDependencies": ["**/.env*"],
-	"globalEnv": [
-		"NODE_ENV",
-		"NEXT_PUBLIC_*",
-		"SUPABASE_*",
-		"CLOUDFLARE_*",
-		"MAPBOX_*",
-		"PYTHON_*"
-	]
+   "$schema": "https://turbo.build/schema.json",
+   "ui": "tui",
+   "tasks": {
+      "build": {
+         "dependsOn": ["^build"],
+         "inputs": ["$TURBO_DEFAULT$", ".env*"],
+         "outputs": [".next/**", "!.next/cache/**", "dist/**", "*.tsbuildinfo"]
+      },
+      "dev": {
+         "cache": false,
+         "persistent": true
+      },
+      "lint": {
+         "dependsOn": ["^build"],
+         "inputs": ["$TURBO_DEFAULT$", ".oxlintrc.json"]
+      },
+      "lint:fix": {
+         "cache": false
+      },
+      "format": {
+         "inputs": ["$TURBO_DEFAULT$", ".oxfmtrc.json"],
+         "outputs": []
+      },
+      "format:fix": {
+         "cache": false
+      },
+      "type-check": {
+         "dependsOn": ["^build"],
+         "inputs": ["$TURBO_DEFAULT$", "tsconfig*.json"],
+         "outputs": []
+      },
+      "test": {
+         "dependsOn": ["^build"],
+         "inputs": ["$TURBO_DEFAULT$", "**/*.test.*", "**/*.spec.*"],
+         "outputs": ["coverage/**"]
+      },
+      "clean": {
+         "cache": false
+      },
+      "deploy": {
+         "dependsOn": ["build", "lint", "type-check"],
+         "inputs": ["$TURBO_DEFAULT$", ".env*"],
+         "outputs": []
+      },
+      "generate-types": {
+         "dependsOn": ["^build"],
+         "inputs": ["$TURBO_DEFAULT$", "../shared-types/src/**"],
+         "outputs": ["src/types/generated/**"]
+      },
+      "generate:openapi-types": {
+         "dependsOn": ["^build"],
+         "inputs": [
+            "$TURBO_DEFAULT$",
+            "../../apps/api/src/**",
+            "../../apps/python-audio-analyzer/src/**"
+         ],
+         "outputs": ["openapi/**", "src/generated/**"]
+      },
+      "check:generated": {
+         "dependsOn": ["^build"],
+         "cache": false
+      },
+      "python:install": {
+         "cache": false,
+         "inputs": ["pyproject.toml", "requirements*.txt"]
+      },
+      "python:dev": {
+         "dependsOn": ["python:install", "generate-types"],
+         "cache": false,
+         "persistent": true
+      },
+      "python:lint": {
+         "dependsOn": ["python:install"],
+         "inputs": [
+            "$TURBO_DEFAULT$",
+            "pyproject.toml",
+            "ruff.toml",
+            ".ruff.toml"
+         ],
+         "outputs": []
+      },
+      "python:format": {
+         "dependsOn": ["python:install"],
+         "inputs": ["$TURBO_DEFAULT$"],
+         "outputs": []
+      },
+      "python:test": {
+         "dependsOn": ["python:install", "generate-types"],
+         "inputs": ["$TURBO_DEFAULT$", "**/*.py", "tests/**"],
+         "outputs": ["coverage/**", ".coverage", "htmlcov/**"]
+      },
+      "python:build": {
+         "dependsOn": [
+            "python:install",
+            "generate-types",
+            "python:lint",
+            "python:test"
+         ],
+         "inputs": ["$TURBO_DEFAULT$", "Dockerfile*"],
+         "outputs": ["dist/**", "build/**"]
+      }
+   },
+   "globalDependencies": ["**/.env*"],
+   "globalEnv": [
+      "NODE_ENV",
+      "NEXT_PUBLIC_*",
+      "SUPABASE_*",
+      "CLOUDFLARE_*",
+      "MAPBOX_*",
+      "PYTHON_*"
+   ]
 }
