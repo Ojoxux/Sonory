@@ -1,0 +1,80 @@
+# Sonory monorepo pre-commit hooks (replaces husky + lint-staged)
+# https://lefthook.dev/configuration/
+
+pre-commit:
+  parallel: true
+  jobs:
+    # apps/web
+    - name: web lint:fix
+      glob: "apps/web/**/*.{js,jsx,ts,tsx}"
+      run: npm --prefix apps/web run lint:fix
+      stage_fixed: true
+    - name: web format:fix
+      glob: "apps/web/**/*.{js,jsx,ts,tsx}"
+      run: npm --prefix apps/web run format:fix
+      stage_fixed: true
+    - name: web type-check
+      glob: "apps/web/**/*.{js,jsx,ts,tsx}"
+      run: npm --prefix apps/web exec -- tsc --noEmit --project apps/web/tsconfig.json
+
+    # apps/api
+    - name: api lint:fix
+      glob: "apps/api/**/*.{js,jsx,ts,tsx}"
+      run: npm --prefix apps/api run lint:fix
+      stage_fixed: true
+    - name: api format:fix
+      glob: "apps/api/**/*.{js,jsx,ts,tsx}"
+      run: npm --prefix apps/api run format:fix
+      stage_fixed: true
+    - name: api type-check
+      glob: "apps/api/**/*.{js,jsx,ts,tsx}"
+      run: npm --prefix apps/api exec -- tsc --noEmit --project apps/api/tsconfig.json
+
+    # packages/shared-types
+    - name: shared-types lint:fix
+      glob: "packages/shared-types/**/*.{js,jsx,ts,tsx}"
+      run: npm --prefix packages/shared-types run lint:fix
+      stage_fixed: true
+    - name: shared-types format:fix
+      glob: "packages/shared-types/**/*.{js,jsx,ts,tsx}"
+      run: npm --prefix packages/shared-types run format:fix
+      stage_fixed: true
+    - name: shared-types type-check
+      glob: "packages/shared-types/**/*.{js,jsx,ts,tsx}"
+      run: npm --prefix packages/shared-types exec -- tsc --noEmit --project packages/shared-types/tsconfig.json
+
+    # packages/utils
+    - name: utils lint:fix
+      glob: "packages/utils/**/*.{js,jsx,ts,tsx}"
+      run: npm --prefix packages/utils run lint:fix
+      stage_fixed: true
+    - name: utils format:fix
+      glob: "packages/utils/**/*.{js,jsx,ts,tsx}"
+      run: npm --prefix packages/utils run format:fix
+      stage_fixed: true
+    - name: utils type-check
+      glob: "packages/utils/**/*.{js,jsx,ts,tsx}"
+      run: npm --prefix packages/utils exec -- tsc --noEmit --project packages/utils/tsconfig.json
+
+    # packages/python-types
+    - name: python-types lint:fix
+      glob: "packages/python-types/**/*.{js,jsx,ts,tsx}"
+      run: npm --prefix packages/python-types run lint:fix
+      stage_fixed: true
+    - name: python-types format:fix
+      glob: "packages/python-types/**/*.{js,jsx,ts,tsx}"
+      run: npm --prefix packages/python-types run format:fix
+      stage_fixed: true
+    - name: python-types type-check
+      glob: "packages/python-types/**/*.{js,jsx,ts,tsx}"
+      run: npm --prefix packages/python-types exec -- tsc --noEmit --project packages/python-types/tsconfig.json
+
+    # packages/config (root-level oxlint/oxfmt)
+    - name: config lint:fix
+      glob: "packages/config/**/*.{js,jsx,ts,tsx}"
+      run: oxlint packages/config --fix
+      stage_fixed: true
+    - name: config format:fix
+      glob: "packages/config/**/*.{js,jsx,ts,tsx}"
+      run: oxfmt packages/config --no-error-on-unmatched-pattern
+      stage_fixed: true

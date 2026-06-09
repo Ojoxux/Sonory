@@ -41,5 +41,5 @@ alwaysApply: true
    - OpenNext + Cloudflare Workers で `npm run deploy` 配備
 
 9. **コード品質**  
-   - Biome + Husky + lint-staged で pre-commit  
+   - oxlint/oxfmt + Lefthook で pre-commit  
    - GitHub Actions で CI（`biome ci .`, `tsc --noEmit`）
