@@ -9,7 +9,7 @@ import { captureException } from "../utils/telemetry"
  * @description
  * Cloudflare Workers環境でのログ・メトリクス・エラー追跡を提供
  * Phase 1: 基本的なログ機能を実装
- * Phase 2以降: Sentry連携やCloudflare Analytics統合を追加予定
+ * Phase 2: Sentry連携（@sentry/hono）済み
  */
 
 /**

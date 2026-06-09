@@ -1,20 +1,19 @@
+import * as Sentry from "@sentry/cloudflare"
 import type { LogContext } from "@sonory/utils"
 
 /**
- * Workers 向けのエラー転送先。
- *
- * @description
- * Phase 2: `@sentry/cloudflare` 導入後に実装を差し替える。
+ * Workers 向けのエラー転送。
  */
 export async function captureException(
    error: unknown,
    context?: LogContext,
 ): Promise<void> {
-   // Sentry DSN 設定後:
-   // import * as Sentry from "@sentry/cloudflare"
-   // Sentry.captureException(error, { extra: context })
-   void error
-   void context
+   if (context === undefined) {
+      Sentry.captureException(error)
+      return
+   }
+
+   Sentry.captureException(error, { extra: { ...context } })
 }
 
 /**

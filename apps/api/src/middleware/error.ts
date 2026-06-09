@@ -2,6 +2,8 @@ import type { APIError } from "@sonory/shared-types"
 import { ERROR_CODES } from "@sonory/shared-types"
 import type { Context, Next } from "hono"
 import { HTTPException } from "hono/http-exception"
+import type { Env } from "../types/env"
+import { captureException } from "../utils/telemetry"
 
 // ERROR_CODESを再エクスポート
 export { ERROR_CODES }
@@ -85,6 +87,16 @@ export const errorHandler = async (c: Context, next: Next) => {
 
       // その他のエラー
       console.error("Unhandled error:", error)
+
+      const env = (c.env ?? {}) as Env
+      if (env.SENTRY_DSN) {
+         await captureException(error, {
+            requestId,
+            path: c.req.path,
+            method: c.req.method,
+         })
+      }
+
       const apiError: APIError = {
          code: ERROR_CODES.INTERNAL_SERVER_ERROR,
          message: "An unexpected error occurred",

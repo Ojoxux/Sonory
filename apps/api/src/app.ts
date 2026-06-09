@@ -1,4 +1,5 @@
 import { OpenAPIHono } from "@hono/zod-openapi"
+import { sentry } from "@sentry/hono/cloudflare"
 import { logger as honoLogger } from "hono/logger"
 import { requestId } from "hono/request-id"
 import { timing } from "hono/timing"
@@ -10,12 +11,18 @@ import { healthRoutes } from "./routes/health"
 import pinsRoutes from "./routes/pins"
 import type { Env } from "./types/env"
 import { logger } from "./utils/logger"
+import { createSentryOptions } from "./utils/sentryOptions"
 
 /**
  * OpenAPIHono アプリケーションを構築する。
  */
 export function createApp(): OpenAPIHono<{ Bindings: Env }> {
    const app = new OpenAPIHono<{ Bindings: Env }>()
+
+   app.use(
+      "*",
+      sentry(app, (env: Env) => createSentryOptions(env)),
+   )
 
    app.use("*", requestId())
    app.use("*", timing())

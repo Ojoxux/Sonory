@@ -6,7 +6,7 @@
       "lib": ["ES2022"],
       "types": ["./worker-configuration.d.ts", "node"],
       "jsx": "react-jsx",
-      "moduleResolution": "node",
+      "moduleResolution": "bundler",
       "allowImportingTsExtensions": false,
       "noPropertyAccessFromIndexSignature": false,
       "moduleDetection": "force",

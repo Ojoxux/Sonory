@@ -28,6 +28,7 @@
       "@ducanh2912/next-pwa": "^10.2.9",
       "@mapbox/mapbox-gl-geocoder": "^5.1.2",
       "@opennextjs/cloudflare": "^1.19.11",
+      "@sentry/nextjs": "^10.56.0",
       "@sonory/shared-types": "*",
       "@sonory/utils": "*",
       "@supabase/supabase-js": "^2.108.0",
