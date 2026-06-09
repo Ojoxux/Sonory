@@ -117,10 +117,9 @@ alwaysApply: true
   - CI用: `npm run ci` (`biome ci .`)  
 - **型チェック**: `npm run lint:typecheck` (`tsc --noEmit`)  
 - **Git フック**  
-  - Husky を `prepare` スクリプトで初期化  
-  - lint-staged で以下をコミット前に実行  
-    - `biome check --apply`  
-    - `biome format --write`  
+  - Lefthook を `prepare` スクリプトで初期化（`lefthook install`）  
+  - `lefthook.yml` で pre-commit 時に以下を実行（変更パッケージのみ）  
+    - `oxlint --fix` / `oxfmt`  
     - `tsc --noEmit`  
 - **CI（GitHub Actions）**  
   1. `npm ci`  
