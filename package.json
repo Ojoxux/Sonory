@@ -25,7 +25,7 @@
       "build:api": "turbo build --filter=@sonory/api",
       "deploy:api": "turbo deploy --filter=@sonory/api",
       "deploy:web": "turbo deploy --filter=@sonory/web",
-      "prepare": "lefthook install",
+      "prepare": "lefthook install --reset-hooks-path",
       "postinstall": "turbo build --filter=@sonory/shared-types --filter=@sonory/utils",
       "setup": "npm install && npm run build",
       "setup:env": "bash scripts/setup-env.sh",
