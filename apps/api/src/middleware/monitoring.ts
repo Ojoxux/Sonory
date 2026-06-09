@@ -1,6 +1,7 @@
 import type { Context, Next } from "hono"
 import type { Env } from "../index"
 import { logger } from "../utils/logger"
+import { captureException } from "../utils/telemetry"
 
 /**
  * モニタリング・ログ基盤ミドルウェア
@@ -8,7 +9,7 @@ import { logger } from "../utils/logger"
  * @description
  * Cloudflare Workers環境でのログ・メトリクス・エラー追跡を提供
  * Phase 1: 基本的なログ機能を実装
- * Phase 2以降: Sentry連携やCloudflare Analytics統合を追加予定
+ * Phase 2: Sentry連携（@sentry/hono）済み
  */
 
 /**
@@ -38,10 +39,9 @@ export async function errorTracking(
 
       logger.error("Unhandled error occurred", errorDetails)
 
-      // TODO Phase 2以降: Sentryに送信
-      // if (c.env.SENTRY_DSN) {
-      //   await sendToSentry(errorDetails)
-      // }
+      if (c.env.SENTRY_DSN) {
+         await captureException(error, errorDetails)
+      }
 
       // エラーを再スロー（エラーハンドラーミドルウェアで処理）
       throw error
