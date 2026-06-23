@@ -29,6 +29,7 @@
       "@mapbox/mapbox-gl-geocoder": "^5.1.2",
       "@opennextjs/cloudflare": "^1.19.11",
       "@sonory/shared-types": "*",
+      "@sonory/utils": "*",
       "@supabase/supabase-js": "^2.108.0",
       "@tanstack/react-query": "^5.101.0",
       "framer-motion": "^12.40.0",

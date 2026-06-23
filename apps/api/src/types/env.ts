@@ -9,4 +9,6 @@ export interface Env {
    SUPABASE_SERVICE_KEY?: string
    PYTHON_AUDIO_ANALYZER_URL: string
    PYTHON_AUDIO_ANALYZER_TIMEOUT: string
+   /** Sentry DSN（`wrangler secret put SENTRY_DSN` で設定） */
+   SENTRY_DSN?: string
 }
