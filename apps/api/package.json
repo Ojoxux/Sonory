@@ -31,7 +31,7 @@
       "@sonory/utils": "file:../../packages/utils",
       "@supabase/supabase-js": "^2.110.8",
       "hono": "^4.12.31",
-      "vite": "^7.3.6",
+      "vite": "^8.1.5",
       "zod": "^4.4.3"
    },
    "devDependencies": {
