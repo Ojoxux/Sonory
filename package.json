@@ -49,8 +49,8 @@
       "@types/node": "^24.13.3",
       "concurrently": "^10.0.3",
       "lefthook": "^2.1.10",
-      "oxfmt": "^0.54.0",
-      "oxlint": "^1.69.0",
+      "oxfmt": "^0.60.0",
+      "oxlint": "^1.75.0",
       "turbo": "^2.10.6",
       "typescript": "^5.9.3"
    },
