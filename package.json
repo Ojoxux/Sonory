@@ -47,11 +47,11 @@
    },
    "devDependencies": {
       "@types/node": "^24.13.3",
-      "concurrently": "^10.0.3",
+      "concurrently": "^10.0.5",
       "lefthook": "^2.1.10",
       "oxfmt": "^0.60.0",
       "oxlint": "^1.75.0",
-      "turbo": "^2.10.6",
+      "turbo": "^2.10.12",
       "typescript": "^5.9.3"
    },
    "packageManager": "npm@10.9.4"
