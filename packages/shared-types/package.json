@@ -19,12 +19,12 @@
       "clean": "rm -rf dist"
    },
    "dependencies": {
-      "zod": "^4.5.2"
+      "zod": "^4.5.4"
    },
    "devDependencies": {
       "@types/node": "^24.13.3",
       "openapi-typescript": "^7.13.0",
-      "tsx": "^4.23.12",
+      "tsx": "^4.23.13",
       "typescript": "^5.9.3"
    }
 }
