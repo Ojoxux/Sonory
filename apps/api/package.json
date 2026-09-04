@@ -25,22 +25,22 @@
       "clean": "rm -rf dist .wrangler"
    },
    "dependencies": {
-      "@hono/zod-openapi": "^1.6.1",
+      "@hono/zod-openapi": "^1.6.3",
       "@hono/zod-validator": "^0.9.1",
       "@sonory/shared-types": "file:../../packages/shared-types",
       "@sonory/utils": "file:../../packages/utils",
-      "@supabase/supabase-js": "^2.113.0",
-      "hono": "^4.13.5",
+      "@supabase/supabase-js": "^2.115.0",
+      "hono": "^4.13.7",
       "vite": "^8.2.2",
       "zod": "^4.5.4"
    },
    "devDependencies": {
       "@types/node": "^24.13.3",
-      "tsc-alias": "^1.9.3",
+      "tsc-alias": "^1.9.4",
       "tsx": "^4.23.13",
       "typescript": "^5.9.3",
       "vitest": "^4.1.11",
       "vitest-environment-miniflare": "^2.14.4",
-      "wrangler": "^4.128.0"
+      "wrangler": "^4.129.0"
    }
 }
