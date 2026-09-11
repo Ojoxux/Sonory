@@ -36,11 +36,11 @@
    },
    "devDependencies": {
       "@types/node": "^24.13.4",
-      "tsc-alias": "^1.9.4",
+      "tsc-alias": "^1.9.5",
       "tsx": "^4.23.13",
       "typescript": "^5.9.3",
       "vitest": "^4.1.11",
       "vitest-environment-miniflare": "^2.14.4",
-      "wrangler": "^4.131.0"
+      "wrangler": "^4.131.1"
    }
 }
