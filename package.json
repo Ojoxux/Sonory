@@ -46,7 +46,7 @@
       "@sonory/utils": "*"
    },
    "devDependencies": {
-      "@types/node": "^24.13.3",
+      "@types/node": "^24.13.4",
       "concurrently": "^10.0.5",
       "lefthook": "^2.1.12",
       "oxfmt": "^0.60.0",
