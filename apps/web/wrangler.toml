@@ -7,9 +7,21 @@ compatibility_flags = ["nodejs_compat"]
 directory = ".open-next/assets"
 binding = "ASSETS"
 
+# NEXT_PUBLIC_* について
+#
+# これらは Next.js のビルド時にクライアントバンドルへインライン展開される。
+# ここ（[vars]）に書いた値が効くのは Worker のランタイム参照だけなので、
+# ブラウザ側に届けるには `next build` を実行する環境にも同じ値が必要。
+# デプロイ用の値は CI の環境変数か .env で与えること。
+#
+# NEXT_PUBLIC_SUPABASE_ANON_KEY は公開前提の値だが、実キーはコミットしない。
+# SUPABASE_SERVICE_KEY は RLS をバイパスするため、ここには絶対に置かない。
+
 [vars]
 NEXT_PUBLIC_API_URL = "http://localhost:8787"
 NEXT_PUBLIC_SITE_URL = "http://localhost:3000"
+NEXT_PUBLIC_SUPABASE_URL = "https://your-project-id.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY = "set-in-build-environment"
 
 [env.staging]
 name = "sonory-web-staging"
@@ -17,6 +29,8 @@ name = "sonory-web-staging"
 [env.staging.vars]
 NEXT_PUBLIC_API_URL = "https://sonory-api-staging.workers.dev"
 NEXT_PUBLIC_SITE_URL = "https://sonory-web-staging.workers.dev"
+NEXT_PUBLIC_SUPABASE_URL = "https://your-project-id.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY = "set-in-build-environment"
 
 [env.production]
 name = "sonory-web-production"
@@ -24,3 +38,5 @@ name = "sonory-web-production"
 [env.production.vars]
 NEXT_PUBLIC_API_URL = "https://sonory-api-production.workers.dev"
 NEXT_PUBLIC_SITE_URL = "https://sonory-web-production.workers.dev"
+NEXT_PUBLIC_SUPABASE_URL = "https://your-project-id.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY = "set-in-build-environment"
