@@ -10,13 +10,13 @@ import {
    UploadUrlDataSchema,
 } from "@sonory/shared-types"
 import type { Context } from "hono"
-import type { Env } from "../index"
+import type { Env, Variables } from "../index"
 import { APIException } from "../middleware/error"
 import { rateLimits } from "../middleware/rateLimit"
 import { onOpenAPIValidationError } from "../middleware/validation"
 import { AudioService } from "../services/audio.service"
 
-const app = new OpenAPIHono<{ Bindings: Env }>({
+const app = new OpenAPIHono<{ Bindings: Env; Variables: Variables }>({
    defaultHook: onOpenAPIValidationError,
 })
 
@@ -32,7 +32,7 @@ const standardErrorResponses = {
 }
 
 const deleteAudioData = async (
-   c: Context<{ Bindings: Env }>,
+   c: Context<{ Bindings: Env; Variables: Variables }>,
    encodedFilePath?: string,
 ) => {
    const audioService = new AudioService(c)
@@ -284,7 +284,7 @@ const processQueueRoute = createRoute({
 
 app.openapi(uploadUrlRoute, async (c) => {
    const audioService = new AudioService(
-      c as unknown as Context<{ Bindings: Env }>,
+      c as unknown as Context<{ Bindings: Env; Variables: Variables }>,
    )
 
    try {
@@ -323,7 +323,7 @@ app.openapi(uploadUrlRoute, async (c) => {
 
 app.openapi(uploadRoute, async (c) => {
    const audioService = new AudioService(
-      c as unknown as Context<{ Bindings: Env }>,
+      c as unknown as Context<{ Bindings: Env; Variables: Variables }>,
    )
 
    try {
@@ -382,7 +382,7 @@ app.openapi(uploadRoute, async (c) => {
 app.openapi(deleteAudioRoute, async (c) => {
    const { filePath: encodedFilePath } = c.req.valid("param")
    const data = await deleteAudioData(
-      c as unknown as Context<{ Bindings: Env }>,
+      c as unknown as Context<{ Bindings: Env; Variables: Variables }>,
       encodedFilePath,
    )
 
@@ -397,7 +397,7 @@ app.openapi(deleteAudioRoute, async (c) => {
 
 app.delete("/:filePath{.+}", rateLimits.default, async (c) => {
    const data = await deleteAudioData(
-      c as unknown as Context<{ Bindings: Env }>,
+      c as unknown as Context<{ Bindings: Env; Variables: Variables }>,
       c.req.param("filePath"),
    )
 
@@ -454,7 +454,7 @@ app.openapi(getAudioMetadataRoute, async (c) => {
 
 app.openapi(analyzeAudioRoute, async (c) => {
    const audioService = new AudioService(
-      c as unknown as Context<{ Bindings: Env }>,
+      c as unknown as Context<{ Bindings: Env; Variables: Variables }>,
    )
    const { audioId } = c.req.valid("param")
 
@@ -518,7 +518,7 @@ app.openapi(analyzeAudioRoute, async (c) => {
 
 app.openapi(analysisStatusRoute, async (c) => {
    const audioService = new AudioService(
-      c as unknown as Context<{ Bindings: Env }>,
+      c as unknown as Context<{ Bindings: Env; Variables: Variables }>,
    )
    const { audioId, jobId } = c.req.valid("param")
 
@@ -564,7 +564,7 @@ app.openapi(analysisStatusRoute, async (c) => {
 
 app.openapi(processQueueRoute, async (c) => {
    const audioService = new AudioService(
-      c as unknown as Context<{ Bindings: Env }>,
+      c as unknown as Context<{ Bindings: Env; Variables: Variables }>,
    )
 
    try {

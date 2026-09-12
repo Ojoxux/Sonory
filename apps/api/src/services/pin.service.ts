@@ -10,9 +10,10 @@ import {
 import type { Context } from "hono"
 import { APIException } from "../middleware/error"
 import { PinRepository } from "../repositories/pin.repository"
+import type { Env, Variables } from "../types/env"
 import type { SoundPinInsert, SoundPinUpdate } from "../types/database"
 import { BaseService } from "./base.service"
-import { getSupabaseAdmin } from "./supabase"
+import { getSupabaseAdmin, getSupabaseUserClient } from "./supabase"
 
 /**
  * Pin service for managing sound pins
@@ -27,10 +28,19 @@ import { getSupabaseAdmin } from "./supabase"
 export class PinService extends BaseService {
    private repository: PinRepository
 
-   constructor(ctx: Context) {
+   constructor(ctx: Context<{ Bindings: Env; Variables: Variables }>) {
       super(ctx)
-      const supabase = getSupabaseAdmin(this.env)
-      this.repository = new PinRepository(supabase, this.requestId)
+      // 読み取り専用・公開データ操作（status='active'で明示的に絞り込み済み）は
+      // service_role を使う。所有者チェックが必要な書き込み（作成・更新・削除）は
+      // 呼び出し元のJWTを引き継いだクライアントを使い、RLS (auth.uid() = user_id) を
+      // 必ず効かせる。詳細は PinRepository のコンストラクタコメントを参照。
+      const adminClient = getSupabaseAdmin(this.env)
+      const userClient = getSupabaseUserClient(ctx)
+      this.repository = new PinRepository(
+         adminClient,
+         userClient,
+         this.requestId,
+      )
    }
 
    protected getServiceName(): string {
@@ -436,7 +446,7 @@ export class PinService extends BaseService {
 
          return {
             // 必須フィールド
-            user_id: null,
+            user_id: this.userId ?? null,
             location: locationWKT,
             audio_url: placeholderUrl,
             audio_duration: request.metadata?.duration ?? 10,
@@ -484,7 +494,7 @@ export class PinService extends BaseService {
 
       return {
          // 必須フィールド
-         user_id: null,
+         user_id: this.userId ?? null,
          location: locationWKT,
          audio_url: request.audio.url,
          audio_duration: request.audio.duration,

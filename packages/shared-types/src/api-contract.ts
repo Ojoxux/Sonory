@@ -60,7 +60,9 @@ export const ApiSuccessWithMetaResponseSchema = <T extends z.ZodType>(
 
 export const SoundPinApiSchema = z.object({
    id: z.string(),
-   userId: z.string().optional(),
+   // userId は意図的に公開しない。所有者 UUID が見えると、位置と時刻から
+   // ピンを束ねて特定個人の行動範囲を推測できてしまうため。
+   // 所有者に基づく処理は API 内で service_role を使って完結させる。
    location: LocationCoordinatesSchema,
    audio: SoundPinAudioSchema,
    weather: ApiWeatherDataSchema.optional(),

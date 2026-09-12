@@ -8,14 +8,17 @@ import { openApiDocumentConfig } from "./openapi-config"
 import audioRoutes from "./routes/audio"
 import { healthRoutes } from "./routes/health"
 import pinsRoutes from "./routes/pins"
-import type { Env } from "./types/env"
+import type { Env, Variables } from "./types/env"
 import { logger } from "./utils/logger"
 
 /**
  * OpenAPIHono アプリケーションを構築する。
  */
-export function createApp(): OpenAPIHono<{ Bindings: Env }> {
-   const app = new OpenAPIHono<{ Bindings: Env }>()
+export function createApp(): OpenAPIHono<{
+   Bindings: Env
+   Variables: Variables
+}> {
+   const app = new OpenAPIHono<{ Bindings: Env; Variables: Variables }>()
 
    app.use("*", requestId())
    app.use("*", timing())

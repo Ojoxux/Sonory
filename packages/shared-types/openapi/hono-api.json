@@ -2012,6 +2012,54 @@
                      }
                   }
                },
+               "401": {
+                  "description": "認証が必要",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "success": {
+                                 "type": "boolean",
+                                 "enum": [
+                                    false
+                                 ]
+                              },
+                              "error": {
+                                 "type": "object",
+                                 "properties": {
+                                    "code": {
+                                       "type": "string"
+                                    },
+                                    "message": {
+                                       "type": "string"
+                                    },
+                                    "details": {
+                                       "nullable": true
+                                    },
+                                    "timestamp": {
+                                       "type": "string"
+                                    },
+                                    "requestId": {
+                                       "type": "string"
+                                    }
+                                 },
+                                 "required": [
+                                    "code",
+                                    "message",
+                                    "timestamp",
+                                    "requestId"
+                                 ]
+                              }
+                           },
+                           "required": [
+                              "success",
+                              "error"
+                           ]
+                        }
+                     }
+                  }
+               },
                "404": {
                   "description": "対象が見つからない",
                   "content": {
@@ -2338,6 +2386,54 @@
                },
                "400": {
                   "description": "リクエスト不正",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "success": {
+                                 "type": "boolean",
+                                 "enum": [
+                                    false
+                                 ]
+                              },
+                              "error": {
+                                 "type": "object",
+                                 "properties": {
+                                    "code": {
+                                       "type": "string"
+                                    },
+                                    "message": {
+                                       "type": "string"
+                                    },
+                                    "details": {
+                                       "nullable": true
+                                    },
+                                    "timestamp": {
+                                       "type": "string"
+                                    },
+                                    "requestId": {
+                                       "type": "string"
+                                    }
+                                 },
+                                 "required": [
+                                    "code",
+                                    "message",
+                                    "timestamp",
+                                    "requestId"
+                                 ]
+                              }
+                           },
+                           "required": [
+                              "success",
+                              "error"
+                           ]
+                        }
+                     }
+                  }
+               },
+               "401": {
+                  "description": "認証が必要",
                   "content": {
                      "application/json": {
                         "schema": {
@@ -2763,6 +2859,54 @@
                },
                "400": {
                   "description": "リクエスト不正",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "success": {
+                                 "type": "boolean",
+                                 "enum": [
+                                    false
+                                 ]
+                              },
+                              "error": {
+                                 "type": "object",
+                                 "properties": {
+                                    "code": {
+                                       "type": "string"
+                                    },
+                                    "message": {
+                                       "type": "string"
+                                    },
+                                    "details": {
+                                       "nullable": true
+                                    },
+                                    "timestamp": {
+                                       "type": "string"
+                                    },
+                                    "requestId": {
+                                       "type": "string"
+                                    }
+                                 },
+                                 "required": [
+                                    "code",
+                                    "message",
+                                    "timestamp",
+                                    "requestId"
+                                 ]
+                              }
+                           },
+                           "required": [
+                              "success",
+                              "error"
+                           ]
+                        }
+                     }
+                  }
+               },
+               "401": {
+                  "description": "認証が必要",
                   "content": {
                      "application/json": {
                         "schema": {
@@ -3255,6 +3399,54 @@
                      }
                   }
                },
+               "401": {
+                  "description": "認証が必要",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "success": {
+                                 "type": "boolean",
+                                 "enum": [
+                                    false
+                                 ]
+                              },
+                              "error": {
+                                 "type": "object",
+                                 "properties": {
+                                    "code": {
+                                       "type": "string"
+                                    },
+                                    "message": {
+                                       "type": "string"
+                                    },
+                                    "details": {
+                                       "nullable": true
+                                    },
+                                    "timestamp": {
+                                       "type": "string"
+                                    },
+                                    "requestId": {
+                                       "type": "string"
+                                    }
+                                 },
+                                 "required": [
+                                    "code",
+                                    "message",
+                                    "timestamp",
+                                    "requestId"
+                                 ]
+                              }
+                           },
+                           "required": [
+                              "success",
+                              "error"
+                           ]
+                        }
+                     }
+                  }
+               },
                "404": {
                   "description": "対象が見つからない",
                   "content": {
@@ -3570,6 +3762,54 @@
                },
                "400": {
                   "description": "リクエスト不正",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "success": {
+                                 "type": "boolean",
+                                 "enum": [
+                                    false
+                                 ]
+                              },
+                              "error": {
+                                 "type": "object",
+                                 "properties": {
+                                    "code": {
+                                       "type": "string"
+                                    },
+                                    "message": {
+                                       "type": "string"
+                                    },
+                                    "details": {
+                                       "nullable": true
+                                    },
+                                    "timestamp": {
+                                       "type": "string"
+                                    },
+                                    "requestId": {
+                                       "type": "string"
+                                    }
+                                 },
+                                 "required": [
+                                    "code",
+                                    "message",
+                                    "timestamp",
+                                    "requestId"
+                                 ]
+                              }
+                           },
+                           "required": [
+                              "success",
+                              "error"
+                           ]
+                        }
+                     }
+                  }
+               },
+               "401": {
+                  "description": "認証が必要",
                   "content": {
                      "application/json": {
                         "schema": {
@@ -4140,6 +4380,54 @@
                      }
                   }
                },
+               "401": {
+                  "description": "認証が必要",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "success": {
+                                 "type": "boolean",
+                                 "enum": [
+                                    false
+                                 ]
+                              },
+                              "error": {
+                                 "type": "object",
+                                 "properties": {
+                                    "code": {
+                                       "type": "string"
+                                    },
+                                    "message": {
+                                       "type": "string"
+                                    },
+                                    "details": {
+                                       "nullable": true
+                                    },
+                                    "timestamp": {
+                                       "type": "string"
+                                    },
+                                    "requestId": {
+                                       "type": "string"
+                                    }
+                                 },
+                                 "required": [
+                                    "code",
+                                    "message",
+                                    "timestamp",
+                                    "requestId"
+                                 ]
+                              }
+                           },
+                           "required": [
+                              "success",
+                              "error"
+                           ]
+                        }
+                     }
+                  }
+               },
                "404": {
                   "description": "対象が見つからない",
                   "content": {
@@ -4452,6 +4740,54 @@
                },
                "400": {
                   "description": "リクエスト不正",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "success": {
+                                 "type": "boolean",
+                                 "enum": [
+                                    false
+                                 ]
+                              },
+                              "error": {
+                                 "type": "object",
+                                 "properties": {
+                                    "code": {
+                                       "type": "string"
+                                    },
+                                    "message": {
+                                       "type": "string"
+                                    },
+                                    "details": {
+                                       "nullable": true
+                                    },
+                                    "timestamp": {
+                                       "type": "string"
+                                    },
+                                    "requestId": {
+                                       "type": "string"
+                                    }
+                                 },
+                                 "required": [
+                                    "code",
+                                    "message",
+                                    "timestamp",
+                                    "requestId"
+                                 ]
+                              }
+                           },
+                           "required": [
+                              "success",
+                              "error"
+                           ]
+                        }
+                     }
+                  }
+               },
+               "401": {
+                  "description": "認証が必要",
                   "content": {
                      "application/json": {
                         "schema": {
@@ -4919,6 +5255,54 @@
                      }
                   }
                },
+               "401": {
+                  "description": "認証が必要",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "success": {
+                                 "type": "boolean",
+                                 "enum": [
+                                    false
+                                 ]
+                              },
+                              "error": {
+                                 "type": "object",
+                                 "properties": {
+                                    "code": {
+                                       "type": "string"
+                                    },
+                                    "message": {
+                                       "type": "string"
+                                    },
+                                    "details": {
+                                       "nullable": true
+                                    },
+                                    "timestamp": {
+                                       "type": "string"
+                                    },
+                                    "requestId": {
+                                       "type": "string"
+                                    }
+                                 },
+                                 "required": [
+                                    "code",
+                                    "message",
+                                    "timestamp",
+                                    "requestId"
+                                 ]
+                              }
+                           },
+                           "required": [
+                              "success",
+                              "error"
+                           ]
+                        }
+                     }
+                  }
+               },
                "404": {
                   "description": "対象が見つからない",
                   "content": {
@@ -5069,6 +5453,54 @@
                },
                "400": {
                   "description": "リクエスト不正",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "success": {
+                                 "type": "boolean",
+                                 "enum": [
+                                    false
+                                 ]
+                              },
+                              "error": {
+                                 "type": "object",
+                                 "properties": {
+                                    "code": {
+                                       "type": "string"
+                                    },
+                                    "message": {
+                                       "type": "string"
+                                    },
+                                    "details": {
+                                       "nullable": true
+                                    },
+                                    "timestamp": {
+                                       "type": "string"
+                                    },
+                                    "requestId": {
+                                       "type": "string"
+                                    }
+                                 },
+                                 "required": [
+                                    "code",
+                                    "message",
+                                    "timestamp",
+                                    "requestId"
+                                 ]
+                              }
+                           },
+                           "required": [
+                              "success",
+                              "error"
+                           ]
+                        }
+                     }
+                  }
+               },
+               "401": {
+                  "description": "認証が必要",
                   "content": {
                      "application/json": {
                         "schema": {
@@ -5287,6 +5719,54 @@
                },
                "400": {
                   "description": "リクエスト不正",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "success": {
+                                 "type": "boolean",
+                                 "enum": [
+                                    false
+                                 ]
+                              },
+                              "error": {
+                                 "type": "object",
+                                 "properties": {
+                                    "code": {
+                                       "type": "string"
+                                    },
+                                    "message": {
+                                       "type": "string"
+                                    },
+                                    "details": {
+                                       "nullable": true
+                                    },
+                                    "timestamp": {
+                                       "type": "string"
+                                    },
+                                    "requestId": {
+                                       "type": "string"
+                                    }
+                                 },
+                                 "required": [
+                                    "code",
+                                    "message",
+                                    "timestamp",
+                                    "requestId"
+                                 ]
+                              }
+                           },
+                           "required": [
+                              "success",
+                              "error"
+                           ]
+                        }
+                     }
+                  }
+               },
+               "401": {
+                  "description": "認証が必要",
                   "content": {
                      "application/json": {
                         "schema": {

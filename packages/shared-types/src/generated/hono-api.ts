@@ -970,6 +970,25 @@ export interface paths {
                   }
                }
             }
+            /** @description 認証が必要 */
+            401: {
+               headers: {
+                  [name: string]: unknown
+               }
+               content: {
+                  "application/json": {
+                     /** @enum {boolean} */
+                     success: false
+                     error: {
+                        code: string
+                        message: string
+                        details?: unknown
+                        timestamp: string
+                        requestId: string
+                     }
+                  }
+               }
+            }
             /** @description 対象が見つからない */
             404: {
                headers: {
@@ -1125,6 +1144,25 @@ export interface paths {
                   }
                }
             }
+            /** @description 認証が必要 */
+            401: {
+               headers: {
+                  [name: string]: unknown
+               }
+               content: {
+                  "application/json": {
+                     /** @enum {boolean} */
+                     success: false
+                     error: {
+                        code: string
+                        message: string
+                        details?: unknown
+                        timestamp: string
+                        requestId: string
+                     }
+                  }
+               }
+            }
             /** @description 対象が見つからない */
             404: {
                headers: {
@@ -1263,6 +1301,25 @@ export interface paths {
             }
             /** @description リクエスト不正 */
             400: {
+               headers: {
+                  [name: string]: unknown
+               }
+               content: {
+                  "application/json": {
+                     /** @enum {boolean} */
+                     success: false
+                     error: {
+                        code: string
+                        message: string
+                        details?: unknown
+                        timestamp: string
+                        requestId: string
+                     }
+                  }
+               }
+            }
+            /** @description 認証が必要 */
+            401: {
                headers: {
                   [name: string]: unknown
                }
@@ -1437,6 +1494,25 @@ export interface paths {
                   }
                }
             }
+            /** @description 認証が必要 */
+            401: {
+               headers: {
+                  [name: string]: unknown
+               }
+               content: {
+                  "application/json": {
+                     /** @enum {boolean} */
+                     success: false
+                     error: {
+                        code: string
+                        message: string
+                        details?: unknown
+                        timestamp: string
+                        requestId: string
+                     }
+                  }
+               }
+            }
             /** @description 対象が見つからない */
             404: {
                headers: {
@@ -1569,6 +1645,25 @@ export interface paths {
             }
             /** @description リクエスト不正 */
             400: {
+               headers: {
+                  [name: string]: unknown
+               }
+               content: {
+                  "application/json": {
+                     /** @enum {boolean} */
+                     success: false
+                     error: {
+                        code: string
+                        message: string
+                        details?: unknown
+                        timestamp: string
+                        requestId: string
+                     }
+                  }
+               }
+            }
+            /** @description 認証が必要 */
+            401: {
                headers: {
                   [name: string]: unknown
                }
@@ -1780,6 +1875,25 @@ export interface paths {
                   }
                }
             }
+            /** @description 認証が必要 */
+            401: {
+               headers: {
+                  [name: string]: unknown
+               }
+               content: {
+                  "application/json": {
+                     /** @enum {boolean} */
+                     success: false
+                     error: {
+                        code: string
+                        message: string
+                        details?: unknown
+                        timestamp: string
+                        requestId: string
+                     }
+                  }
+               }
+            }
             /** @description 対象が見つからない */
             404: {
                headers: {
@@ -1910,6 +2024,25 @@ export interface paths {
             }
             /** @description リクエスト不正 */
             400: {
+               headers: {
+                  [name: string]: unknown
+               }
+               content: {
+                  "application/json": {
+                     /** @enum {boolean} */
+                     success: false
+                     error: {
+                        code: string
+                        message: string
+                        details?: unknown
+                        timestamp: string
+                        requestId: string
+                     }
+                  }
+               }
+            }
+            /** @description 認証が必要 */
+            401: {
                headers: {
                   [name: string]: unknown
                }
@@ -2079,6 +2212,25 @@ export interface paths {
                   }
                }
             }
+            /** @description 認証が必要 */
+            401: {
+               headers: {
+                  [name: string]: unknown
+               }
+               content: {
+                  "application/json": {
+                     /** @enum {boolean} */
+                     success: false
+                     error: {
+                        code: string
+                        message: string
+                        details?: unknown
+                        timestamp: string
+                        requestId: string
+                     }
+                  }
+               }
+            }
             /** @description 対象が見つからない */
             404: {
                headers: {
@@ -2152,6 +2304,25 @@ export interface paths {
             }
             /** @description リクエスト不正 */
             400: {
+               headers: {
+                  [name: string]: unknown
+               }
+               content: {
+                  "application/json": {
+                     /** @enum {boolean} */
+                     success: false
+                     error: {
+                        code: string
+                        message: string
+                        details?: unknown
+                        timestamp: string
+                        requestId: string
+                     }
+                  }
+               }
+            }
+            /** @description 認証が必要 */
+            401: {
                headers: {
                   [name: string]: unknown
                }
@@ -2261,6 +2432,25 @@ export interface paths {
             }
             /** @description リクエスト不正 */
             400: {
+               headers: {
+                  [name: string]: unknown
+               }
+               content: {
+                  "application/json": {
+                     /** @enum {boolean} */
+                     success: false
+                     error: {
+                        code: string
+                        message: string
+                        details?: unknown
+                        timestamp: string
+                        requestId: string
+                     }
+                  }
+               }
+            }
+            /** @description 認証が必要 */
+            401: {
                headers: {
                   [name: string]: unknown
                }

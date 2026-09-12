@@ -154,6 +154,36 @@ export function getSupabaseAdmin(env?: Env): SupabaseClient {
 }
 
 /**
+ * リクエストの JWT を引き継いだ Supabase クライアントを取得する（RLS 適用）
+ *
+ * service_role ではなく anon キー + 呼び出し元の `Authorization` で初期化するため、
+ * `auth.uid() = user_id` ベースの RLS がそのまま効く。
+ *
+ * ⚠️ 絶対にシングルトン化しないこと。Workers ではリクエスト毎に JWT が異なる。
+ *
+ *  c - Hono コンテキスト（Authorization と env のみ参照）
+ *  リクエストスコープのクライアント
+ */
+export function getSupabaseUserClient(c: {
+   env: Env
+   req: { header(name: string): string | undefined }
+}): SupabaseClient {
+   const config = getSupabaseConfig(c.env)
+   const authHeader = c.req.header("Authorization")
+
+   return createClient(config.url, config.anonKey, {
+      auth: {
+         persistSession: false,
+         autoRefreshToken: false,
+      },
+      global: {
+         fetch: fetch.bind(globalThis),
+         headers: authHeader ? { Authorization: authHeader } : {},
+      },
+   })
+}
+
+/**
  * クライアントインスタンスをリセット（テスト用）
  */
 export function resetClients(): void {

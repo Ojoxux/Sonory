@@ -7,12 +7,11 @@ import { HTTPException } from "hono/http-exception"
 export { ERROR_CODES }
 
 // 追加のエラーコード（バックエンド固有）
+// 認証関連のコード（UNAUTHORIZED / FORBIDDEN）は @sonory/shared-types の
+// ERROR_CODES に統合済み。こちらにはバックエンド固有のコードのみを残す。
 export const BACKEND_ERROR_CODES = {
    // バリデーション関連
    INVALID_REQUEST: "INVALID_REQUEST",
-   // 認証関連
-   UNAUTHORIZED: "UNAUTHORIZED",
-   FORBIDDEN: "FORBIDDEN",
 } as const
 
 /**

@@ -13,16 +13,18 @@ import {
    SoundPinApiSchema,
    UpdatePinRequestSchema,
 } from "@sonory/shared-types"
+import { optionalAuth, requireAuth } from "../middleware/auth"
+import { rateLimits } from "../middleware/rateLimit"
 import { APIException } from "../middleware/error"
 import { onOpenAPIValidationError } from "../middleware/validation"
 import { AudioService } from "../services/audio.service"
 import { PinService } from "../services/pin.service"
-import type { Env } from "../types/api"
+import type { Env, Variables } from "../types/api"
 
 type CreatePinRequest = Parameters<PinService["createPin"]>[0]
 type UpdatePinRequest = Parameters<PinService["updatePin"]>[1]
 
-const app = new OpenAPIHono<{ Bindings: Env }>({
+const app = new OpenAPIHono<{ Bindings: Env; Variables: Variables }>({
    defaultHook: onOpenAPIValidationError,
 })
 
@@ -30,6 +32,10 @@ const standardErrorResponses = {
    400: {
       content: { "application/json": { schema: ApiErrorResponseSchema } },
       description: "リクエスト不正",
+   },
+   401: {
+      content: { "application/json": { schema: ApiErrorResponseSchema } },
+      description: "認証が必要",
    },
    404: {
       content: { "application/json": { schema: ApiErrorResponseSchema } },
@@ -50,6 +56,7 @@ const createPinsBatchSchema: z.ZodTypeAny = z.array(CreatePinRequestSchema)
 const createPinRoute = createRoute({
    method: "post",
    path: "/",
+   middleware: [rateLimits.createPin, requireAuth],
    tags: ["Pins"],
    summary: "ピン作成",
    description: "新しい音声ピンを作成",
@@ -77,6 +84,7 @@ const createPinRoute = createRoute({
 const uploadPinRoute = createRoute({
    method: "post",
    path: "/upload",
+   middleware: [rateLimits.audioUpload, requireAuth],
    tags: ["Pins"],
    summary: "音声アップロード付きピン作成",
    description: "音声ファイルをアップロードしてピンを作成",
@@ -110,6 +118,7 @@ const uploadPinRoute = createRoute({
 const nearbyPinsRoute = createRoute({
    method: "get",
    path: "/nearby",
+   middleware: [rateLimits.getPins, optionalAuth],
    tags: ["Pins"],
    summary: "周辺ピン取得",
    description: "指定された境界内のピンを取得",
@@ -134,6 +143,7 @@ const nearbyPinsRoute = createRoute({
 const searchPinsRoute = createRoute({
    method: "get",
    path: "/search",
+   middleware: [rateLimits.getPins, optionalAuth],
    tags: ["Pins"],
    summary: "ピン検索",
    description: "条件を指定してピンを検索",
@@ -156,6 +166,7 @@ const searchPinsRoute = createRoute({
 const getUserPinsRoute = createRoute({
    method: "get",
    path: "/user/{userId}",
+   middleware: [rateLimits.getPins, requireAuth],
    tags: ["Pins"],
    summary: "ユーザーのピン取得",
    description: "指定ユーザーのピン一覧を取得",
@@ -180,6 +191,7 @@ const getUserPinsRoute = createRoute({
 const batchCreatePinsRoute = createRoute({
    method: "post",
    path: "/batch",
+   middleware: [rateLimits.createPin, requireAuth],
    tags: ["Pins"],
    summary: "複数ピン一括作成",
    description: "複数のピンを一括で作成",
@@ -211,6 +223,7 @@ const batchCreatePinsRoute = createRoute({
 const getPinByIdRoute = createRoute({
    method: "get",
    path: "/{id}",
+   middleware: [rateLimits.getPins, optionalAuth],
    tags: ["Pins"],
    summary: "ピン詳細取得",
    description: "IDでピンを取得",
@@ -235,6 +248,7 @@ const getPinByIdRoute = createRoute({
 const updatePinRoute = createRoute({
    method: "put",
    path: "/{id}",
+   middleware: [rateLimits.default, requireAuth],
    tags: ["Pins"],
    summary: "ピン更新",
    description: "ピンの情報を更新",
@@ -265,6 +279,7 @@ const updatePinRoute = createRoute({
 const deletePinRoute = createRoute({
    method: "delete",
    path: "/{id}",
+   middleware: [rateLimits.default, requireAuth],
    tags: ["Pins"],
    summary: "ピン削除",
    description: "ピンを削除",
@@ -291,6 +306,7 @@ const deletePinRoute = createRoute({
 const reportPinRoute = createRoute({
    method: "post",
    path: "/{id}/report",
+   middleware: [rateLimits.default, requireAuth],
    tags: ["Pins"],
    summary: "ピン報告",
    description: "不適切なピンを報告",

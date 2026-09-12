@@ -1,6 +1,6 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi"
 import type { APIResponse } from "@sonory/shared-types"
-import type { Env } from "../index"
+import type { Env, Variables } from "../index"
 import { getSupabaseAdmin } from "../services/supabase"
 import { logger } from "../utils/logger"
 
@@ -85,7 +85,10 @@ const healthDetailedRoute = createRoute({
    },
 })
 
-export const healthRoutes = new OpenAPIHono<{ Bindings: Env }>()
+export const healthRoutes = new OpenAPIHono<{
+   Bindings: Env
+   Variables: Variables
+}>()
 
 healthRoutes.openapi(healthRoute, async (c) => {
    let dbStatus: "connected" | "disconnected" = "disconnected"

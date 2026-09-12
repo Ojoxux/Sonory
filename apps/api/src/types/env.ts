@@ -10,3 +10,13 @@ export interface Env {
    PYTHON_AUDIO_ANALYZER_URL: string
    PYTHON_AUDIO_ANALYZER_TIMEOUT: string
 }
+
+/**
+ * Hono コンテキスト変数の型定義。
+ *
+ * 認証ミドルウェアが検証済みユーザーの UUID をここにセットする。
+ */
+export interface Variables {
+   /** 認証済みユーザーのUUID。未認証時は undefined */
+   userId?: string
+}

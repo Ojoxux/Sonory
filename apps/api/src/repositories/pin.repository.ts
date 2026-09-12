@@ -23,11 +23,18 @@ export class PinRepository {
 
    /**
     * Creates a new PinRepository instance
-    * @param supabase - Supabase client instance
+    *
+    * @param adminClient - service_role client, used for read-only queries that are
+    *    already scoped by an explicit `status = 'active'` filter (RLS bypass is safe here
+    *    because no owner-restricted data can leak through these code paths)
+    * @param userClient - request-scoped client that forwards the caller's JWT, used for
+    *    mutations (create/update/delete) so that RLS (`auth.uid() = user_id`) is actually
+    *    enforced. Must never be cached/reused across requests (see `getSupabaseUserClient`).
     * @param requestId - Request ID for logging
     */
    constructor(
-      private supabase: SupabaseClient,
+      private adminClient: SupabaseClient,
+      private userClient: SupabaseClient,
       private requestId?: string,
    ) {
       this.logger = new Logger("INFO")
@@ -445,7 +452,7 @@ export class PinRepository {
       if (filePathToUse) {
          try {
             const { data: signedData, error: signedError } =
-               await this.supabase.storage
+               await this.adminClient.storage
                   .from("sonory-audio")
                   .createSignedUrl(filePathToUse, 604800) // 7 days
 
@@ -474,7 +481,8 @@ export class PinRepository {
 
       return {
          id: record.id,
-         ...(record.user_id ? { userId: record.user_id } : {}),
+         // user_id は API レスポンスに含めない（api-contract.ts の SoundPinApiSchema 参照）。
+         // DB には保存され、RLS の所有者判定に使われるが、クライアントへは渡さない。
          location: {
             lat,
             lng,
@@ -569,7 +577,7 @@ export class PinRepository {
             requestId: this.requestId,
          })
 
-         const { data: record, error } = await this.supabase
+         const { data: record, error } = await this.userClient
             .rpc("create_sound_pin", rpcParams)
             .single()
 
@@ -619,7 +627,7 @@ export class PinRepository {
     */
    async findById(id: string): Promise<SoundPinAPI | null> {
       try {
-         const { data: record, error } = await this.supabase
+         const { data: record, error } = await this.adminClient
             .from("sound_pins")
             .select()
             .eq("id", id)
@@ -657,7 +665,7 @@ export class PinRepository {
     */
    async update(id: string, data: SoundPinUpdate): Promise<SoundPinAPI | null> {
       try {
-         const { data: record, error } = await this.supabase
+         const { data: record, error } = await this.userClient
             .from("sound_pins")
             .update(data)
             .eq("id", id)
@@ -702,7 +710,7 @@ export class PinRepository {
     */
    async delete(id: string): Promise<boolean> {
       try {
-         const { data, error } = await this.supabase
+         const { data, error } = await this.userClient
             .from("sound_pins")
             .update({
                status: "deleted" as const,
@@ -754,7 +762,7 @@ export class PinRepository {
          })
 
          // Use optimized PostGIS RPC function for maximum performance
-         const { data: records, error } = await this.supabase.rpc(
+         const { data: records, error } = await this.adminClient.rpc(
             "find_pins_within_bounds",
             {
                north: query.bounds.north,
@@ -817,7 +825,7 @@ export class PinRepository {
    ): Promise<SoundPinAPI[]> {
       try {
          // Use ST_DWithin for efficient radius search
-         const { data: records, error } = await this.supabase.rpc(
+         const { data: records, error } = await this.adminClient.rpc(
             "find_nearby_pins",
             {
                lat: center.lat,
