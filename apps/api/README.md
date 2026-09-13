@@ -168,3 +168,24 @@ task --list
 - `PUT /api/pins/:id` - ピン更新
 - `DELETE /api/pins/:id` - ピン削除
 - `POST /api/pins/:id/report` - 不適切コンテンツ報告
+
+## トラブルシューティング
+
+### `wrangler dev` で外部 HTTPS への fetch が `internal error; reference = ...` で失敗する
+
+Supabase への接続が全滅し、`/api/health` が `database: disconnected` を返す場合、
+workerd がシステムの CA 証明書ストアを見つけられていない可能性がある。
+
+HTTP は通るのに HTTPS だけ失敗するのが特徴。最小の worker で切り分けられる。
+
+環境変数を指定して起動すると解消する。
+
+```bash
+SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt \
+SSL_CERT_DIR=/etc/ssl/certs \
+npm run dev
+```
+
+NixOS など `SSL_CERT_FILE` が既定で設定されない環境で発生する。
+シェルの設定（home-manager の `home.sessionVariables` など）に入れておけば、
+wrangler に限らず同種の問題をまとめて回避できる。

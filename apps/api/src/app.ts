@@ -23,7 +23,7 @@ export function createApp(): OpenAPIHono<{
    app.use("*", requestId())
    app.use("*", timing())
    app.use("*", honoLogger())
-   app.use("*", errorHandler)
+   app.onError(errorHandler)
 
    app.use("*", async (c, next) => {
       const corsMiddleware = getCorsMiddleware(c.env)
