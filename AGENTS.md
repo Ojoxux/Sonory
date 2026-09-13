@@ -142,8 +142,13 @@ Workers 環境では **リクエストごとに JWT が異なる**。
 
 ## Next.js (App Router)
 
-**⚠️ Next.js 16 は破壊的変更が多い。** コードを書く前に `apps/web/AGENTS.md` の指示に従い、
-`node_modules/next/dist/docs/` を読むこと。学習データの知識で書かない。
+**⚠️ Next.js 16 は破壊的変更が多い。** API・規約・ファイル構成が学習データと異なる。
+**コードを書く前に `node_modules/next/dist/docs/` を読むこと。**
+（モノレポではリポジトリルートから `next` パッケージが見えないことがあるため、
+`apps/web/` を起点に解決する。deprecation notice に従うこと）
+
+`next dev` による `AGENTS.md` / `CLAUDE.md` の自動生成は `agentRules: false` で無効化している
+（未追跡ファイルが毎回生えるのを避けるため）。上記の警告はその代替。
 
 - デフォルトは Server Components。インタラクション必須時のみ `"use client"`
 - 各ページは `metadata` をエクスポート
