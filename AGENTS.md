@@ -1,0 +1,214 @@
+# Sonory 開発ガイド
+
+周囲の環境音を10秒録音し、AIが分類して地図上に記録するアプリ。
+Turborepo モノレポ。Web は Next.js (OpenNext + Cloudflare Workers)、API は Hono (Workers)、
+解析は Python (YAMNet)、DB は Supabase (PostgreSQL + PostGIS + pgmq)。
+
+このファイルが実体。`CLAUDE.md` はここを参照するだけ。
+
+---
+
+# 第1部: 実装時ルール
+
+**各項目には実際に起きた事故が紐づいている。** 守らないと同じ失敗を繰り返す。
+
+## API ルートには認証とレート制限を必ず宣言する
+
+`middleware` の省略は「未設定」であって「デフォルト」ではない。
+
+```ts
+const createPinRoute = createRoute({
+   method: "post",
+   middleware: [rateLimits.createPin, requireAuth],
+   path: "/",
+})
+```
+
+- 読み取り系は `optionalAuth`（未ログインでも地図を見られる必要がある）
+- 書き込み系は `requireAuth`
+- レート制限は認証より **前**。安いチェックを先に通し、認証処理自体も保護する
+- 内部処理専用は `requireInternalDispatch`
+
+> **事故:** `pins.ts` 10ルートと `audio.ts` 7ルートが認証もレート制限も未適用のまま5ヶ月放置。
+> `DELETE /api/audio/{filePath}` は誰でも任意の音声ファイルを削除できた。
+> 旧規約にはレート制限の表が書かれていたが、誰も実装しなかった。
+
+## エラーハンドラは `app.onError` で登録する
+
+```ts
+app.onError(errorHandler) // ✅
+app.use("*", errorHandler) // ❌ 例外が届かず平文の "Internal Server Error" になる
+```
+
+Hono の `compose` は例外をアプリの `onError` に回すため、外側ミドルウェアの `try/catch` には届かない。
+
+> **事故:** 2026-05 から約4ヶ月、すべての `APIException` が 500 で返っていた。
+> 401 も 400 も 500。`api-client` の 401 リトライも永久に発火しない状態だった。
+
+## 検証は4つすべて実行する
+
+```bash
+npx turbo type-check
+npx turbo lint
+npx turbo format     # 忘れやすい
+npx turbo test
+```
+
+`oxlint` はフォーマットを見ない。`lint` が通っても `format` が落ちることがある。
+
+> **事故:** Biome（lint + format 一体）から oxlint + oxfmt へ移行した際、CI が `lint` のままだった。
+> 未整形のコードが CI を通過していた。現在は CI に `format` を追加済み。
+
+## DB アクセスは service_role とユーザークライアントを使い分ける
+
+| 用途                   | クライアント               | 理由                                           |
+| ---------------------- | -------------------------- | ---------------------------------------------- |
+| 所有者に基づく書き込み | `getSupabaseUserClient(c)` | RLS の `auth.uid() = user_id` を効かせる       |
+| 読み取り・内部処理     | `getSupabaseAdmin(env)`    | RLS をバイパス。既に条件で絞っている場合に使う |
+
+**`sound_pins.user_id` は列レベルで `anon` / `authenticated` から SELECT 権限を剥奪している。**
+ユーザークライアントでは `WHERE user_id = ...` を書くことすらできない。
+所有者で絞る処理は `service_role` で行い、`userId` は検証済み JWT から導出する。
+
+Workers 環境では **リクエストごとに JWT が異なる**。
+ユーザークライアントをモジュールスコープでキャッシュしてはいけない。
+
+> **事故:** `user_id` が公開読み取りで返っており、位置と時刻からピンを束ねて
+> 個人の行動範囲を推測できる状態だった。
+
+## スキーマの正は `apps/api/supabase/schema.sql`
+
+- スキーマ変更は必ず `apps/api/supabase/migrations/` にファイルとして残す
+- **SQL Editor で直接変更しない**
+- 適用後は `schema.sql` を再生成してコミットする
+- 変更前に `apps/api/supabase/tools/` で実DBの現状を確認する
+
+詳細は `apps/api/supabase/README.md`。
+
+> **事故:** 手動実行と SQL Editor 直叩きでファイルと実DBが乖離し、
+> `anon` キーだけで到達できる書き込み経路が6つ開いていた。
+
+## コメントは既存コードの密度に合わせる
+
+既存コードのコメント率は **5〜25%**。
+
+- TSDoc はエクスポートする関数・型にのみ。内部ヘルパーには不要
+- **同じ説明を複数ファイルに書かない。** 経緯は README、構造は `schema.sql`、
+  個別の非自明な判断だけコードに
+- そのファイルを読まないと分からないことだけ書く
+
+> **事故:** 実質33行の SQL に62行のコメントを書き、同じ経緯を3箇所に重複させた。
+
+## 環境変数の置き場所を間違えない
+
+| ファイル              | 読むもの                      |
+| --------------------- | ----------------------------- |
+| `apps/web/.env.local` | Next.js（`NEXT_PUBLIC_*`）    |
+| `apps/api/.dev.vars`  | wrangler（`SUPABASE_*` など） |
+| ルート `.env`         | docker compose のみ           |
+
+`next dev` は `apps/web` を cwd に起動するため、**ルートの `.env` は Next.js に届かない。**
+
+> **事故:** `NEXT_PUBLIC_SUPABASE_*` がどこにも定義されておらず、Realtime が一度も動いていなかった。
+
+---
+
+# 第2部: コーディング規約
+
+## TypeScript
+
+- `strict`, `noImplicitAny`, `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`,
+  `noPropertyAccessFromIndexSignature` は常に有効
+- **`any` 禁止**。不明な型は `unknown` → ナローイング
+- すべての公開関数・メソッドは戻り型を宣言する
+- 型アサーション（`as`）は最後の手段
+- 既存型の拡張・宣言マージは `interface`、その他は `type`
+- `const`, `readonly`, `as const` を優先し、副作用は専用モジュールに隔離
+- 関数は単一責務に絞る
+
+## ファイル構成
+
+各コンポーネントは `PascalCase/` ディレクトリ。
+
+- UI: `index.tsx` / 型: `types.ts` / ローカルフック: `hooks.ts`
+- 純粋関数: `utils.ts` / 定数: `constants.ts`
+- ルート階層のバレルファイルは作らない
+
+**命名**: コンポーネント `PascalCase` / 関数・変数 `camelCase` / 定数 `UPPER_SNAKE_CASE`
+
+## Atomic Design
+
+`atoms → molecules → organisms → templates`。**下位レイヤは上位レイヤを参照しない。**
+
+## Next.js (App Router)
+
+**⚠️ Next.js 16 は破壊的変更が多い。** コードを書く前に `apps/web/AGENTS.md` の指示に従い、
+`node_modules/next/dist/docs/` を読むこと。学習データの知識で書かない。
+
+- デフォルトは Server Components。インタラクション必須時のみ `"use client"`
+- 各ページは `metadata` をエクスポート
+- 画像は `next/image`
+- リスト描画にはユニークで安定した `key`
+
+## エラー処理と UX
+
+- エラーバウンダリで重大な UI 崩壊を防ぐ
+- ローディングは `Suspense` とスケルトン UI
+- 非同期処理は必ず `try / catch`
+- 成功・失敗はトーストやアラートで即時通知
+
+## セキュリティ
+
+- 機密情報は環境変数で管理し、クライアントに露出しない
+- **`SUPABASE_SERVICE_KEY` は RLS をバイパスする。web 側に持ち込まない**
+- ユーザー入力は `zod` でスキーマバリデーション
+- `dangerouslySetInnerHTML` を避ける
+- `.env.*` は Git 管理外。サンプルは `.env.example`
+
+## アクセシビリティ
+
+- セマンティック HTML を優先し、必要に応じて ARIA
+- インタラクティブ要素はキーボード操作を保証
+- WCAG 準拠のコントラスト比
+- 画像には意味のある `alt`
+
+## スタイリング
+
+- Tailwind のユーティリティを使用。任意値（`[w-100px]` 等）は禁止
+- トークンは `tailwind.config.ts` が単一の情報源
+- `prefers-reduced-motion` を尊重
+- モバイルファースト
+
+---
+
+# 第3部: ツールチェーン
+
+| 用途             | コマンド             | 実体                     |
+| ---------------- | -------------------- | ------------------------ |
+| Lint             | `npm run lint`       | `oxlint`                 |
+| フォーマット検出 | `npm run format`     | `oxfmt --check`          |
+| 自動修正         | `npm run fix`        | `oxlint --fix` + `oxfmt` |
+| 型チェック       | `npm run type-check` | `tsc --noEmit`           |
+| テスト           | `npm run test`       | `vitest`                 |
+
+**Git フック（lefthook）**: pre-commit で変更パッケージのみ `oxlint --fix` / `oxfmt` / `tsc --noEmit`
+
+**CI (`.github/workflows/lint.yml`)**: `npm ci` → oxlint → oxfmt → tsc →
+Python 型生成の検証 → OpenAPI 生成型の整合性検証
+
+## ローカル起動
+
+```bash
+npm run start:infra      # audio-analyzer (YAMNet) + Redis（Docker）
+npm run start:api        # wrangler dev :8787
+npm run start:frontend   # next dev :3000
+```
+
+解析キューは Cron Trigger で消費されるが、`wrangler dev` は Cron を自動実行しない。
+さらに `scheduled` ハンドラは `ENVIRONMENT=development` で早期 return する。
+手で叩く場合:
+
+```bash
+curl -X POST http://localhost:8787/api/audio/internal/process-queue \
+  -H 'Host: scheduled.sonory.internal' -H 'x-sonory-scheduled: true'
+```
