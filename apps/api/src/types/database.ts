@@ -7,7 +7,13 @@
  */
 export interface SoundPinRecord {
    id: string
-   user_id: string | null
+   /**
+    * 所有者の UUID。
+    *
+    * ユーザークライアント経由の読み取りでは列権限により取得できないため省略される。
+    * service_role で読んだ場合のみ値が入る。
+    */
+   user_id?: string | null
    location: string // PostGIS geography stored as WKT or GeoJSON string
    audio_url: string
    audio_file_path: string | null // Permanent file path in storage

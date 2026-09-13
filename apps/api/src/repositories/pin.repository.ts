@@ -2,6 +2,7 @@ import {
    ERROR_CODES,
    type LocationCoordinates,
    type NearbyPinsQuery,
+   type SearchPinsQuery,
    type SoundPinAPI,
 } from "@sonory/shared-types"
 import type { SupabaseClient } from "@supabase/supabase-js"
@@ -669,10 +670,11 @@ export class PinRepository {
             .from("sound_pins")
             .update(data)
             .eq("id", id)
-            .select(`
-               *,
-               location_text:ST_AsText(location)
-            `)
+            // user_id は列権限で authenticated から SELECT できないため、
+            // ワイルドカードは使えない（AGENTS.md「DB アクセス」参照）
+            .select(
+               "id, location, audio_url, audio_file_path, audio_duration, audio_format, weather_temperature, weather_condition, weather_wind_speed, weather_humidity, time_tag, ai_analysis_result, status, title, device_info, created_at, updated_at, deleted_at",
+            )
             .single()
 
          if (error) {
@@ -717,7 +719,8 @@ export class PinRepository {
                deleted_at: new Date().toISOString(),
             })
             .eq("id", id)
-            .select()
+            // ワイルドカード不可（user_id の列権限）。件数判定だけなので id で足りる
+            .select("id")
 
          if (error) {
             throw error
@@ -856,6 +859,233 @@ export class PinRepository {
             error instanceof Error ? { message: error.message } : undefined,
          )
       }
+   }
+
+   /**
+    * Finds all non-deleted pins owned by a user
+    * @param userId - Owner's user ID
+    * @returns Array of pins, most recent first
+    * @throws APIException on database error
+    */
+   async findByUserId(userId: string): Promise<SoundPinAPI[]> {
+      try {
+         const { data: records, error } = await this.adminClient
+            .from("sound_pins")
+            .select()
+            .eq("user_id", userId)
+            .neq("status", "deleted")
+            .order("created_at", { ascending: false })
+            .limit(100)
+
+         if (error) {
+            throw error
+         }
+
+         if (!records || records.length === 0) {
+            return []
+         }
+
+         return await Promise.all(
+            records.map((record: SoundPinRecord) => this.toDomainModel(record)),
+         )
+      } catch (error) {
+         this.logger.error("Failed to find pins by user ID", {
+            error: error instanceof Error ? error.message : String(error),
+            userId,
+            requestId: this.requestId,
+         })
+         throw new APIException(
+            ERROR_CODES.DATABASE_ERROR,
+            "Failed to find user pins",
+            500,
+            error instanceof Error ? { message: error.message } : undefined,
+         )
+      }
+   }
+
+   /**
+    * Searches active pins with optional geo/time/category/weather filters
+    *
+    * @description
+    * `location` があれば `find_nearby_pins` RPC で半径検索した上で残りの条件を
+    * アプリ側で絞り込む（RPCは半径検索のみ対応のため）。無ければテーブルを
+    * 直接クエリし、`categories` は `ai_analysis_result->>topic` で絞り込む
+    * （GINインデックスあり）。
+    *
+    * @param query - Search filters
+    * @returns Array of pins matching all provided criteria
+    * @throws APIException on database error
+    */
+   async search(query: SearchPinsQuery): Promise<SoundPinAPI[]> {
+      try {
+         if (query.location) {
+            return await this.searchByLocation(query)
+         }
+         return await this.searchByFilters(query)
+      } catch (error) {
+         this.logger.error("Failed to search pins", {
+            error: error instanceof Error ? error.message : String(error),
+            query,
+            requestId: this.requestId,
+         })
+         throw new APIException(
+            ERROR_CODES.DATABASE_ERROR,
+            "Failed to search pins",
+            500,
+            error instanceof Error ? { message: error.message } : undefined,
+         )
+      }
+   }
+
+   /**
+    * Reports a pin (moderation). RLSの所有者チェックを回避する必要があるため
+    * （通報は非所有者が行う）、adminClient で更新する。
+    *
+    * `reason` を保存する列が sound_pins に無いため永続化されない。
+    *
+    * @param id - Pin ID
+    * @returns True if a matching, not-yet-deleted pin was updated
+    * @throws APIException on database error
+    */
+   async report(id: string): Promise<boolean> {
+      try {
+         const { data, error } = await this.adminClient
+            .from("sound_pins")
+            .update({ status: "reported" as const })
+            .eq("id", id)
+            .neq("status", "deleted")
+            .select()
+
+         if (error) {
+            throw error
+         }
+
+         return (data?.length ?? 0) > 0
+      } catch (error) {
+         this.logger.error("Failed to report pin", {
+            error: error instanceof Error ? error.message : String(error),
+            pinId: id,
+            requestId: this.requestId,
+         })
+         throw new APIException(
+            ERROR_CODES.DATABASE_ERROR,
+            "Failed to report pin",
+            500,
+            error instanceof Error ? { message: error.message } : undefined,
+         )
+      }
+   }
+
+   /**
+    * `location` 指定時の検索: RPCで半径検索した後、残りの条件を絞り込む
+    */
+   private async searchByLocation(
+      query: SearchPinsQuery,
+   ): Promise<SoundPinAPI[]> {
+      const location = query.location
+      if (!location) {
+         throw new Error("searchByLocation called without query.location")
+      }
+
+      const { data: records, error } = await this.adminClient.rpc(
+         "find_nearby_pins",
+         {
+            lat: location.lat,
+            lng: location.lng,
+            radius_meters: Math.round(location.radius * 1000),
+            max_results: 200,
+         },
+      )
+
+      if (error) {
+         throw error
+      }
+
+      const pins = await Promise.all(
+         (records ?? []).map((record: SoundPinRecord) =>
+            this.toDomainModel(record),
+         ),
+      )
+
+      return this.applyPostFilters(pins, query)
+   }
+
+   /**
+    * `location` 未指定時の検索: テーブルを直接クエリする
+    */
+   private async searchByFilters(
+      query: SearchPinsQuery,
+   ): Promise<SoundPinAPI[]> {
+      let dbQuery = this.adminClient
+         .from("sound_pins")
+         .select()
+         .eq("status", "active")
+
+      if (query.timeRange) {
+         dbQuery = dbQuery
+            .gte("created_at", query.timeRange.start)
+            .lte("created_at", query.timeRange.end)
+      }
+
+      if (query.categories && query.categories.length > 0) {
+         dbQuery = dbQuery.in("ai_analysis_result->>topic", query.categories)
+      }
+
+      if (query.weather && query.weather.length > 0) {
+         dbQuery = dbQuery.in("weather_condition", query.weather)
+      }
+
+      const { data: records, error } = await dbQuery
+         .order("created_at", { ascending: false })
+         .range(query.offset, query.offset + query.limit - 1)
+
+      if (error) {
+         throw error
+      }
+
+      return await Promise.all(
+         (records ?? []).map((record: SoundPinRecord) =>
+            this.toDomainModel(record),
+         ),
+      )
+   }
+
+   /**
+    * RPCではカバーできない条件（時間帯・カテゴリ・天気）をアプリ側で絞り込み、
+    * limit/offsetを適用する
+    */
+   private applyPostFilters(
+      pins: SoundPinAPI[],
+      query: SearchPinsQuery,
+   ): SoundPinAPI[] {
+      let filtered = pins
+
+      if (query.timeRange) {
+         const start = new Date(query.timeRange.start).getTime()
+         const end = new Date(query.timeRange.end).getTime()
+         filtered = filtered.filter((pin) => {
+            const createdAt = new Date(pin.createdAt).getTime()
+            return createdAt >= start && createdAt <= end
+         })
+      }
+
+      if (query.categories && query.categories.length > 0) {
+         const categories = query.categories
+         filtered = filtered.filter((pin) => {
+            const topic = pin.aiAnalysis?.categories.topic
+            return topic !== undefined && categories.includes(topic)
+         })
+      }
+
+      if (query.weather && query.weather.length > 0) {
+         const weather = query.weather
+         filtered = filtered.filter((pin) => {
+            const condition = pin.weather?.condition
+            return condition != null && weather.includes(condition)
+         })
+      }
+
+      return filtered.slice(query.offset, query.offset + query.limit)
    }
 }
 
