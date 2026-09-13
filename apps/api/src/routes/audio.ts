@@ -13,6 +13,8 @@ import type { Context } from "hono"
 import type { Env, Variables } from "../index"
 import { APIException } from "../middleware/error"
 import { rateLimits } from "../middleware/rateLimit"
+import { optionalAuth, requireAuth } from "../middleware/auth"
+import { requireInternalDispatch } from "../middleware/internal"
 import { onOpenAPIValidationError } from "../middleware/validation"
 import { AudioService } from "../services/audio.service"
 
@@ -76,7 +78,7 @@ const uploadUrlRoute = createRoute({
    tags: ["Audio"],
    summary: "Presigned URL生成",
    description: "Supabase Storageへの直接アップロード用Presigned URLを生成",
-   middleware: [rateLimits.default],
+   middleware: [rateLimits.default, requireAuth],
    request: {
       body: {
          required: true,
@@ -109,7 +111,7 @@ const uploadRoute = createRoute({
    tags: ["Audio"],
    summary: "音声ファイルアップロード",
    description: "音声ファイルを直接アップロード（FormData）",
-   middleware: [rateLimits.audioUpload],
+   middleware: [rateLimits.audioUpload, requireAuth],
    request: {
       body: {
          required: true,
@@ -142,7 +144,7 @@ const deleteAudioRoute = createRoute({
    tags: ["Audio"],
    summary: "音声ファイル削除",
    description: "音声ファイルを削除",
-   middleware: [rateLimits.default],
+   middleware: [rateLimits.default, requireAuth],
    request: {
       params: z.object({
          filePath: z.string(),
@@ -172,7 +174,7 @@ const getAudioMetadataRoute = createRoute({
    tags: ["Audio"],
    summary: "音声メタデータ取得",
    description: "音声ファイルのメタデータを取得",
-   middleware: [rateLimits.default],
+   middleware: [rateLimits.default, optionalAuth],
    request: {
       params: z.object({
          audioId: z.string(),
@@ -198,7 +200,7 @@ const analyzeAudioRoute = createRoute({
    summary: "音声分析ジョブ投入",
    description:
       "音声分析ジョブを非同期で投入（Cloudflare Workers 30秒制限対応）",
-   middleware: [rateLimits.default],
+   middleware: [rateLimits.default, requireAuth],
    request: {
       params: z.object({
          audioId: z.string(),
@@ -234,7 +236,7 @@ const analysisStatusRoute = createRoute({
    tags: ["Audio"],
    summary: "分析ステータス取得",
    description: "分析ジョブのステータスと結果を取得",
-   middleware: [rateLimits.default],
+   middleware: [rateLimits.default, optionalAuth],
    request: {
       params: z.object({
          audioId: z.string(),
@@ -256,6 +258,7 @@ const analysisStatusRoute = createRoute({
 
 const processQueueRoute = createRoute({
    method: "post",
+   middleware: [requireInternalDispatch],
    path: "/internal/process-queue",
    tags: ["Internal"],
    summary: "キュー処理",
@@ -395,7 +398,7 @@ app.openapi(deleteAudioRoute, async (c) => {
    )
 })
 
-app.delete("/:filePath{.+}", rateLimits.default, async (c) => {
+app.delete("/:filePath{.+}", rateLimits.default, requireAuth, async (c) => {
    const data = await deleteAudioData(
       c as unknown as Context<{ Bindings: Env; Variables: Variables }>,
       c.req.param("filePath"),
