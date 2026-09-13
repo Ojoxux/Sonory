@@ -4,7 +4,7 @@
       "target": "ES2022",
       "module": "ESNext",
       "lib": ["ES2022"],
-      "types": ["./worker-configuration.d.ts", "node"],
+      "types": ["./worker-configuration.d.ts", "node", "vite/client"],
       "jsx": "react-jsx",
       "moduleResolution": "node",
       "allowImportingTsExtensions": false,
