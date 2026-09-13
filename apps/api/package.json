@@ -32,7 +32,7 @@
       "@supabase/supabase-js": "^2.116.0",
       "hono": "^4.13.7",
       "vite": "^8.3.0",
-      "zod": "^4.6.2"
+      "zod": "^4.6.4"
    },
    "devDependencies": {
       "@types/node": "^24.13.4",
