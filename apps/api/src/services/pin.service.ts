@@ -240,8 +240,9 @@ export class PinService extends BaseService {
       this.log("info", "Searching pins", { query })
 
       try {
-         // TODO: Implement search logic
-         throw new Error("Not implemented")
+         const pins = await this.repository.search(query)
+         this.log("info", "Search completed", { count: pins.length })
+         return pins
       } catch (error) {
          this.log("error", "Failed to search pins", {
             query,
@@ -256,14 +257,23 @@ export class PinService extends BaseService {
     *
     * @param userId - User ID
     * @returns Array of user's pins
-    * @throws APIException on query error
+    * @throws APIException 403 if requesting another user's pins, or on query error
     */
    async getUserPins(userId: string): Promise<SoundPinAPI[]> {
       this.log("info", "Getting user pins", { userId })
 
       try {
-         // TODO: Implement user pins query
-         throw new Error("Not implemented")
+         if (this.userId !== userId) {
+            throw new APIException(
+               ERROR_CODES.FORBIDDEN,
+               "Cannot access another user's pins",
+               403,
+            )
+         }
+
+         const pins = await this.repository.findByUserId(userId)
+         this.log("info", "Found user pins", { count: pins.length })
+         return pins
       } catch (error) {
          this.log("error", "Failed to get user pins", {
             userId,
@@ -274,29 +284,11 @@ export class PinService extends BaseService {
    }
 
    /**
-    * Creates multiple pins in batch
-    *
-    * @param requests - Array of pin creation requests
-    * @returns Array of created pins
-    * @throws APIException on batch creation error
-    */
-   async createPinsBatch(requests: CreatePinRequest[]): Promise<SoundPinAPI[]> {
-      this.log("info", "Creating pins in batch", { count: requests.length })
-
-      try {
-         // TODO: Implement batch creation
-         throw new Error("Not implemented")
-      } catch (error) {
-         this.log("error", "Failed to create pins batch", {
-            count: requests.length,
-            error: error instanceof Error ? error.message : String(error),
-         })
-         throw error
-      }
-   }
-
-   /**
     * Reports a pin for inappropriate content
+    *
+    * @description
+    * 通報は pin_reports に記録するだけで、ピンの status は変更しない。
+    * 非表示にするかは別途判断する（詳細は PinRepository.report）。
     *
     * @param id - Pin ID
     * @param reason - Report reason
@@ -307,8 +299,7 @@ export class PinService extends BaseService {
       this.log("info", "Reporting pin", { pinId: id, reason })
 
       try {
-         // TODO: Implement report logic
-         throw new Error("Not implemented")
+         return await this.repository.report(id, this.userId, reason)
       } catch (error) {
          this.log("error", "Failed to report pin", {
             pinId: id,

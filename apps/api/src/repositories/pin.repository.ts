@@ -938,23 +938,44 @@ export class PinRepository {
    }
 
    /**
-    * Reports a pin (moderation). RLSの所有者チェックを回避する必要があるため
-    * （通報は非所有者が行う）、adminClient で更新する。
+    * 通報を pin_reports に記録する。
     *
-    * `reason` を保存する列が sound_pins に無いため永続化されない。
+    * ピンの status は変更しない。status を 'reported' にすると SELECT ポリシー
+    * （status='active'）を外れて即座に非表示になり、匿名アカウントを作れば
+    * 誰でも任意のピンを取り下げられてしまうため。非表示の判断は別途行う。
     *
-    * @param id - Pin ID
-    * @returns True if a matching, not-yet-deleted pin was updated
-    * @throws APIException on database error
+    * 通報は非所有者が行うため RLS を迂回する必要があり、adminClient を使う。
+    *
+    *  id - Pin ID
+    *  reporterId - 通報者の UUID
+    *  reason - 通報理由
+    *  記録できたら true。対象ピンが存在しない場合は false
+    *  APIException on database error
     */
-   async report(id: string): Promise<boolean> {
+   async report(
+      id: string,
+      reporterId: string | undefined,
+      reason: string,
+   ): Promise<boolean> {
       try {
-         const { data, error } = await this.adminClient
+         const { data: pin } = await this.adminClient
             .from("sound_pins")
-            .update({ status: "reported" as const })
+            .select("id")
             .eq("id", id)
             .neq("status", "deleted")
-            .select()
+            .maybeSingle()
+
+         if (!pin) {
+            return false
+         }
+
+         const { data, error } = await this.adminClient
+            .from("pin_reports")
+            .upsert(
+               { pin_id: id, reporter_id: reporterId ?? null, reason },
+               { onConflict: "pin_id,reporter_id" },
+            )
+            .select("id")
 
          if (error) {
             throw error
