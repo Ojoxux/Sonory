@@ -10,13 +10,15 @@ import {
    UploadUrlDataSchema,
 } from "@sonory/shared-types"
 import type { Context } from "hono"
-import type { Env } from "../index"
+import type { Env, Variables } from "../index"
 import { APIException } from "../middleware/error"
 import { rateLimits } from "../middleware/rateLimit"
+import { optionalAuth, requireAuth } from "../middleware/auth"
+import { requireInternalDispatch } from "../middleware/internal"
 import { onOpenAPIValidationError } from "../middleware/validation"
 import { AudioService } from "../services/audio.service"
 
-const app = new OpenAPIHono<{ Bindings: Env }>({
+const app = new OpenAPIHono<{ Bindings: Env; Variables: Variables }>({
    defaultHook: onOpenAPIValidationError,
 })
 
@@ -32,7 +34,7 @@ const standardErrorResponses = {
 }
 
 const deleteAudioData = async (
-   c: Context<{ Bindings: Env }>,
+   c: Context<{ Bindings: Env; Variables: Variables }>,
    encodedFilePath?: string,
 ) => {
    const audioService = new AudioService(c)
@@ -76,7 +78,7 @@ const uploadUrlRoute = createRoute({
    tags: ["Audio"],
    summary: "Presigned URL生成",
    description: "Supabase Storageへの直接アップロード用Presigned URLを生成",
-   middleware: [rateLimits.default],
+   middleware: [rateLimits.default, requireAuth],
    request: {
       body: {
          required: true,
@@ -109,7 +111,7 @@ const uploadRoute = createRoute({
    tags: ["Audio"],
    summary: "音声ファイルアップロード",
    description: "音声ファイルを直接アップロード（FormData）",
-   middleware: [rateLimits.audioUpload],
+   middleware: [rateLimits.audioUpload, requireAuth],
    request: {
       body: {
          required: true,
@@ -142,7 +144,7 @@ const deleteAudioRoute = createRoute({
    tags: ["Audio"],
    summary: "音声ファイル削除",
    description: "音声ファイルを削除",
-   middleware: [rateLimits.default],
+   middleware: [rateLimits.default, requireAuth],
    request: {
       params: z.object({
          filePath: z.string(),
@@ -172,7 +174,7 @@ const getAudioMetadataRoute = createRoute({
    tags: ["Audio"],
    summary: "音声メタデータ取得",
    description: "音声ファイルのメタデータを取得",
-   middleware: [rateLimits.default],
+   middleware: [rateLimits.default, optionalAuth],
    request: {
       params: z.object({
          audioId: z.string(),
@@ -198,7 +200,7 @@ const analyzeAudioRoute = createRoute({
    summary: "音声分析ジョブ投入",
    description:
       "音声分析ジョブを非同期で投入（Cloudflare Workers 30秒制限対応）",
-   middleware: [rateLimits.default],
+   middleware: [rateLimits.default, requireAuth],
    request: {
       params: z.object({
          audioId: z.string(),
@@ -209,6 +211,7 @@ const analyzeAudioRoute = createRoute({
             "application/json": {
                schema: z.object({
                   audioUrl: z.string().url(),
+                  audioFilePath: z.string().optional(),
                   topK: z.number().optional(),
                }),
             },
@@ -234,7 +237,7 @@ const analysisStatusRoute = createRoute({
    tags: ["Audio"],
    summary: "分析ステータス取得",
    description: "分析ジョブのステータスと結果を取得",
-   middleware: [rateLimits.default],
+   middleware: [rateLimits.default, optionalAuth],
    request: {
       params: z.object({
          audioId: z.string(),
@@ -256,6 +259,7 @@ const analysisStatusRoute = createRoute({
 
 const processQueueRoute = createRoute({
    method: "post",
+   middleware: [requireInternalDispatch],
    path: "/internal/process-queue",
    tags: ["Internal"],
    summary: "キュー処理",
@@ -284,7 +288,7 @@ const processQueueRoute = createRoute({
 
 app.openapi(uploadUrlRoute, async (c) => {
    const audioService = new AudioService(
-      c as unknown as Context<{ Bindings: Env }>,
+      c as unknown as Context<{ Bindings: Env; Variables: Variables }>,
    )
 
    try {
@@ -323,7 +327,7 @@ app.openapi(uploadUrlRoute, async (c) => {
 
 app.openapi(uploadRoute, async (c) => {
    const audioService = new AudioService(
-      c as unknown as Context<{ Bindings: Env }>,
+      c as unknown as Context<{ Bindings: Env; Variables: Variables }>,
    )
 
    try {
@@ -382,7 +386,7 @@ app.openapi(uploadRoute, async (c) => {
 app.openapi(deleteAudioRoute, async (c) => {
    const { filePath: encodedFilePath } = c.req.valid("param")
    const data = await deleteAudioData(
-      c as unknown as Context<{ Bindings: Env }>,
+      c as unknown as Context<{ Bindings: Env; Variables: Variables }>,
       encodedFilePath,
    )
 
@@ -395,9 +399,9 @@ app.openapi(deleteAudioRoute, async (c) => {
    )
 })
 
-app.delete("/:filePath{.+}", rateLimits.default, async (c) => {
+app.delete("/:filePath{.+}", rateLimits.default, requireAuth, async (c) => {
    const data = await deleteAudioData(
-      c as unknown as Context<{ Bindings: Env }>,
+      c as unknown as Context<{ Bindings: Env; Variables: Variables }>,
       c.req.param("filePath"),
    )
 
@@ -454,7 +458,7 @@ app.openapi(getAudioMetadataRoute, async (c) => {
 
 app.openapi(analyzeAudioRoute, async (c) => {
    const audioService = new AudioService(
-      c as unknown as Context<{ Bindings: Env }>,
+      c as unknown as Context<{ Bindings: Env; Variables: Variables }>,
    )
    const { audioId } = c.req.valid("param")
 
@@ -478,7 +482,11 @@ app.openapi(analyzeAudioRoute, async (c) => {
          )
       }
 
-      const jobResult = await audioService.scheduleAnalysis(audioId, audioUrl)
+      const jobResult = await audioService.scheduleAnalysis(
+         audioId,
+         audioUrl,
+         body.audioFilePath,
+      )
 
       const env = c.env as Env
       const isDevelopment =
@@ -518,7 +526,7 @@ app.openapi(analyzeAudioRoute, async (c) => {
 
 app.openapi(analysisStatusRoute, async (c) => {
    const audioService = new AudioService(
-      c as unknown as Context<{ Bindings: Env }>,
+      c as unknown as Context<{ Bindings: Env; Variables: Variables }>,
    )
    const { audioId, jobId } = c.req.valid("param")
 
@@ -564,7 +572,7 @@ app.openapi(analysisStatusRoute, async (c) => {
 
 app.openapi(processQueueRoute, async (c) => {
    const audioService = new AudioService(
-      c as unknown as Context<{ Bindings: Env }>,
+      c as unknown as Context<{ Bindings: Env; Variables: Variables }>,
    )
 
    try {

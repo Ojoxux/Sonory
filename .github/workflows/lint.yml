@@ -48,20 +48,26 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # 5. Biome (Lint + import 整理 + フォーマット検出)を実行
-      - name: Run Biome
+      # 5. oxlint を実行
+      - name: Run oxlint
         run: npm run lint
 
-      # 6. TS の型チェックを実行
+      # 6. oxfmt でフォーマット崩れを検出
+      #    oxlint はフォーマットを見ないため、lint とは別に必要
+      #    （Biome から移行した際に抜け落ちていた）
+      - name: Run oxfmt
+        run: npm run format
+
+      # 7. TS の型チェックを実行
       - name: Run tsc
         run: npm run type-check
 
-      # 7. shared-types から Python 型が生成できることを検証
+      # 8. shared-types から Python 型が生成できることを検証
       - name: Verify Python types generation
         run: |
           npm run build -w @sonory/shared-types
           npm run verify -w @sonory/python-types
 
-      # 8. OpenAPI Spec と生成型の整合性を検証
+      # 9. OpenAPI Spec と生成型の整合性を検証
       - name: Verify generated OpenAPI types
         run: npm run check:generated --workspace=@sonory/shared-types

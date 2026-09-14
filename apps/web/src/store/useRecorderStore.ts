@@ -1,5 +1,6 @@
 import type { UploadAudioResponse } from "@sonory/shared-types"
 import { create } from "zustand"
+import { defaultApiClient } from "@/services/api-client"
 import type { AudioData, RecorderState } from "./types"
 
 /**
@@ -212,30 +213,12 @@ export const useRecorderStore = create<RecorderState>((set, _get) => ({
             hasMetadata: !!metadata.location,
          })
 
-         const response = await fetch("/api/audio/upload", {
-            method: "POST",
-            body: formData,
-         })
-
-         console.log("📡 アップロードレスポンス受信:", {
-            status: response.status,
-            ok: response.ok,
-            headers: Object.fromEntries(response.headers.entries()),
-         })
-
-         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}))
-            console.error("❌ アップロードエラー:", {
-               status: response.status,
-               errorData,
-            })
-            throw new Error(
-               (errorData as { message?: string })?.message ||
-                  `アップロード失敗: ${response.status}`,
-            )
-         }
-
-         const result = await response.json()
+         // 生の fetch では Authorization ヘッダーが付かず 401 になる。
+         // 認証と 401 リトライは api-client が一元的に扱う
+         const result = await defaultApiClient.postFormData<unknown>(
+            "/api/audio/upload",
+            formData,
+         )
          console.log("📤 アップロードレスポンス:", result)
 
          const { audioUrl, audioId } = validateUploadResponse(result)

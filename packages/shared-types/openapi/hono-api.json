@@ -1031,6 +1031,9 @@
                               "type": "string",
                               "format": "uri"
                            },
+                           "audioFilePath": {
+                              "type": "string"
+                           },
                            "topK": {
                               "type": "number"
                            }
@@ -1759,6 +1762,46 @@
                               "type": "string",
                               "maxLength": 200
                            },
+                           "aiAnalysis": {
+                              "type": "object",
+                              "properties": {
+                                 "transcription": {
+                                    "type": "string"
+                                 },
+                                 "categories": {
+                                    "type": "object",
+                                    "properties": {
+                                       "emotion": {
+                                          "type": "string"
+                                       },
+                                       "topic": {
+                                          "type": "string"
+                                       },
+                                       "language": {
+                                          "type": "string"
+                                       },
+                                       "confidence": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                       }
+                                    },
+                                    "required": [
+                                       "emotion",
+                                       "topic",
+                                       "language",
+                                       "confidence"
+                                    ]
+                                 },
+                                 "summary": {
+                                    "type": "string"
+                                 }
+                              },
+                              "required": [
+                                 "transcription",
+                                 "categories"
+                              ]
+                           },
                            "deviceInfo": {
                               "type": "string"
                            }
@@ -1788,9 +1831,6 @@
                                  "type": "object",
                                  "properties": {
                                     "id": {
-                                       "type": "string"
-                                    },
-                                    "userId": {
                                        "type": "string"
                                     },
                                     "location": {
@@ -1966,6 +2006,54 @@
                },
                "400": {
                   "description": "リクエスト不正",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "success": {
+                                 "type": "boolean",
+                                 "enum": [
+                                    false
+                                 ]
+                              },
+                              "error": {
+                                 "type": "object",
+                                 "properties": {
+                                    "code": {
+                                       "type": "string"
+                                    },
+                                    "message": {
+                                       "type": "string"
+                                    },
+                                    "details": {
+                                       "nullable": true
+                                    },
+                                    "timestamp": {
+                                       "type": "string"
+                                    },
+                                    "requestId": {
+                                       "type": "string"
+                                    }
+                                 },
+                                 "required": [
+                                    "code",
+                                    "message",
+                                    "timestamp",
+                                    "requestId"
+                                 ]
+                              }
+                           },
+                           "required": [
+                              "success",
+                              "error"
+                           ]
+                        }
+                     }
+                  }
+               },
+               "401": {
+                  "description": "認証が必要",
                   "content": {
                      "application/json": {
                         "schema": {
@@ -2162,9 +2250,6 @@
                                     "id": {
                                        "type": "string"
                                     },
-                                    "userId": {
-                                       "type": "string"
-                                    },
                                     "location": {
                                        "type": "object",
                                        "properties": {
@@ -2338,6 +2423,54 @@
                },
                "400": {
                   "description": "リクエスト不正",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "success": {
+                                 "type": "boolean",
+                                 "enum": [
+                                    false
+                                 ]
+                              },
+                              "error": {
+                                 "type": "object",
+                                 "properties": {
+                                    "code": {
+                                       "type": "string"
+                                    },
+                                    "message": {
+                                       "type": "string"
+                                    },
+                                    "details": {
+                                       "nullable": true
+                                    },
+                                    "timestamp": {
+                                       "type": "string"
+                                    },
+                                    "requestId": {
+                                       "type": "string"
+                                    }
+                                 },
+                                 "required": [
+                                    "code",
+                                    "message",
+                                    "timestamp",
+                                    "requestId"
+                                 ]
+                              }
+                           },
+                           "required": [
+                              "success",
+                              "error"
+                           ]
+                        }
+                     }
+                  }
+               },
+               "401": {
+                  "description": "認証が必要",
                   "content": {
                      "application/json": {
                         "schema": {
@@ -2580,9 +2713,6 @@
                                        "id": {
                                           "type": "string"
                                        },
-                                       "userId": {
-                                          "type": "string"
-                                       },
                                        "location": {
                                           "type": "object",
                                           "properties": {
@@ -2763,6 +2893,54 @@
                },
                "400": {
                   "description": "リクエスト不正",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "success": {
+                                 "type": "boolean",
+                                 "enum": [
+                                    false
+                                 ]
+                              },
+                              "error": {
+                                 "type": "object",
+                                 "properties": {
+                                    "code": {
+                                       "type": "string"
+                                    },
+                                    "message": {
+                                       "type": "string"
+                                    },
+                                    "details": {
+                                       "nullable": true
+                                    },
+                                    "timestamp": {
+                                       "type": "string"
+                                    },
+                                    "requestId": {
+                                       "type": "string"
+                                    }
+                                 },
+                                 "required": [
+                                    "code",
+                                    "message",
+                                    "timestamp",
+                                    "requestId"
+                                 ]
+                              }
+                           },
+                           "required": [
+                              "success",
+                              "error"
+                           ]
+                        }
+                     }
+                  }
+               },
+               "401": {
+                  "description": "認証が必要",
                   "content": {
                      "application/json": {
                         "schema": {
@@ -3032,9 +3210,6 @@
                                        "id": {
                                           "type": "string"
                                        },
-                                       "userId": {
-                                          "type": "string"
-                                       },
                                        "location": {
                                           "type": "object",
                                           "properties": {
@@ -3209,6 +3384,54 @@
                },
                "400": {
                   "description": "リクエスト不正",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "success": {
+                                 "type": "boolean",
+                                 "enum": [
+                                    false
+                                 ]
+                              },
+                              "error": {
+                                 "type": "object",
+                                 "properties": {
+                                    "code": {
+                                       "type": "string"
+                                    },
+                                    "message": {
+                                       "type": "string"
+                                    },
+                                    "details": {
+                                       "nullable": true
+                                    },
+                                    "timestamp": {
+                                       "type": "string"
+                                    },
+                                    "requestId": {
+                                       "type": "string"
+                                    }
+                                 },
+                                 "required": [
+                                    "code",
+                                    "message",
+                                    "timestamp",
+                                    "requestId"
+                                 ]
+                              }
+                           },
+                           "required": [
+                              "success",
+                              "error"
+                           ]
+                        }
+                     }
+                  }
+               },
+               "401": {
+                  "description": "認証が必要",
                   "content": {
                      "application/json": {
                         "schema": {
@@ -3393,9 +3616,6 @@
                                        "id": {
                                           "type": "string"
                                        },
-                                       "userId": {
-                                          "type": "string"
-                                       },
                                        "location": {
                                           "type": "object",
                                           "properties": {
@@ -3616,484 +3836,8 @@
                      }
                   }
                },
-               "404": {
-                  "description": "対象が見つからない",
-                  "content": {
-                     "application/json": {
-                        "schema": {
-                           "type": "object",
-                           "properties": {
-                              "success": {
-                                 "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
-                              },
-                              "error": {
-                                 "type": "object",
-                                 "properties": {
-                                    "code": {
-                                       "type": "string"
-                                    },
-                                    "message": {
-                                       "type": "string"
-                                    },
-                                    "details": {
-                                       "nullable": true
-                                    },
-                                    "timestamp": {
-                                       "type": "string"
-                                    },
-                                    "requestId": {
-                                       "type": "string"
-                                    }
-                                 },
-                                 "required": [
-                                    "code",
-                                    "message",
-                                    "timestamp",
-                                    "requestId"
-                                 ]
-                              }
-                           },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
-                        }
-                     }
-                  }
-               },
-               "500": {
-                  "description": "サーバーエラー",
-                  "content": {
-                     "application/json": {
-                        "schema": {
-                           "type": "object",
-                           "properties": {
-                              "success": {
-                                 "type": "boolean",
-                                 "enum": [
-                                    false
-                                 ]
-                              },
-                              "error": {
-                                 "type": "object",
-                                 "properties": {
-                                    "code": {
-                                       "type": "string"
-                                    },
-                                    "message": {
-                                       "type": "string"
-                                    },
-                                    "details": {
-                                       "nullable": true
-                                    },
-                                    "timestamp": {
-                                       "type": "string"
-                                    },
-                                    "requestId": {
-                                       "type": "string"
-                                    }
-                                 },
-                                 "required": [
-                                    "code",
-                                    "message",
-                                    "timestamp",
-                                    "requestId"
-                                 ]
-                              }
-                           },
-                           "required": [
-                              "success",
-                              "error"
-                           ]
-                        }
-                     }
-                  }
-               }
-            }
-         }
-      },
-      "/api/pins/batch": {
-         "post": {
-            "tags": [
-               "Pins"
-            ],
-            "summary": "複数ピン一括作成",
-            "description": "複数のピンを一括で作成",
-            "requestBody": {
-               "required": true,
-               "content": {
-                  "application/json": {
-                     "schema": {
-                        "type": "array",
-                        "items": {
-                           "type": "object",
-                           "properties": {
-                              "location": {
-                                 "type": "object",
-                                 "properties": {
-                                    "lat": {
-                                       "type": "number",
-                                       "minimum": -90,
-                                       "maximum": 90
-                                    },
-                                    "lng": {
-                                       "type": "number",
-                                       "minimum": -180,
-                                       "maximum": 180
-                                    },
-                                    "accuracy": {
-                                       "type": "number",
-                                       "minimum": 0,
-                                       "exclusiveMinimum": true
-                                    }
-                                 },
-                                 "required": [
-                                    "lat",
-                                    "lng"
-                                 ]
-                              },
-                              "audio": {
-                                 "type": "object",
-                                 "properties": {
-                                    "url": {
-                                       "type": "string",
-                                       "format": "uri"
-                                    },
-                                    "duration": {
-                                       "type": "number",
-                                       "minimum": 9.9,
-                                       "maximum": 600
-                                    },
-                                    "format": {
-                                       "type": "string",
-                                       "enum": [
-                                          "webm",
-                                          "mp3",
-                                          "wav"
-                                       ]
-                                    },
-                                    "filePath": {
-                                       "type": "string"
-                                    }
-                                 },
-                                 "required": [
-                                    "url",
-                                    "duration",
-                                    "format"
-                                 ]
-                              },
-                              "audio_file_path": {
-                                 "type": "string"
-                              },
-                              "metadata": {
-                                 "type": "object",
-                                 "properties": {
-                                    "duration": {
-                                       "type": "number",
-                                       "minimum": 0,
-                                       "exclusiveMinimum": true
-                                    },
-                                    "timeTag": {
-                                       "type": "string",
-                                       "enum": [
-                                          "朝",
-                                          "昼",
-                                          "夕",
-                                          "夜"
-                                       ]
-                                    },
-                                    "title": {
-                                       "type": "string",
-                                       "maxLength": 200
-                                    },
-                                    "deviceInfo": {
-                                       "type": "string"
-                                    },
-                                    "weather": {
-                                       "type": "object",
-                                       "properties": {
-                                          "temperature": {
-                                             "type": "number"
-                                          },
-                                          "condition": {
-                                             "type": "string",
-                                             "nullable": true
-                                          },
-                                          "windSpeed": {
-                                             "type": "number",
-                                             "nullable": true
-                                          },
-                                          "humidity": {
-                                             "type": "number",
-                                             "nullable": true,
-                                             "minimum": 0,
-                                             "maximum": 100
-                                          }
-                                       },
-                                       "required": [
-                                          "temperature"
-                                       ]
-                                    }
-                                 }
-                              },
-                              "weather": {
-                                 "type": "object",
-                                 "properties": {
-                                    "temperature": {
-                                       "type": "number"
-                                    },
-                                    "condition": {
-                                       "type": "string",
-                                       "nullable": true
-                                    },
-                                    "windSpeed": {
-                                       "type": "number",
-                                       "nullable": true
-                                    },
-                                    "humidity": {
-                                       "type": "number",
-                                       "nullable": true,
-                                       "minimum": 0,
-                                       "maximum": 100
-                                    }
-                                 },
-                                 "required": [
-                                    "temperature"
-                                 ]
-                              },
-                              "timeTag": {
-                                 "type": "string",
-                                 "enum": [
-                                    "朝",
-                                    "昼",
-                                    "夕",
-                                    "夜"
-                                 ]
-                              },
-                              "title": {
-                                 "type": "string",
-                                 "maxLength": 200
-                              },
-                              "deviceInfo": {
-                                 "type": "string"
-                              }
-                           },
-                           "required": [
-                              "location"
-                           ]
-                        }
-                     }
-                  }
-               }
-            },
-            "responses": {
-               "200": {
-                  "description": "作成されたピン一覧",
-                  "content": {
-                     "application/json": {
-                        "schema": {
-                           "type": "object",
-                           "properties": {
-                              "success": {
-                                 "type": "boolean",
-                                 "enum": [
-                                    true
-                                 ]
-                              },
-                              "data": {
-                                 "type": "array",
-                                 "items": {
-                                    "type": "object",
-                                    "properties": {
-                                       "id": {
-                                          "type": "string"
-                                       },
-                                       "userId": {
-                                          "type": "string"
-                                       },
-                                       "location": {
-                                          "type": "object",
-                                          "properties": {
-                                             "lat": {
-                                                "type": "number",
-                                                "minimum": -90,
-                                                "maximum": 90
-                                             },
-                                             "lng": {
-                                                "type": "number",
-                                                "minimum": -180,
-                                                "maximum": 180
-                                             },
-                                             "accuracy": {
-                                                "type": "number",
-                                                "minimum": 0,
-                                                "exclusiveMinimum": true
-                                             }
-                                          },
-                                          "required": [
-                                             "lat",
-                                             "lng"
-                                          ]
-                                       },
-                                       "audio": {
-                                          "type": "object",
-                                          "properties": {
-                                             "url": {
-                                                "type": "string"
-                                             },
-                                             "duration": {
-                                                "type": "number"
-                                             },
-                                             "format": {
-                                                "type": "string",
-                                                "enum": [
-                                                   "webm",
-                                                   "mp3",
-                                                   "wav",
-                                                   "mp4",
-                                                   "m4a",
-                                                   "flac",
-                                                   "ogg"
-                                                ]
-                                             }
-                                          },
-                                          "required": [
-                                             "url",
-                                             "duration",
-                                             "format"
-                                          ]
-                                       },
-                                       "weather": {
-                                          "type": "object",
-                                          "properties": {
-                                             "temperature": {
-                                                "type": "number"
-                                             },
-                                             "condition": {
-                                                "type": "string",
-                                                "nullable": true
-                                             },
-                                             "windSpeed": {
-                                                "type": "number",
-                                                "nullable": true
-                                             },
-                                             "humidity": {
-                                                "type": "number",
-                                                "nullable": true,
-                                                "minimum": 0,
-                                                "maximum": 100
-                                             }
-                                          },
-                                          "required": [
-                                             "temperature"
-                                          ]
-                                       },
-                                       "timeTag": {
-                                          "type": "string",
-                                          "enum": [
-                                             "朝",
-                                             "昼",
-                                             "夕",
-                                             "夜"
-                                          ]
-                                       },
-                                       "aiAnalysis": {
-                                          "type": "object",
-                                          "properties": {
-                                             "transcription": {
-                                                "type": "string"
-                                             },
-                                             "categories": {
-                                                "type": "object",
-                                                "properties": {
-                                                   "emotion": {
-                                                      "type": "string"
-                                                   },
-                                                   "topic": {
-                                                      "type": "string"
-                                                   },
-                                                   "language": {
-                                                      "type": "string"
-                                                   },
-                                                   "confidence": {
-                                                      "type": "number",
-                                                      "minimum": 0,
-                                                      "maximum": 1
-                                                   }
-                                                },
-                                                "required": [
-                                                   "emotion",
-                                                   "topic",
-                                                   "language",
-                                                   "confidence"
-                                                ]
-                                             },
-                                             "summary": {
-                                                "type": "string"
-                                             }
-                                          },
-                                          "required": [
-                                             "transcription",
-                                             "categories"
-                                          ]
-                                       },
-                                       "status": {
-                                          "type": "string",
-                                          "enum": [
-                                             "active",
-                                             "processing",
-                                             "deleted",
-                                             "reported"
-                                          ]
-                                       },
-                                       "title": {
-                                          "type": "string"
-                                       },
-                                       "metadata": {
-                                          "type": "object",
-                                          "properties": {
-                                             "deviceInfo": {
-                                                "type": "string"
-                                             }
-                                          }
-                                       },
-                                       "createdAt": {
-                                          "type": "string"
-                                       },
-                                       "updatedAt": {
-                                          "type": "string"
-                                       }
-                                    },
-                                    "required": [
-                                       "id",
-                                       "location",
-                                       "audio",
-                                       "status",
-                                       "createdAt",
-                                       "updatedAt"
-                                    ]
-                                 }
-                              },
-                              "meta": {
-                                 "type": "object",
-                                 "additionalProperties": {
-                                    "nullable": true
-                                 }
-                              }
-                           },
-                           "required": [
-                              "success",
-                              "data"
-                           ]
-                        }
-                     }
-                  }
-               },
-               "400": {
-                  "description": "リクエスト不正",
+               "401": {
+                  "description": "認証が必要",
                   "content": {
                      "application/json": {
                         "schema": {
@@ -4276,9 +4020,6 @@
                                     "id": {
                                        "type": "string"
                                     },
-                                    "userId": {
-                                       "type": "string"
-                                    },
                                     "location": {
                                        "type": "object",
                                        "properties": {
@@ -4452,6 +4193,54 @@
                },
                "400": {
                   "description": "リクエスト不正",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "success": {
+                                 "type": "boolean",
+                                 "enum": [
+                                    false
+                                 ]
+                              },
+                              "error": {
+                                 "type": "object",
+                                 "properties": {
+                                    "code": {
+                                       "type": "string"
+                                    },
+                                    "message": {
+                                       "type": "string"
+                                    },
+                                    "details": {
+                                       "nullable": true
+                                    },
+                                    "timestamp": {
+                                       "type": "string"
+                                    },
+                                    "requestId": {
+                                       "type": "string"
+                                    }
+                                 },
+                                 "required": [
+                                    "code",
+                                    "message",
+                                    "timestamp",
+                                    "requestId"
+                                 ]
+                              }
+                           },
+                           "required": [
+                              "success",
+                              "error"
+                           ]
+                        }
+                     }
+                  }
+               },
+               "401": {
+                  "description": "認証が必要",
                   "content": {
                      "application/json": {
                         "schema": {
@@ -4697,9 +4486,6 @@
                                     "id": {
                                        "type": "string"
                                     },
-                                    "userId": {
-                                       "type": "string"
-                                    },
                                     "location": {
                                        "type": "object",
                                        "properties": {
@@ -4873,6 +4659,54 @@
                },
                "400": {
                   "description": "リクエスト不正",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "success": {
+                                 "type": "boolean",
+                                 "enum": [
+                                    false
+                                 ]
+                              },
+                              "error": {
+                                 "type": "object",
+                                 "properties": {
+                                    "code": {
+                                       "type": "string"
+                                    },
+                                    "message": {
+                                       "type": "string"
+                                    },
+                                    "details": {
+                                       "nullable": true
+                                    },
+                                    "timestamp": {
+                                       "type": "string"
+                                    },
+                                    "requestId": {
+                                       "type": "string"
+                                    }
+                                 },
+                                 "required": [
+                                    "code",
+                                    "message",
+                                    "timestamp",
+                                    "requestId"
+                                 ]
+                              }
+                           },
+                           "required": [
+                              "success",
+                              "error"
+                           ]
+                        }
+                     }
+                  }
+               },
+               "401": {
+                  "description": "認証が必要",
                   "content": {
                      "application/json": {
                         "schema": {
@@ -5115,6 +4949,54 @@
                      }
                   }
                },
+               "401": {
+                  "description": "認証が必要",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "success": {
+                                 "type": "boolean",
+                                 "enum": [
+                                    false
+                                 ]
+                              },
+                              "error": {
+                                 "type": "object",
+                                 "properties": {
+                                    "code": {
+                                       "type": "string"
+                                    },
+                                    "message": {
+                                       "type": "string"
+                                    },
+                                    "details": {
+                                       "nullable": true
+                                    },
+                                    "timestamp": {
+                                       "type": "string"
+                                    },
+                                    "requestId": {
+                                       "type": "string"
+                                    }
+                                 },
+                                 "required": [
+                                    "code",
+                                    "message",
+                                    "timestamp",
+                                    "requestId"
+                                 ]
+                              }
+                           },
+                           "required": [
+                              "success",
+                              "error"
+                           ]
+                        }
+                     }
+                  }
+               },
                "404": {
                   "description": "対象が見つからない",
                   "content": {
@@ -5287,6 +5169,54 @@
                },
                "400": {
                   "description": "リクエスト不正",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "success": {
+                                 "type": "boolean",
+                                 "enum": [
+                                    false
+                                 ]
+                              },
+                              "error": {
+                                 "type": "object",
+                                 "properties": {
+                                    "code": {
+                                       "type": "string"
+                                    },
+                                    "message": {
+                                       "type": "string"
+                                    },
+                                    "details": {
+                                       "nullable": true
+                                    },
+                                    "timestamp": {
+                                       "type": "string"
+                                    },
+                                    "requestId": {
+                                       "type": "string"
+                                    }
+                                 },
+                                 "required": [
+                                    "code",
+                                    "message",
+                                    "timestamp",
+                                    "requestId"
+                                 ]
+                              }
+                           },
+                           "required": [
+                              "success",
+                              "error"
+                           ]
+                        }
+                     }
+                  }
+               },
+               "401": {
+                  "description": "認証が必要",
                   "content": {
                      "application/json": {
                         "schema": {

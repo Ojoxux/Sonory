@@ -118,6 +118,7 @@ export function AudioPlayback({
          uploadedAudioUrl,
          currentPosition,
          results,
+         fallbackUsed,
       )
 
       // 成功時は閉じる

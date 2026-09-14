@@ -1,5 +1,5 @@
 import type { Context } from "hono"
-import type { Env } from "../index"
+import type { Env, Variables } from "../index"
 import { logger } from "../utils/logger"
 
 /**
@@ -21,13 +21,18 @@ import { logger } from "../utils/logger"
  */
 export abstract class BaseService {
    protected readonly env: Env
-   protected readonly ctx: Context<{ Bindings: Env }>
+   protected readonly ctx: Context<{ Bindings: Env; Variables: Variables }>
    protected readonly requestId: string
 
-   constructor(ctx: Context<{ Bindings: Env }>) {
+   constructor(ctx: Context<{ Bindings: Env; Variables: Variables }>) {
       this.ctx = ctx
       this.env = ctx.env
       this.requestId = ctx.get("requestId") || crypto.randomUUID()
+   }
+
+   /** 認証済みユーザーの UUID。未認証なら undefined */
+   protected get userId(): string | undefined {
+      return this.ctx.get("userId")
    }
 
    /**

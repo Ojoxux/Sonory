@@ -5,6 +5,8 @@ import { APIException, ERROR_CODES } from "./error"
  * レート制限設定
  */
 interface RateLimitConfig {
+   /** リミッターの識別名。キーに含めることで他のエンドポイントとカウンタを共有しない */
+   name: string
    windowMs: number // 時間窓（ミリ秒）
    max: number // 最大リクエスト数
    keyGenerator?: (c: AppContext) => string // レート制限のキー生成
@@ -22,13 +24,16 @@ const rateLimitStore = new Map<string, { count: number; resetAt: number }>()
  */
 export const rateLimit = (config: RateLimitConfig): AppMiddleware => {
    const {
+      name,
       windowMs = 60 * 1000, // デフォルト: 1分
       max = 100, // デフォルト: 100リクエスト
       keyGenerator = (c) => c.req.header("cf-connecting-ip") || "unknown",
    } = config
 
    return async (c, next) => {
-      const key = keyGenerator(c)
+      // リミッター名を含める。含めないと全エンドポイントが1つのカウンタを共有し、
+      // 地図の閲覧でピン作成の枠を使い切るような干渉が起きる。
+      const key = `${name}:${keyGenerator(c)}`
       const now = Date.now()
 
       // 既存のレート制限情報を取得
@@ -81,14 +86,14 @@ export const rateLimit = (config: RateLimitConfig): AppMiddleware => {
  */
 export const rateLimits = {
    // 音声アップロード: 5リクエスト/分
-   audioUpload: rateLimit({ windowMs: 60 * 1000, max: 5 }),
+   audioUpload: rateLimit({ name: "audioUpload", windowMs: 60 * 1000, max: 5 }),
 
    // ピン取得: 100リクエスト/分
-   getPins: rateLimit({ windowMs: 60 * 1000, max: 100 }),
+   getPins: rateLimit({ name: "getPins", windowMs: 60 * 1000, max: 100 }),
 
    // ピン作成: 20リクエスト/分
-   createPin: rateLimit({ windowMs: 60 * 1000, max: 20 }),
+   createPin: rateLimit({ name: "createPin", windowMs: 60 * 1000, max: 20 }),
 
    // デフォルト: 60リクエスト/分
-   default: rateLimit({ windowMs: 60 * 1000, max: 60 }),
+   default: rateLimit({ name: "default", windowMs: 60 * 1000, max: 60 }),
 }

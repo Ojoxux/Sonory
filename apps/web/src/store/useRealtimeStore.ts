@@ -1,7 +1,32 @@
 import type { RealtimeChannel, SupabaseClient } from "@supabase/supabase-js"
-import { createClient } from "@supabase/supabase-js"
 import { create } from "zustand"
+import { getSupabaseClient } from "@/services/supabase"
 import type { LocationData } from "./useSoundPinStore"
+
+/**
+ * Realtime 用の Supabase クライアントを解決する
+ *
+ * @description
+ * Auth（匿名サインイン）と同一のシングルトンを共有する。
+ * ここで別インスタンスを生成すると匿名セッションが共有されず、
+ * Realtime が未認証接続になってしまう。
+ *
+ * 環境変数が未設定の場合は例外ではなく `null` を返し、
+ * リアルタイム通知だけを無効化してアプリ全体は動かし続ける。
+ *
+ * @returns 共有クライアント。設定が無い場合は `null`
+ */
+function resolveRealtimeClient(): SupabaseClient | null {
+   try {
+      return getSupabaseClient()
+   } catch (error) {
+      console.warn(
+         "Supabase設定が見つかりません。リアルタイム通知機能は無効化されます。",
+         error,
+      )
+      return null
+   }
+}
 
 /**
  * リアルタイム通知の型定義
@@ -307,19 +332,13 @@ export const useRealtimeStore = create<RealtimeState & RealtimeActions>(
          try {
             set({ connectionStatus: "connecting", connectionError: null })
 
-            // Supabaseクライアントを初期化
-            const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-            const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+            // Auth と共有のシングルトンクライアントを取得する
+            const client = resolveRealtimeClient()
 
-            if (!supabaseUrl || !supabaseAnonKey) {
-               console.warn(
-                  "Supabase設定が見つかりません。リアルタイム通知機能は無効化されます。",
-               )
+            if (!client) {
                set({ connectionStatus: "disconnected" })
                return
             }
-
-            const client = createClient(supabaseUrl, supabaseAnonKey)
 
             set({
                supabaseClient: client,
@@ -572,10 +591,11 @@ export const useRealtimeStore = create<RealtimeState & RealtimeActions>(
        */
       markNotificationAsRead: (notificationId: string): void => {
          set((state) => ({
-            recentNotifications: state.recentNotifications.map((notification) =>
-               notification.id === notificationId
-                  ? { ...notification, isRead: true }
-                  : notification,
+            recentNotifications: state.recentNotifications.map(
+               (notification) =>
+                  notification.id === notificationId
+                     ? { ...notification, isRead: true }
+                     : notification,
             ),
          }))
       },

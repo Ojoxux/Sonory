@@ -10,9 +10,10 @@ import {
 import type { Context } from "hono"
 import { APIException } from "../middleware/error"
 import { PinRepository } from "../repositories/pin.repository"
+import type { Env, Variables } from "../types/env"
 import type { SoundPinInsert, SoundPinUpdate } from "../types/database"
 import { BaseService } from "./base.service"
-import { getSupabaseAdmin } from "./supabase"
+import { getSupabaseAdmin, getSupabaseUserClient } from "./supabase"
 
 /**
  * Pin service for managing sound pins
@@ -27,10 +28,19 @@ import { getSupabaseAdmin } from "./supabase"
 export class PinService extends BaseService {
    private repository: PinRepository
 
-   constructor(ctx: Context) {
+   constructor(ctx: Context<{ Bindings: Env; Variables: Variables }>) {
       super(ctx)
-      const supabase = getSupabaseAdmin(this.env)
-      this.repository = new PinRepository(supabase, this.requestId)
+      // 読み取り専用・公開データ操作（status='active'で明示的に絞り込み済み）は
+      // service_role を使う。所有者チェックが必要な書き込み（作成・更新・削除）は
+      // 呼び出し元のJWTを引き継いだクライアントを使い、RLS (auth.uid() = user_id) を
+      // 必ず効かせる。詳細は PinRepository のコンストラクタコメントを参照。
+      const adminClient = getSupabaseAdmin(this.env)
+      const userClient = getSupabaseUserClient(ctx)
+      this.repository = new PinRepository(
+         adminClient,
+         userClient,
+         this.requestId,
+      )
    }
 
    protected getServiceName(): string {
@@ -230,8 +240,9 @@ export class PinService extends BaseService {
       this.log("info", "Searching pins", { query })
 
       try {
-         // TODO: Implement search logic
-         throw new Error("Not implemented")
+         const pins = await this.repository.search(query)
+         this.log("info", "Search completed", { count: pins.length })
+         return pins
       } catch (error) {
          this.log("error", "Failed to search pins", {
             query,
@@ -246,14 +257,23 @@ export class PinService extends BaseService {
     *
     * @param userId - User ID
     * @returns Array of user's pins
-    * @throws APIException on query error
+    * @throws APIException 403 if requesting another user's pins, or on query error
     */
    async getUserPins(userId: string): Promise<SoundPinAPI[]> {
       this.log("info", "Getting user pins", { userId })
 
       try {
-         // TODO: Implement user pins query
-         throw new Error("Not implemented")
+         if (this.userId !== userId) {
+            throw new APIException(
+               ERROR_CODES.FORBIDDEN,
+               "Cannot access another user's pins",
+               403,
+            )
+         }
+
+         const pins = await this.repository.findByUserId(userId)
+         this.log("info", "Found user pins", { count: pins.length })
+         return pins
       } catch (error) {
          this.log("error", "Failed to get user pins", {
             userId,
@@ -264,29 +284,11 @@ export class PinService extends BaseService {
    }
 
    /**
-    * Creates multiple pins in batch
-    *
-    * @param requests - Array of pin creation requests
-    * @returns Array of created pins
-    * @throws APIException on batch creation error
-    */
-   async createPinsBatch(requests: CreatePinRequest[]): Promise<SoundPinAPI[]> {
-      this.log("info", "Creating pins in batch", { count: requests.length })
-
-      try {
-         // TODO: Implement batch creation
-         throw new Error("Not implemented")
-      } catch (error) {
-         this.log("error", "Failed to create pins batch", {
-            count: requests.length,
-            error: error instanceof Error ? error.message : String(error),
-         })
-         throw error
-      }
-   }
-
-   /**
     * Reports a pin for inappropriate content
+    *
+    * @description
+    * 通報は pin_reports に記録するだけで、ピンの status は変更しない。
+    * 非表示にするかは別途判断する（詳細は PinRepository.report）。
     *
     * @param id - Pin ID
     * @param reason - Report reason
@@ -297,8 +299,7 @@ export class PinService extends BaseService {
       this.log("info", "Reporting pin", { pinId: id, reason })
 
       try {
-         // TODO: Implement report logic
-         throw new Error("Not implemented")
+         return await this.repository.report(id, this.userId, reason)
       } catch (error) {
          this.log("error", "Failed to report pin", {
             pinId: id,
@@ -420,6 +421,30 @@ export class PinService extends BaseService {
    }
 
    /**
+    * CreatePinRequest.aiAnalysis を DB の JSONB 形式へ変換する
+    *
+    * 解析が未完了で渡されなかった場合は null。その場合は解析完了時に
+    * AudioService.writeBackToPin が audio_file_path 一致で埋める。
+    */
+   private toAnalysisResult(
+      analysis: CreatePinRequest["aiAnalysis"],
+   ): Record<string, unknown> | null {
+      if (!analysis) {
+         return null
+      }
+
+      return {
+         transcription: analysis.transcription,
+         topic: analysis.categories.topic,
+         emotion: analysis.categories.emotion,
+         language: analysis.categories.language,
+         confidence: analysis.categories.confidence,
+         ...(analysis.summary ? { summary: analysis.summary } : {}),
+         analyzed_at: new Date().toISOString(),
+      }
+   }
+
+   /**
     * Converts API request to database insert format
     *
     * @param request - API request
@@ -436,7 +461,7 @@ export class PinService extends BaseService {
 
          return {
             // 必須フィールド
-            user_id: null,
+            user_id: this.userId ?? null,
             location: locationWKT,
             audio_url: placeholderUrl,
             audio_duration: request.metadata?.duration ?? 10,
@@ -444,8 +469,8 @@ export class PinService extends BaseService {
             audio_file_path: request.audio_file_path,
             status: "active" as const,
 
-            // AI分析フィールド（初期値はnull、後で更新）
-            ai_analysis_result: null,
+            // 解析済みなら保存。未完了なら解析完了時に書き戻される
+            ai_analysis_result: this.toAnalysisResult(request.aiAnalysis),
 
             // 天気情報（metadataまたはトップレベルから）
             weather_temperature:
@@ -484,7 +509,7 @@ export class PinService extends BaseService {
 
       return {
          // 必須フィールド
-         user_id: null,
+         user_id: this.userId ?? null,
          location: locationWKT,
          audio_url: request.audio.url,
          audio_duration: request.audio.duration,
@@ -492,8 +517,8 @@ export class PinService extends BaseService {
          audio_file_path: request.audio.filePath ?? null,
          status: "active" as const,
 
-         // AI分析フィールド（初期値はnull、後で更新）
-         ai_analysis_result: null,
+         // 解析済みなら保存。未完了なら解析完了時に書き戻される
+         ai_analysis_result: this.toAnalysisResult(request.aiAnalysis),
 
          // 天気情報（任意）
          weather_temperature: request.weather?.temperature ?? null,

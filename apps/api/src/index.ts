@@ -2,7 +2,7 @@ import { app } from "./app"
 import type { Env } from "./types/env"
 import { logger } from "./utils/logger"
 
-export type { Env } from "./types/env"
+export type { Env, Variables } from "./types/env"
 
 /**
  * Cloudflare Workers エクスポート。

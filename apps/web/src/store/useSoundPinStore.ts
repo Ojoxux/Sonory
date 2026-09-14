@@ -214,7 +214,24 @@ export const useSoundPinStore = create<SoundPinState>((set, get) => ({
             },
             duration: duration || 10,
             timeTag,
-            title: primaryResult?.label || "音声ピン",
+            // 解析結果が未確定の場合は暫定タイトル。実際のラベルはサーバー側の
+            // 書き戻し処理（audio_file_path一致）とRealtime経由で後から反映される
+            title: primaryResult?.label || "解析中",
+            // 解析済みなら結果も送る。送らないと ai_analysis_result が null のままになり、
+            // カテゴリ絞り込みが効かない
+            ...(primaryResult
+               ? {
+                    aiAnalysis: {
+                       transcription: "",
+                       categories: {
+                          emotion: "neutral",
+                          topic: primaryResult.label,
+                          language: "ja",
+                          confidence: primaryResult.confidence,
+                       },
+                    },
+                 }
+               : {}),
             deviceInfo: navigator.userAgent,
             weather: weatherData,
          }

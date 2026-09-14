@@ -1,17 +1,14 @@
 import type { Context as HonoContext, MiddlewareHandler } from "hono"
-import type { Env } from "../index"
+import type { Env, Variables } from "../index"
 
-export type { Env }
+export type { Env, Variables }
 
 /**
  * アプリケーションコンテキストの型定義
  */
 export type AppContext = HonoContext<{
    Bindings: Env
-   Variables: {
-      requestId: string
-      userId?: string
-   }
+   Variables: Variables & { requestId: string }
 }>
 
 /**
@@ -20,10 +17,7 @@ export type AppContext = HonoContext<{
  */
 export type AppMiddleware = MiddlewareHandler<{
    Bindings: Env
-   Variables: {
-      requestId: string
-      userId?: string
-   }
+   Variables: Variables & { requestId: string }
 }>
 
 /**

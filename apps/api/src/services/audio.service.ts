@@ -47,6 +47,12 @@ interface AnalysisJobStatusResponse {
 interface QueueMessage {
    audioId: string
    audioUrl: string
+   /**
+    * ストレージ上の恒久的なファイルパス。あればキュー処理直前にこのパスから
+    * 新規の署名付きURLを発行するため、`audioUrl` の期限切れ（2時間）の影響を受けない。
+    * 移行期間中の古いメッセージには存在しないため、その場合は `audioUrl` をそのまま使う。
+    */
+   audioFilePath?: string
    retryCount?: number
    rootMessageId?: number
    metadata?: Record<string, unknown>
@@ -476,11 +482,14 @@ export class AudioService extends BaseService {
     *
     * @param audioId - 分析対象の音声ID
     * @param audioUrl - 分析対象の音声URL（公開アクセス可能）
+    * @param audioFilePath - ストレージ上の恒久的なファイルパス（あれば優先して保存し、
+    *    キュー処理直前に新規の署名付きURLを発行できるようにする）
     * @returns 分析ジョブの情報
     */
    async scheduleAnalysis(
       audioId: string,
       audioUrl: string,
+      audioFilePath?: string,
    ): Promise<AnalysisJobResult> {
       try {
          this.log("info", "Scheduling audio analysis job", {
@@ -491,39 +500,8 @@ export class AudioService extends BaseService {
          // audioUrlからファイルパスを抽出して新しいSigned URLを生成
          // これにより、古いSigned URLの有効期限切れやプレースホルダーURLを回避
          let analysisAudioUrl = audioUrl
-         let filePath: string | null = null
-
-         // プレースホルダーURL (storage://bucket/path) からファイルパスを抽出
-         if (audioUrl.startsWith("storage://")) {
-            const match = audioUrl.match(/^storage:\/\/[^/]+\/(.+)$/)
-            filePath = match?.[1] ?? null
-            this.log("info", "Extracted file path from placeholder URL", {
-               originalUrl: audioUrl,
-               filePath,
-            })
-         } else {
-            // HTTP/HTTPS URLからファイルパスを抽出
-            try {
-               const urlObj = new URL(audioUrl)
-               const pathMatch = urlObj.pathname.match(
-                  /\/object\/(?:sign|public)\/([^?]+)/,
-               )
-               if (pathMatch?.[1]) {
-                  filePath = pathMatch[1].replace(`${this.bucketName}/`, "")
-                  this.log("info", "Extracted file path from HTTP URL", {
-                     originalUrl: audioUrl,
-                     filePath,
-                  })
-               }
-            } catch (urlError) {
-               this.log("warn", "Failed to parse URL", {
-                  error:
-                     urlError instanceof Error
-                        ? urlError.message
-                        : String(urlError),
-               })
-            }
-         }
+         const filePath =
+            audioFilePath ?? this.extractFilePathFromAudioUrl(audioUrl)
 
          // ファイルパスが抽出できた場合、新しいSigned URLを生成
          if (filePath) {
@@ -562,9 +540,12 @@ export class AudioService extends BaseService {
          }
 
          // Supabase Queuesにメッセージを送信
+         // audioFilePathを保持しておくと、キュー処理直前に署名の有効期限に
+         // 関わらず新規のSigned URLを発行できる（リトライ時の恒久失敗を防ぐ）
          const message: QueueMessage = {
             audioId,
             audioUrl: analysisAudioUrl,
+            ...(filePath ? { audioFilePath: filePath } : {}),
             retryCount: 0,
          }
 
@@ -819,15 +800,23 @@ export class AudioService extends BaseService {
             started_at: new Date().toISOString(),
          })
 
+         // audioFilePathがあれば、期限切れの可能性がある古いaudioUrlではなく
+         // 処理直前に新規発行した署名付きURLを使う（キュー滞留時の恒久失敗を回避）
+         const resolvedFilePath =
+            message.audioFilePath ??
+            this.extractFilePathFromAudioUrl(message.audioUrl)
+         const audioUrlForAnalysis =
+            await this.resolveAudioUrlForAnalysis(message)
+
          this.log("info", "Executing analysis job", {
             messageId,
             audioId: message.audioId,
-            audioUrl: message.audioUrl,
+            audioUrl: audioUrlForAnalysis,
          })
 
          // Python YAMNet分析を実行
          const analysisResult = await this.analyzeAudioWithPython(
-            message.audioUrl,
+            audioUrlForAnalysis,
             5,
          )
 
@@ -840,6 +829,8 @@ export class AudioService extends BaseService {
                completed_at: new Date().toISOString(),
             })
             .eq("message_id", jobId)
+
+         await this.writeBackToPin(resolvedFilePath, analysisResult)
 
          // キューからメッセージを削除
          await this.supabaseClient.rpc("queue_delete", {
@@ -927,6 +918,124 @@ export class AudioService extends BaseService {
                retryCount,
             })
          }
+      }
+   }
+
+   /**
+    * キュー処理の直前に、恒久的なファイルパスから新規のSigned URLを発行する
+    *
+    * @description
+    * `audioFilePath` が無い（移行期間中の古いメッセージ）場合は
+    * 従来どおり `audioUrl` をそのまま使う。
+    *
+    * @param message - 処理対象のキューメッセージ
+    * @returns Python解析器に渡す音声URL
+    */
+   private async resolveAudioUrlForAnalysis(
+      message: QueueMessage,
+   ): Promise<string> {
+      if (!message.audioFilePath) {
+         return message.audioUrl
+      }
+
+      const { data, error } = await this.supabaseClient.storage
+         .from(this.bucketName)
+         .createSignedUrl(message.audioFilePath, 7200)
+
+      if (error || !data) {
+         this.log(
+            "warn",
+            "Failed to refresh signed URL, using stored audioUrl",
+            {
+               audioFilePath: message.audioFilePath,
+               error: error?.message,
+            },
+         )
+         return message.audioUrl
+      }
+
+      return data.signedUrl
+   }
+
+   /**
+    * 解析完了後、audio_file_path が一致する sound_pins に結果を書き戻す
+    *
+    * @description
+    * Cron 経由の処理には呼び出し元のJWTが無いため service_role で更新する。
+    * 一致するピンが無い場合（ピン未作成のケース）は何もせず正常終了する。
+    *
+    * @param filePath - ストレージ上のファイルパス。抽出できなかった場合はnull
+    * @param analysisResult - Python YAMNetの分析結果
+    */
+   private async writeBackToPin(
+      filePath: string | null,
+      analysisResult: PythonAnalysisResult,
+   ): Promise<void> {
+      if (!filePath) {
+         this.log(
+            "warn",
+            "Skipping pin write-back: could not resolve file path",
+            {},
+         )
+         return
+      }
+
+      const topClassification = analysisResult.classifications[0]
+
+      const { data, error } = await this.supabaseClient
+         .from("sound_pins")
+         .update({
+            ai_analysis_result: {
+               classifications: analysisResult.classifications.map(
+                  (c) => c.label,
+               ),
+               analyzed_at: new Date().toISOString(),
+               ...(topClassification
+                  ? {
+                       topic: topClassification.label,
+                       confidence: topClassification.confidence,
+                    }
+                  : {}),
+            },
+            ...(topClassification ? { title: topClassification.label } : {}),
+         })
+         .eq("audio_file_path", filePath)
+         .select("id")
+
+      if (error) {
+         this.log("error", "Failed to write back analysis result to pin", {
+            filePath,
+            error: error.message,
+         })
+         return
+      }
+
+      this.log("info", "Pin write-back completed", {
+         filePath,
+         matchedCount: data?.length ?? 0,
+      })
+   }
+
+   /**
+    * storage:// プレースホルダーURLまたは署名付き/公開URLからファイルパスを抽出
+    *
+    * @param url - 抽出対象のURL
+    * @returns ファイルパス。抽出できない場合はnull
+    */
+   private extractFilePathFromAudioUrl(url: string): string | null {
+      if (url.startsWith("storage://")) {
+         const match = url.match(/^storage:\/\/[^/]+\/(.+)$/)
+         return match?.[1] ?? null
+      }
+
+      try {
+         const urlObj = new URL(url)
+         const pathMatch = urlObj.pathname.match(
+            /\/object\/(?:sign|public)\/([^?]+)/,
+         )
+         return pathMatch?.[1]?.replace(`${this.bucketName}/`, "") ?? null
+      } catch {
+         return null
       }
    }
 
