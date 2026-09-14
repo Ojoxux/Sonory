@@ -392,6 +392,8 @@ app.openapi(uploadPinRoute, async (c) => {
          // 解析完了後にピンを特定する結合キー。
          // 渡さないと writeBackToPin が一致するピンを見つけられない
          audio_file_path: uploadResult.audioFilePath,
+         // クライアントが metadata に載せてきた解析結果を保存する
+         ...(metadata.aiAnalysis ? { aiAnalysis: metadata.aiAnalysis } : {}),
          weather: metadata.weather,
          timeTag: metadata.timeTag,
          title: metadata.title,

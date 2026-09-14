@@ -887,6 +887,16 @@ export interface paths {
                   /** @enum {string} */
                   timeTag?: "朝" | "昼" | "夕" | "夜"
                   title?: string
+                  aiAnalysis?: {
+                     transcription: string
+                     categories: {
+                        emotion: string
+                        topic: string
+                        language: string
+                        confidence: number
+                     }
+                     summary?: string
+                  }
                   deviceInfo?: string
                }
             }

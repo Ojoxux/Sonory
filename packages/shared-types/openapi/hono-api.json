@@ -1762,6 +1762,46 @@
                               "type": "string",
                               "maxLength": 200
                            },
+                           "aiAnalysis": {
+                              "type": "object",
+                              "properties": {
+                                 "transcription": {
+                                    "type": "string"
+                                 },
+                                 "categories": {
+                                    "type": "object",
+                                    "properties": {
+                                       "emotion": {
+                                          "type": "string"
+                                       },
+                                       "topic": {
+                                          "type": "string"
+                                       },
+                                       "language": {
+                                          "type": "string"
+                                       },
+                                       "confidence": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                       }
+                                    },
+                                    "required": [
+                                       "emotion",
+                                       "topic",
+                                       "language",
+                                       "confidence"
+                                    ]
+                                 },
+                                 "summary": {
+                                    "type": "string"
+                                 }
+                              },
+                              "required": [
+                                 "transcription",
+                                 "categories"
+                              ]
+                           },
                            "deviceInfo": {
                               "type": "string"
                            }

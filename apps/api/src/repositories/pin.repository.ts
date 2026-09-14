@@ -571,6 +571,7 @@ export class PinRepository {
             p_time_tag: data.time_tag,
             p_title: data.title,
             p_device_info: data.device_info,
+            p_ai_analysis_result: data.ai_analysis_result,
          }
 
          this.logger.info("Calling RPC function with params", {

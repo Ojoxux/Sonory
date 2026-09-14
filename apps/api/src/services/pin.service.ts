@@ -421,6 +421,30 @@ export class PinService extends BaseService {
    }
 
    /**
+    * CreatePinRequest.aiAnalysis を DB の JSONB 形式へ変換する
+    *
+    * 解析が未完了で渡されなかった場合は null。その場合は解析完了時に
+    * AudioService.writeBackToPin が audio_file_path 一致で埋める。
+    */
+   private toAnalysisResult(
+      analysis: CreatePinRequest["aiAnalysis"],
+   ): Record<string, unknown> | null {
+      if (!analysis) {
+         return null
+      }
+
+      return {
+         transcription: analysis.transcription,
+         topic: analysis.categories.topic,
+         emotion: analysis.categories.emotion,
+         language: analysis.categories.language,
+         confidence: analysis.categories.confidence,
+         ...(analysis.summary ? { summary: analysis.summary } : {}),
+         analyzed_at: new Date().toISOString(),
+      }
+   }
+
+   /**
     * Converts API request to database insert format
     *
     * @param request - API request
@@ -445,8 +469,8 @@ export class PinService extends BaseService {
             audio_file_path: request.audio_file_path,
             status: "active" as const,
 
-            // AI分析フィールド（初期値はnull、後で更新）
-            ai_analysis_result: null,
+            // 解析済みなら保存。未完了なら解析完了時に書き戻される
+            ai_analysis_result: this.toAnalysisResult(request.aiAnalysis),
 
             // 天気情報（metadataまたはトップレベルから）
             weather_temperature:
@@ -493,8 +517,8 @@ export class PinService extends BaseService {
          audio_file_path: request.audio.filePath ?? null,
          status: "active" as const,
 
-         // AI分析フィールド（初期値はnull、後で更新）
-         ai_analysis_result: null,
+         // 解析済みなら保存。未完了なら解析完了時に書き戻される
+         ai_analysis_result: this.toAnalysisResult(request.aiAnalysis),
 
          // 天気情報（任意）
          weather_temperature: request.weather?.temperature ?? null,

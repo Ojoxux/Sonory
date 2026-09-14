@@ -1,0 +1,99 @@
+-- create_sound_pin に解析結果の引数を追加する
+--
+-- ピン作成はこの RPC 経由だが、ai_analysis_result を受け取る引数が無く、
+-- サービス層が組み立てた値が RPC 呼び出しの段階で捨てられていた。
+-- そのため分類結果が保存されず、カテゴリ絞り込み
+-- （ai_analysis_result->>'topic'）も永久に効かない状態だった。
+--
+-- 引数は末尾に DEFAULT NULL で追加する。既存の呼び出しは影響を受けない。
+-- 本体・SECURITY INVOKER・search_path は 20260912113306 から変更していない。
+
+BEGIN;
+
+DROP FUNCTION IF EXISTS public.create_sound_pin(
+  uuid, double precision, double precision, text, real, character varying,
+  real, character varying, real, real, character varying, character varying,
+  text, text
+);
+
+CREATE FUNCTION public.create_sound_pin(
+  p_user_id UUID,
+  p_lat DOUBLE PRECISION,
+  p_lng DOUBLE PRECISION,
+  p_audio_url TEXT,
+  p_audio_duration REAL,
+  p_audio_format VARCHAR(10),
+  p_weather_temperature REAL DEFAULT NULL,
+  p_weather_condition VARCHAR(50) DEFAULT NULL,
+  p_weather_wind_speed REAL DEFAULT NULL,
+  p_weather_humidity REAL DEFAULT NULL,
+  p_time_tag VARCHAR(10) DEFAULT NULL,
+  p_title VARCHAR(200) DEFAULT NULL,
+  p_device_info TEXT DEFAULT NULL,
+  p_audio_file_path TEXT DEFAULT NULL,
+  p_ai_analysis_result JSONB DEFAULT NULL
+)
+RETURNS TABLE (
+  id UUID, location TEXT, audio_url TEXT, audio_file_path TEXT,
+  audio_duration REAL, audio_format VARCHAR(10),
+  weather_temperature REAL, weather_condition VARCHAR(50),
+  weather_wind_speed REAL, weather_humidity REAL,
+  time_tag VARCHAR(10), ai_analysis_result JSONB, status VARCHAR(20),
+  title VARCHAR(200), device_info TEXT,
+  created_at TIMESTAMPTZ, updated_at TIMESTAMPTZ, deleted_at TIMESTAMPTZ
+)
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = public
+AS $function$
+DECLARE
+  new_pin_id UUID;
+BEGIN
+  INSERT INTO public.sound_pins (
+    user_id, location, audio_url, audio_file_path, audio_duration, audio_format,
+    weather_temperature, weather_condition, weather_wind_speed, weather_humidity,
+    time_tag, title, device_info, ai_analysis_result, status
+  ) VALUES (
+    p_user_id,
+    ST_SetSRID(ST_MakePoint(p_lng, p_lat), 4326)::geography,
+    p_audio_url, p_audio_file_path, p_audio_duration, p_audio_format,
+    p_weather_temperature, p_weather_condition, p_weather_wind_speed,
+    p_weather_humidity, p_time_tag, p_title, p_device_info, p_ai_analysis_result,
+    'active'
+  )
+  RETURNING public.sound_pins.id INTO new_pin_id;
+
+  RETURN QUERY
+  SELECT
+    sp.id, ST_AsText(sp.location::geometry) AS location,
+    sp.audio_url, sp.audio_file_path, sp.audio_duration, sp.audio_format,
+    sp.weather_temperature, sp.weather_condition, sp.weather_wind_speed,
+    sp.weather_humidity, sp.time_tag, sp.ai_analysis_result, sp.status,
+    sp.title, sp.device_info, sp.created_at, sp.updated_at, sp.deleted_at
+  FROM public.sound_pins sp
+  WHERE sp.id = new_pin_id;
+END;
+$function$;
+
+REVOKE EXECUTE ON FUNCTION public.create_sound_pin(
+  uuid, double precision, double precision, text, real, character varying,
+  real, character varying, real, real, character varying, character varying,
+  text, text, jsonb
+) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.create_sound_pin(
+  uuid, double precision, double precision, text, real, character varying,
+  real, character varying, real, real, character varying, character varying,
+  text, text, jsonb
+) TO authenticated, service_role;
+
+CREATE SCHEMA IF NOT EXISTS supabase_migrations;
+CREATE TABLE IF NOT EXISTS supabase_migrations.schema_migrations (
+  version    TEXT PRIMARY KEY,
+  statements TEXT[],
+  name       TEXT
+);
+INSERT INTO supabase_migrations.schema_migrations (version, name)
+VALUES ('20260914115424', 'create_sound_pin_accepts_analysis')
+ON CONFLICT (version) DO NOTHING;
+
+COMMIT;

@@ -16,6 +16,7 @@ import type { PinApiResponse } from "../domain/pin-types"
 import { type ApiClient, defaultApiClient } from "./api-client"
 
 type PinTimeTag = NonNullable<CreatePinRequestBody["timeTag"]>
+type PinAiAnalysis = NonNullable<CreatePinRequestBody["aiAnalysis"]>
 type PinMetadata = NonNullable<CreatePinRequestBody["metadata"]>
 
 interface PinCreateParams {
@@ -26,6 +27,7 @@ interface PinCreateParams {
    title: string
    deviceInfo: string
    weather?: WeatherData
+   aiAnalysis?: PinAiAnalysis
 }
 
 interface PinUploadParams {
@@ -36,6 +38,7 @@ interface PinUploadParams {
    title: string
    deviceInfo: string
    weather?: WeatherData
+   aiAnalysis?: PinAiAnalysis
 }
 
 /**
@@ -51,6 +54,7 @@ export async function createPinFromStorageUrl(
    const body: CreatePinRequestBody = {
       audio_file_path: params.audioFilePath,
       location: params.location,
+      ...(params.aiAnalysis ? { aiAnalysis: params.aiAnalysis } : {}),
       metadata: {
          duration: params.duration,
          timeTag: params.timeTag,
@@ -74,12 +78,15 @@ export async function uploadPinWithAudio(
    client: ApiClient = defaultApiClient,
 ): Promise<PinApiResponse> {
    type UploadPinForm = HonoFormRequestBody<"/api/pins/upload", "post">
-   const metadata: PinMetadata = {
+   // metadata は JSON 文字列として送られ、API 側で展開される。
+   // aiAnalysis もここに載せないと保存されない
+   const metadata: PinMetadata & { aiAnalysis?: PinAiAnalysis } = {
       duration: params.duration,
       timeTag: params.timeTag,
       title: params.title,
       deviceInfo: params.deviceInfo,
       ...(params.weather ? { weather: params.weather } : {}),
+      ...(params.aiAnalysis ? { aiAnalysis: params.aiAnalysis } : {}),
    }
    const formShape: UploadPinForm = {
       audio: params.audioBlob,

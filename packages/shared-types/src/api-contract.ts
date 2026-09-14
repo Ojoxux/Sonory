@@ -102,6 +102,10 @@ export const CreatePinRequestSchema = z.object({
    weather: ApiWeatherDataSchema.optional(),
    timeTag: TimeTagSchema.optional(),
    title: z.string().max(200).optional(),
+   // クライアントが取得済みの解析結果。ピン配置はユーザーが結果を見てから
+   // 行うため、作成時点で結果が揃っている。渡さないと ai_analysis_result が
+   // null のままになり、カテゴリ絞り込み（ai_analysis_result->>topic）が効かない
+   aiAnalysis: AiAnalysisSchema.optional(),
    deviceInfo: z.string().optional(),
 })
 
