@@ -211,6 +211,7 @@ const analyzeAudioRoute = createRoute({
             "application/json": {
                schema: z.object({
                   audioUrl: z.string().url(),
+                  audioFilePath: z.string().optional(),
                   topK: z.number().optional(),
                }),
             },
@@ -481,7 +482,11 @@ app.openapi(analyzeAudioRoute, async (c) => {
          )
       }
 
-      const jobResult = await audioService.scheduleAnalysis(audioId, audioUrl)
+      const jobResult = await audioService.scheduleAnalysis(
+         audioId,
+         audioUrl,
+         body.audioFilePath,
+      )
 
       const env = c.env as Env
       const isDevelopment =
