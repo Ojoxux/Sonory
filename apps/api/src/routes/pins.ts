@@ -389,6 +389,9 @@ app.openapi(uploadPinRoute, async (c) => {
             duration: metadata.duration || 10,
             format: audioFormat,
          },
+         // 解析完了後にピンを特定する結合キー。
+         // 渡さないと writeBackToPin が一致するピンを見つけられない
+         audio_file_path: uploadResult.audioFilePath,
          weather: metadata.weather,
          timeTag: metadata.timeTag,
          title: metadata.title,
