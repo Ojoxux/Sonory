@@ -23,6 +23,8 @@ const withPWA = require("@ducanh2912/next-pwa").default({
 const nextConfig: NextConfig = {
    /* config options here */
    reactStrictMode: true,
+   // 👇 next dev による AGENTS.md/CLAUDE.md の自動生成を無効化
+   agentRules: false,
    // 👇 Next.js 16 Turbopack 対応
    turbopack: {},
    // 👇 Mapbox 環境変数（任意）
