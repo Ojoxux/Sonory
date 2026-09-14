@@ -47,9 +47,6 @@ const standardErrorResponses = {
    },
 }
 
-// HACK: 複雑な配列スキーマは事前に定義して型推論の深さを抑える
-const createPinsBatchSchema: z.ZodTypeAny = z.array(CreatePinRequestSchema)
-
 /**
  * Route definitions
  */
@@ -183,38 +180,6 @@ const getUserPinsRoute = createRoute({
             },
          },
          description: "ユーザーのピン一覧",
-      },
-      ...standardErrorResponses,
-   },
-})
-
-const batchCreatePinsRoute = createRoute({
-   method: "post",
-   path: "/batch",
-   middleware: [rateLimits.createPin, requireAuth],
-   tags: ["Pins"],
-   summary: "複数ピン一括作成",
-   description: "複数のピンを一括で作成",
-   request: {
-      body: {
-         required: true,
-         content: {
-            "application/json": {
-               schema: createPinsBatchSchema,
-            },
-         },
-      },
-   },
-   responses: {
-      200: {
-         content: {
-            "application/json": {
-               schema: ApiSuccessWithMetaResponseSchema(
-                  z.array(SoundPinApiSchema),
-               ),
-            },
-         },
-         description: "作成されたピン一覧",
       },
       ...standardErrorResponses,
    },
@@ -440,6 +405,7 @@ app.openapi(uploadPinRoute, async (c) => {
                await audioService.scheduleAnalysis(
                   uploadResult.audioId,
                   uploadResult.audioUrl,
+                  uploadResult.audioFilePath,
                )
 
                console.log("AI分析ジョブ投入完了:", {
@@ -566,25 +532,6 @@ app.openapi(getUserPinsRoute, async (c) => {
       {
          success: true as const,
          data: pins,
-      },
-      200,
-   )
-})
-
-app.openapi(batchCreatePinsRoute, async (c) => {
-   const service = new PinService(c)
-   const data = c.req.valid("json") as CreatePinRequest[]
-
-   const pins = await service.createPinsBatch(data)
-
-   return c.json(
-      {
-         success: true as const,
-         data: pins,
-         meta: {
-            requested: data.length,
-            created: pins.length,
-         },
       },
       200,
    )

@@ -559,6 +559,7 @@ export interface paths {
                "application/json": {
                   /** Format: uri */
                   audioUrl: string
+                  audioFilePath?: string
                   topK?: number
                }
             }
@@ -902,7 +903,6 @@ export interface paths {
                      success: true
                      data: {
                         id: string
-                        userId?: string
                         location: {
                            lat: number
                            lng: number
@@ -1076,7 +1076,6 @@ export interface paths {
                      success: true
                      data: {
                         id: string
-                        userId?: string
                         location: {
                            lat: number
                            lng: number
@@ -1247,7 +1246,6 @@ export interface paths {
                      success: true
                      data: {
                         id: string
-                        userId?: string
                         location: {
                            lat: number
                            lng: number
@@ -1426,7 +1424,6 @@ export interface paths {
                      success: true
                      data: {
                         id: string
-                        userId?: string
                         location: {
                            lat: number
                            lng: number
@@ -1594,7 +1591,6 @@ export interface paths {
                      success: true
                      data: {
                         id: string
-                        userId?: string
                         location: {
                            lat: number
                            lng: number
@@ -1729,217 +1725,6 @@ export interface paths {
       patch?: never
       trace?: never
    }
-   "/api/pins/batch": {
-      parameters: {
-         query?: never
-         header?: never
-         path?: never
-         cookie?: never
-      }
-      get?: never
-      put?: never
-      /**
-       * 複数ピン一括作成
-       * @description 複数のピンを一括で作成
-       */
-      post: {
-         parameters: {
-            query?: never
-            header?: never
-            path?: never
-            cookie?: never
-         }
-         requestBody: {
-            content: {
-               "application/json": {
-                  location: {
-                     lat: number
-                     lng: number
-                     accuracy?: number
-                  }
-                  audio?: {
-                     /** Format: uri */
-                     url: string
-                     duration: number
-                     /** @enum {string} */
-                     format: "webm" | "mp3" | "wav"
-                     filePath?: string
-                  }
-                  audio_file_path?: string
-                  metadata?: {
-                     duration?: number
-                     /** @enum {string} */
-                     timeTag?: "朝" | "昼" | "夕" | "夜"
-                     title?: string
-                     deviceInfo?: string
-                     weather?: {
-                        temperature: number
-                        condition?: string | null
-                        windSpeed?: number | null
-                        humidity?: number | null
-                     }
-                  }
-                  weather?: {
-                     temperature: number
-                     condition?: string | null
-                     windSpeed?: number | null
-                     humidity?: number | null
-                  }
-                  /** @enum {string} */
-                  timeTag?: "朝" | "昼" | "夕" | "夜"
-                  title?: string
-                  deviceInfo?: string
-               }[]
-            }
-         }
-         responses: {
-            /** @description 作成されたピン一覧 */
-            200: {
-               headers: {
-                  [name: string]: unknown
-               }
-               content: {
-                  "application/json": {
-                     /** @enum {boolean} */
-                     success: true
-                     data: {
-                        id: string
-                        userId?: string
-                        location: {
-                           lat: number
-                           lng: number
-                           accuracy?: number
-                        }
-                        audio: {
-                           url: string
-                           duration: number
-                           /** @enum {string} */
-                           format:
-                              | "webm"
-                              | "mp3"
-                              | "wav"
-                              | "mp4"
-                              | "m4a"
-                              | "flac"
-                              | "ogg"
-                        }
-                        weather?: {
-                           temperature: number
-                           condition?: string | null
-                           windSpeed?: number | null
-                           humidity?: number | null
-                        }
-                        /** @enum {string} */
-                        timeTag?: "朝" | "昼" | "夕" | "夜"
-                        aiAnalysis?: {
-                           transcription: string
-                           categories: {
-                              emotion: string
-                              topic: string
-                              language: string
-                              confidence: number
-                           }
-                           summary?: string
-                        }
-                        /** @enum {string} */
-                        status: "active" | "processing" | "deleted" | "reported"
-                        title?: string
-                        metadata?: {
-                           deviceInfo?: string
-                        }
-                        createdAt: string
-                        updatedAt: string
-                     }[]
-                     meta?: {
-                        [key: string]: unknown
-                     }
-                  }
-               }
-            }
-            /** @description リクエスト不正 */
-            400: {
-               headers: {
-                  [name: string]: unknown
-               }
-               content: {
-                  "application/json": {
-                     /** @enum {boolean} */
-                     success: false
-                     error: {
-                        code: string
-                        message: string
-                        details?: unknown
-                        timestamp: string
-                        requestId: string
-                     }
-                  }
-               }
-            }
-            /** @description 認証が必要 */
-            401: {
-               headers: {
-                  [name: string]: unknown
-               }
-               content: {
-                  "application/json": {
-                     /** @enum {boolean} */
-                     success: false
-                     error: {
-                        code: string
-                        message: string
-                        details?: unknown
-                        timestamp: string
-                        requestId: string
-                     }
-                  }
-               }
-            }
-            /** @description 対象が見つからない */
-            404: {
-               headers: {
-                  [name: string]: unknown
-               }
-               content: {
-                  "application/json": {
-                     /** @enum {boolean} */
-                     success: false
-                     error: {
-                        code: string
-                        message: string
-                        details?: unknown
-                        timestamp: string
-                        requestId: string
-                     }
-                  }
-               }
-            }
-            /** @description サーバーエラー */
-            500: {
-               headers: {
-                  [name: string]: unknown
-               }
-               content: {
-                  "application/json": {
-                     /** @enum {boolean} */
-                     success: false
-                     error: {
-                        code: string
-                        message: string
-                        details?: unknown
-                        timestamp: string
-                        requestId: string
-                     }
-                  }
-               }
-            }
-         }
-      }
-      delete?: never
-      options?: never
-      head?: never
-      patch?: never
-      trace?: never
-   }
    "/api/pins/{id}": {
       parameters: {
          query?: never
@@ -1973,7 +1758,6 @@ export interface paths {
                      success: true
                      data: {
                         id: string
-                        userId?: string
                         location: {
                            lat: number
                            lng: number
@@ -2144,7 +1928,6 @@ export interface paths {
                      success: true
                      data: {
                         id: string
-                        userId?: string
                         location: {
                            lat: number
                            lng: number
