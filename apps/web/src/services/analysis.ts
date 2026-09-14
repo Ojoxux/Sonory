@@ -171,7 +171,8 @@ export async function pollJobStatus(
    jobId: string,
    client: ApiClient = defaultApiClient,
 ): Promise<InferenceResult[]> {
-   const maxAttempts = 120
+   // Cron実行間隔（最大60秒）+ 解析時間（実測3.3秒）+ 余裕を見込んだ値
+   const maxAttempts = 90
    const pollInterval = 1000
 
    for (let attempt = 1; attempt <= maxAttempts; attempt++) {

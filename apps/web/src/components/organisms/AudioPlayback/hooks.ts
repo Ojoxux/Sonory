@@ -191,6 +191,7 @@ export const usePinPlacement = () => {
     * @param uploadedAudioUrl アップロード済みURL（オプション）
     * @param currentPosition 現在位置
     * @param results AI分析結果
+    * @param fallbackUsed 分析結果がダミーのフォールバック値かどうか（trueの場合は保存に使わない）
     * @returns 処理結果（成功/失敗）
     */
    const placePin = useCallback(
@@ -199,11 +200,12 @@ export const usePinPlacement = () => {
          uploadedAudioUrl: string | null,
          currentPosition: LocationData,
          results: Array<{ label: string; confidence: number }>,
+         fallbackUsed?: boolean,
       ): Promise<{ success: boolean; error?: string }> => {
-         if (results.length === 0) {
-            console.warn("⚠️ AI分析結果が存在しません")
-            return { success: false, error: "AI分析結果が存在しません" }
-         }
+         // フォールバック（ダミー）結果は本物の解析結果として保存しない。
+         // 解析未完了として扱い、タイトルは暫定値になる（実際の結果は
+         // サーバー側の書き戻し処理とRealtime経由で後から反映される）
+         const analysisResult = fallbackUsed ? [] : results
 
          try {
             // アップロード済みURLを優先的に使用
@@ -221,7 +223,7 @@ export const usePinPlacement = () => {
                hasUploadedUrl: !!uploadedAudioUrl,
                audioUrl: `${audioUrl.substring(0, 100)}...`, // URLの先頭のみ表示
                position: currentPosition,
-               resultsCount: results.length,
+               resultsCount: analysisResult.length,
                duration: audioData.duration,
             })
 
@@ -232,7 +234,7 @@ export const usePinPlacement = () => {
                   latitude: currentPosition.latitude,
                   longitude: currentPosition.longitude,
                },
-               results,
+               analysisResult,
                audioData.duration,
             )
 
