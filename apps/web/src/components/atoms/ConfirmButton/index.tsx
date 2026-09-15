@@ -19,9 +19,12 @@ import type { ConfirmButtonProps } from "./types"
 export function ConfirmButton({
    onClick,
    isConfirmed,
+   isDisabled = false,
    isClosing,
    className = "",
 }: ConfirmButtonProps) {
+   const isLocked = isConfirmed || isDisabled
+
    return (
       <motion.div
          className={`relative z-50 mb-4 ${className}`}
@@ -33,15 +36,17 @@ export function ConfirmButton({
       >
          <motion.button
             onClick={onClick}
-            disabled={isConfirmed}
+            disabled={isLocked}
             className={`pointer-events-auto w-full rounded-xl px-6 py-3 font-semibold text-sm transition-all duration-300 ${
                isConfirmed
                   ? "bg-green-500 text-white shadow-[0_4px_20px_rgba(34,197,94,0.4)]"
-                  : "bg-white/90 text-black hover:bg-white hover:shadow-[0_4px_20px_rgba(255,255,255,0.3)]"
+                  : isDisabled
+                    ? "bg-white/30 text-black/50"
+                    : "bg-white/90 text-black hover:bg-white hover:shadow-[0_4px_20px_rgba(255,255,255,0.3)]"
             }
         `}
-            whileTap={{ scale: 0.98 }}
-            whileHover={!isConfirmed ? { scale: 1.02 } : {}}
+            whileTap={isLocked ? {} : { scale: 0.98 }}
+            whileHover={isLocked ? {} : { scale: 1.02 }}
          >
             {isConfirmed ? (
                <motion.div
@@ -67,6 +72,8 @@ export function ConfirmButton({
                   </motion.svg>
                   確認済み
                </motion.div>
+            ) : isDisabled ? (
+               "マイクを許可すると確認できます"
             ) : (
                "上記の確認事項を確認しました"
             )}

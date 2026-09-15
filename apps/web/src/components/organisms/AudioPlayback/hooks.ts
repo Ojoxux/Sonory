@@ -3,6 +3,7 @@ import type { AudioData } from "@/store/types"
 import { useInferenceStore } from "@/store/useInferenceStore"
 import { useRecorderStore } from "@/store/useRecorderStore"
 import { useSoundPinStore } from "@/store/useSoundPinStore"
+import { showErrorToast } from "@/store/useToastStore"
 import type { LocationData } from "./types"
 
 /**
@@ -116,6 +117,11 @@ export const useAudioProcessing = () => {
                console.warn(
                   "⚠️ アップロードに失敗しました。オフライン分析を実行します:",
                   uploadError,
+               )
+               showErrorToast(
+                  uploadError instanceof Error
+                     ? `音声のアップロードに失敗しました: ${uploadError.message}`
+                     : "音声のアップロードに失敗しました",
                )
                // アップロードに失敗してもAI分析は続行
             }
