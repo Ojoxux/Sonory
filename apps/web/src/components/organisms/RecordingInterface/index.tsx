@@ -40,8 +40,10 @@ export function RecordingInterface({
       instructionsRef,
       waveformData,
       audioData,
+      microphonePermission,
       handleRecord,
       handleStartRecording,
+      handleRequestMicrophonePermission,
       handleAgree,
       handleStop,
       handleClosePlayback,
@@ -72,6 +74,11 @@ export function RecordingInterface({
                         isClosing={isClosing}
                         isAgreed={isAgreed}
                         showConfirmationComplete={showConfirmationComplete}
+                        microphonePermission={microphonePermission}
+                        hasPosition={!!currentPosition}
+                        onRequestMicrophonePermission={
+                           handleRequestMicrophonePermission
+                        }
                         onAgree={handleAgree}
                         onStartRecording={handleStartRecording}
                         instructionsRef={instructionsRef}

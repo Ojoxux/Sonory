@@ -3,9 +3,27 @@
 import type { PanInfo } from "framer-motion"
 import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react"
 import { useRecorderStore } from "../../../../store/useRecorderStore"
+import { useMicrophonePermission } from "@/hooks/useMicrophonePermission"
+import { showErrorToast } from "@/store/useToastStore"
 // 実際のMediaRecorder APIを使用
 import { useMediaRecorder } from "../../RecordSection/hooks/useMediaRecorder"
 import { useAsyncWaveform } from "./useAsyncWaveform"
+
+/**
+ * マイク周りの失敗をユーザーに伝わる文言に変換する
+ *
+ * 権限拒否（NotAllowedError）だけは「何をすればよいか」が分かる文言にする
+ */
+function getMicrophoneErrorMessage(
+   error: unknown,
+   fallbackPrefix: string,
+): string {
+   if (error instanceof Error && error.name === "NotAllowedError") {
+      return "マイクへのアクセスが許可されていません。ブラウザの設定でマイクを許可してください。"
+   }
+   const detail = error instanceof Error ? error.message : "不明なエラー"
+   return `${fallbackPrefix}: ${detail}`
+}
 
 /**
  * RecordingInterfaceで使用する状態と機能をまとめたカスタムフック
@@ -35,6 +53,8 @@ export function useRecordingInterface(
       error: recordingError,
    } = useMediaRecorder()
    const { audioData } = useRecorderStore()
+   const { state: microphonePermission, request: requestMicrophonePermission } =
+      useMicrophonePermission()
    const constraintsRef = useRef<HTMLDivElement>(null)
 
    // 非同期波形データフック
@@ -177,9 +197,20 @@ export function useRecordingInterface(
          console.error("録音の開始に失敗しました:", error)
          setStatus("idle")
          setShowInstructions(false)
-         // エラーメッセージを表示（将来的にはUIで表示）
-         alert(
-            `録音の開始に失敗しました: ${error instanceof Error ? error.message : "不明なエラー"}`,
+         showErrorToast(
+            getMicrophoneErrorMessage(error, "録音の開始に失敗しました"),
+         )
+      }
+   }
+
+   // 権限は確認画面のトグルで取る。録音開始の直前だと許可ダイアログがスライド操作に
+   // 割り込み、拒否された場合もスライドし終わるまで分からない
+   const handleRequestMicrophonePermission = async () => {
+      try {
+         await requestMicrophonePermission()
+      } catch (error) {
+         showErrorToast(
+            getMicrophoneErrorMessage(error, "マイクを準備できませんでした"),
          )
       }
    }
@@ -235,7 +266,7 @@ export function useRecordingInterface(
    }
 
    const instructionItems = [
-      "マイクへのアクセス許可が必要です",
+      "録音した場所が地図上に公開されます",
       "録音は最大10秒まで自動停止します",
       "録音中にもう一度ボタンを押すと録音を停止します",
       "周囲の雑音が多いと AI 分類の精度が低下する場合があります",
@@ -259,8 +290,10 @@ export function useRecordingInterface(
       instructionsRef,
       waveformData,
       audioData,
+      microphonePermission,
       handleRecord,
       handleStartRecording,
+      handleRequestMicrophonePermission,
       handleAgree,
       handleStop,
       handleClosePlayback,

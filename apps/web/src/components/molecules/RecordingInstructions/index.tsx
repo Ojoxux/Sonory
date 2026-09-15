@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion"
 import { ConfirmButton } from "../../atoms/ConfirmButton"
+import { MicPermissionToggle } from "../../atoms/MicPermissionToggle"
 import { ConfirmationComplete } from "../ConfirmationComplete"
 import { InstructionsList } from "../InstructionsList"
 import { SlideToStart } from "../SlideToStart"
@@ -24,6 +25,9 @@ import {
  * @param isClosing 閉じるアニメーション中かどうか
  * @param isAgreed 同意済みかどうか
  * @param showConfirmationComplete 確認完了画面を表示するかどうか
+ * @param microphonePermission マイク権限の状態
+ * @param hasPosition 現在位置が取得できているかどうか
+ * @param onRequestMicrophonePermission マイク許可トグル押下時のコールバック
  * @param onAgree 同意ボタンクリック時のコールバック
  * @param onStartRecording 録音開始時のコールバック
  * @param instructionsRef 外部クリック検知用のref
@@ -33,6 +37,9 @@ export function RecordingInstructions({
    isClosing,
    isAgreed,
    showConfirmationComplete,
+   microphonePermission,
+   hasPosition,
+   onRequestMicrophonePermission,
    onAgree,
    onStartRecording,
    instructionsRef,
@@ -136,10 +143,38 @@ export function RecordingInstructions({
                   isClosing={isClosing}
                />
 
+               {/* 位置情報が無いとピンを配置できない。録音し終えてから気づかせない */}
+               {!hasPosition && (
+                  <motion.div
+                     className="relative z-10 mb-4 rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-4 py-3"
+                     initial={{ opacity: 0, y: 30 }}
+                     animate={
+                        isClosing ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }
+                     }
+                     transition={
+                        isClosing
+                           ? { duration: 0.2 }
+                           : { delay: 1.35, duration: 0.6 }
+                     }
+                  >
+                     <span className="text-sm text-yellow-300 leading-relaxed">
+                        位置情報を取得できていません。録音はできますが、ピンは配置できません
+                     </span>
+                  </motion.div>
+               )}
+
+               {/* マイク許可トグル（確認ボタンの前提） */}
+               <MicPermissionToggle
+                  state={microphonePermission}
+                  onRequest={onRequestMicrophonePermission}
+                  isClosing={isClosing}
+               />
+
                {/* 確認ボタン */}
                <ConfirmButton
                   onClick={onAgree}
                   isConfirmed={isAgreed}
+                  isDisabled={microphonePermission !== "granted"}
                   isClosing={isClosing}
                />
             </>
