@@ -2,7 +2,7 @@
 -- Sonory スキーマスナップショット (SSOT)
 -- =============================================================================
 --
--- 生成日: 2026-09-15
+-- 生成日: 2026-09-16
 -- 対象:   本番 Supabase プロジェクトの public スキーマ + Storage バケット
 --
 -- 【ここに書いてよいのは実DBで確認した事実だけです。】
@@ -543,10 +543,22 @@ GRANT ALL ON public.analysis_results TO service_role;
 
 -- 検索系 RPC は未ログインのゲストが地図を閲覧するための正規経路。
 -- status = 'active' の行しか返さないため anon に開放してよい。
+--
+-- PUBLIC への EXECUTE は 20260916053854 で剥がした。CREATE FUNCTION の既定で
+-- 付いたまま残っており、新しく作ったロールに自動でピンの読み取り権限が
+-- 付いてしまう状態だった。これらは SECURITY DEFINER なので、呼び出し元の
+-- テーブル権限では止まらず EXECUTE を絞るのが唯一の制御点になる。
+REVOKE EXECUTE ON FUNCTION public.find_nearby_pins(
+  double precision, double precision, integer, integer
+) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.find_nearby_pins(
   double precision, double precision, integer, integer
 ) TO anon, authenticated, service_role;
 
+REVOKE EXECUTE ON FUNCTION public.find_pins_within_bounds(
+  double precision, double precision, double precision, double precision,
+  integer, text[]
+) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.find_pins_within_bounds(
   double precision, double precision, double precision, double precision,
   integer, text[]
@@ -655,5 +667,7 @@ VALUES
   ('20260913145717', 'owner_can_see_own_pins'),
   ('20260913150549', 'create_pin_reports'),
   ('20260914094720', 'enable_realtime_for_sound_pins'),
-  ('20260914115424', 'create_sound_pin_accepts_analysis')
+  ('20260914115424', 'create_sound_pin_accepts_analysis'),
+  ('20260916052801', 'create_ci_migration_check_role'),
+  ('20260916053854', 'revoke_search_rpc_from_public')
 ON CONFLICT (version) DO NOTHING;

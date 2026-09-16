@@ -34,6 +34,8 @@ supabase/
 | `20260913150549_create_pin_reports.sql`                | 通報を記録する `pin_reports` テーブルを追加                                       | 適用済み (2026-09-13) |
 | `20260914094720_enable_realtime_for_sound_pins.sql`    | `sound_pins` を `supabase_realtime` publication に追加                            | 適用済み (2026-09-14) |
 | `20260914115424_create_sound_pin_accepts_analysis.sql` | `create_sound_pin` に `p_ai_analysis_result` 引数を追加                           | 適用済み (2026-09-14) |
+| `20260916052801_create_ci_migration_check_role.sql`    | CI の適用状況チェック用の読み取り専用ロールを追加                                 | 適用済み (2026-09-16) |
+| `20260916053854_revoke_search_rpc_from_public.sql`     | 検索系 RPC の PUBLIC への EXECUTE を剥がす                                        | 適用済み (2026-09-16) |
 
 `20260912071028` → `20260912071029` には適用順序の依存があった。
 逆順だと、INSERT ポリシーが存在しない状態で `create_sound_pin` に RLS が
@@ -126,6 +128,7 @@ GRANT の羅列になる。アプリのスキーマが埋もれて差分が読�
 | `dump_functions.sql`           | `pg_get_functiondef()` による関数定義の全文                            |
 | `dump_remaining.sql`           | 関数の EXECUTE 権限、トリガー、Storage バケット、pgmq キュー           |
 | `verify_hardening.sql`         | `anon` 経路が塞がれていることの検証                                    |
+| `check_migrations_applied.sh`  | `migrations/` が実DBに適用済みか検証（CI から実行）                    |
 
 ## 経緯: なぜこの構成になったか
 
