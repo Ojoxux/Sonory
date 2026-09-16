@@ -7,19 +7,19 @@ on:
 
 jobs:
    check-applied:
-      name: マイグレーションが実DBに適用済みか
+      name: Check migrations applied
       runs-on: ubuntu-latest
       steps:
-         - name: リポジトリをチェックアウト
+         - name: Checkout
            uses: actions/checkout@v6
 
          # fork からの PR には secrets が渡らないため、その場合はスキップする
-         - name: 適用状況を検証
+         - name: Verify migrations are applied to the live database
            env:
               SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
            run: |
               if [ -z "$SUPABASE_DB_URL" ]; then
-                 echo "SUPABASE_DB_URL が無いためスキップします"
+                 echo "SUPABASE_DB_URL is not set, skipping"
                  exit 0
               fi
               apps/api/supabase/tools/check_migrations_applied.sh
