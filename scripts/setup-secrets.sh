@@ -52,7 +52,7 @@ echo
 echo "Next steps:"
 echo "1. Verify your secrets are correct"
 echo "2. Start with Docker Secrets:"
-echo "   task sonory:up"
+echo "   task dev"
 echo "   # または: docker-compose -f docker-compose.yml -f docker-compose.secrets.yml up"
 echo
 echo "3. For full security (with network isolation):"

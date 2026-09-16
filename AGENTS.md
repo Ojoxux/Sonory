@@ -45,14 +45,9 @@ Hono の `compose` は例外をアプリの `onError` に回すため、外側�
 > **事故:** 2026-05 から約4ヶ月、すべての `APIException` が 500 で返っていた。
 > 401 も 400 も 500。`api-client` の 401 リトライも永久に発火しない状態だった。
 
-## 検証は4つすべて実行する
+## 検証は `task check` で4つすべて実行する
 
-```bash
-npx turbo type-check
-npx turbo lint
-npx turbo format     # 忘れやすい
-npx turbo test
-```
+`task check` は type-check / lint / format / test をまとめて走らせる。個別に叩かないこと。
 
 `oxlint` はフォーマットを見ない。`lint` が通っても `format` が落ちることがある。
 
@@ -94,10 +89,7 @@ Workers 環境では **リクエストごとに JWT が異なる**。
 
 `schema.sql` の更新は実DBのダンプを正として該当箇所を書き換える。
 
-```bash
-set -a; . apps/api/.env.db; set +a
-npx supabase db dump --db-url "$SUPABASE_DB_URL" -f /tmp/dump.sql
-```
+`task db:dump` で `/tmp/sonory-schema-dump.sql` に出力される（`apps/api/.env.db` を読む）。
 
 **ダンプをそのまま `schema.sql` にしない。** postgis が `public` にあるため
 6000行超のうち約2700行が `st_*` への GRANT になり、アプリのスキーマが埋もれる。
@@ -118,20 +110,24 @@ npx supabase db dump --db-url "$SUPABASE_DB_URL" -f /tmp/dump.sql
 既存コードのコメント率は **5〜25%**。
 
 - TSDoc はエクスポートする関数・型にのみ。内部ヘルパーには不要
-- **SQL ファイルは先頭に「何をするものか」を一文だけ。** 経緯は README に書く
-- **同じ説明を複数ファイルに書かない。** 経緯は README、構造は `schema.sql`、
-  個別の非自明な判断だけコードに
+- **SQL ファイルは先頭に「何をするものか」を一文だけ**
+- **同じ説明を複数ファイルに書かない**
+- **README はルートの概要と起動手順だけ。** 開発上の知識はこのファイルに集約する
 - そのファイルを読まないと分からないことだけ書く
 
 > **事故:** 実質33行の SQL に62行のコメントを書き、同じ経緯を3箇所に重複させた。
 
 ## 環境変数の置き場所を間違えない
 
-| ファイル              | 読むもの                      |
-| --------------------- | ----------------------------- |
-| `apps/web/.env.local` | Next.js（`NEXT_PUBLIC_*`）    |
-| `apps/api/.dev.vars`  | wrangler（`SUPABASE_*` など） |
-| ルート `.env`         | docker compose のみ           |
+| ファイル              | 読むもの                        |
+| --------------------- | ------------------------------- |
+| `apps/web/.env.local` | Next.js（`NEXT_PUBLIC_*`）      |
+| `apps/api/.dev.vars`  | wrangler（`SUPABASE_*` など）   |
+| `apps/api/.env.db`    | `supabase db dump` の接続文字列 |
+| ルート `.env`         | docker compose のみ             |
+
+いずれも隣の `.example` をコピーして作る。`.env.db` は例が無いので
+`SUPABASE_DB_URL=` の1行を書く（Session pooler、ポート 5432）。
 
 `next dev` は `apps/web` を cwd に起動するため、**ルートの `.env` は Next.js に届かない。**
 
@@ -214,13 +210,13 @@ npx supabase db dump --db-url "$SUPABASE_DB_URL" -f /tmp/dump.sql
 
 # 第3部: ツールチェーン
 
-| 用途             | コマンド             | 実体                     |
-| ---------------- | -------------------- | ------------------------ |
-| Lint             | `npm run lint`       | `oxlint`                 |
-| フォーマット検出 | `npm run format`     | `oxfmt --check`          |
-| 自動修正         | `npm run fix`        | `oxlint --fix` + `oxfmt` |
-| 型チェック       | `npm run type-check` | `tsc --noEmit`           |
-| テスト           | `npm run test`       | `vitest`                 |
+**コマンドは Taskfile に集約している。** `task` で一覧が出る。
+ルートの npm scripts は `prepare` と `postinstall` だけ。新しく足さないこと。
+
+| 用途     | コマンド     | 実体                                                   |
+| -------- | ------------ | ------------------------------------------------------ |
+| 検証     | `task check` | `tsc --noEmit` / `oxlint` / `oxfmt --check` / `vitest` |
+| 自動修正 | `task fix`   | `oxlint --fix` + `oxfmt`                               |
 
 **Git フック（lefthook）**: pre-commit で変更パッケージのみ `oxlint --fix` / `oxfmt` / `tsc --noEmit`
 
@@ -230,9 +226,8 @@ Python 型生成の検証 → OpenAPI 生成型の整合性検証
 ## ローカル起動
 
 ```bash
-npm run start:infra      # audio-analyzer (YAMNet) + Redis（Docker）
-npm run start:api        # wrangler dev :8787
-npm run start:frontend   # next dev :3000
+task dev    # コンテナ + API :8787 + Web :3000
+task down   # コンテナを停止（API と Web は Ctrl+C で止まる）
 ```
 
 解析キューは Cron Trigger で消費されるが、`wrangler dev` は Cron を自動実行しない。
@@ -243,3 +238,6 @@ npm run start:frontend   # next dev :3000
 curl -X POST http://localhost:8787/api/audio/internal/process-queue \
   -H 'Host: scheduled.sonory.internal' -H 'x-sonory-scheduled: true'
 ```
+
+`wrangler dev` で HTTPS の fetch だけが `internal error; reference = ...` で失敗する場合、
+workerd が CA 証明書を見つけられていない（NixOS 等）。`SSL_CERT_FILE` を設定する。

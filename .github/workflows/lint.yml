@@ -50,17 +50,17 @@ jobs:
 
       # 5. oxlint を実行
       - name: Run oxlint
-        run: npm run lint
+        run: npx turbo lint
 
       # 6. oxfmt でフォーマット崩れを検出
       #    oxlint はフォーマットを見ないため、lint とは別に必要
       #    （Biome から移行した際に抜け落ちていた）
       - name: Run oxfmt
-        run: npm run format
+        run: npx turbo format
 
       # 7. TS の型チェックを実行
       - name: Run tsc
-        run: npm run type-check
+        run: npx turbo type-check
 
       # 8. shared-types から Python 型が生成できることを検証
       - name: Verify Python types generation
