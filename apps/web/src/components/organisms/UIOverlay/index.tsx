@@ -2,8 +2,10 @@
 
 import { AppHeader } from "@/components/molecules/AppHeader"
 import { ToastContainer } from "@/components/molecules/ToastContainer"
+import { AppInfoSheet } from "@/components/organisms/AppInfoSheet"
 import { PWAInstallPrompt } from "@/components/organisms/PWAInstallPrompt"
 import { RecordingInterface } from "@/components/organisms/RecordingInterface"
+import { SettingsSheet } from "@/components/organisms/SettingsSheet"
 import type { UIOverlayProps } from "./types"
 
 /**
@@ -11,7 +13,8 @@ import type { UIOverlayProps } from "./types"
  *
  * @description
  * マップ上に表示されるUI要素を統合するOrganismコンポーネント
- * ヘッダー、PWAインストールプロンプト、録音インターフェースを含む
+ * ヘッダー、設定シート、アプリ情報シート、PWAインストールプロンプト、
+ * 録音インターフェースを含む
  *
  * @example
  * ```tsx
@@ -24,11 +27,16 @@ import type { UIOverlayProps } from "./types"
  */
 export function UIOverlay({
    onSettingsClick,
+   onAppInfoClick,
    onCompassClick,
    latitude,
    longitude,
    debugTimeOverride,
    mapBearing,
+   isSettingsOpen,
+   onSettingsClose,
+   isAppInfoOpen,
+   onAppInfoClose,
 }: UIOverlayProps) {
    return (
       <>
@@ -38,12 +46,19 @@ export function UIOverlay({
          {/* ヘッダー（常に表示） */}
          <AppHeader
             onSettingsClick={onSettingsClick}
+            onAppInfoClick={onAppInfoClick}
             onCompassClick={onCompassClick}
             latitude={latitude}
             longitude={longitude}
             debugTimeOverride={debugTimeOverride}
             mapBearing={mapBearing}
          />
+
+         {/* 設定シート */}
+         <SettingsSheet isOpen={isSettingsOpen} onClose={onSettingsClose} />
+
+         {/* アプリ情報シート */}
+         <AppInfoSheet isOpen={isAppInfoOpen} onClose={onAppInfoClose} />
 
          {/* PWAインストールプロンプト */}
          <PWAInstallPrompt

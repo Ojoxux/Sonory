@@ -1,5 +1,6 @@
 import type { RealtimeChannel, SupabaseClient } from "@supabase/supabase-js"
 import { create } from "zustand"
+import { persist } from "zustand/middleware"
 import { getSupabaseClient } from "@/services/supabase"
 import type { LocationData } from "./useSoundPinStore"
 
@@ -312,347 +313,358 @@ const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
  * Supabase Realtimeを使用して新しいピンの通知を管理します。
  * 地理的範囲フィルタリング、通知設定、接続状態管理を提供します。
  */
-export const useRealtimeStore = create<RealtimeState & RealtimeActions>(
-   (set, get) => ({
-      // 初期状態
-      isConnected: false,
-      connectionStatus: "disconnected",
-      subscribedChannels: [],
-      recentNotifications: [],
-      notificationSettings: DEFAULT_NOTIFICATION_SETTINGS,
-      connectionError: null,
-      userLocation: null,
-      supabaseClient: null,
-      activeChannels: new Map(),
+export const useRealtimeStore = create<RealtimeState & RealtimeActions>()(
+   persist(
+      (set, get) => ({
+         // 初期状態
+         isConnected: false,
+         connectionStatus: "disconnected",
+         subscribedChannels: [],
+         recentNotifications: [],
+         notificationSettings: DEFAULT_NOTIFICATION_SETTINGS,
+         connectionError: null,
+         userLocation: null,
+         supabaseClient: null,
+         activeChannels: new Map(),
 
-      /**
-       * リアルタイム接続を開始します
-       */
-      connectRealtime: async (): Promise<void> => {
-         try {
-            set({ connectionStatus: "connecting", connectionError: null })
+         /**
+          * リアルタイム接続を開始します
+          */
+         connectRealtime: async (): Promise<void> => {
+            try {
+               set({ connectionStatus: "connecting", connectionError: null })
 
-            // Auth と共有のシングルトンクライアントを取得する
-            const client = resolveRealtimeClient()
+               // Auth と共有のシングルトンクライアントを取得する
+               const client = resolveRealtimeClient()
 
-            if (!client) {
-               set({ connectionStatus: "disconnected" })
-               return
+               if (!client) {
+                  set({ connectionStatus: "disconnected" })
+                  return
+               }
+
+               set({
+                  supabaseClient: client,
+                  connectionStatus: "connected",
+                  isConnected: true,
+               })
+
+               console.log("✅ Supabase Realtime接続完了")
+            } catch (error) {
+               const errorMessage =
+                  error instanceof Error ? error.message : "接続に失敗しました"
+
+               set({
+                  connectionStatus: "error",
+                  connectionError: errorMessage,
+                  isConnected: false,
+               })
+
+               console.error("❌ Supabase Realtime接続失敗:", error)
+               throw error
+            }
+         },
+
+         /**
+          * リアルタイム接続を切断します
+          */
+         disconnectRealtime: (): void => {
+            const { activeChannels, supabaseClient } = get()
+
+            // 全チャンネルの購読を解除
+            for (const [channelId, channel] of activeChannels) {
+               channel.unsubscribe()
+               console.log(`🔌 チャンネル購読解除: ${channelId}`)
+            }
+
+            // Supabaseクライアントを切断
+            if (supabaseClient) {
+               supabaseClient.removeAllChannels()
             }
 
             set({
-               supabaseClient: client,
-               connectionStatus: "connected",
-               isConnected: true,
-            })
-
-            console.log("✅ Supabase Realtime接続完了")
-         } catch (error) {
-            const errorMessage =
-               error instanceof Error ? error.message : "接続に失敗しました"
-
-            set({
-               connectionStatus: "error",
-               connectionError: errorMessage,
                isConnected: false,
+               connectionStatus: "disconnected",
+               subscribedChannels: [],
+               activeChannels: new Map(),
+               supabaseClient: null,
+               connectionError: null,
             })
 
-            console.error("❌ Supabase Realtime接続失敗:", error)
-            throw error
-         }
-      },
+            console.log("🔌 Supabase Realtime切断完了")
+         },
 
-      /**
-       * リアルタイム接続を切断します
-       */
-      disconnectRealtime: (): void => {
-         const { activeChannels, supabaseClient } = get()
+         /**
+          * 近隣ピンの購読を開始します
+          *
+          * @param userLocation - ユーザーの現在位置
+          * @param radius - 購読範囲（メートル）
+          */
+         subscribeToNearbyPins: (
+            userLocation: LocationData,
+            radius: number,
+         ): void => {
+            const { supabaseClient, activeChannels, notificationSettings } =
+               get()
 
-         // 全チャンネルの購読を解除
-         for (const [channelId, channel] of activeChannels) {
-            channel.unsubscribe()
-            console.log(`🔌 チャンネル購読解除: ${channelId}`)
-         }
+            if (!supabaseClient || !notificationSettings.enabled) {
+               console.log("⚠️ Realtime未接続または通知無効")
+               return
+            }
 
-         // Supabaseクライアントを切断
-         if (supabaseClient) {
-            supabaseClient.removeAllChannels()
-         }
+            const channelId = `sound-pins-${userLocation.latitude.toFixed(4)}-${userLocation.longitude.toFixed(4)}`
 
-         set({
-            isConnected: false,
-            connectionStatus: "disconnected",
-            subscribedChannels: [],
-            activeChannels: new Map(),
-            supabaseClient: null,
-            connectionError: null,
-         })
+            // 既存チャンネルがある場合は解除
+            if (activeChannels.has(channelId)) {
+               const existingChannel = activeChannels.get(channelId)
+               existingChannel?.unsubscribe()
+            }
 
-         console.log("🔌 Supabase Realtime切断完了")
-      },
-
-      /**
-       * 近隣ピンの購読を開始します
-       *
-       * @param userLocation - ユーザーの現在位置
-       * @param radius - 購読範囲（メートル）
-       */
-      subscribeToNearbyPins: (
-         userLocation: LocationData,
-         radius: number,
-      ): void => {
-         const { supabaseClient, activeChannels, notificationSettings } = get()
-
-         if (!supabaseClient || !notificationSettings.enabled) {
-            console.log("⚠️ Realtime未接続または通知無効")
-            return
-         }
-
-         const channelId = `sound-pins-${userLocation.latitude.toFixed(4)}-${userLocation.longitude.toFixed(4)}`
-
-         // 既存チャンネルがある場合は解除
-         if (activeChannels.has(channelId)) {
-            const existingChannel = activeChannels.get(channelId)
-            existingChannel?.unsubscribe()
-         }
-
-         // 新しいチャンネルを作成
-         const channel = supabaseClient
-            .channel(channelId)
-            .on(
-               "postgres_changes",
-               {
-                  event: "INSERT",
-                  schema: "public",
-                  table: "sound_pins",
-               },
-               (payload) => {
-                  get().handleNewPinNotification(payload.new)
-               },
-            )
-            .on(
-               "postgres_changes",
-               {
-                  event: "UPDATE",
-                  schema: "public",
-                  table: "sound_pins",
-                  filter: "ai_analysis.neq.null",
-               },
-               (payload) => {
-                  // AI分析完了通知
-                  if (!isPinData(payload.new)) {
-                     console.warn("⚠️ 無効なピンデータ")
-                     return
-                  }
-
-                  const pinData = payload.new
-
-                  if (pinData.location?.coordinates) {
-                     const [lng, lat] = pinData.location.coordinates
-                     const distance = calculateDistance(
-                        userLocation.latitude,
-                        userLocation.longitude,
-                        lat,
-                        lng,
-                     )
-
-                     if (distance <= notificationSettings.maxDistance) {
-                        const notification: RealtimeNotification = {
-                           id: generateNotificationId(),
-                           type: "pin_analysis_complete",
-                           pinId: pinData.id,
-                           location: { lat, lng },
-                           distance: Math.round(distance),
-                           timestamp: new Date(),
-                           isRead: false,
-                           data: {
-                              title: pinData.title || "音声ピン",
-                           },
-                        }
-
-                        set((state) => ({
-                           recentNotifications: [
-                              notification,
-                              ...state.recentNotifications,
-                           ].slice(0, 50),
-                        }))
-
-                        console.log("🔔 AI分析完了通知:", notification)
+            // 新しいチャンネルを作成
+            const channel = supabaseClient
+               .channel(channelId)
+               .on(
+                  "postgres_changes",
+                  {
+                     event: "INSERT",
+                     schema: "public",
+                     table: "sound_pins",
+                  },
+                  (payload) => {
+                     get().handleNewPinNotification(payload.new)
+                  },
+               )
+               .on(
+                  "postgres_changes",
+                  {
+                     event: "UPDATE",
+                     schema: "public",
+                     table: "sound_pins",
+                     filter: "ai_analysis.neq.null",
+                  },
+                  (payload) => {
+                     // AI分析完了通知
+                     if (!isPinData(payload.new)) {
+                        console.warn("⚠️ 無効なピンデータ")
+                        return
                      }
-                  }
-               },
-            )
-            .subscribe()
 
-         // チャンネルを管理に追加
-         const newActiveChannels = new Map(activeChannels)
-         newActiveChannels.set(channelId, channel)
+                     const pinData = payload.new
 
-         set((state) => ({
-            activeChannels: newActiveChannels,
-            subscribedChannels: [...state.subscribedChannels, channelId],
-            userLocation,
-         }))
+                     if (pinData.location?.coordinates) {
+                        const [lng, lat] = pinData.location.coordinates
+                        const distance = calculateDistance(
+                           userLocation.latitude,
+                           userLocation.longitude,
+                           lat,
+                           lng,
+                        )
 
-         console.log(`📡 近隣ピン購読開始: ${channelId} (半径: ${radius}m)`)
-      },
+                        if (distance <= notificationSettings.maxDistance) {
+                           const notification: RealtimeNotification = {
+                              id: generateNotificationId(),
+                              type: "pin_analysis_complete",
+                              pinId: pinData.id,
+                              location: { lat, lng },
+                              distance: Math.round(distance),
+                              timestamp: new Date(),
+                              isRead: false,
+                              data: {
+                                 title: pinData.title || "音声ピン",
+                              },
+                           }
 
-      /**
-       * チャンネルの購読を解除します
-       *
-       * @param channelId - 解除するチャンネルID
-       */
-      unsubscribeFromChannel: (channelId: string): void => {
-         const { activeChannels } = get()
+                           set((state) => ({
+                              recentNotifications: [
+                                 notification,
+                                 ...state.recentNotifications,
+                              ].slice(0, 50),
+                           }))
 
-         const channel = activeChannels.get(channelId)
-         if (channel) {
-            channel.unsubscribe()
+                           console.log("🔔 AI分析完了通知:", notification)
+                        }
+                     }
+                  },
+               )
+               .subscribe()
+
+            // チャンネルを管理に追加
             const newActiveChannels = new Map(activeChannels)
-            newActiveChannels.delete(channelId)
+            newActiveChannels.set(channelId, channel)
 
             set((state) => ({
                activeChannels: newActiveChannels,
-               subscribedChannels: state.subscribedChannels.filter(
-                  (id) => id !== channelId,
+               subscribedChannels: [...state.subscribedChannels, channelId],
+               userLocation,
+            }))
+
+            console.log(`📡 近隣ピン購読開始: ${channelId} (半径: ${radius}m)`)
+         },
+
+         /**
+          * チャンネルの購読を解除します
+          *
+          * @param channelId - 解除するチャンネルID
+          */
+         unsubscribeFromChannel: (channelId: string): void => {
+            const { activeChannels } = get()
+
+            const channel = activeChannels.get(channelId)
+            if (channel) {
+               channel.unsubscribe()
+               const newActiveChannels = new Map(activeChannels)
+               newActiveChannels.delete(channelId)
+
+               set((state) => ({
+                  activeChannels: newActiveChannels,
+                  subscribedChannels: state.subscribedChannels.filter(
+                     (id) => id !== channelId,
+                  ),
+               }))
+
+               console.log(`🔌 チャンネル購読解除: ${channelId}`)
+            }
+         },
+
+         /**
+          * 新ピン通知を処理します
+          *
+          * @param payload - Supabaseからのペイロード
+          */
+         handleNewPinNotification: (payload: Record<string, unknown>): void => {
+            const { userLocation, notificationSettings } = get()
+
+            if (!userLocation || !notificationSettings.enabled) {
+               return
+            }
+
+            try {
+               const validatedData = validatePinData(payload)
+               if (!validatedData) {
+                  return
+               }
+
+               const { pinData, lat, lng } = validatedData
+
+               const { distance, isWithin } = isWithinNotificationRange(
+                  userLocation.latitude,
+                  userLocation.longitude,
+                  lat,
+                  lng,
+                  notificationSettings.maxDistance,
+               )
+
+               if (!isWithin) {
+                  return
+               }
+
+               const notification = createNotification(
+                  pinData,
+                  lat,
+                  lng,
+                  distance,
+                  generateNotificationId,
+               )
+
+               set((state) => ({
+                  recentNotifications: [
+                     notification,
+                     ...state.recentNotifications,
+                  ].slice(0, 50),
+               }))
+
+               // 音声・振動アラート
+               if (notificationSettings.soundEnabled) {
+                  playSoundAlert()
+               }
+
+               if (notificationSettings.vibrationEnabled) {
+                  triggerVibrationAlert()
+               }
+
+               console.log("🔔 新ピン通知:", notification)
+            } catch (error) {
+               console.error("❌ 新ピン通知処理エラー:", error)
+            }
+         },
+
+         /**
+          * 通知を既読にします
+          *
+          * @param notificationId - 既読にする通知ID
+          */
+         markNotificationAsRead: (notificationId: string): void => {
+            set((state) => ({
+               recentNotifications: state.recentNotifications.map(
+                  (notification) =>
+                     notification.id === notificationId
+                        ? { ...notification, isRead: true }
+                        : notification,
                ),
             }))
+         },
 
-            console.log(`🔌 チャンネル購読解除: ${channelId}`)
-         }
-      },
-
-      /**
-       * 新ピン通知を処理します
-       *
-       * @param payload - Supabaseからのペイロード
-       */
-      handleNewPinNotification: (payload: Record<string, unknown>): void => {
-         const { userLocation, notificationSettings } = get()
-
-         if (!userLocation || !notificationSettings.enabled) {
-            return
-         }
-
-         try {
-            const validatedData = validatePinData(payload)
-            if (!validatedData) {
-               return
-            }
-
-            const { pinData, lat, lng } = validatedData
-
-            const { distance, isWithin } = isWithinNotificationRange(
-               userLocation.latitude,
-               userLocation.longitude,
-               lat,
-               lng,
-               notificationSettings.maxDistance,
-            )
-
-            if (!isWithin) {
-               return
-            }
-
-            const notification = createNotification(
-               pinData,
-               lat,
-               lng,
-               distance,
-               generateNotificationId,
-            )
-
+         /**
+          * 通知設定を更新します
+          *
+          * @param settings - 更新する設定
+          */
+         updateNotificationSettings: (
+            settings: Partial<NotificationSettings>,
+         ): void => {
             set((state) => ({
-               recentNotifications: [
-                  notification,
-                  ...state.recentNotifications,
-               ].slice(0, 50),
+               notificationSettings: {
+                  ...state.notificationSettings,
+                  ...settings,
+               },
             }))
 
-            // 音声・振動アラート
-            if (notificationSettings.soundEnabled) {
-               playSoundAlert()
-            }
+            console.log("⚙️ 通知設定更新:", settings)
+         },
 
-            if (notificationSettings.vibrationEnabled) {
-               triggerVibrationAlert()
-            }
+         /**
+          * ユーザー位置を更新します
+          *
+          * @param location - 新しい位置情報
+          */
+         updateUserLocation: (location: LocationData): void => {
+            set({ userLocation: location })
+         },
 
-            console.log("🔔 新ピン通知:", notification)
-         } catch (error) {
-            console.error("❌ 新ピン通知処理エラー:", error)
-         }
+         /**
+          * 通知履歴をクリアします
+          */
+         clearNotifications: (): void => {
+            set({ recentNotifications: [] })
+         },
+
+         /**
+          * 接続状態を設定します
+          *
+          * @param status - 設定する接続状態
+          */
+         setConnectionStatus: (status: ConnectionStatus): void => {
+            set({
+               connectionStatus: status,
+               isConnected: status === "connected",
+            })
+         },
+
+         /**
+          * 接続エラーを設定します
+          *
+          * @param error - エラーメッセージ
+          */
+         setConnectionError: (error: string | null): void => {
+            set({ connectionError: error })
+         },
+      }),
+      {
+         // supabaseClient・activeChannels はシリアライズ不可（実行時オブジェクト）なので
+         // partialize で notificationSettings だけに絞って永続化する
+         name: "sonory-notification-settings",
+         partialize: (state) => ({
+            notificationSettings: state.notificationSettings,
+         }),
       },
-
-      /**
-       * 通知を既読にします
-       *
-       * @param notificationId - 既読にする通知ID
-       */
-      markNotificationAsRead: (notificationId: string): void => {
-         set((state) => ({
-            recentNotifications: state.recentNotifications.map(
-               (notification) =>
-                  notification.id === notificationId
-                     ? { ...notification, isRead: true }
-                     : notification,
-            ),
-         }))
-      },
-
-      /**
-       * 通知設定を更新します
-       *
-       * @param settings - 更新する設定
-       */
-      updateNotificationSettings: (
-         settings: Partial<NotificationSettings>,
-      ): void => {
-         set((state) => ({
-            notificationSettings: {
-               ...state.notificationSettings,
-               ...settings,
-            },
-         }))
-
-         console.log("⚙️ 通知設定更新:", settings)
-      },
-
-      /**
-       * ユーザー位置を更新します
-       *
-       * @param location - 新しい位置情報
-       */
-      updateUserLocation: (location: LocationData): void => {
-         set({ userLocation: location })
-      },
-
-      /**
-       * 通知履歴をクリアします
-       */
-      clearNotifications: (): void => {
-         set({ recentNotifications: [] })
-      },
-
-      /**
-       * 接続状態を設定します
-       *
-       * @param status - 設定する接続状態
-       */
-      setConnectionStatus: (status: ConnectionStatus): void => {
-         set({
-            connectionStatus: status,
-            isConnected: status === "connected",
-         })
-      },
-
-      /**
-       * 接続エラーを設定します
-       *
-       * @param error - エラーメッセージ
-       */
-      setConnectionError: (error: string | null): void => {
-         set({ connectionError: error })
-      },
-   }),
+   ),
 )

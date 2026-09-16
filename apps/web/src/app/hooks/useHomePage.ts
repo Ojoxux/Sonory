@@ -12,7 +12,12 @@ import { useDebugStore } from "@/store/useDebugStore"
  * @params position 現在位置
  * @params debugTimeOverride デバッグ用時間オーバーライド（時間のみ0-23）
  * @params mapBearing マップのbearing（回転角度）
+ * @params isSettingsOpen 設定シートの開閉状態
+ * @params isAppInfoOpen アプリ情報シートの開閉状態
  * @params handleSettingsClick 設定ボタンがクリックされた時のコールバック
+ * @params handleSettingsClose 設定シートを閉じる時のコールバック
+ * @params handleAppInfoClick アプリ情報ボタンがクリックされた時のコールバック
+ * @params handleAppInfoClose アプリ情報シートを閉じる時のコールバック
  * @params handleCompassClick コンパスボタンがクリックされた時のコールバック
  * @params handleGeolocationReady 位置情報取得が準備できた時のコールバック
  * @params handleReturnToLocationReady 現在位置に戻るボタンがクリックされた時のコールバック
@@ -29,7 +34,12 @@ export const useHomePage = (): {
    } | null
    debugTimeOverride: number | null
    mapBearing: number
+   isSettingsOpen: boolean
+   isAppInfoOpen: boolean
    handleSettingsClick: () => void
+   handleSettingsClose: () => void
+   handleAppInfoClick: () => void
+   handleAppInfoClose: () => void
    handleCompassClick: () => void
    handleGeolocationReady: (geolocationFunction: () => void) => void
    handleReturnToLocationReady: (returnFunction: () => void) => void
@@ -44,9 +54,23 @@ export const useHomePage = (): {
       (() => void) | null
    >(null)
    const [mapBearing, setMapBearing] = useState<number>(0)
+   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false)
+   const [isAppInfoOpen, setIsAppInfoOpen] = useState<boolean>(false)
 
    const handleSettingsClick = (): void => {
-      // TODO: 設定画面の表示処理を実装
+      setIsSettingsOpen(true)
+   }
+
+   const handleSettingsClose = (): void => {
+      setIsSettingsOpen(false)
+   }
+
+   const handleAppInfoClick = (): void => {
+      setIsAppInfoOpen(true)
+   }
+
+   const handleAppInfoClose = (): void => {
+      setIsAppInfoOpen(false)
    }
 
    const handleCompassClick = (): void => {
@@ -74,7 +98,12 @@ export const useHomePage = (): {
       position,
       debugTimeOverride,
       mapBearing,
+      isSettingsOpen,
+      isAppInfoOpen,
       handleSettingsClick,
+      handleSettingsClose,
+      handleAppInfoClick,
+      handleAppInfoClose,
       handleCompassClick,
       handleGeolocationReady,
       handleReturnToLocationReady,

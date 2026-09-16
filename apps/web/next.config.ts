@@ -30,6 +30,8 @@ const nextConfig: NextConfig = {
    // 👇 Mapbox 環境変数（任意）
    env: {
       NEXT_PUBLIC_MAPBOX_TOKEN: process.env.NEXT_PUBLIC_MAPBOX_TOKEN,
+      // クライアントから package.json を読めないためここでバージョンを渡す
+      NEXT_PUBLIC_APP_VERSION: require("./package.json").version,
    },
    // 👇 開発環境でのAPI プロキシ設定
    async rewrites() {

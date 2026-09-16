@@ -177,6 +177,7 @@ apps/python-audio-analyzer/.pytest_cache/
 # Database & Storage
 # =============================================================================
 *.db
+.env.db
 *.sqlite
 *.sqlite3
 
@@ -212,3 +213,5 @@ secrets/*.pem
 # Memo
 # =============================================================================
 docs
+# Claude Code のエージェント用 worktree
+.claude/worktrees/

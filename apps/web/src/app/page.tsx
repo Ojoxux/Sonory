@@ -33,7 +33,12 @@ export default function Home(): ReactElement {
       position,
       debugTimeOverride,
       mapBearing,
+      isSettingsOpen,
+      isAppInfoOpen,
       handleSettingsClick,
+      handleSettingsClose,
+      handleAppInfoClick,
+      handleAppInfoClose,
       handleCompassClick,
       handleGeolocationReady,
       handleReturnToLocationReady,
@@ -75,11 +80,16 @@ export default function Home(): ReactElement {
             <div className="pointer-events-none absolute inset-0 z-10">
                <UIOverlay
                   onSettingsClick={handleSettingsClick}
+                  onAppInfoClick={handleAppInfoClick}
                   onCompassClick={handleCompassClick}
                   latitude={position?.latitude}
                   longitude={position?.longitude}
                   debugTimeOverride={debugTimeOverride}
                   mapBearing={mapBearing}
+                  isSettingsOpen={isSettingsOpen}
+                  onSettingsClose={handleSettingsClose}
+                  isAppInfoOpen={isAppInfoOpen}
+                  onAppInfoClose={handleAppInfoClose}
                />
             </div>
             {/*
