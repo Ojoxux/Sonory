@@ -32,6 +32,26 @@ const MEDIA_QUERIES = {
    STANDALONE: "(display-mode: standalone)",
 } as const
 
+const DISMISSED_AT_KEY = "sonory-pwa-install-dismissed-at"
+const DISMISS_SUPPRESS_DURATION_MS = 14 * 24 * 60 * 60 * 1000
+
+// localStorage はプライベートウィンドウ等で例外を投げる
+function recordDismissal(): void {
+   try {
+      localStorage.setItem(DISMISSED_AT_KEY, String(Date.now()))
+   } catch {}
+}
+
+function isWithinDismissSuppressPeriod(): boolean {
+   try {
+      const dismissedAt = localStorage.getItem(DISMISSED_AT_KEY)
+      if (!dismissedAt) return false
+      return Date.now() - Number(dismissedAt) < DISMISS_SUPPRESS_DURATION_MS
+   } catch {
+      return false
+   }
+}
+
 /** デバッグメッセージ */
 const DEBUG_MESSAGES = {
    /** インストールボタンクリック */
@@ -128,6 +148,7 @@ export function usePWAInstallState(
     * プロンプト閉じる処理
     */
    const handleDismiss = useCallback((): void => {
+      if (!isDebugActive) recordDismissal()
       setIsExpanded(false)
       setIsVisible(false)
       // 閉じるアニメーション後に非表示
@@ -136,7 +157,7 @@ export function usePWAInstallState(
          setIsDebugActive(false)
          onDismiss?.()
       }, ANIMATION_DELAYS.CLOSE_ANIMATION)
-   }, [onDismiss])
+   }, [isDebugActive, onDismiss])
 
    /**
     * インストールボタンクリック処理
@@ -309,7 +330,7 @@ export function usePWAInstallEventListeners(
       e.preventDefault()
       setDeferredPrompt(e as BeforeInstallPromptEvent)
 
-      if (autoShow && !debugMode) {
+      if (autoShow && !debugMode && !isWithinDismissSuppressPeriod()) {
          // まず小さい表示で出現
          setShowPrompt(true)
          setIsVisible(true)

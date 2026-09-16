@@ -61,14 +61,7 @@ export function UIOverlay({
          <AppInfoSheet isOpen={isAppInfoOpen} onClose={onAppInfoClose} />
 
          {/* PWAインストールプロンプト */}
-         <PWAInstallPrompt
-            onInstallSuccess={() => {
-               // TODO: インストール成功時の処理を実装
-            }}
-            onDismiss={() => {
-               // TODO: インストール拒否時の処理を実装
-            }}
-         />
+         <PWAInstallPrompt />
 
          {/* 録音インターフェース */}
          <RecordingInterface

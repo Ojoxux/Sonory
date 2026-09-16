@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { formatRecordedAt } from "@/utils/dateFormat"
 import { AIAnalyzingView } from "./AIAnalyzingView"
 import { AnalysisResultsView } from "./AnalysisResultsView"
@@ -67,20 +67,6 @@ export function AudioPlayback({
    } = usePinPlacement()
 
    const [viewState, setViewState] = useState<ViewState>("audio-review")
-
-   /**
-    * 波形プレイヤーの準備完了時のコールバック（メモ化）
-    */
-   const handleWaveformReady = useCallback(() => {
-      // TODO: 音声準備完了時の処理を実装
-   }, [])
-
-   /**
-    * 波形プレイヤーの再生完了時のコールバック（メモ化）
-    */
-   const handleWaveformFinish = useCallback(() => {
-      // TODO: 音声再生完了時の処理を実装
-   }, [])
 
    /**
     * 続けるボタンのクリックハンドラー
@@ -162,8 +148,6 @@ export function AudioPlayback({
                formattedDate={formatRecordedAt(audioData.recordedAt)}
                onContinue={handleContinue}
                onCancel={handleClose}
-               onWaveformReady={handleWaveformReady}
-               onWaveformFinish={handleWaveformFinish}
             />
          )}
 
@@ -188,8 +172,6 @@ export function AudioPlayback({
                onClose={handleClose}
                pinCreationStatus={pinCreationStatus}
                hasPosition={!!currentPosition}
-               onWaveformReady={handleWaveformReady}
-               onWaveformFinish={handleWaveformFinish}
             />
          )}
       </>

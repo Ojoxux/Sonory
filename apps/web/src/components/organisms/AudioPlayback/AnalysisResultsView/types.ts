@@ -51,8 +51,4 @@ export type AnalysisResultsViewProps = {
    pinCreationStatus?: "idle" | "creating" | "success" | "error"
    /** 現在位置が存在するか */
    hasPosition: boolean
-   /** 波形プレイヤーの準備完了時のコールバック */
-   onWaveformReady?: () => void
-   /** 波形プレイヤーの再生完了時のコールバック */
-   onWaveformFinish?: () => void
 }

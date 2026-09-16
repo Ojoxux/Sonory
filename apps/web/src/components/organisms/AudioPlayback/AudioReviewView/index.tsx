@@ -18,8 +18,6 @@ import type { AudioReviewViewProps } from "./types"
  * @param formattedDate 録音日時のフォーマット済み文字列
  * @param onContinue 続けるボタンのクリックハンドラー
  * @param onCancel キャンセルボタンのクリックハンドラー
- * @param onWaveformReady 波形プレイヤーの準備完了時のコールバック
- * @param onWaveformFinish 波形プレイヤーの再生完了時のコールバック
  *
  * @example
  * ```tsx
@@ -38,8 +36,6 @@ export function AudioReviewView({
    formattedDate,
    onContinue,
    onCancel,
-   onWaveformReady,
-   onWaveformFinish,
 }: AudioReviewViewProps) {
    return (
       <Sheet
@@ -79,8 +75,6 @@ export function AudioReviewView({
                         waveColor="#9ca3af"
                         progressColor="#dc2626"
                         className="w-full"
-                        onReady={onWaveformReady}
-                        onFinish={onWaveformFinish}
                      />
                   </div>
 

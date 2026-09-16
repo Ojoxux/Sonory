@@ -30,8 +30,6 @@ import type { AnalysisResultsViewProps } from "./types"
  * @param onClose 閉じるボタンのクリックハンドラー
  * @param pinCreationStatus ピン作成ステータス
  * @param hasPosition 現在位置が存在するか
- * @param onWaveformReady 波形プレイヤーの準備完了時のコールバック
- * @param onWaveformFinish 波形プレイヤーの再生完了時のコールバック
  *
  * @example
  * ```tsx
@@ -58,8 +56,6 @@ export function AnalysisResultsView({
    onClose,
    pinCreationStatus = "idle",
    hasPosition,
-   onWaveformReady,
-   onWaveformFinish,
 }: AnalysisResultsViewProps) {
    return (
       <Sheet
@@ -114,11 +110,7 @@ export function AnalysisResultsView({
                      environment={backendAnalysisResult?.environment}
                   />
 
-                  <AudioPlayerSection
-                     audioData={audioData}
-                     onWaveformReady={onWaveformReady}
-                     onWaveformFinish={onWaveformFinish}
-                  />
+                  <AudioPlayerSection audioData={audioData} />
 
                   <div className="flex gap-2.5 pt-1 pb-6">
                      <ActionButtons
