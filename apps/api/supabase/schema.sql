@@ -543,11 +543,8 @@ GRANT ALL ON public.analysis_results TO service_role;
 
 -- 検索系 RPC は未ログインのゲストが地図を閲覧するための正規経路。
 -- status = 'active' の行しか返さないため anon に開放してよい。
---
--- PUBLIC への EXECUTE は 20260916053854 で剥がした。CREATE FUNCTION の既定で
--- 付いたまま残っており、新しく作ったロールに自動でピンの読み取り権限が
--- 付いてしまう状態だった。これらは SECURITY DEFINER なので、呼び出し元の
--- テーブル権限では止まらず EXECUTE を絞るのが唯一の制御点になる。
+-- SECURITY DEFINER のため呼び出し元のテーブル権限では止まらない。
+-- CREATE FUNCTION が既定で付ける PUBLIC 付与は 20260916053854 で剥がした。
 REVOKE EXECUTE ON FUNCTION public.find_nearby_pins(
   double precision, double precision, integer, integer
 ) FROM PUBLIC;
