@@ -516,5 +516,6 @@ VALUES
   ('20260914094720', 'enable_realtime_for_sound_pins'),
   ('20260914115424', 'create_sound_pin_accepts_analysis'),
   ('20260916052801', 'create_ci_migration_check_role'),
-  ('20260916053854', 'revoke_search_rpc_from_public')
+  ('20260916053854', 'revoke_search_rpc_from_public'),
+  ('20260916060248', 'drop_ci_migration_check_role')
 ON CONFLICT (version) DO NOTHING;

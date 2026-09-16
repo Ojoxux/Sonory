@@ -6,20 +6,12 @@ on:
    workflow_dispatch:
 
 jobs:
-   check-applied:
-      name: Check migrations applied
+   check-schema-sync:
+      name: Check schema.sql is in sync
       runs-on: ubuntu-latest
       steps:
          - name: Checkout
            uses: actions/checkout@v6
 
-         # fork からの PR には secrets が渡らないため、その場合はスキップする
-         - name: Verify migrations are applied to the live database
-           env:
-              SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
-           run: |
-              if [ -z "$SUPABASE_DB_URL" ]; then
-                 echo "SUPABASE_DB_URL is not set, skipping"
-                 exit 0
-              fi
-              apps/api/supabase/tools/check_migrations_applied.sh
+         - name: Verify migrations are recorded in schema.sql
+           run: apps/api/supabase/tools/check_schema_sync.sh
