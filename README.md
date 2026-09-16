@@ -11,4 +11,32 @@
    日常の一瞬を音で残します。
 </p>
 
-開発手順は [AGENTS.md](./AGENTS.md) を参照。
+## 構成
+
+| ディレクトリ                 | 内容                                              |
+| ---------------------------- | ------------------------------------------------- |
+| `apps/web`                   | Next.js（OpenNext + Cloudflare Workers）          |
+| `apps/api`                   | Hono（Cloudflare Workers）                        |
+| `apps/python-audio-analyzer` | YAMNet による環境音の分類                         |
+| `apps/api/supabase`          | Supabase（PostgreSQL + PostGIS + pgmq）のスキーマ |
+
+## ローカル起動
+
+Node.js 22、Docker、Supabase プロジェクト（匿名サインインを有効化）が必要です。
+
+```bash
+npm install
+
+cp .env.example .env
+cp apps/api/.dev.vars.example apps/api/.dev.vars
+cp apps/web/.env.example apps/web/.env.local
+# それぞれに Supabase の URL とキーを設定する
+
+npm run start:all
+```
+
+- Web: http://localhost:3000
+- API: http://localhost:8787
+- Audio Analyzer: http://localhost:8000
+
+開発のルールと詳細は [AGENTS.md](./AGENTS.md) を参照してください。
