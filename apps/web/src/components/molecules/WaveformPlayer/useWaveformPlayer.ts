@@ -358,7 +358,6 @@ export function useWaveformPlayer({
    const loadAudioData = useCallback(
       (wavesurfer: WaveSurfer): void => {
          if (!audioData) {
-            console.error("No audio data provided")
             setError(new Error("音声データが提供されていません"))
             setIsLoading(false)
             return
@@ -370,7 +369,6 @@ export function useWaveformPlayer({
             } else if (audioData.url) {
                wavesurfer.load(audioData.url)
             } else {
-               console.error("No valid audio data found")
                setError(new Error("有効な音声データが見つかりません"))
                setIsLoading(false)
             }
@@ -413,7 +411,6 @@ export function useWaveformPlayer({
 
          // コンテナが DOM に存在することを確認
          if (!containerRef.current?.isConnected) {
-            console.warn("Container is not connected to DOM")
             setIsLoading(false)
             return
          }
@@ -489,9 +486,6 @@ export function useWaveformPlayer({
       }
 
       if (!wavesurferRef.current || !isInitialized) {
-         console.warn(
-            "WaveSurfer instance not available or not initialized - attempting to reinitialize",
-         )
          if (audioData) {
             initializeWaveSurfer().catch((error) => {
                console.error("Failed to reinitialize WaveSurfer:", error)

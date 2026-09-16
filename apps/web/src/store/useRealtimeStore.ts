@@ -209,14 +209,14 @@ function validatePinData(
    payload: Record<string, unknown>,
 ): { pinData: PinData; lat: number; lng: number } | null {
    if (!isPinData(payload)) {
-      console.warn("⚠️ 無効なピンデータ")
+      console.warn("無効なピンデータ")
       return null
    }
 
    const pinData = payload
 
    if (!pinData.location?.coordinates) {
-      console.warn("⚠️ ピンデータに位置情報がありません")
+      console.warn("ピンデータに位置情報がありません")
       return null
    }
 
@@ -347,8 +347,6 @@ export const useRealtimeStore = create<RealtimeState & RealtimeActions>()(
                   connectionStatus: "connected",
                   isConnected: true,
                })
-
-               console.log("✅ Supabase Realtime接続完了")
             } catch (error) {
                const errorMessage =
                   error instanceof Error ? error.message : "接続に失敗しました"
@@ -359,7 +357,7 @@ export const useRealtimeStore = create<RealtimeState & RealtimeActions>()(
                   isConnected: false,
                })
 
-               console.error("❌ Supabase Realtime接続失敗:", error)
+               console.error("Supabase Realtime接続失敗:", error)
                throw error
             }
          },
@@ -371,9 +369,8 @@ export const useRealtimeStore = create<RealtimeState & RealtimeActions>()(
             const { activeChannels, supabaseClient } = get()
 
             // 全チャンネルの購読を解除
-            for (const [channelId, channel] of activeChannels) {
+            for (const [, channel] of activeChannels) {
                channel.unsubscribe()
-               console.log(`🔌 チャンネル購読解除: ${channelId}`)
             }
 
             // Supabaseクライアントを切断
@@ -389,8 +386,6 @@ export const useRealtimeStore = create<RealtimeState & RealtimeActions>()(
                supabaseClient: null,
                connectionError: null,
             })
-
-            console.log("🔌 Supabase Realtime切断完了")
          },
 
          /**
@@ -401,13 +396,12 @@ export const useRealtimeStore = create<RealtimeState & RealtimeActions>()(
           */
          subscribeToNearbyPins: (
             userLocation: LocationData,
-            radius: number,
+            _radius: number,
          ): void => {
             const { supabaseClient, activeChannels, notificationSettings } =
                get()
 
             if (!supabaseClient || !notificationSettings.enabled) {
-               console.log("⚠️ Realtime未接続または通知無効")
                return
             }
 
@@ -444,7 +438,7 @@ export const useRealtimeStore = create<RealtimeState & RealtimeActions>()(
                   (payload) => {
                      // AI分析完了通知
                      if (!isPinData(payload.new)) {
-                        console.warn("⚠️ 無効なピンデータ")
+                        console.warn("無効なピンデータ")
                         return
                      }
 
@@ -479,8 +473,6 @@ export const useRealtimeStore = create<RealtimeState & RealtimeActions>()(
                                  ...state.recentNotifications,
                               ].slice(0, 50),
                            }))
-
-                           console.log("🔔 AI分析完了通知:", notification)
                         }
                      }
                   },
@@ -496,8 +488,6 @@ export const useRealtimeStore = create<RealtimeState & RealtimeActions>()(
                subscribedChannels: [...state.subscribedChannels, channelId],
                userLocation,
             }))
-
-            console.log(`📡 近隣ピン購読開始: ${channelId} (半径: ${radius}m)`)
          },
 
          /**
@@ -520,8 +510,6 @@ export const useRealtimeStore = create<RealtimeState & RealtimeActions>()(
                      (id) => id !== channelId,
                   ),
                }))
-
-               console.log(`🔌 チャンネル購読解除: ${channelId}`)
             }
          },
 
@@ -580,10 +568,8 @@ export const useRealtimeStore = create<RealtimeState & RealtimeActions>()(
                if (notificationSettings.vibrationEnabled) {
                   triggerVibrationAlert()
                }
-
-               console.log("🔔 新ピン通知:", notification)
             } catch (error) {
-               console.error("❌ 新ピン通知処理エラー:", error)
+               console.error("新ピン通知処理エラー:", error)
             }
          },
 
@@ -617,8 +603,6 @@ export const useRealtimeStore = create<RealtimeState & RealtimeActions>()(
                   ...settings,
                },
             }))
-
-            console.log("⚙️ 通知設定更新:", settings)
          },
 
          /**

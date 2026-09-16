@@ -26,16 +26,6 @@ function normalizeWeather(apiPin: NearbyPin): WeatherData | undefined {
  * @returns ローカルピン
  */
 export const convertApiPinToLocal = (apiPin: NearbyPin): SoundPin => {
-   // デバッグ: APIピンの変換処理をログ出力
-   if (process.env.NODE_ENV === "development") {
-      console.log("🔄 Converting API pin to local format:", {
-         pinId: apiPin.id,
-         title: apiPin.title,
-         aiTopic: apiPin.aiAnalysis?.categories?.topic,
-         aiConfidence: apiPin.aiAnalysis?.categories?.confidence,
-      })
-   }
-
    // 分類結果を構築
    const classificationResults = []
 

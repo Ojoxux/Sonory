@@ -125,7 +125,6 @@ export function useBrowserGeolocation() {
          const handleError = (err: GeolocationPositionError) => {
             if (!geolocationInstance) return
             geolocationInstance.error = err
-            console.error("位置情報取得エラー:", err.message)
          }
 
          // 位置情報の監視を開始

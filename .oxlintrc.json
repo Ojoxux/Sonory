@@ -46,5 +46,13 @@
          }
       ],
       "typescript/no-explicit-any": "warn"
-   }
+   },
+   "overrides": [
+      {
+         "files": ["apps/web/src/**"],
+         "rules": {
+            "no-console": ["error", { "allow": ["error", "warn", "debug"] }]
+         }
+      }
+   ]
 }

@@ -166,7 +166,6 @@ export function useRecordingInterface(
       if (audioData && status === "recording") {
          // MediaRecorderが停止してaudioDataが設定された場合、
          // 自動的に録音完了状態に遷移
-         console.log("🎵 録音完了を検知:", { audioData: audioData.id, status })
          setStatus("completed")
       }
    }, [audioData, status])

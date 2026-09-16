@@ -67,7 +67,7 @@ export async function ensureAnonymousSession(
    const { data, error } = await supabase.auth.signInAnonymously()
 
    if (error) {
-      console.error("❌ 匿名サインインに失敗しました:", error)
+      console.error("匿名サインインに失敗しました:", error)
       return null
    }
 

@@ -64,11 +64,6 @@ function validateUploadResponse(
    const audioId = data.audioId
 
    if (typeof audioUrl !== "string" || typeof audioId !== "string") {
-      console.error("❌ アップロードレスポンスに必要な値が含まれていません:", {
-         audioUrl,
-         audioId,
-         fullResponse: result,
-      })
       throw new Error("アップロードレスポンスが不完全です")
    }
 
@@ -207,23 +202,14 @@ export const useRecorderStore = create<RecorderState>((set, _get) => ({
 
          const formData = createUploadFormData(audioBlob, metadata)
 
-         console.log("🔄 音声アップロード実行中...", {
-            endpoint: "/api/audio/upload",
-            blobSize: audioBlob.size,
-            hasMetadata: !!metadata.location,
-         })
-
          // 生の fetch では Authorization ヘッダーが付かず 401 になる。
          // 認証と 401 リトライは api-client が一元的に扱う
          const result = await defaultApiClient.postFormData<unknown>(
             "/api/audio/upload",
             formData,
          )
-         console.log("📤 アップロードレスポンス:", result)
 
          const { audioUrl, audioId } = validateUploadResponse(result)
-
-         console.log("✅ アップロード成功:", { url: audioUrl, id: audioId })
 
          set({
             uploadStatus: "success",

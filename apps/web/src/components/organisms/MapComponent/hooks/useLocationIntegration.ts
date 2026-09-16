@@ -160,7 +160,6 @@ export function useLocationIntegration({
       setGeolocateAttempted(true)
 
       if (!("geolocation" in navigator)) {
-         console.warn("Geolocation APIがサポートされていません")
          loadSavedPosition()
          return
       }

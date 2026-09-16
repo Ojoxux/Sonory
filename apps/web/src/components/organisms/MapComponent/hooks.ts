@@ -129,40 +129,7 @@ export function useMapComponent({
       useLocationStorage()
 
    // React Queryで周辺ピンを取得
-   const {
-      pins: nearbyPins,
-      isLoading: isLoadingNearbyPins,
-      error: nearbyPinsError,
-   } = useIntegratedPins(mapBounds)
-
-   console.log("🔍 MapComponent: useNearbyPins呼び出し", {
-      mapBounds,
-      mapExists: !!map,
-      mapStyleLoaded,
-      enabled: !!mapBounds,
-      nearbyPinsCount: nearbyPins.length,
-      isLoadingNearbyPins,
-      nearbyPinsError: nearbyPinsError?.message,
-      mapBoundsDetail: mapBounds
-         ? {
-              north: mapBounds.north.toFixed(4),
-              south: mapBounds.south.toFixed(4),
-              east: mapBounds.east.toFixed(4),
-              west: mapBounds.west.toFixed(4),
-           }
-         : null,
-   })
-
-   // mapBoundsの状態を詳しく監視
-   console.log("🔍 MapComponent: mapBounds状態監視", {
-      mapBounds,
-      mapBoundsIsNull: mapBounds === null,
-      mapBoundsType: typeof mapBounds,
-      mapExists: !!map,
-      mapStyleLoaded,
-      mapLoaded: map?.loaded(),
-      mapIsStyleLoaded: map?.isStyleLoaded(),
-   })
+   const { pins: nearbyPins } = useIntegratedPins(mapBounds)
 
    // カスタムフック: 通知機能
    const { showNotification } = useMapNotifications()
@@ -304,7 +271,6 @@ export function useMapComponent({
       const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
 
       if (!mapboxToken) {
-         console.error("Mapbox access token is not set")
          return
       }
 
@@ -313,10 +279,6 @@ export function useMapComponent({
       try {
          const initialLightPreset =
             determineInitialLightPreset(debugTimeOverride)
-
-         if (process.env.NODE_ENV === "development") {
-            // TODO: 開発環境でのログ出力を実装
-         }
 
          const mapOptions: MapboxMapOptions = {
             container: mapContainerRef.current,
@@ -358,7 +320,6 @@ export function useMapComponent({
 
          // イベントリスナー設定
          mapInstance.on("load", () => {
-            console.log("🔍 MapComponent: マップロード完了")
             setMapStyleLoaded(true)
 
             // ユーザーパス用のソースとレイヤーを追加
@@ -395,7 +356,6 @@ export function useMapComponent({
          // スタイル読み込み完了時の処理（より確実な検知）
          mapInstance.on("styledata", () => {
             if (mapInstance.isStyleLoaded()) {
-               console.log("🔍 MapComponent: スタイルロード完了")
                setMapStyleLoaded(true)
 
                // スタイル読み込み完了後にライティング設定を適用
@@ -413,9 +373,6 @@ export function useMapComponent({
          mapInstance.on("idle", () => {
             // スタイルは読み込まれているがマップ全体の初期化が完了していない場合の補完的チェック
             if (mapInstance.isStyleLoaded() && !mapInitializedRef.current) {
-               if (process.env.NODE_ENV === "development") {
-                  // TODO: スタイル読み込み完了後の初期化ログを実装
-               }
                setMapStyleLoaded(true)
 
                updateMapBounds(mapInstance, setMapBounds)
@@ -446,17 +403,10 @@ export function useMapComponent({
             // 位置追跡終了
          })
 
-         geolocateControl.on("error", (error) => {
-            if (process.env.NODE_ENV === "development") {
-               console.error("Geolocation エラー:", error)
-            }
-         })
-
          // mapのインスタンス化にはDOM要素が必要で、useStateの初期値では不可能
          // また、mapは他のuseEffectの依存配列に含まれており、再レンダリングのトリガーとして機能する必要がある
          setMap(mapInstance)
          mapInitializedRef.current = true
-         console.log("🔍 MapComponent: マップインスタンス設定完了")
 
          // コールバック関数を設定
          onGeolocationReady?.(attemptGeolocation)
