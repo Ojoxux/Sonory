@@ -2,31 +2,32 @@
 -- Sonory スキーマスナップショット (SSOT)
 -- =============================================================================
 --
--- 生成日: 2026-09-12
+-- 生成日: 2026-09-15
 -- 対象:   本番 Supabase プロジェクトの public スキーマ + Storage バケット
 --
--- 【これは生成物です。手で編集しないこと。】
+-- 【ここに書いてよいのは実DBで確認した事実だけです。】
 --   スキーマを変更したいときは migrations/ に新しいファイルを追加して適用し、
---   そのあと本ファイルを再生成する。ここを直接書き換えても実DBは変わらず、
---   「ファイルと実DBの乖離」という過去に実害を出した状態に逆戻りする。
+--   そのあと実DBをダンプして本ファイルを突き合わせる。ここを直接書き換えても
+--   実DBは変わらず、「ファイルと実DBの乖離」という過去に実害を出した状態に
+--   逆戻りする。ダンプに無いものを書かないこと。手順は README を参照。
 --
 -- 位置づけ:
 --   - **実DBが今どうなっているか**を1ファイルで読めるようにしたもの。
 --     マイグレーションを順に読まなくても現在のスキーマ全体を把握できる。
---   - 再生成して git diff を取ると、SQL Editor での直接変更などによる
+--   - ダンプと突き合わせると、SQL Editor での直接変更などによる
 --     乖離がそのまま差分として現れる。乖離検知の仕組みを兼ねる。
 --   - 新規 Supabase プロジェクトを立ち上げる場合は、本ファイルを適用してから
 --     migrations/ の未適用分を流す。
 --
 -- 対して migrations/ は「何をどう変えるか」の記録であり、適用される実体。
 -- 本ファイルはその結果のスナップショットにすぎない。両者が食い違った場合、
--- 正しいのは実DBであり、本ファイルの再生成が必要だという合図。
+-- 正しいのは実DBであり、本ファイルの更新が必要だという合図。
 --
--- 再生成の方法:
---   Docker が使える場合:
---     npx supabase db dump --db-url "$SUPABASE_DB_URL" -f supabase/schema.sql
---   使えない場合:
---     tools/ の各クエリを SQL Editor で実行し、結果をもとに本ファイルを更新する。
+-- 更新の方法:
+--   実DBをダンプし、それを正として本ファイルの該当箇所を書き換える。
+--   ダンプをそのまま本ファイルにしないこと。postgis が public に入っているため
+--   ダンプは6000行超のうち約2700行が st_* 関数への GRANT の羅列になる。
+--   手順の詳細は README の「schema.sql の更新方法」を参照。
 --
 -- 経緯:
 --   以前は apps/api/sql/001〜013 を手動で SQL Editor に貼る運用で、適用状態を
@@ -50,7 +51,8 @@
 --
 --   アプリ側も API の認証ミドルウェアと Web の匿名サインイン
 --   （Authorization ヘッダの自動付与を含む）まで実装済み。
---   未実装は Phase 4 の searchPins / getUserPins / reportPin のみ。
+--   通報は pin_reports への記録として実装済み。未実装は searchPins と
+--   getUserPins のみ。
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
@@ -59,9 +61,9 @@
 -- 既存プロジェクトではすべて導入済みのため、以下はいずれも no-op になる。
 --
 -- 【新規プロジェクトに適用する場合の注意】
--- Supabase は postgis を extensions スキーマ、pgmq を pgmq スキーマに配置する。
--- 素の CREATE EXTENSION は public に作ってしまい、本ファイルが前提とする
--- pgmq_public.* / pgmq.meta の参照が壊れる。
+-- 本番DBの実際の配置は postgis が public、pgmq が pgmq、uuid-ossp と pgcrypto が
+-- extensions。素の CREATE EXTENSION で pgmq を入れると public に作ってしまい、
+-- 本ファイルが前提とする pgmq_public.* / pgmq.meta の参照が壊れる。
 -- 新規プロジェクトでは先に Dashboard の Database > Extensions から
 -- postgis と pgmq を有効化し、そのうえで本ファイルを適用すること。
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -211,10 +213,40 @@ CREATE INDEX IF NOT EXISTS idx_analysis_results_created_at
     ON public.analysis_results (created_at DESC);
 
 -- -----------------------------------------------------------------------------
+-- pin_reports: 通報記録
+-- -----------------------------------------------------------------------------
+-- 通報は status='reported' への更新ではなくここに記録する。前者は通報1回で
+-- ピンが即座に公開範囲から消える状態だったため。
+CREATE TABLE IF NOT EXISTS public.pin_reports (
+    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    pin_id      UUID NOT NULL REFERENCES public.sound_pins(id) ON DELETE CASCADE,
+    -- 通報者。退会しても通報記録は残す
+    reporter_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    reason      TEXT NOT NULL CHECK (char_length(reason) BETWEEN 10 AND 1000),
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT pin_reports_unique_reporter UNIQUE (pin_id, reporter_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_pin_reports_pin_id
+    ON public.pin_reports (pin_id);
+CREATE INDEX IF NOT EXISTS idx_pin_reports_created_at
+    ON public.pin_reports (created_at DESC);
+
+-- 通報内容は運営のみが読む。ポリシーを作らないことで anon / authenticated に
+-- 対する既定拒否とし、service_role のみが読み書きする（analysis_results と同じ形）
+ALTER TABLE public.pin_reports ENABLE ROW LEVEL SECURITY;
+
+REVOKE ALL ON public.pin_reports FROM PUBLIC, anon, authenticated;
+GRANT ALL ON public.pin_reports TO service_role;
+
+-- -----------------------------------------------------------------------------
 -- RPC: ピン作成
 -- -----------------------------------------------------------------------------
 -- SECURITY DEFINER である点に注意。この関数経由の INSERT には RLS が適用されない。
 -- 所有者の検証は 20260912071029_auth_schema.sql で SECURITY INVOKER 化して解消する。
+-- p_ai_analysis_result は 20260914115424 で末尾に追加された（DEFAULT NULL のため
+-- 既存の呼び出しに影響なし）。分類結果（YAMNet）をピン作成と同時に保存する。
 CREATE OR REPLACE FUNCTION public.create_sound_pin(
   p_user_id UUID,
   p_lat DOUBLE PRECISION,
@@ -229,7 +261,8 @@ CREATE OR REPLACE FUNCTION public.create_sound_pin(
   p_time_tag VARCHAR(10) DEFAULT NULL,
   p_title VARCHAR(200) DEFAULT NULL,
   p_device_info TEXT DEFAULT NULL,
-  p_audio_file_path TEXT DEFAULT NULL
+  p_audio_file_path TEXT DEFAULT NULL,
+  p_ai_analysis_result JSONB DEFAULT NULL
 )
 RETURNS TABLE (
   id UUID, location TEXT, audio_url TEXT, audio_file_path TEXT,
@@ -252,13 +285,13 @@ BEGIN
   INSERT INTO public.sound_pins (
     user_id, location, audio_url, audio_file_path, audio_duration, audio_format,
     weather_temperature, weather_condition, weather_wind_speed, weather_humidity,
-    time_tag, title, device_info, status
+    time_tag, title, device_info, ai_analysis_result, status
   ) VALUES (
     p_user_id,
     ST_SetSRID(ST_MakePoint(p_lng, p_lat), 4326)::geography,
     p_audio_url, p_audio_file_path, p_audio_duration, p_audio_format,
     p_weather_temperature, p_weather_condition, p_weather_wind_speed,
-    p_weather_humidity, p_time_tag, p_title, p_device_info,
+    p_weather_humidity, p_time_tag, p_title, p_device_info, p_ai_analysis_result,
     'active'
   )
   RETURNING public.sound_pins.id INTO new_pin_id;
@@ -430,10 +463,13 @@ END $$;
 -- RPC 経由の作成にも適用される。p_user_id に他人の UUID を渡しても拒否される。
 ALTER TABLE public.sound_pins ENABLE ROW LEVEL SECURITY;
 
+-- 20260913145717 で所有者は非公開状態（processing/deleted 等）でも自分のピンを
+-- 見られるように緩めた。緩めないと論理削除（UPDATE で status='deleted'）の
+-- RETURNING が RLS に弾かれ DELETE /api/pins/{id} が 500 になっていた。
 DROP POLICY IF EXISTS "Public pins are viewable by everyone" ON public.sound_pins;
 CREATE POLICY "Public pins are viewable by everyone"
   ON public.sound_pins FOR SELECT
-  USING (status = 'active');
+  USING (status = 'active' OR auth.uid() = user_id);
 
 DROP POLICY IF EXISTS "Users can insert their own pins" ON public.sound_pins;
 CREATE POLICY "Users can insert their own pins"
@@ -521,12 +557,12 @@ GRANT EXECUTE ON FUNCTION public.find_pins_within_bounds(
 REVOKE EXECUTE ON FUNCTION public.create_sound_pin(
   uuid, double precision, double precision, text, real, character varying,
   real, character varying, real, real, character varying, character varying,
-  text, text
+  text, text, jsonb
 ) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.create_sound_pin(
   uuid, double precision, double precision, text, real, character varying,
   real, character varying, real, real, character varying, character varying,
-  text, text
+  text, text, jsonb
 ) TO authenticated, service_role;
 
 -- キュー操作はサーバ内部専用。
@@ -565,6 +601,25 @@ ON CONFLICT (id) DO UPDATE SET
   allowed_mime_types = EXCLUDED.allowed_mime_types;
 
 -- -----------------------------------------------------------------------------
+-- Realtime
+-- -----------------------------------------------------------------------------
+-- supabase_realtime publication は存在していたが、テーブルが1つも登録されて
+-- おらず postgres_changes の購読が一切配信されていなかった（20260914094720）。
+-- Web は INSERT（新規ピンの即時表示）と UPDATE（解析結果の書き戻し）を購読する
+-- （useRealtimeStore.ts）。
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+      AND schemaname = 'public'
+      AND tablename = 'sound_pins'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.sound_pins;
+  END IF;
+END $$;
+
+-- -----------------------------------------------------------------------------
 -- マイグレーション履歴への記録
 -- -----------------------------------------------------------------------------
 -- 本ファイルは SQL Editor への貼り付けでも適用できるが、
@@ -596,5 +651,9 @@ VALUES
   ('20260912071028', 'auth_rls_policies'),
   ('20260912071029', 'auth_schema'),
   ('20260912113306', 'hide_user_id_from_clients'),
-  ('20260912113856', 'restrict_user_id_column')
+  ('20260912113856', 'restrict_user_id_column'),
+  ('20260913145717', 'owner_can_see_own_pins'),
+  ('20260913150549', 'create_pin_reports'),
+  ('20260914094720', 'enable_realtime_for_sound_pins'),
+  ('20260914115424', 'create_sound_pin_accepts_analysis')
 ON CONFLICT (version) DO NOTHING;
