@@ -177,6 +177,7 @@ apps/python-audio-analyzer/.pytest_cache/
 # Database & Storage
 # =============================================================================
 *.db
+.env.db
 *.sqlite
 *.sqlite3
 

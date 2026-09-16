@@ -15,6 +15,7 @@ import type { AppHeaderProps } from "./types"
  * 時間帯に応じてアイコンの色も変更
  *
  * @param onSettingsClick 設定ボタンがクリックされた時のコールバック
+ * @param onAppInfoClick アプリ情報ボタンがクリックされた時のコールバック
  * @param latitude 緯度
  * @param longitude 経度
  * @param mapBearing マップのbearing（回転角度）
@@ -33,6 +34,7 @@ import type { AppHeaderProps } from "./types"
  */
 export function AppHeader({
    onSettingsClick,
+   onAppInfoClick,
    onCompassClick,
    latitude,
    longitude,
@@ -85,9 +87,7 @@ export function AppHeader({
                <IconButton
                   icon={<MdInfo className="h-5 w-5" />}
                   ariaLabel="アプリ情報"
-                  onClick={() => {
-                     // TODO: アプリ情報の表示処理を実装
-                  }}
+                  onClick={onAppInfoClick}
                   className={`${iconBgClass} ${iconColorClass} backdrop-blur-sm`}
                />
 

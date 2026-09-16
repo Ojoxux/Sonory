@@ -4,6 +4,8 @@
 export interface AppHeaderProps {
    /** 設定ボタンクリック時のハンドラー */
    onSettingsClick?: () => void
+   /** アプリ情報ボタンクリック時のハンドラー */
+   onAppInfoClick?: () => void
    /** コンパスボタンクリック時のハンドラー（現在位置に戻る） */
    onCompassClick?: () => void
    /** 現在の緯度 */
