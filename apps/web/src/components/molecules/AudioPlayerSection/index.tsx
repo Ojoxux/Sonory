@@ -11,23 +11,13 @@ import type { AudioPlayerSectionProps } from "./types"
  * WaveformPlayerをラップし、統一されたスタイリングを適用
  *
  * @param audioData 音声データ
- * @param onWaveformReady 波形プレイヤーの準備完了時のコールバック
- * @param onWaveformFinish 波形プレイヤーの再生完了時のコールバック
  *
  * @example
  * ```tsx
- * <AudioPlayerSection
- *   audioData={audioData}
- *   onWaveformReady={() => console.log("Ready")}
- *   onWaveformFinish={() => console.log("Finished")}
- * />
+ * <AudioPlayerSection audioData={audioData} />
  * ```
  */
-export function AudioPlayerSection({
-   audioData,
-   onWaveformReady,
-   onWaveformFinish,
-}: AudioPlayerSectionProps) {
+export function AudioPlayerSection({ audioData }: AudioPlayerSectionProps) {
    return (
       <div className="space-y-2">
          <h3 className="font-semibold text-base text-white/80">録音音声</h3>
@@ -38,8 +28,6 @@ export function AudioPlayerSection({
                waveColor="#9ca3af"
                progressColor="#dc2626"
                className="w-full"
-               onReady={onWaveformReady}
-               onFinish={onWaveformFinish}
             />
          </div>
       </div>

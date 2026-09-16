@@ -1,6 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
+import { MdPublic } from "react-icons/md"
 import type { EnvironmentInfoProps } from "./types"
 
 /**
@@ -34,8 +35,7 @@ export function EnvironmentInfo({ environment }: EnvironmentInfoProps) {
          animate={{ opacity: 1, scale: 1 }}
       >
          <div className="flex items-center gap-2">
-            {/* TODO: あまり絵文字は使いたくない。アイコンを使ったほうがいい */}
-            <span className="text-blue-400 text-lg">🌍</span>
+            <MdPublic className="h-5 w-5 text-blue-400" />
             <span className="text-blue-300 text-sm">
                {environment.description || environment.primary_type}
             </span>

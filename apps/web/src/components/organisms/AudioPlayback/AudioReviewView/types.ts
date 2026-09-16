@@ -17,8 +17,4 @@ export type AudioReviewViewProps = {
    onContinue: () => void
    /** キャンセルボタンのクリックハンドラー */
    onCancel: () => void
-   /** 波形プレイヤーの準備完了時のコールバック */
-   onWaveformReady?: () => void
-   /** 波形プレイヤーの再生完了時のコールバック */
-   onWaveformFinish?: () => void
 }
