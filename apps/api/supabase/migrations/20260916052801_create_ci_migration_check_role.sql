@@ -40,14 +40,22 @@ ON CONFLICT (version) DO NOTHING;
 
 COMMIT;
 
--- 適用後にやること（SQL Editor で実行。パスワードは会話やリポジトリに残さない）:
+-- 適用後にやること:
 --
---   ALTER ROLE ci_migration_check PASSWORD '<生成したパスワード>';
+-- 1. パスワードを新しく生成する。既存の DB パスワードとは別物で、このロール用に
+--    ここで決める値。16進にするのは、URL のパスワード部で
+--    パーセントエンコードが要る文字（/ + @ : # など）を避けるため。
 --
--- そのうえで GitHub の Secrets に SUPABASE_DB_URL を登録する。
--- Supavisor 経由のユーザ名は <ロール名>.<project-ref> の形式:
+--      node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"
 --
---   postgresql://ci_migration_check.<project-ref>:<password>@<pooler-host>:5432/postgres
+-- 2. SQL Editor で設定する。リポジトリには残さない。
+--
+--      ALTER ROLE ci_migration_check PASSWORD '<1で生成した値>';
+--
+-- 3. GitHub の Secrets に SUPABASE_DB_URL を登録する。
+--    Supavisor 経由のユーザ名は <ロール名>.<project-ref> の形式:
+--
+--      postgresql://ci_migration_check.<project-ref>:<password>@<pooler-host>:5432/postgres
 --
 -- 権限の確認:
 --
