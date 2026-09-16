@@ -1,14 +1,4 @@
 -- クライアントから user_id を見えなくする
---
--- 露出していた3経路: 読み取り RPC の戻り値 / find_nearby_pins_by_ids の
--- SETOF sound_pins / PostgREST のテーブル直読み。このファイルは前2つを塞ぐ。
--- 3つ目の列レベル権限は 20260912113856 で対応。
---
--- create_sound_pin も戻り値から user_id を外す。SECURITY INVOKER のため、
--- 返したままだと列権限の剥奪と衝突して関数が落ちるため。
---
--- 戻り値の型を変えるので CREATE OR REPLACE は使えず DROP → CREATE。
--- DROP で権限が消えるため、再作成後に GRANT を貼り直している。
 
 BEGIN;
 
@@ -16,7 +6,6 @@ DROP FUNCTION IF EXISTS public.find_nearby_pins_by_ids(
   double precision, double precision, integer, uuid[]
 );
 
--- create_sound_pin: 戻り値から user_id を削除
 DROP FUNCTION IF EXISTS public.create_sound_pin(
   uuid, double precision, double precision, text, real, character varying,
   real, character varying, real, real, character varying, character varying,
@@ -92,7 +81,6 @@ GRANT EXECUTE ON FUNCTION public.create_sound_pin(
   text, text
 ) TO authenticated, service_role;
 
--- find_nearby_pins: 戻り値から user_id を削除
 DROP FUNCTION IF EXISTS public.find_nearby_pins(
   double precision, double precision, integer, integer
 );
@@ -146,7 +134,6 @@ GRANT EXECUTE ON FUNCTION public.find_nearby_pins(
   double precision, double precision, integer, integer
 ) TO anon, authenticated, service_role;
 
--- find_pins_within_bounds: 戻り値から user_id を削除
 DROP FUNCTION IF EXISTS public.find_pins_within_bounds(
   double precision, double precision, double precision, double precision,
   integer, text[]
@@ -197,9 +184,6 @@ GRANT EXECUTE ON FUNCTION public.find_pins_within_bounds(
   integer, text[]
 ) TO anon, authenticated, service_role;
 
--- ⚠️ 下の1行は効果が無かった。テーブルレベルの GRANT SELECT が全列に及ぶため、
--- 列レベルの REVOKE では差し引けない。20260912113856 で正しく対応済み。
--- 適用済みの履歴として残してある。
 REVOKE SELECT (user_id) ON public.sound_pins FROM anon, authenticated;
 
 CREATE SCHEMA IF NOT EXISTS supabase_migrations;

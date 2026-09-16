@@ -1,15 +1,4 @@
 -- user_id を anon / authenticated から隠す（列レベル権限）
---
--- 直前の 20260912113306 で REVOKE SELECT (user_id) を実行したが、これは無効だった。
--- テーブルレベルの GRANT SELECT は全列に及び、列レベルの REVOKE ではその一部を
--- 差し引けない。エラーも出ないため気付きにくい。
--- 正しくはテーブルレベルを剥奪し、公開する列だけ列指定で付け直す。
---
--- ⚠️ 副作用: これらのロールは sound_pins でワイルドカードを使えなくなる。
--- PostgREST の select=* はエラーになる。アプリの読み取りは SECURITY DEFINER の
--- RPC 経由なので影響しないが、Realtime は authenticated で直接購読するため未検証。
---
--- ⚠️ 列を追加したら、下の GRANT にも追記すること。しないと読めない。
 
 BEGIN;
 
@@ -51,4 +40,3 @@ ON CONFLICT (version) DO NOTHING;
 
 COMMIT;
 
--- 検証: supabase/tools/verify_user_id_hidden.sql

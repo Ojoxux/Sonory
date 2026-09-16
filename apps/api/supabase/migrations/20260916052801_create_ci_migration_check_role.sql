@@ -1,10 +1,4 @@
 -- CI の適用状況チェック専用ロールを作る
---
--- postgres の接続情報を Secrets に置くと、漏れたときに auth.users を含む全テーブルの
--- 読み書きと RLS のバイパスまで渡る。読みたいのは version 列だけ。
---
--- パスワードはここでは設定しない（リポジトリに入るため）。適用後に SQL Editor で
--- ALTER ROLE ci_migration_check PASSWORD '...' を実行する。
 
 BEGIN;
 

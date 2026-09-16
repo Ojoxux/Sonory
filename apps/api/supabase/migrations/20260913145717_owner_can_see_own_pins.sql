@@ -1,12 +1,4 @@
 -- 所有者は自分のピンを status に関わらず閲覧できるようにする
---
--- 20260912071028 の SELECT ポリシーは status = 'active' のみを許可していた。
--- API の削除は status='deleted' への UPDATE（論理削除）なので、更新後の行が
--- 自分自身から見えなくなり、PostgREST の RETURNING が
--- "new row violates row-level security policy" で失敗していた。
---
--- 結果として DELETE /api/pins/{id} が 500 になっていた。
--- 公開範囲は変わらない。auth.uid() = user_id は所有者本人にしか一致しない。
 
 BEGIN;
 

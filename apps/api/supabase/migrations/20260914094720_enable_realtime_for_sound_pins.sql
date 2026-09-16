@@ -1,11 +1,4 @@
 -- sound_pins を Realtime の配信対象に加える
---
--- supabase_realtime publication は存在していたが、テーブルが1つも
--- 登録されていなかった。そのため postgres_changes の購読が成立しても
--- 変更が一切配信されず、地図に新しいピンが出るのはリロード時だけだった。
---
--- Web は INSERT と UPDATE を購読している（useRealtimeStore.ts）。
--- INSERT は新規ピンの即時表示、UPDATE は解析結果の書き戻し反映に使う。
 
 BEGIN;
 
@@ -34,5 +27,3 @@ ON CONFLICT (version) DO NOTHING;
 
 COMMIT;
 
--- 適用後は tools/check_realtime.sql を再実行し、
--- public.sound_pins が publication に含まれることを確認する。

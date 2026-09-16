@@ -88,7 +88,19 @@ Workers 環境では **リクエストごとに JWT が異なる**。
 先に新旧両対応のコードをデプロイし、**別PRで**あとから適用する。
 1本のPRに追加と破壊を混ぜない。
 
-詳細は `apps/api/supabase/README.md`。
+新しいファイルは `npx supabase migration new <name>` で作る（14桁のUTC）。
+適用は Dashboard の SQL Editor に貼る。各ファイルは末尾で自身を
+`supabase_migrations.schema_migrations` に登録する。
+
+`schema.sql` の更新は実DBのダンプを正として該当箇所を書き換える。
+
+```bash
+set -a; . apps/api/.env.db; set +a
+npx supabase db dump --db-url "$SUPABASE_DB_URL" -f /tmp/dump.sql
+```
+
+**ダンプをそのまま `schema.sql` にしない。** postgis が `public` にあるため
+6000行超のうち約2700行が `st_*` への GRANT になり、アプリのスキーマが埋もれる。
 
 > **事故:** 手動実行と SQL Editor 直叩きでファイルと実DBが乖離し、
 > `anon` キーだけで到達できる書き込み経路が6つ開いていた。
@@ -106,6 +118,7 @@ Workers 環境では **リクエストごとに JWT が異なる**。
 既存コードのコメント率は **5〜25%**。
 
 - TSDoc はエクスポートする関数・型にのみ。内部ヘルパーには不要
+- **SQL ファイルは先頭に「何をするものか」を一文だけ。** 経緯は README に書く
 - **同じ説明を複数ファイルに書かない。** 経緯は README、構造は `schema.sql`、
   個別の非自明な判断だけコードに
 - そのファイルを読まないと分からないことだけ書く

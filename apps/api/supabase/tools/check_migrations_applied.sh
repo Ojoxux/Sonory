@@ -47,7 +47,7 @@ if ((${#missing[@]} > 0)); then
    echo "実DBに未適用のマイグレーションがあります:" >&2
    printf '  %s\n' "${missing[@]}" >&2
    echo >&2
-   echo "マージ前に適用してください。手順は apps/api/supabase/README.md。" >&2
+   echo "マージ前に適用してください。手順は AGENTS.md。" >&2
    exit 1
 fi
 
