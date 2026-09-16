@@ -1,12 +1,4 @@
 -- create_sound_pin に解析結果の引数を追加する
---
--- ピン作成はこの RPC 経由だが、ai_analysis_result を受け取る引数が無く、
--- サービス層が組み立てた値が RPC 呼び出しの段階で捨てられていた。
--- そのため分類結果が保存されず、カテゴリ絞り込み
--- （ai_analysis_result->>'topic'）も永久に効かない状態だった。
---
--- 引数は末尾に DEFAULT NULL で追加する。既存の呼び出しは影響を受けない。
--- 本体・SECURITY INVOKER・search_path は 20260912113306 から変更していない。
 
 BEGIN;
 

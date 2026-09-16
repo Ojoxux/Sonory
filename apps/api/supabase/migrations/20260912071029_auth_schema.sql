@@ -1,16 +1,7 @@
 -- 認証 (Issue #117) のスキーマ変更
---
--- 1. create_sound_pin を SECURITY INVOKER 化
---    DEFINER のままだと RLS を迂回し、p_user_id に他人の UUID を渡せてしまう。
---    INVOKER にすれば INSERT ポリシー auth.uid() = user_id が自然に適用され、
---    関数内にガード節を書く必要がなくなる。
--- 2. sound_pins.user_id に auth.users(id) への外部キーを追加
---
--- ⚠️ 20260912071028_auth_rls_policies.sql を先に適用しておくこと。
 
 BEGIN;
 
--- 1. create_sound_pin を SECURITY INVOKER にする
 CREATE OR REPLACE FUNCTION public.create_sound_pin(
   p_user_id UUID,
   p_lat DOUBLE PRECISION,
@@ -69,7 +60,6 @@ BEGIN
 END;
 $function$;
 
--- 権限は据え置き（anon は剥奪したまま）
 REVOKE EXECUTE ON FUNCTION public.create_sound_pin(
   uuid, double precision, double precision, text, real, character varying,
   real, character varying, real, real, character varying, character varying,
@@ -81,10 +71,6 @@ GRANT EXECUTE ON FUNCTION public.create_sound_pin(
   text, text
 ) TO authenticated, service_role;
 
--- 2. user_id に auth.users(id) への外部キーを張る
---
--- ON DELETE SET NULL: 退会してもピンは地図に残し、孤児ピン（読み取り専用）になる。
--- 退会時に消したい場合は CASCADE に変えること。
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -99,7 +85,6 @@ BEGIN
   END IF;
 END $$;
 
--- 履歴テーブルは CLI の db push が自動作成するが、SQL Editor 運用では存在しない
 CREATE SCHEMA IF NOT EXISTS supabase_migrations;
 CREATE TABLE IF NOT EXISTS supabase_migrations.schema_migrations (
   version    TEXT PRIMARY KEY,

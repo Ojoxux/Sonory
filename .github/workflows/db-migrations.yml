@@ -1,0 +1,17 @@
+name: DB Migrations CI
+
+on:
+   pull_request:
+      branches: [main]
+   workflow_dispatch:
+
+jobs:
+   check-schema-sync:
+      name: Check schema.sql is in sync
+      runs-on: ubuntu-latest
+      steps:
+         - name: Checkout
+           uses: actions/checkout@v6
+
+         - name: Verify migrations are recorded in schema.sql
+           run: apps/api/supabase/tools/check_schema_sync.sh

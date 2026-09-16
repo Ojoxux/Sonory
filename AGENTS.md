@@ -80,19 +80,45 @@ Workers 環境では **リクエストごとに JWT が異なる**。
 
 - スキーマ変更は必ず `apps/api/supabase/migrations/` にファイルとして残す
 - **SQL Editor で直接変更しない**
-- 適用後は `schema.sql` を再生成してコミットする
-- 変更前に `apps/api/supabase/tools/` で実DBの現状を確認する
+- **マージする前に適用する。** CI は `migrations/` が `schema.sql` の履歴に載っているかを見る
+- 適用後は実DBをダンプし、`schema.sql` を突き合わせて更新する
+- 変更前に `apps/api/supabase/tools/` の読み取り専用クエリで実DBの現状を確認する
 
-詳細は `apps/api/supabase/README.md`。
+破壊的変更（列の削除、リネーム、制約の追加、権限の剥奪）だけは順序が逆になる。
+先に新旧両対応のコードをデプロイし、**別PRで**あとから適用する。
+1本のPRに追加と破壊を混ぜない。
+
+新しいファイルは `npx supabase migration new <name>` で作る（14桁のUTC）。
+適用は Dashboard の SQL Editor に貼る。各ファイルは末尾で自身を
+`supabase_migrations.schema_migrations` に登録する。
+
+`schema.sql` の更新は実DBのダンプを正として該当箇所を書き換える。
+
+```bash
+set -a; . apps/api/.env.db; set +a
+npx supabase db dump --db-url "$SUPABASE_DB_URL" -f /tmp/dump.sql
+```
+
+**ダンプをそのまま `schema.sql` にしない。** postgis が `public` にあるため
+6000行超のうち約2700行が `st_*` への GRANT になり、アプリのスキーマが埋もれる。
 
 > **事故:** 手動実行と SQL Editor 直叩きでファイルと実DBが乖離し、
 > `anon` キーだけで到達できる書き込み経路が6つ開いていた。
+>
+> **事故:** 「適用したら `schema.sql` を再生成する」と README に書いてあったが
+> 守られず、8本流した時点で乖離した。適用とマージが別々の出来事だったため。
+> 現在は CI でマージの条件にしている。
+>
+> **事故:** `user_id` の列権限を剥奪したマイグレーションを適用した直後、
+> まだ `.select("*")` を使っていた `DELETE` / `PUT` が「permission denied」で
+> 落ちた。破壊的変更をコードより先に流したため。
 
 ## コメントは既存コードの密度に合わせる
 
 既存コードのコメント率は **5〜25%**。
 
 - TSDoc はエクスポートする関数・型にのみ。内部ヘルパーには不要
+- **SQL ファイルは先頭に「何をするものか」を一文だけ。** 経緯は README に書く
 - **同じ説明を複数ファイルに書かない。** 経緯は README、構造は `schema.sql`、
   個別の非自明な判断だけコードに
 - そのファイルを読まないと分からないことだけ書く
