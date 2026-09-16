@@ -41,7 +41,7 @@ function createAudioBlob(chunks: Blob[], mimeType: string): Blob {
  */
 function validateAudioBlob(audioBlob: Blob): void {
    if (audioBlob.size < 1000) {
-      console.warn("⚠️ 録音データが小さすぎます（1KB未満）")
+      console.warn("録音データが小さすぎます（1KB未満）")
    }
 }
 
@@ -85,19 +85,10 @@ function handleRecordingStop(
 ): void {
    const elapsedTime = calculateElapsedTime(recordingStartTimeRef)
 
-   console.log("🎵 MediaRecorder停止イベント発火", { elapsedTime })
-
    clearAutoStopTimer(autoStopTimerRef)
    recordingStartTimeRef.current = null
 
    const audioBlob = createAudioBlob(chunksRef.current, mediaRecorder.mimeType)
-
-   console.log("🎤 最終録音データ:", {
-      chunks: chunksRef.current.length,
-      totalSize: audioBlob.size,
-      mimeType: audioBlob.type,
-      duration: elapsedTime,
-   })
 
    validateAudioBlob(audioBlob)
 
@@ -182,11 +173,6 @@ export function useMediaRecorder() {
 
          // データ取得イベント
          mediaRecorder.ondataavailable = (event: BlobEvent): void => {
-            console.log("📊 MediaRecorder data available:", {
-               size: event.data.size,
-               type: event.data.type,
-               chunksCount: chunksRef.current.length + 1,
-            })
             if (event.data.size > 0) {
                chunksRef.current.push(event.data)
             }
@@ -227,13 +213,6 @@ export function useMediaRecorder() {
                ? (currentTime - recordingStartTimeRef.current) / 1000
                : 0
 
-            console.log("🔴 MediaRecorder自動停止タイマー実行", {
-               mediaRecorderExists: !!mediaRecorderRef.current,
-               state: mediaRecorderRef.current?.state,
-               isRecording: isRecording,
-               elapsedTime: elapsedTime,
-            })
-
             if (
                mediaRecorderRef.current &&
                mediaRecorderRef.current.state === "recording"
@@ -241,7 +220,6 @@ export function useMediaRecorder() {
                // 10秒に満たない場合は、10秒まで待つ
                if (elapsedTime < 10) {
                   const remainingTime = (10 - elapsedTime) * 1000
-                  console.log("⏳ 10秒まで待機", { remainingTime })
                   autoStopTimerRef.current = setTimeout(
                      stopRecordingAtTime,
                      remainingTime,
@@ -249,7 +227,6 @@ export function useMediaRecorder() {
                   return
                }
 
-               console.log("🛑 MediaRecorder自動停止実行", { elapsedTime })
                mediaRecorderRef.current.stop()
             }
          }
@@ -262,7 +239,7 @@ export function useMediaRecorder() {
          setIsRecording(false)
          throw error
       }
-   }, [setAudioData, storeStartRecording, isRecording])
+   }, [setAudioData, storeStartRecording])
 
    /**
     * 録音を停止します
@@ -276,12 +253,6 @@ export function useMediaRecorder() {
          }
 
          if (mediaRecorderRef.current && isRecording) {
-            const currentTime = performance.now()
-            const elapsedTime = recordingStartTimeRef.current
-               ? (currentTime - recordingStartTimeRef.current) / 1000
-               : 0
-
-            console.log("🛑 手動停止実行", { elapsedTime })
             mediaRecorderRef.current.stop()
             storeStopRecording()
          }

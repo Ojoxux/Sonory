@@ -18,8 +18,6 @@ export interface UseRealtimeOptions {
    autoRequestPermission?: boolean
    /** 地図範囲変更時の購読更新を有効にするか */
    autoSubscribeOnBoundsChange?: boolean
-   /** デバッグログを有効にするか */
-   enableDebugLog?: boolean
 }
 
 /**
@@ -98,11 +96,7 @@ function calculateCenterAndRadius(bounds: MapBounds): {
 export function useRealtime(
    options: UseRealtimeOptions = {},
 ): UseRealtimeReturn {
-   const {
-      autoConnect = true,
-      autoRequestPermission = true,
-      enableDebugLog = false,
-   } = options
+   const { autoConnect = true, autoRequestPermission = true } = options
 
    // Zustandストア
    const {
@@ -127,44 +121,24 @@ export function useRealtime(
       bounds: MapBounds
    } | null>(null)
 
-   // デバッグログ
-   const debugLog = useCallback(
-      (message: string, ...args: unknown[]) => {
-         if (enableDebugLog) {
-            console.log(`[useRealtime] ${message}`, ...args)
-         }
-      },
-      [enableDebugLog],
-   )
-
    // 未読通知数を計算
    const unreadCount = recentNotifications.filter((n) => !n.isRead).length
 
    // 接続処理
    const connect = useCallback(async (): Promise<void> => {
-      try {
-         debugLog("リアルタイム接続開始")
-         await connectRealtime()
-         debugLog("リアルタイム接続完了")
-      } catch (error) {
-         debugLog("リアルタイム接続エラー:", error)
-         throw error
-      }
-   }, [connectRealtime, debugLog])
+      await connectRealtime()
+   }, [connectRealtime])
 
    // 切断処理
    const disconnect = useCallback((): void => {
-      debugLog("リアルタイム切断開始")
       disconnectRealtime()
       lastSubscriptionRef.current = null
-      debugLog("リアルタイム切断完了")
-   }, [disconnectRealtime, debugLog])
+   }, [disconnectRealtime])
 
    // 地図範囲での購読
    const subscribeToMapArea = useCallback(
       (bounds: MapBounds, userLocation: LocationData): void => {
          if (!isConnected || !notificationSettings.enabled) {
-            debugLog("購読スキップ: 未接続または通知無効")
             return
          }
 
@@ -173,7 +147,6 @@ export function useRealtime(
          // 前回と同じ範囲の場合はスキップ
          const currentChannelId = `sound-pins-${center.latitude.toFixed(4)}-${center.longitude.toFixed(4)}`
          if (lastSubscriptionRef.current?.channelId === currentChannelId) {
-            debugLog("購読スキップ: 同じ範囲")
             return
          }
 
@@ -183,7 +156,6 @@ export function useRealtime(
          }
 
          // 新しい購読を開始
-         debugLog("地図範囲購読開始:", { bounds, center, radius })
          updateUserLocation(userLocation)
          subscribeToNearbyPins(center, radius)
 
@@ -199,31 +171,25 @@ export function useRealtime(
          unsubscribeFromChannel,
          updateUserLocation,
          subscribeToNearbyPins,
-         debugLog,
       ],
    )
 
    // 全購読停止
    const unsubscribeAll = useCallback((): void => {
       if (lastSubscriptionRef.current) {
-         debugLog("全購読停止")
          unsubscribeFromChannel(lastSubscriptionRef.current.channelId)
          lastSubscriptionRef.current = null
       }
-   }, [unsubscribeFromChannel, debugLog])
+   }, [unsubscribeFromChannel])
 
    // 通知権限要求
    const requestPermission = useCallback(async (): Promise<boolean> => {
       try {
-         debugLog("通知権限要求開始")
-         const granted = await requestNotificationPermission()
-         debugLog("通知権限要求結果:", granted)
-         return granted
-      } catch (error) {
-         debugLog("通知権限要求エラー:", error)
+         return await requestNotificationPermission()
+      } catch {
          return false
       }
-   }, [debugLog])
+   }, [])
 
    // 設定更新
    const updateSettings = useCallback(
@@ -235,18 +201,14 @@ export function useRealtime(
             maxDistance: number
          }>,
       ): void => {
-         debugLog("通知設定更新:", settings)
          updateNotificationSettings(settings)
       },
-      [updateNotificationSettings, debugLog],
+      [updateNotificationSettings],
    )
 
    // 自動接続
    const connectEvent = useEffectEvent(() => {
-      debugLog("自動接続実行")
-      connect().catch((error) => {
-         debugLog("自動接続失敗:", error)
-      })
+      connect().catch(() => {})
    })
 
    useEffect(() => {
@@ -257,9 +219,7 @@ export function useRealtime(
 
    // 自動通知権限要求
    const requestPermissionEvent = useEffectEvent(() => {
-      requestPermission().catch((error) => {
-         debugLog("自動通知権限要求失敗:", error)
-      })
+      requestPermission().catch(() => {})
    })
 
    useEffect(() => {
@@ -290,7 +250,6 @@ export function useRealtime(
 
    // クリーンアップ
    const disconnectEvent = useEffectEvent(() => {
-      debugLog("クリーンアップ: 接続切断")
       disconnect()
    })
 
@@ -331,7 +290,6 @@ export function useMapRealtime(userLocation: LocationData | null) {
       autoConnect: true,
       autoRequestPermission: true,
       autoSubscribeOnBoundsChange: true,
-      enableDebugLog: process.env.NODE_ENV === "development",
    })
 
    // 地図範囲変更時の購読更新
@@ -362,6 +320,5 @@ export function useNotificationRealtime() {
       autoConnect: true,
       autoRequestPermission: false,
       autoSubscribeOnBoundsChange: false,
-      enableDebugLog: false,
    })
 }

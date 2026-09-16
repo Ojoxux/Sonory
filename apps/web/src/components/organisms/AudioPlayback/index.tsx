@@ -95,7 +95,6 @@ export function AudioPlayback({
     */
    const handlePlacePin = async (): Promise<void> => {
       if (!audioData || !currentPosition) {
-         console.warn("⚠️ 音声データまたは位置情報が不足しています")
          return
       }
 

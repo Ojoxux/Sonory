@@ -181,8 +181,6 @@ export function useMapboxInitialization() {
    // Mapbox Access Tokenを設定
    if (MAPBOX_ACCESS_TOKEN) {
       mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN
-   } else {
-      console.error("Mapbox access token is not defined")
    }
 
    // マップの初期化関数

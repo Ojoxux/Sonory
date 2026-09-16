@@ -85,17 +85,6 @@ export function SoundPinMarkers({
       (cluster: PinCluster): mapboxgl.Marker | null => {
          if (!map) return null
 
-         console.log("🎯 マーカー作成:", {
-            clusterId: cluster.id,
-            isSingle: cluster.isSingle,
-            count: cluster.count,
-            center: cluster.center,
-            pins: cluster.pins.map((p) => ({
-               id: p.id,
-               isPersisted: p.isPersisted,
-            })),
-         })
-
          try {
             const markerElement = document.createElement("div")
             markerElement.className = "cluster-marker"
@@ -131,15 +120,6 @@ export function SoundPinMarkers({
                     ? "analyzing"
                     : "default"
 
-               console.log("🎨 SoundPinIcon描画:", {
-                  clusterId: cluster.id,
-                  pinId: pin.id,
-                  variant: iconVariant,
-                  isSelected,
-                  isAnalyzing,
-                  isPersisted: pin.isPersisted,
-               })
-
                root.render(
                   <SoundPinIcon
                      size="medium"
@@ -163,15 +143,6 @@ export function SoundPinMarkers({
                .setLngLat([cluster.center.longitude, cluster.center.latitude])
                .addTo(map)
 
-            console.log("✅ マーカー地図追加完了:", {
-               clusterId: cluster.id,
-               position: [cluster.center.longitude, cluster.center.latitude],
-               element: markerElement,
-               addedToMap: true,
-               elementVisible: markerElement.style.display !== "none",
-               elementInDocument: document.contains(markerElement),
-            })
-
             return marker
          } catch (error) {
             console.error("クラスタマーカーの作成に失敗:", error)
@@ -186,13 +157,7 @@ export function SoundPinMarkers({
     */
    const clustersChanged = useCallback(
       (newClusters: PinCluster[], oldClusters: PinCluster[]): boolean => {
-         console.log("🔍 クラスタ変更チェック:", {
-            newClustersLength: newClusters.length,
-            oldClustersLength: oldClusters.length,
-         })
-
          if (newClusters.length !== oldClusters.length) {
-            console.log("✅ クラスタ数が変更されました")
             return true
          }
 
@@ -210,24 +175,10 @@ export function SoundPinMarkers({
                   newCluster.center.longitude - oldCluster.center.longitude,
                ) > 0.000001
             ) {
-               console.log("✅ クラスタ内容が変更されました:", {
-                  index: i,
-                  newCount: newCluster.count,
-                  oldCount: oldCluster.count,
-                  newIsSingle: newCluster.isSingle,
-                  oldIsSingle: oldCluster.isSingle,
-                  latDiff: Math.abs(
-                     newCluster.center.latitude - oldCluster.center.latitude,
-                  ),
-                  lngDiff: Math.abs(
-                     newCluster.center.longitude - oldCluster.center.longitude,
-                  ),
-               })
                return true
             }
          }
 
-         console.log("❌ クラスタに変更はありません")
          return false
       },
       [],
@@ -247,19 +198,9 @@ export function SoundPinMarkers({
             const existingMarker = clusterMarkersRef.current.get(cluster.id)
 
             if (!existingMarker) {
-               console.log("🆕 新規マーカー作成開始:", {
-                  clusterId: cluster.id,
-               })
                const marker = createClusterMarker(cluster)
                if (marker) {
                   newMarkersToAdd.set(cluster.id, marker)
-                  console.log("✅ 新規マーカー作成完了:", {
-                     clusterId: cluster.id,
-                  })
-               } else {
-                  console.error("❌ 新規マーカー作成失敗:", {
-                     clusterId: cluster.id,
-                  })
                }
             }
          }
@@ -286,11 +227,6 @@ export function SoundPinMarkers({
                   Math.abs(currentLngLat.lng - newLng) > 0.000001 ||
                   Math.abs(currentLngLat.lat - newLat) > 0.000001
                ) {
-                  console.log("🔄 既存マーカー位置更新:", {
-                     clusterId: cluster.id,
-                     from: [currentLngLat.lng, currentLngLat.lat],
-                     to: [newLng, newLat],
-                  })
                   existingMarker.setLngLat([newLng, newLat])
                }
             }
@@ -310,7 +246,6 @@ export function SoundPinMarkers({
             if (!newClusterIds.has(clusterId)) {
                const marker = clusterMarkersRef.current.get(clusterId)
                if (marker) {
-                  console.log("🗑️ 不要マーカー削除:", { clusterId })
                   marker.remove()
                   clusterMarkersRef.current.delete(clusterId)
                }
@@ -337,9 +272,6 @@ export function SoundPinMarkers({
 
          // 新しいクラスターが空の場合は処理をスキップ
          if (newClusters.length === 0) {
-            console.log(
-               "⚠️ 新しいクラスターが空のため、マーカー更新をスキップします",
-            )
             return
          }
 
@@ -364,12 +296,6 @@ export function SoundPinMarkers({
          removeObsoleteMarkers(newClusterIds)
 
          currentClustersRef.current = newClusters
-
-         console.log("📊 マーカー更新完了:", {
-            totalMarkersCount: clusterMarkersRef.current.size,
-            newClustersCount: newClusters.length,
-            markerIds: Array.from(clusterMarkersRef.current.keys()),
-         })
       },
       [
          map,
@@ -397,54 +323,8 @@ export function SoundPinMarkers({
          const zoomDiff = Math.abs(currentZoom - currentZoomRef.current)
          const isSignificantZoomChange = zoomDiff > 0.5
 
-         console.log("🎯 マーカー更新:", {
-            currentZoom,
-            previousZoom: currentZoomRef.current,
-            zoomDiff,
-            isSignificantZoomChange,
-            pinsCount: stablePins.length,
-            pins: stablePins.map((pin) => ({
-               id: pin.id,
-               lat: pin.latitude,
-               lng: pin.longitude,
-               isPersisted: pin.isPersisted,
-            })),
-         })
-
          // クラスタリング実行
          const newClusters = clusterPins(stablePins, map)
-
-         // 地図の現在の境界を取得
-         const mapBounds = map.getBounds()
-         const boundsInfo = mapBounds
-            ? {
-                 north: mapBounds.getNorth(),
-                 south: mapBounds.getSouth(),
-                 east: mapBounds.getEast(),
-                 west: mapBounds.getWest(),
-              }
-            : null
-
-         console.log("🗂️ クラスタリング結果:", {
-            clustersCount: newClusters.length,
-            mapBounds: boundsInfo,
-            clusters: newClusters.map((cluster) => ({
-               id: cluster.id,
-               count: cluster.count,
-               isSingle: cluster.isSingle,
-               center: cluster.center,
-               inBounds: boundsInfo
-                  ? cluster.center.latitude >= boundsInfo.south &&
-                    cluster.center.latitude <= boundsInfo.north &&
-                    cluster.center.longitude >= boundsInfo.west &&
-                    cluster.center.longitude <= boundsInfo.east
-                  : "unknown",
-               pins: cluster.pins.map((p) => ({
-                  id: p.id,
-                  isPersisted: p.isPersisted,
-               })),
-            })),
-         })
 
          // 前回と比較して変更があるかチェック
          const hasChanges = clustersChanged(
@@ -457,32 +337,8 @@ export function SoundPinMarkers({
          const shouldUpdate =
             hasChanges || isSignificantZoomChange || hasNoMarkers
 
-         console.log("🔍 マーカー更新判定:", {
-            hasChanges,
-            isSignificantZoomChange,
-            hasNoMarkers,
-            shouldUpdate,
-            existingMarkersCount: clusterMarkersRef.current.size,
-            clustersCount: newClusters.length,
-         })
-
          if (shouldUpdate) {
-            console.log("🔄 クラスタリング更新:", {
-               clustersCount: newClusters.length,
-               hasChanges,
-               isSignificantZoomChange,
-               hasNoMarkers,
-               existingMarkersCount: clusterMarkersRef.current.size,
-            })
-
             updateMarkersIncremental(newClusters)
-
-            console.log("📌 マーカー更新後:", {
-               totalMarkersCount: clusterMarkersRef.current.size,
-               markerIds: Array.from(clusterMarkersRef.current.keys()),
-            })
-         } else {
-            console.log("⏭️ クラスタリング更新スキップ: 変更なし")
          }
 
          currentZoomRef.current = currentZoom
@@ -498,13 +354,6 @@ export function SoundPinMarkers({
    // ピンデータ変更時の更新（依存配列を最適化）
    // selectedPinIdの変更も含めて、すべての変更をdebouncedUpdateMarkersで処理
    useEffect(() => {
-      console.log("🔄 ピンデータまたは選択状態変更検知:", {
-         pinsCount: stablePins.length,
-         selectedPinId,
-         mapReady: !!map,
-         styleLoaded: mapStyleLoaded,
-         existingMarkers: clusterMarkersRef.current.size,
-      })
       debouncedUpdateMarkers()
    }, [map, stablePins, mapStyleLoaded, selectedPinId, debouncedUpdateMarkers])
 

@@ -127,7 +127,7 @@ function setMapboxLightPreset(
       }
    } catch (error) {
       if (process.env.NODE_ENV === "development") {
-         console.warn("⚠️ setStyle実行エラー:", error)
+         console.warn("setStyle実行エラー:", error)
       }
       // エラーが発生しても続行
    }
@@ -231,7 +231,7 @@ export function useMapEnvironment({
             terrainInitializedRef.current = true
          } catch (error) {
             if (process.env.NODE_ENV === "development") {
-               console.warn("⚠️ 地形設定エラー:", error)
+               console.warn("地形設定エラー:", error)
             }
          }
       },
@@ -252,7 +252,7 @@ export function useMapEnvironment({
             mapboxHelpers.setFog(targetMap, fogConfig)
          } catch (error) {
             if (process.env.NODE_ENV === "development") {
-               console.warn("⚠️ フォグ設定エラー:", error)
+               console.warn("フォグ設定エラー:", error)
             }
          }
       },
@@ -269,7 +269,7 @@ export function useMapEnvironment({
             applyNightLighting(targetMap, isNightTime ? -20 : 45)
          } catch (error) {
             if (process.env.NODE_ENV === "development") {
-               console.warn("⚠️ 照明設定エラー:", error)
+               console.warn("照明設定エラー:", error)
             }
          }
       },

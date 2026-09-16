@@ -60,25 +60,11 @@ export function usePinAudioPlayer(
                if (Number.isFinite(audioDuration) && audioDuration > 0) {
                   setDuration(audioDuration)
                   setAudioLoadingStatus("ready")
-                  console.log("✅ PinAudioPlayer: 音声読み込み成功", {
-                     audioUrl,
-                     duration: audioDuration,
-                     readyState: audio.readyState,
-                  })
                } else {
                   // durationが無効な場合は、suggestedDurationまたはデフォルト値を使用
                   const fallbackDuration = suggestedDuration || 10
                   setDuration(fallbackDuration)
                   setAudioLoadingStatus("ready")
-                  console.log(
-                     "ℹ️ PinAudioPlayer: audio要素からdurationを取得できませんでした。フォールバック値を使用します:",
-                     {
-                        audioUrl,
-                        audioDuration,
-                        usedDuration: fallbackDuration,
-                        hasSuggestedDuration: !!suggestedDuration,
-                     },
-                  )
                }
             }
 
@@ -137,15 +123,9 @@ export function usePinAudioPlayer(
 
             // 音声読み込みエラー時の処理
             audio.onerror = (error) => {
-               console.error("🚨 PinAudioPlayer: 音声読み込みエラー:", {
-                  error,
-                  audioUrl,
-                  audioSrc: audio.src,
-                  audioReadyState: audio.readyState,
-                  audioNetworkState: audio.networkState,
-               })
+               console.error("PinAudioPlayer: 音声読み込みエラー:", error)
                setAudioLoadingStatus("error")
-               setAudioLoadError(`音声の読み込みに失敗しました: ${audioUrl}`)
+               setAudioLoadError("音声の読み込みに失敗しました")
             }
 
             setAudioElement(audio)
@@ -244,30 +224,7 @@ export function usePinAudioPlayer(
                : null)
 
          if (audioUrl) {
-            console.log("🎵 PinAudioPlayer: 音声読み込み開始", {
-               pinId: pin.id,
-               audioUrl,
-               hasUrl: !!pin.audioData.url,
-               hasBlob: !!pin.audioData.blob,
-               isPersisted: pin.isPersisted,
-               primaryLabel: pin.primaryLabel,
-               environment: pin.environment,
-               classificationResults: pin.classificationResults,
-               duration: pin.audioData.duration,
-            })
-
             loadAudio(audioUrl, pin.audioData.duration)
-         } else {
-            console.warn("⚠️ PinAudioPlayer: 音声URLもBlobも見つかりません", {
-               pin: {
-                  id: pin.id,
-                  hasAudioData: !!pin.audioData,
-                  audioDataUrl: pin.audioData?.url,
-                  hasBlob: !!pin.audioData?.blob,
-                  primaryLabel: pin.primaryLabel,
-                  environment: pin.environment,
-               },
-            })
          }
       }
    }, [pin, loadAudio])

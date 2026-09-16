@@ -49,7 +49,6 @@ export interface NotificationStats {
 export async function requestNotificationPermission(): Promise<boolean> {
    // 通知APIサポートチェック
    if (!("Notification" in window)) {
-      console.warn("⚠️ このブラウザは通知をサポートしていません")
       return false
    }
 
@@ -60,24 +59,15 @@ export async function requestNotificationPermission(): Promise<boolean> {
 
    // 既に拒否されている場合
    if (Notification.permission === "denied") {
-      console.warn("⚠️ 通知権限が拒否されています")
       return false
    }
 
    try {
       // 権限要求
       const permission = await Notification.requestPermission()
-      const granted = permission === "granted"
-
-      if (granted) {
-         console.log("✅ 通知権限が許可されました")
-      } else {
-         console.warn("⚠️ 通知権限が拒否されました")
-      }
-
-      return granted
+      return permission === "granted"
    } catch (error) {
-      console.error("❌ 通知権限要求エラー:", error)
+      console.error("通知権限要求エラー:", error)
       return false
    }
 }
@@ -107,7 +97,6 @@ export function sendNotification(
 ): Notification | null {
    // 権限チェック
    if (getNotificationPermission() !== "granted") {
-      console.warn("⚠️ 通知権限がありません")
       return null
    }
 
@@ -148,7 +137,7 @@ export function sendNotification(
 
       // エラーイベント処理
       notification.onerror = (error) => {
-         console.error("❌ 通知エラー:", error)
+         console.error("通知エラー:", error)
       }
 
       // 自動閉じる（5秒後）
@@ -156,10 +145,9 @@ export function sendNotification(
          notification.close()
       }, 5000)
 
-      console.log("📢 通知送信:", title)
       return notification
    } catch (error) {
-      console.error("❌ 通知送信エラー:", error)
+      console.error("通知送信エラー:", error)
       return null
    }
 }
@@ -246,8 +234,6 @@ function handleNotificationClick(data: {
       detail: data,
    })
    window.dispatchEvent(event)
-
-   console.log("🔔 通知クリック:", data)
 }
 
 /**
@@ -256,7 +242,6 @@ function handleNotificationClick(data: {
 export function registerNotificationHandlers(): void {
    // Service Workerサポートチェック
    if (!("serviceWorker" in navigator)) {
-      console.warn("⚠️ Service Workerがサポートされていません")
       return
    }
 
@@ -279,13 +264,8 @@ export function registerNotificationHandlers(): void {
                )
             }
             break
-
-         default:
-            console.log("📨 Service Workerメッセージ:", event.data)
       }
    })
-
-   console.log("📡 通知ハンドラー登録完了")
 }
 
 /**
@@ -351,15 +331,11 @@ export async function initializeNotifications(): Promise<void> {
       registerNotificationHandlers()
 
       // 通知クリックイベントリスナー登録
-      window.addEventListener("sonory-notification-click", (event) => {
-         const customEvent = event as CustomEvent
+      window.addEventListener("sonory-notification-click", () => {
          updateNotificationStats("clicked")
-         console.log("🔔 通知クリック統計更新:", customEvent.detail)
       })
-
-      console.log("✅ 通知機能初期化完了")
    } catch (error) {
-      console.error("❌ 通知機能初期化エラー:", error)
+      console.error("通知機能初期化エラー:", error)
    }
 }
 
@@ -373,7 +349,6 @@ export async function testNotification(): Promise<void> {
    const hasPermission = await requestNotificationPermission()
 
    if (!hasPermission) {
-      console.warn("⚠️ 通知権限がないためテストできません")
       return
    }
 
@@ -385,6 +360,4 @@ export async function testNotification(): Promise<void> {
          pinId: "test-pin-id",
       },
    })
-
-   console.log("🧪 通知テスト実行")
 }

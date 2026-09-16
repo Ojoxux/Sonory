@@ -29,9 +29,6 @@ export const useMapDebug = (): UseMapDebugReturn => {
    // HACK: 初期化時にdebugModeをfalseに強制設定 (デバッグモードがデフォルトで出てしまうため)
    useEffect(() => {
       setDebugMode(false)
-      if (process.env.NODE_ENV === "development") {
-         console.log("[MapComponent] debugModeをfalseにリセット")
-      }
    }, [setDebugMode])
 
    return {

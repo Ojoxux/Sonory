@@ -64,11 +64,8 @@ export const useAudioProcessing = () => {
                }
             })
 
-            console.log("🎵 録音時間チェック:", { duration })
-
             // 録音時間のバリデーション（9.9秒未満の場合はエラー）
             if (duration < 9.9) {
-               console.error("録音時間が不足しています:", { duration })
                setAnalysisMessage(
                   `録音時間が${duration.toFixed(1)}秒のため、マップピンを作成できません。10秒の録音が必要です。`,
                )
@@ -89,14 +86,7 @@ export const useAudioProcessing = () => {
             }
 
             // アップロードを試行（タイムアウト付き）
-            let uploadResult: { url: string; id: string } | null = null
             try {
-               console.log("🔄 音声アップロード開始:", {
-                  blobSize: audioData.blob.size,
-                  blobType: audioData.blob.type,
-                  metadata,
-               })
-
                const uploadPromise = uploadAudioToStorage(
                   audioData.blob,
                   metadata,
@@ -108,14 +98,10 @@ export const useAudioProcessing = () => {
                   ),
                )
 
-               uploadResult = await Promise.race([
-                  uploadPromise,
-                  timeoutPromise,
-               ])
-               console.log("✅ 音声アップロード成功:", uploadResult)
+               await Promise.race([uploadPromise, timeoutPromise])
             } catch (uploadError) {
                console.warn(
-                  "⚠️ アップロードに失敗しました。オフライン分析を実行します:",
+                  "アップロードに失敗しました。オフライン分析を実行します:",
                   uploadError,
                )
                showErrorToast(
@@ -138,17 +124,13 @@ export const useAudioProcessing = () => {
             // AI分析を実行
             try {
                await startInference(audioData)
-            } catch (inferenceError) {
-               console.warn(
-                  "⚠️ AI分析に失敗しました。フォールバック結果を使用します:",
-                  inferenceError,
-               )
+            } catch {
                // フォールバック結果は useInferenceStore 内で自動的に生成される
             }
 
             return { success: true }
          } catch (err) {
-            console.error("💥 処理に失敗しました:", err)
+            console.error("処理に失敗しました:", err)
             return {
                success: false,
                error: err instanceof Error ? err.message : "不明なエラー",
@@ -220,18 +202,7 @@ export const usePinPlacement = () => {
             // アップロード済みURLがない場合は、BlobからURLを生成（createPersistentPin内でアップロードされる）
             if (!audioUrl) {
                audioUrl = URL.createObjectURL(audioData.blob)
-               console.log(
-                  "⚠️ アップロード済みURLがないため、BlobからURLを生成します",
-               )
             }
-
-            console.log("📍 ピン配置開始:", {
-               hasUploadedUrl: !!uploadedAudioUrl,
-               audioUrl: `${audioUrl.substring(0, 100)}...`, // URLの先頭のみ表示
-               position: currentPosition,
-               resultsCount: analysisResult.length,
-               duration: audioData.duration,
-            })
 
             // 永続化ピンを作成
             await createPersistentPin(
@@ -244,10 +215,9 @@ export const usePinPlacement = () => {
                audioData.duration,
             )
 
-            console.log("✅ ピン配置成功")
             return { success: true }
          } catch (error) {
-            console.error("❌ ピン配置エラー:", error)
+            console.error("ピン配置エラー:", error)
             return {
                success: false,
                error: error instanceof Error ? error.message : "不明なエラー",

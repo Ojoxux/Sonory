@@ -44,14 +44,14 @@ export function Providers({ children }: PropsWithChildren) {
    // （API 側が optionalAuth）、書き込み系だけが 401 になる。
    useEffect(() => {
       ensureAnonymousSession().catch((error) => {
-         console.error("❌ 匿名サインイン初期化エラー:", error)
+         console.error("匿名サインイン初期化エラー:", error)
       })
    }, [])
 
    // 通知機能の初期化
    useEffect(() => {
       initializeNotifications().catch((error) => {
-         console.error("❌ 通知機能初期化エラー:", error)
+         console.error("通知機能初期化エラー:", error)
       })
    }, [])
 
