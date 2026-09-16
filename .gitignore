@@ -206,7 +206,6 @@ secrets/*.txt
 secrets/*.key
 secrets/*.pem
 !secrets/.gitkeep
-!secrets/README.md
 
 
 # =============================================================================

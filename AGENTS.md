@@ -118,20 +118,24 @@ npx supabase db dump --db-url "$SUPABASE_DB_URL" -f /tmp/dump.sql
 既存コードのコメント率は **5〜25%**。
 
 - TSDoc はエクスポートする関数・型にのみ。内部ヘルパーには不要
-- **SQL ファイルは先頭に「何をするものか」を一文だけ。** 経緯は README に書く
-- **同じ説明を複数ファイルに書かない。** 経緯は README、構造は `schema.sql`、
-  個別の非自明な判断だけコードに
+- **SQL ファイルは先頭に「何をするものか」を一文だけ**
+- **同じ説明を複数ファイルに書かない**
+- **README を作らない。** 開発上の知識はこのファイルに集約する
 - そのファイルを読まないと分からないことだけ書く
 
 > **事故:** 実質33行の SQL に62行のコメントを書き、同じ経緯を3箇所に重複させた。
 
 ## 環境変数の置き場所を間違えない
 
-| ファイル              | 読むもの                      |
-| --------------------- | ----------------------------- |
-| `apps/web/.env.local` | Next.js（`NEXT_PUBLIC_*`）    |
-| `apps/api/.dev.vars`  | wrangler（`SUPABASE_*` など） |
-| ルート `.env`         | docker compose のみ           |
+| ファイル              | 読むもの                        |
+| --------------------- | ------------------------------- |
+| `apps/web/.env.local` | Next.js（`NEXT_PUBLIC_*`）      |
+| `apps/api/.dev.vars`  | wrangler（`SUPABASE_*` など）   |
+| `apps/api/.env.db`    | `supabase db dump` の接続文字列 |
+| ルート `.env`         | docker compose のみ             |
+
+いずれも隣の `.example` をコピーして作る。`.env.db` は例が無いので
+`SUPABASE_DB_URL=` の1行を書く（Session pooler、ポート 5432）。
 
 `next dev` は `apps/web` を cwd に起動するため、**ルートの `.env` は Next.js に届かない。**
 
@@ -243,3 +247,6 @@ npm run start:frontend   # next dev :3000
 curl -X POST http://localhost:8787/api/audio/internal/process-queue \
   -H 'Host: scheduled.sonory.internal' -H 'x-sonory-scheduled: true'
 ```
+
+`wrangler dev` で HTTPS の fetch だけが `internal error; reference = ...` で失敗する場合、
+workerd が CA 証明書を見つけられていない（NixOS 等）。`SSL_CERT_FILE` を設定する。
