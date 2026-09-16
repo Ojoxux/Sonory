@@ -22,7 +22,7 @@
 
 ## ローカル起動
 
-Node.js 22、Docker、Supabase プロジェクト（匿名サインインを有効化）が必要です。
+Node.js 22、起動済みの Docker、Supabase プロジェクト（匿名サインインを有効化）が必要です。
 
 ```bash
 npm install
@@ -32,11 +32,13 @@ cp apps/api/.dev.vars.example apps/api/.dev.vars
 cp apps/web/.env.example apps/web/.env.local
 # それぞれに Supabase の URL とキーを設定する
 
-npm run start:all
+npm run start:all   # audio-analyzer と Redis のコンテナも起動する（初回はビルドに時間がかかる）
 ```
 
 - Web: http://localhost:3000
 - API: http://localhost:8787
 - Audio Analyzer: http://localhost:8000
+
+コンテナは Ctrl+C では止まらないので、終了時は `npm run stop:all` を実行します。
 
 開発のルールと詳細は [AGENTS.md](./AGENTS.md) を参照してください。
