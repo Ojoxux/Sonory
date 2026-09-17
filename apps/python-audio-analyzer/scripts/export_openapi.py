@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """FastAPI OpenAPI Spec を packages/shared-types/openapi/ に書き出す。"""
 
 from __future__ import annotations

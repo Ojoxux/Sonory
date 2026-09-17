@@ -8,11 +8,12 @@ AudioSetの521クラスを日本語12カテゴリに変換し、環境タイプ�
 import asyncio
 import os
 import tempfile
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Any, ClassVar
+
 import numpy as np
+import structlog
 import tensorflow as tf
 import tensorflow_hub as hub
-import structlog
 
 logger = structlog.get_logger(__name__)
 
@@ -56,7 +57,7 @@ def setup_tensorflow_hub_cache():
                 f.write("test")
             os.remove(test_file)
         except Exception as e:
-            raise RuntimeError(f"Cache directory not writable: {e}")
+            raise RuntimeError(f"Cache directory not writable: {e}") from e
 
         # 環境変数を設定
         os.environ["TFHUB_CACHE_DIR"] = cache_dir
@@ -68,7 +69,7 @@ def setup_tensorflow_hub_cache():
         os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"  # INFO以上のログを表示
 
         return cache_dir
-    except Exception:
+    except Exception:  # noqa: BLE001
         # フォールバック：システムの一時ディレクトリを使用
         fallback_dir = tempfile.mkdtemp(prefix="tfhub_cache_")
         os.environ["TFHUB_CACHE_DIR"] = fallback_dir
@@ -88,7 +89,7 @@ class YAMNetClassifier:
     """
 
     # AudioSetクラスから日本語カテゴリへのマッピング
-    AUDIOSET_TO_JAPANESE = {
+    AUDIOSET_TO_JAPANESE: ClassVar[dict[str, str]] = {
         # 交通関連
         "Motor vehicle (road)": "車の音",
         "Car": "車の音",
@@ -201,7 +202,7 @@ class YAMNetClassifier:
     }
 
     # 環境タイプ分類のためのキーワード
-    ENVIRONMENT_KEYWORDS = {
+    ENVIRONMENT_KEYWORDS: ClassVar[dict[str, list[str]]] = {
         "urban": [
             "Motor vehicle",
             "Car",
@@ -324,7 +325,7 @@ class YAMNetClassifier:
 
         except Exception as e:
             logger.error("Failed to initialize YAMNet model", error=str(e))
-            raise RuntimeError(f"YAMNet initialization failed: {e}")
+            raise RuntimeError(f"YAMNet initialization failed: {e}") from e
 
     def _load_model_with_retry(self) -> Any:
         """モデルを再試行機能付きで読み込み"""
@@ -348,7 +349,7 @@ class YAMNetClassifier:
 
                 time.sleep(2**attempt)  # 指数バックオフ
 
-    def _load_class_names(self, class_map_path: str) -> List[str]:
+    def _load_class_names(self, class_map_path: str) -> list[str]:
         """
         クラス名リストを読み込み
 
@@ -397,7 +398,7 @@ class YAMNetClassifier:
 
     def classify_audio(
         self, audio_waveform: np.ndarray, sample_rate: int = 16000, top_k: int = 5
-    ) -> Tuple[List[Dict[str, float]], Dict[str, float], str]:
+    ) -> tuple[list[dict[str, float]], dict[str, float], str]:
         """
         音声の分類を実行
 
@@ -510,11 +511,11 @@ class YAMNetClassifier:
 
         except Exception as e:
             logger.error("Audio classification failed", error=str(e))
-            raise RuntimeError(f"Classification failed: {e}")
+            raise RuntimeError(f"Classification failed: {e}") from e
 
     def _convert_to_japanese(
-        self, class_names: List[str], scores: np.ndarray
-    ) -> List[Dict[str, Any]]:
+        self, class_names: list[str], scores: np.ndarray
+    ) -> list[dict[str, Any]]:
         """
         AudioSetクラスを日本語カテゴリに変換
 
@@ -525,7 +526,7 @@ class YAMNetClassifier:
         Returns:
             日本語カテゴリと信頼度のリスト（100%ベースに正規化）
         """
-        japanese_categories: Dict[str, float] = {}
+        japanese_categories: dict[str, float] = {}
         unmapped_classes = []
 
         # デバッグ: 検出されたAudioSetクラスをログ出力
@@ -582,8 +583,7 @@ class YAMNetClassifier:
             # 合計が0の場合は均等に分配
             num_categories = len(japanese_categories)
             normalized_categories = {
-                category: 1.0 / num_categories
-                for category in japanese_categories.keys()
+                category: 1.0 / num_categories for category in japanese_categories
             }
 
         # 信頼度順にソート
@@ -616,7 +616,7 @@ class YAMNetClassifier:
 
         return result
 
-    def _find_japanese_category(self, audioset_class: str) -> Optional[str]:
+    def _find_japanese_category(self, audioset_class: str) -> str | None:
         """
         AudioSetクラス名から対応する日本語カテゴリを検索
 
@@ -718,8 +718,8 @@ class YAMNetClassifier:
         return None
 
     def _estimate_environment_type(
-        self, class_names: List[str], scores: np.ndarray
-    ) -> Tuple[Dict[str, float], str]:
+        self, class_names: list[str], scores: np.ndarray
+    ) -> tuple[dict[str, float], str]:
         """
         環境タイプを推定
 
@@ -748,7 +748,7 @@ class YAMNetClassifier:
         else:
             # スコアがすべて0の場合は均等に分配
             num_env_types = len(env_scores)
-            env_scores = {k: 1.0 / num_env_types for k in env_scores.keys()}
+            env_scores = {k: 1.0 / num_env_types for k in env_scores}
 
         # 主要環境タイプを決定
         primary_env = max(env_scores.items(), key=lambda x: x[1])[0]
@@ -785,7 +785,7 @@ class YAMNetManager:
 
     def __init__(self):
         """YAMNetManagerを初期化"""
-        self.classifier: Optional[YAMNetClassifier] = None
+        self.classifier: YAMNetClassifier | None = None
         self._initialized = False
 
     async def initialize(self) -> None:
@@ -808,7 +808,7 @@ class YAMNetManager:
 
         except Exception as e:
             logger.error("YAMNetManager initialization failed", error=str(e))
-            raise RuntimeError(f"YAMNetManager initialization failed: {e}")
+            raise RuntimeError(f"YAMNetManager initialization failed: {e}") from e
 
     def get_classifier(self) -> YAMNetClassifier:
         """

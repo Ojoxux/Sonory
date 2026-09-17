@@ -5,17 +5,19 @@ Audio preprocessing pipeline for YAMNet inference.
 音声ファイル読み込み、サンプリングレート正規化、YAMNet形式変換を行います。
 """
 
-import tempfile
+import asyncio
 import subprocess
-from typing import Optional, Tuple, Union
+import tempfile
 from pathlib import Path
-import numpy as np
-import librosa
-import soundfile as sf
+from typing import ClassVar
+
+import ffmpeg
 import httpx
+import librosa
+import numpy as np
+import soundfile as sf
 import structlog
 from pydantic import BaseModel, Field
-import ffmpeg
 
 logger = structlog.get_logger(__name__)
 
@@ -30,8 +32,8 @@ class AudioMetadata(BaseModel):
     duration: float = Field(..., description="音声長さ（秒）")
     sample_rate: int = Field(..., description="サンプリングレート（Hz）")
     channels: int = Field(..., description="チャンネル数")
-    format: Optional[str] = Field(None, description="音声フォーマット")
-    file_size: Optional[int] = Field(None, description="ファイルサイズ（バイト）")
+    format: str | None = Field(None, description="音声フォーマット")
+    file_size: int | None = Field(None, description="ファイルサイズ（バイト）")
 
 
 class ProcessedAudio(BaseModel):
@@ -63,7 +65,14 @@ class AudioProcessor:
     MIN_DURATION = 9.0  # 秒（短すぎる音声の制限、タイマー精度を考慮）
 
     # サポートする音声フォーマット
-    SUPPORTED_FORMATS = {".wav", ".mp3", ".webm", ".m4a", ".flac", ".ogg"}
+    SUPPORTED_FORMATS: ClassVar[set[str]] = {
+        ".wav",
+        ".mp3",
+        ".webm",
+        ".m4a",
+        ".flac",
+        ".ogg",
+    }
 
     def __init__(self, timeout: float = 30.0):
         """
@@ -132,13 +141,13 @@ class AudioProcessor:
 
             except Exception as e:
                 logger.error("Unexpected error processing audio from URL", error=str(e))
-                raise RuntimeError(f"Audio processing failed: {e}")
+                raise RuntimeError(f"Audio processing failed: {e}") from e
 
         # この行に到達することはないが、型チェッカーのために追加
         raise RuntimeError("Unexpected end of retry loop")
 
     async def process_audio_from_bytes(
-        self, audio_bytes: bytes, filename_hint: Optional[str] = None
+        self, audio_bytes: bytes, filename_hint: str | None = None
     ) -> ProcessedAudio:
         """
         バイナリデータから音声を処理
@@ -182,19 +191,17 @@ class AudioProcessor:
 
         except Exception as e:
             logger.error("Audio processing from bytes failed", error=str(e))
-            raise RuntimeError(f"Audio processing failed: {e}")
+            raise RuntimeError(f"Audio processing failed: {e}") from e
         finally:
             # 一時ファイルをクリーンアップ
             try:
                 Path(temp_file.name).unlink(missing_ok=True)
             except OSError as e:
                 logger.warning(f"Failed to cleanup temp file: {e}")
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.error(f"Unexpected error during temp file cleanup: {e}")
 
-    async def process_audio_from_file(
-        self, file_path: Union[str, Path]
-    ) -> ProcessedAudio:
+    async def process_audio_from_file(self, file_path: str | Path) -> ProcessedAudio:
         """
         ファイルパスから音声を処理
 
@@ -268,7 +275,7 @@ class AudioProcessor:
 
         except Exception as e:
             logger.error("Audio file processing failed", error=str(e))
-            raise RuntimeError(f"Audio processing failed: {e}")
+            raise RuntimeError(f"Audio processing failed: {e}") from e
 
     async def _convert_webm_to_wav(self, webm_path: Path) -> Path:
         """
@@ -303,8 +310,11 @@ class AudioProcessor:
 
                 # ffmpegバイナリの存在確認
                 try:
-                    subprocess.run(
-                        ["ffmpeg", "-version"], check=True, capture_output=True
+                    await asyncio.to_thread(
+                        subprocess.run,
+                        ["ffmpeg", "-version"],
+                        check=True,
+                        capture_output=True,
                     )
                 except (subprocess.CalledProcessError, FileNotFoundError):
                     logger.error(
@@ -342,7 +352,7 @@ class AudioProcessor:
             raise RuntimeError(f"WebM to WAV conversion failed: {e}")
         except Exception as e:
             logger.error("Unexpected error in WebM conversion", error=str(e))
-            raise RuntimeError(f"WebM conversion failed: {e}")
+            raise RuntimeError(f"WebM conversion failed: {e}") from e
 
     def _validate_audio_data(
         self, waveform: np.ndarray, metadata: AudioMetadata
@@ -386,7 +396,7 @@ class AudioProcessor:
 
     def _preprocess_for_yamnet(
         self, waveform: np.ndarray, original_sr: int
-    ) -> Tuple[np.ndarray, dict]:
+    ) -> tuple[np.ndarray, dict]:
         """
         YAMNet用に音声を前処理
 
@@ -446,7 +456,7 @@ class AudioProcessor:
 
         return waveform, processing_info
 
-    def _extract_filename_from_url(self, url: str) -> Optional[str]:
+    def _extract_filename_from_url(self, url: str) -> str | None:
         """
         URLからファイル名を抽出
 
@@ -462,11 +472,11 @@ class AudioProcessor:
             parsed = urlparse(url)
             filename = Path(parsed.path).name
             return filename if filename else None
-        except Exception:
+        except ValueError:
             return None
 
     def _determine_file_extension(
-        self, filename_hint: Optional[str], audio_bytes: bytes
+        self, filename_hint: str | None, audio_bytes: bytes
     ) -> str:
         """
         ファイル拡張子を決定
@@ -487,7 +497,7 @@ class AudioProcessor:
         # バイナリデータからフォーマットを推定
         if audio_bytes.startswith(b"RIFF"):
             return ".wav"
-        elif audio_bytes.startswith(b"\xff\xfb") or audio_bytes.startswith(b"\xff\xf3"):
+        elif audio_bytes.startswith((b"\xff\xfb", b"\xff\xf3")):
             return ".mp3"
         elif b"webm" in audio_bytes[:100].lower():
             return ".webm"
