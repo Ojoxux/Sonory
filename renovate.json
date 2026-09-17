@@ -69,12 +69,17 @@
       {
          "matchManagers": ["github-actions"],
          "matchUpdateTypes": ["minor", "patch", "digest", "pinDigest"],
-         "groupName": "github actions",
+         "groupName": "github actions"
+      },
+      {
+         "matchManagers": ["github-actions"],
+         "matchUpdateTypes": ["minor", "patch"],
          "automerge": true,
          "minimumReleaseAge": "14 days"
       },
       {
-         "matchUpdateTypes": ["digest", "pinDigest"],
+         "description": "SHA 固定にはリリース日時が無いので minimumReleaseAge を付けない（付けると永久に pending になる）",
+         "matchUpdateTypes": ["pinDigest"],
          "automerge": true
       },
       {
