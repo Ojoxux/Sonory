@@ -43,7 +43,7 @@ export const useIntegratedPins = (bounds: MapBounds | null) => {
 
    // 周辺ピンを取得するフックを使用
    const nearbyPinsResult = useNearbyPins({
-      bounds: bounds || { north: 0, south: 0, east: 0, west: 0 },
+      bounds,
       limit: 50,
       categories: undefined,
    })
