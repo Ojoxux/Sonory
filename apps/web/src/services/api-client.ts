@@ -6,7 +6,7 @@
  * 全リクエストに付与し、401 のときだけ再認証して1回リトライする。
  */
 
-import { getAccessToken, reauthenticateAnonymously } from "./supabase"
+import { getAccessToken, reauthenticate } from "./supabase"
 
 /** リクエスト設定。headers は Headers インスタンスだと展開できないため object に限定する */
 type RequestConfig = RequestInit & { headers?: Record<string, string> }
@@ -72,7 +72,7 @@ async function fetchWithAuth(
       return response
    }
 
-   const refreshed = await tokenOrNull(reauthenticateAnonymously)
+   const refreshed = await tokenOrNull(reauthenticate)
    return refreshed ? send(refreshed) : response
 }
 

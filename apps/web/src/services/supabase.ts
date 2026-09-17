@@ -37,7 +37,9 @@ export function getSupabaseClient(): SupabaseClient {
       auth: {
          persistSession: true,
          autoRefreshToken: true,
-         detectSessionInUrl: false,
+         // Google から戻ったときの認証結果（code）をURLから受け取るために必要
+         flowType: "pkce",
+         detectSessionInUrl: true,
       },
    })
 
@@ -85,11 +87,83 @@ export async function getAccessToken(): Promise<string | null> {
 }
 
 /**
- * 匿名サインインをやり直して新しいトークンを得る
+ * Google アカウントとの連携を開始する（現在の匿名ユーザーに紐付け）
  *
- * @returns 新しいアクセストークン。失敗した場合は `null`
+ * @returns エラーメッセージ。成功時（ブラウザがリダイレクトされる）は `null`
  */
-export async function reauthenticateAnonymously(): Promise<string | null> {
-   const session = await ensureAnonymousSession(true)
-   return session?.access_token ?? null
+export async function linkGoogleAccount(): Promise<string | null> {
+   const { error } = await getSupabaseClient().auth.linkIdentity({
+      provider: "google",
+      options: { redirectTo: window.location.origin },
+   })
+
+   if (error) {
+      console.error("Google連携の開始に失敗しました:", error)
+      return error.message
+   }
+
+   return null
+}
+
+/**
+ * 連携済みの Google アカウントでサインインする（別端末からのログイン用）
+ *
+ * @returns エラーメッセージ。成功時（ブラウザがリダイレクトされる）は `null`
+ */
+export async function signInWithGoogle(): Promise<string | null> {
+   const { error } = await getSupabaseClient().auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin },
+   })
+
+   if (error) {
+      console.error("Googleサインインの開始に失敗しました:", error)
+      return error.message
+   }
+
+   return null
+}
+
+/**
+ * サインアウトし、新しい匿名セッションに戻す
+ *
+ * @returns 新しい匿名セッション。作成に失敗した場合は `null`
+ */
+export async function signOutToAnonymous(): Promise<Session | null> {
+   // 既定の global だと、同じアカウントでログインしている全端末からログアウトされる
+   const { error } = await getSupabaseClient().auth.signOut({ scope: "local" })
+   if (error) {
+      console.error("ログアウトに失敗しました:", error)
+   }
+   return ensureAnonymousSession()
+}
+
+/**
+ * 401 からの再認証
+ *
+ * @description
+ * まず `refreshSession` を試す。失敗した場合、現在のユーザーが匿名か
+ * セッションが無いときだけ新しい匿名ユーザーを作る。Google 連携済みの
+ * ユーザーで refresh が失敗しても、黙って別ユーザーに差し替えない。
+ *
+ * @returns 新しいアクセストークン。作り直さない/失敗した場合は `null`
+ */
+export async function reauthenticate(): Promise<string | null> {
+   const supabase = getSupabaseClient()
+
+   // refresh に失敗するとセッションが消えるため、判定用のユーザーは先に取っておく
+   const { data: before } = await supabase.auth.getSession()
+   const userBefore = before.session?.user ?? null
+
+   const { data, error } = await supabase.auth.refreshSession()
+   if (!error && data.session) {
+      return data.session.access_token
+   }
+
+   if (userBefore === null || userBefore.is_anonymous === true) {
+      const session = await ensureAnonymousSession(true)
+      return session?.access_token ?? null
+   }
+
+   return null
 }

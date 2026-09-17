@@ -2,6 +2,7 @@
 
 import { Sheet } from "react-modal-sheet"
 import { SettingToggle } from "@/components/atoms/SettingToggle"
+import { AccountSection } from "@/components/molecules/AccountSection"
 import { MAX_DISTANCE_OPTIONS } from "./constants"
 import type { SettingsSheetProps } from "./types"
 import { useSettingsSheet } from "./useSettingsSheet"
@@ -28,6 +29,12 @@ export function SettingsSheet({ isOpen, onClose }: SettingsSheetProps) {
       handleToggleVibration,
       handleMaxDistanceChange,
       handleToggleDebugMode,
+      isAnonymous,
+      email,
+      isAccountBusy,
+      handleLinkGoogle,
+      handleSignInWithGoogle,
+      handleSignOut,
    } = useSettingsSheet()
 
    if (!isMounted) {
@@ -53,6 +60,15 @@ export function SettingsSheet({ isOpen, onClose }: SettingsSheetProps) {
 
             <Sheet.Content className="bg-transparent!">
                <div className="space-y-6 px-6 pb-6">
+                  <AccountSection
+                     isAnonymous={isAnonymous}
+                     email={email}
+                     isBusy={isAccountBusy}
+                     onLink={handleLinkGoogle}
+                     onSignIn={handleSignInWithGoogle}
+                     onSignOut={handleSignOut}
+                  />
+
                   <section className="space-y-3">
                      <h3 className="font-semibold text-lg text-white">通知</h3>
 

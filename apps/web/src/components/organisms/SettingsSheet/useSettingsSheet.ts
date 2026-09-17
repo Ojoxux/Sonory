@@ -2,6 +2,12 @@
 
 import { useCallback, useState } from "react"
 import { useIsMounted } from "@/hooks/useIsMounted"
+import {
+   linkGoogleAccount,
+   signInWithGoogle,
+   signOutToAnonymous,
+} from "@/services/supabase"
+import { useAuthStore } from "@/store/useAuthStore"
 import { useDebugStore } from "@/store/useDebugStore"
 import type { NotificationSettings } from "@/store/useRealtimeStore"
 import { useRealtimeStore } from "@/store/useRealtimeStore"
@@ -31,6 +37,12 @@ export function useSettingsSheet(): {
    handleToggleVibration: () => void
    handleMaxDistanceChange: (value: number) => void
    handleToggleDebugMode: () => void
+   isAnonymous: boolean
+   email: string | null
+   isAccountBusy: boolean
+   handleLinkGoogle: () => Promise<void>
+   handleSignInWithGoogle: () => Promise<void>
+   handleSignOut: () => Promise<void>
 } {
    const isMounted = useIsMounted()
    // SSR では Notification API が無いため "default"。クライアントの初回レンダーで
@@ -45,6 +57,8 @@ export function useSettingsSheet(): {
    const { notificationSettings, updateNotificationSettings } =
       useRealtimeStore()
    const { debugMode, toggleDebugMode } = useDebugStore()
+   const { isAnonymous, email } = useAuthStore()
+   const [isAccountBusy, setIsAccountBusy] = useState(false)
 
    const handleToggleEnabled = useCallback(async (): Promise<void> => {
       if (notificationSettings.enabled) {
@@ -85,6 +99,35 @@ export function useSettingsSheet(): {
       toggleDebugMode()
    }, [toggleDebugMode])
 
+   // 成功時はブラウザが Google へ遷移するので、busy を戻すのは失敗したときだけ
+   const startOAuth = useCallback(
+      async (start: () => Promise<string | null>): Promise<void> => {
+         setIsAccountBusy(true)
+         const error = await start()
+         if (error) {
+            showErrorToast("Google アカウントでの認証を開始できませんでした")
+            setIsAccountBusy(false)
+         }
+      },
+      [],
+   )
+
+   const handleLinkGoogle = useCallback(
+      (): Promise<void> => startOAuth(linkGoogleAccount),
+      [startOAuth],
+   )
+
+   const handleSignInWithGoogle = useCallback(
+      (): Promise<void> => startOAuth(signInWithGoogle),
+      [startOAuth],
+   )
+
+   const handleSignOut = useCallback(async (): Promise<void> => {
+      setIsAccountBusy(true)
+      await signOutToAnonymous()
+      setIsAccountBusy(false)
+   }, [])
+
    return {
       isMounted,
       notificationSettings,
@@ -95,5 +138,11 @@ export function useSettingsSheet(): {
       handleToggleVibration,
       handleMaxDistanceChange,
       handleToggleDebugMode,
+      isAnonymous,
+      email,
+      isAccountBusy,
+      handleLinkGoogle,
+      handleSignInWithGoogle,
+      handleSignOut,
    }
 }
