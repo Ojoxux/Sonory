@@ -14,6 +14,10 @@ import { useLocationStorage } from "./hooks/useLocationStorage"
 import { useMapBoundsManager } from "./hooks/useMapBoundsManager"
 import { useMapboxInitialization } from "./hooks/useMapboxInitialization"
 import { useMapCentering } from "./hooks/useMapCentering"
+import {
+   getInitialCamera,
+   LAST_POSITION_STORAGE_KEY,
+} from "./utils/initialCamera"
 import { useMapControls } from "./hooks/useMapControls"
 import { useMapDebug } from "./hooks/useMapDebug"
 import { useMapEnvironment } from "./hooks/useMapEnvironment"
@@ -83,6 +87,14 @@ export const useIntegratedPins = (bounds: MapBounds | null) => {
 /**
  * MapComponent統合管理フック
  */
+function readLastPosition(): string | null {
+   try {
+      return localStorage.getItem(LAST_POSITION_STORAGE_KEY)
+   } catch {
+      return null
+   }
+}
+
 export function useMapComponent({
    onGeolocationReady,
    onReturnToLocationReady,
@@ -162,6 +174,13 @@ export function useMapComponent({
       }
       return null
    }, [mapboxPosition, customPosition, savedPosition])
+
+   // 次に開いたときの初期位置に使う。ブラウザの位置監視で取れた分も保存する
+   useEffect(() => {
+      if (customPosition && isValidPosition(customPosition)) {
+         savePosition(customPosition)
+      }
+   }, [customPosition, savePosition])
 
    // 位置情報の状態を管理
    const positionState = useMemo(
@@ -283,10 +302,7 @@ export function useMapComponent({
          const mapOptions: MapboxMapOptions = {
             container: mapContainerRef.current,
             style: "mapbox://styles/mapbox/standard",
-            center: [139.6917, 35.6895], // 東京駅
-            zoom: 16,
-            pitch: 45,
-            bearing: -20,
+            ...getInitialCamera(readLastPosition()),
             antialias: true,
             // Standard Style の初期設定（現在時刻に基づく）
             config: {

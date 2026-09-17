@@ -69,10 +69,12 @@ export function useMapCentering({
          !userInteractionRef.current || timeSinceLastInteraction > 30000
 
       if (!hasInitialPositionSet.current) {
-         map.jumpTo({
+         map.flyTo({
             center: [position.longitude, position.latitude],
             zoom: 18,
             pitch: 50,
+            essential: true,
+            duration: 2500,
          })
          hasInitialPositionSet.current = true
       } else if (shouldAutoCenter) {
