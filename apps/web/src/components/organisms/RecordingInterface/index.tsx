@@ -1,6 +1,6 @@
 "use client"
 
-import { AnimatePresence, motion } from "framer-motion"
+import { AnimatePresence, motion } from "motion/react"
 import { RecordingExpandedDisplay } from "../../molecules/RecordingExpandedDisplay"
 import { RecordingInitialState } from "../../molecules/RecordingInitialState"
 import { RecordingInstructions } from "../../molecules/RecordingInstructions"

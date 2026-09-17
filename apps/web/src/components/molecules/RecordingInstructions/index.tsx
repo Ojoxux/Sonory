@@ -1,6 +1,6 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion } from "motion/react"
 import { ConfirmButton } from "../../atoms/ConfirmButton"
 import { MicPermissionToggle } from "../../atoms/MicPermissionToggle"
 import { ConfirmationComplete } from "../ConfirmationComplete"

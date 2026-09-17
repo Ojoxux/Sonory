@@ -1,6 +1,6 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion } from "motion/react"
 import { MdMic } from "react-icons/md"
 import type { RecordingInitialStateProps } from "./types"
 

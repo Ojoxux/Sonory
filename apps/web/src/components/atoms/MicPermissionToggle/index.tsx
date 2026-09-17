@@ -1,6 +1,6 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion } from "motion/react"
 import { MIC_PERMISSION_DESCRIPTIONS } from "./constants"
 import type { MicPermissionToggleProps } from "./types"
 

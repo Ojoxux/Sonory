@@ -15,7 +15,7 @@
 
 "use client"
 
-import { motion } from "framer-motion"
+import { motion } from "motion/react"
 import { memo } from "react"
 import { HiMiniSpeakerWave } from "react-icons/hi2"
 import type { ClusterBadgeProps, ClusterBadgeSize } from "./types"

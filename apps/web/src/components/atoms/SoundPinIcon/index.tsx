@@ -1,6 +1,6 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion } from "motion/react"
 import type { ReactElement } from "react"
 import { SvgIcon } from "./SvgIcon"
 import type { SoundPinIconProps } from "./types"

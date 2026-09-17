@@ -1,4 +1,4 @@
-import { motion } from "framer-motion"
+import { motion } from "motion/react"
 import { MdPause, MdPlayArrow } from "react-icons/md"
 import type { PlaybackControlsProps } from "./types"
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { motion, useMotionValue, useTransform } from "framer-motion"
+import { motion, useMotionValue, useTransform } from "motion/react"
 import { useEffect, useRef, useState } from "react"
 import { MdArrowForward } from "react-icons/md"
 import { DropRippleEffect } from "../../atoms/DropRippleEffect"

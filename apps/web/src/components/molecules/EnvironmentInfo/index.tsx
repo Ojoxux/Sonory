@@ -1,6 +1,6 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion } from "motion/react"
 import { MdPublic } from "react-icons/md"
 import type { EnvironmentInfoProps } from "./types"
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion } from "motion/react"
 import { MdStop } from "react-icons/md"
 import { PulseEffect } from "../../atoms/PulseEffect"
 import { WaveformDisplay } from "../WaveformDisplay"

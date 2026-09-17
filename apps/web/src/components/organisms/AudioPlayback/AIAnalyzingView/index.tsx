@@ -1,6 +1,6 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion } from "motion/react"
 import { Sheet } from "react-modal-sheet"
 import { AIAnalysisOrb } from "../../../atoms/AIAnalysisOrb"
 import type { AIAnalyzingViewProps } from "./types"

@@ -15,7 +15,7 @@
 
 "use client"
 
-import { motion } from "framer-motion"
+import { motion } from "motion/react"
 import type { ReactElement } from "react"
 import { FaBug, FaChevronDown, FaChevronUp } from "react-icons/fa"
 import { useInferenceStore } from "@/store/useInferenceStore"
