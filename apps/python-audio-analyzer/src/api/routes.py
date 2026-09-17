@@ -42,7 +42,7 @@ class AudioUploadRequest(BaseModel):
     top_k: int = Field(default=5, description="返却する上位分類結果数", ge=1, le=20)
 
     @validator("top_k")
-    def validate_top_k(cls, v):
+    def validate_top_k(cls, v: int) -> int:
         if not 1 <= v <= 20:
             raise ValueError("top_k must be between 1 and 20")
         return v
@@ -92,7 +92,8 @@ def get_audio_analyzer(request: Request) -> AudioAnalyzer:
     """
     if not hasattr(request.app.state, "audio_analyzer"):
         raise HTTPException(status_code=503, detail="Audio analyzer not initialized")
-    return request.app.state.audio_analyzer
+    analyzer: AudioAnalyzer = request.app.state.audio_analyzer
+    return analyzer
 
 
 @router.post(
@@ -332,7 +333,7 @@ async def get_analysis_stats(
 
 
 # エラーハンドラー（FastAPIアプリに追加される）
-async def http_exception_handler(request: Request, exc: Exception):
+async def http_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """
     HTTPExceptionの共通エラーハンドリング
 

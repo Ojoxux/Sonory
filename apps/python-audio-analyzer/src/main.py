@@ -128,7 +128,7 @@ app = create_app()
 
 
 @app.get("/health")
-async def health_check():
+async def health_check() -> dict[str, str]:
     """Health check endpoint."""
     return {"status": "healthy", "service": "sonory-audio-analyzer", "version": "0.1.0"}
 
