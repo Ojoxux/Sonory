@@ -10,8 +10,7 @@
 
 import { useCallback, useEffect, useState } from "react"
 import type { LocationData } from "../mapbox.types"
-
-const STORAGE_KEY = "sonory_last_position"
+import { LAST_POSITION_STORAGE_KEY as STORAGE_KEY } from "../utils/initialCamera"
 const POSITION_EXPIRY_HOURS = 24
 
 /**
