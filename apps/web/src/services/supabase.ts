@@ -130,7 +130,11 @@ export async function signInWithGoogle(): Promise<string | null> {
  * @returns 新しい匿名セッション。作成に失敗した場合は `null`
  */
 export async function signOutToAnonymous(): Promise<Session | null> {
-   await getSupabaseClient().auth.signOut()
+   // 既定の global だと、同じアカウントでログインしている全端末からログアウトされる
+   const { error } = await getSupabaseClient().auth.signOut({ scope: "local" })
+   if (error) {
+      console.error("ログアウトに失敗しました:", error)
+   }
    return ensureAnonymousSession()
 }
 

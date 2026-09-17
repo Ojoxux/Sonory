@@ -8,6 +8,10 @@ const auth = {
    getSession: vi.fn<() => Promise<SessionResult>>(),
    refreshSession: vi.fn<() => Promise<AuthResult>>(),
    signInAnonymously: vi.fn<() => Promise<AuthResult>>(),
+   signOut:
+      vi.fn<
+         (options?: { scope: string }) => Promise<{ error: Error | null }>
+      >(),
 }
 
 vi.mock("@supabase/supabase-js", () => ({
@@ -16,6 +20,13 @@ vi.mock("@supabase/supabase-js", () => ({
 
 function session(token: string, isAnonymous: boolean): FakeSession {
    return { access_token: token, user: { is_anonymous: isAnonymous } }
+}
+
+async function loadSupabase() {
+   vi.resetModules()
+   vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co")
+   vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon-key")
+   return import("./supabase")
 }
 
 async function loadReauthenticate() {
@@ -90,5 +101,33 @@ describe("reauthenticate", () => {
       const reauthenticate = await loadReauthenticate()
 
       expect(await reauthenticate()).toBe("new-anonymous")
+   })
+})
+
+describe("signOutToAnonymous", () => {
+   beforeEach(() => {
+      vi.clearAllMocks()
+      auth.signOut.mockResolvedValue({ error: null })
+      auth.getSession.mockResolvedValue({ data: { session: null } })
+      auth.signInAnonymously.mockResolvedValue({
+         data: { session: session("new-anonymous", true) },
+         error: null,
+      })
+   })
+
+   it("この端末だけログアウトし、他の端末のセッションは残す", async () => {
+      const { signOutToAnonymous } = await loadSupabase()
+
+      await signOutToAnonymous()
+
+      expect(auth.signOut).toHaveBeenCalledWith({ scope: "local" })
+   })
+
+   it("ログアウト後に匿名セッションを作り直す", async () => {
+      const { signOutToAnonymous } = await loadSupabase()
+
+      const result = await signOutToAnonymous()
+
+      expect(result?.access_token).toBe("new-anonymous")
    })
 })
