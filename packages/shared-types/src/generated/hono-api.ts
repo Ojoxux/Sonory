@@ -919,7 +919,6 @@ export interface paths {
                            accuracy?: number
                         }
                         audio: {
-                           url: string
                            duration: number
                            /** @enum {string} */
                            format:
@@ -1092,7 +1091,6 @@ export interface paths {
                            accuracy?: number
                         }
                         audio: {
-                           url: string
                            duration: number
                            /** @enum {string} */
                            format:
@@ -1262,7 +1260,6 @@ export interface paths {
                            accuracy?: number
                         }
                         audio: {
-                           url: string
                            duration: number
                            /** @enum {string} */
                            format:
@@ -1440,7 +1437,6 @@ export interface paths {
                            accuracy?: number
                         }
                         audio: {
-                           url: string
                            duration: number
                            /** @enum {string} */
                            format:
@@ -1607,7 +1603,6 @@ export interface paths {
                            accuracy?: number
                         }
                         audio: {
-                           url: string
                            duration: number
                            /** @enum {string} */
                            format:
@@ -1774,7 +1769,6 @@ export interface paths {
                            accuracy?: number
                         }
                         audio: {
-                           url: string
                            duration: number
                            /** @enum {string} */
                            format:
@@ -1944,7 +1938,6 @@ export interface paths {
                            accuracy?: number
                         }
                         audio: {
-                           url: string
                            duration: number
                            /** @enum {string} */
                            format:
@@ -2173,6 +2166,130 @@ export interface paths {
             }
          }
       }
+      options?: never
+      head?: never
+      patch?: never
+      trace?: never
+   }
+   "/api/pins/{id}/audio-url": {
+      parameters: {
+         query?: never
+         header?: never
+         path?: never
+         cookie?: never
+      }
+      /**
+       * 音声URL取得
+       * @description ピンの音声ファイルの署名付きURLを取得（1時間有効）
+       */
+      get: {
+         parameters: {
+            query?: never
+            header?: never
+            path: {
+               id: string
+            }
+            cookie?: never
+         }
+         requestBody?: never
+         responses: {
+            /** @description 音声の署名付きURL */
+            200: {
+               headers: {
+                  [name: string]: unknown
+               }
+               content: {
+                  "application/json": {
+                     /** @enum {boolean} */
+                     success: true
+                     data: {
+                        url: string
+                        expiresAt: string
+                     }
+                  }
+               }
+            }
+            /** @description リクエスト不正 */
+            400: {
+               headers: {
+                  [name: string]: unknown
+               }
+               content: {
+                  "application/json": {
+                     /** @enum {boolean} */
+                     success: false
+                     error: {
+                        code: string
+                        message: string
+                        details?: unknown
+                        timestamp: string
+                        requestId: string
+                     }
+                  }
+               }
+            }
+            /** @description 認証が必要 */
+            401: {
+               headers: {
+                  [name: string]: unknown
+               }
+               content: {
+                  "application/json": {
+                     /** @enum {boolean} */
+                     success: false
+                     error: {
+                        code: string
+                        message: string
+                        details?: unknown
+                        timestamp: string
+                        requestId: string
+                     }
+                  }
+               }
+            }
+            /** @description 対象が見つからない */
+            404: {
+               headers: {
+                  [name: string]: unknown
+               }
+               content: {
+                  "application/json": {
+                     /** @enum {boolean} */
+                     success: false
+                     error: {
+                        code: string
+                        message: string
+                        details?: unknown
+                        timestamp: string
+                        requestId: string
+                     }
+                  }
+               }
+            }
+            /** @description サーバーエラー */
+            500: {
+               headers: {
+                  [name: string]: unknown
+               }
+               content: {
+                  "application/json": {
+                     /** @enum {boolean} */
+                     success: false
+                     error: {
+                        code: string
+                        message: string
+                        details?: unknown
+                        timestamp: string
+                        requestId: string
+                     }
+                  }
+               }
+            }
+         }
+      }
+      put?: never
+      post?: never
+      delete?: never
       options?: never
       head?: never
       patch?: never

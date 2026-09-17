@@ -10,6 +10,7 @@ import type {
    HonoFormRequestBody,
    MapBounds,
    NearbyPinsResponse,
+   PinAudioUrlResponse,
    WeatherData,
 } from "@sonory/shared-types"
 import type { PinApiResponse } from "../domain/pin-types"
@@ -120,6 +121,27 @@ export async function fetchNearbyPins(
    })
 
    return client.get<NearbyPinsResponse>(`/api/pins/nearby?${params}`)
+}
+
+/**
+ * ピンの音声URLを取得（再生時に呼ぶ）
+ *
+ * @param pinId - 対象ピンID
+ * @param client - APIクライアント（テスト時に差し替え可能）
+ */
+export async function fetchPinAudioUrl(
+   pinId: string,
+   client: ApiClient = defaultApiClient,
+): Promise<string> {
+   const result = await client.get<PinAudioUrlResponse>(
+      `/api/pins/${pinId}/audio-url`,
+   )
+
+   if (!result.success) {
+      throw new Error("音声URLの取得結果が不正です")
+   }
+
+   return result.data.url
 }
 
 /**

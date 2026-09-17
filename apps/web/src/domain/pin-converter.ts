@@ -24,6 +24,9 @@ function normalizeWeather(weather: DbPin["weather"]): WeatherData | undefined {
 
 /**
  * APIレスポンスをSoundPinに変換
+ *
+ * 一覧・作成レスポンスから audio.url は廃止したため、audioData.url は設定しない。
+ * 再生時に PinAudioPlayer が fetchPinAudioUrl で取得する
  */
 export function convertApiResponseToPin(
    result: PinApiResponse,
@@ -41,7 +44,6 @@ export function convertApiResponseToPin(
       longitude: result.data.location.lng,
       audioData: {
          blob: new Blob(),
-         url: result.data.audio.url,
          recordedAt: new Date(result.data.createdAt),
          id: result.data.id,
          duration,
@@ -101,7 +103,6 @@ export function convertDbPinToSoundPin(pin: DbPin): SoundPin {
       longitude: pin.location.lng,
       audioData: {
          blob: new Blob(),
-         url: pin.audio.url,
          recordedAt: new Date(pin.createdAt),
          id: pin.id,
       },

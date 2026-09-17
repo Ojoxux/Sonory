@@ -7,6 +7,7 @@ import {
    ERROR_CODES,
    type NearbyPinsQuery,
    NearbyPinsQueryParamsSchema,
+   PinAudioUrlSchema,
    ReportPinRequestSchema,
    type SearchPinsQuery,
    SearchPinsQueryParamsSchema,
@@ -206,6 +207,31 @@ const getPinByIdRoute = createRoute({
             },
          },
          description: "ピン詳細",
+      },
+      ...standardErrorResponses,
+   },
+})
+
+const getAudioUrlRoute = createRoute({
+   method: "get",
+   path: "/{id}/audio-url",
+   middleware: [rateLimits.getAudioUrl, optionalAuth],
+   tags: ["Pins"],
+   summary: "音声URL取得",
+   description: "ピンの音声ファイルの署名付きURLを取得（1時間有効）",
+   request: {
+      params: z.object({
+         id: z.string().uuid(),
+      }),
+   },
+   responses: {
+      200: {
+         content: {
+            "application/json": {
+               schema: ApiSuccessResponseSchema(PinAudioUrlSchema),
+            },
+         },
+         description: "音声の署名付きURL",
       },
       ...standardErrorResponses,
    },
@@ -560,6 +586,21 @@ app.openapi(getPinByIdRoute, async (c) => {
       {
          success: true as const,
          data: pin,
+      },
+      200,
+   )
+})
+
+app.openapi(getAudioUrlRoute, async (c) => {
+   const service = new PinService(c)
+   const { id } = c.req.valid("param")
+
+   const audio = await service.getAudioUrl(id)
+
+   return c.json(
+      {
+         success: true as const,
+         data: audio,
       },
       200,
    )

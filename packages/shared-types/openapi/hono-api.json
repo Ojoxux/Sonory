@@ -1860,9 +1860,6 @@
                                     "audio": {
                                        "type": "object",
                                        "properties": {
-                                          "url": {
-                                             "type": "string"
-                                          },
                                           "duration": {
                                              "type": "number"
                                           },
@@ -1880,7 +1877,6 @@
                                           }
                                        },
                                        "required": [
-                                          "url",
                                           "duration",
                                           "format"
                                        ]
@@ -2277,9 +2273,6 @@
                                     "audio": {
                                        "type": "object",
                                        "properties": {
-                                          "url": {
-                                             "type": "string"
-                                          },
                                           "duration": {
                                              "type": "number"
                                           },
@@ -2297,7 +2290,6 @@
                                           }
                                        },
                                        "required": [
-                                          "url",
                                           "duration",
                                           "format"
                                        ]
@@ -2740,9 +2732,6 @@
                                        "audio": {
                                           "type": "object",
                                           "properties": {
-                                             "url": {
-                                                "type": "string"
-                                             },
                                              "duration": {
                                                 "type": "number"
                                              },
@@ -2760,7 +2749,6 @@
                                              }
                                           },
                                           "required": [
-                                             "url",
                                              "duration",
                                              "format"
                                           ]
@@ -3237,9 +3225,6 @@
                                        "audio": {
                                           "type": "object",
                                           "properties": {
-                                             "url": {
-                                                "type": "string"
-                                             },
                                              "duration": {
                                                 "type": "number"
                                              },
@@ -3257,7 +3242,6 @@
                                              }
                                           },
                                           "required": [
-                                             "url",
                                              "duration",
                                              "format"
                                           ]
@@ -3643,9 +3627,6 @@
                                        "audio": {
                                           "type": "object",
                                           "properties": {
-                                             "url": {
-                                                "type": "string"
-                                             },
                                              "duration": {
                                                 "type": "number"
                                              },
@@ -3663,7 +3644,6 @@
                                              }
                                           },
                                           "required": [
-                                             "url",
                                              "duration",
                                              "format"
                                           ]
@@ -4047,9 +4027,6 @@
                                     "audio": {
                                        "type": "object",
                                        "properties": {
-                                          "url": {
-                                             "type": "string"
-                                          },
                                           "duration": {
                                              "type": "number"
                                           },
@@ -4067,7 +4044,6 @@
                                           }
                                        },
                                        "required": [
-                                          "url",
                                           "duration",
                                           "format"
                                        ]
@@ -4513,9 +4489,6 @@
                                     "audio": {
                                        "type": "object",
                                        "properties": {
-                                          "url": {
-                                             "type": "string"
-                                          },
                                           "duration": {
                                              "type": "number"
                                           },
@@ -4533,7 +4506,6 @@
                                           }
                                        },
                                        "required": [
-                                          "url",
                                           "duration",
                                           "format"
                                        ]
@@ -4890,6 +4862,257 @@
                                  },
                                  "required": [
                                     "deleted"
+                                 ]
+                              }
+                           },
+                           "required": [
+                              "success",
+                              "data"
+                           ]
+                        }
+                     }
+                  }
+               },
+               "400": {
+                  "description": "リクエスト不正",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "success": {
+                                 "type": "boolean",
+                                 "enum": [
+                                    false
+                                 ]
+                              },
+                              "error": {
+                                 "type": "object",
+                                 "properties": {
+                                    "code": {
+                                       "type": "string"
+                                    },
+                                    "message": {
+                                       "type": "string"
+                                    },
+                                    "details": {
+                                       "nullable": true
+                                    },
+                                    "timestamp": {
+                                       "type": "string"
+                                    },
+                                    "requestId": {
+                                       "type": "string"
+                                    }
+                                 },
+                                 "required": [
+                                    "code",
+                                    "message",
+                                    "timestamp",
+                                    "requestId"
+                                 ]
+                              }
+                           },
+                           "required": [
+                              "success",
+                              "error"
+                           ]
+                        }
+                     }
+                  }
+               },
+               "401": {
+                  "description": "認証が必要",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "success": {
+                                 "type": "boolean",
+                                 "enum": [
+                                    false
+                                 ]
+                              },
+                              "error": {
+                                 "type": "object",
+                                 "properties": {
+                                    "code": {
+                                       "type": "string"
+                                    },
+                                    "message": {
+                                       "type": "string"
+                                    },
+                                    "details": {
+                                       "nullable": true
+                                    },
+                                    "timestamp": {
+                                       "type": "string"
+                                    },
+                                    "requestId": {
+                                       "type": "string"
+                                    }
+                                 },
+                                 "required": [
+                                    "code",
+                                    "message",
+                                    "timestamp",
+                                    "requestId"
+                                 ]
+                              }
+                           },
+                           "required": [
+                              "success",
+                              "error"
+                           ]
+                        }
+                     }
+                  }
+               },
+               "404": {
+                  "description": "対象が見つからない",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "success": {
+                                 "type": "boolean",
+                                 "enum": [
+                                    false
+                                 ]
+                              },
+                              "error": {
+                                 "type": "object",
+                                 "properties": {
+                                    "code": {
+                                       "type": "string"
+                                    },
+                                    "message": {
+                                       "type": "string"
+                                    },
+                                    "details": {
+                                       "nullable": true
+                                    },
+                                    "timestamp": {
+                                       "type": "string"
+                                    },
+                                    "requestId": {
+                                       "type": "string"
+                                    }
+                                 },
+                                 "required": [
+                                    "code",
+                                    "message",
+                                    "timestamp",
+                                    "requestId"
+                                 ]
+                              }
+                           },
+                           "required": [
+                              "success",
+                              "error"
+                           ]
+                        }
+                     }
+                  }
+               },
+               "500": {
+                  "description": "サーバーエラー",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "success": {
+                                 "type": "boolean",
+                                 "enum": [
+                                    false
+                                 ]
+                              },
+                              "error": {
+                                 "type": "object",
+                                 "properties": {
+                                    "code": {
+                                       "type": "string"
+                                    },
+                                    "message": {
+                                       "type": "string"
+                                    },
+                                    "details": {
+                                       "nullable": true
+                                    },
+                                    "timestamp": {
+                                       "type": "string"
+                                    },
+                                    "requestId": {
+                                       "type": "string"
+                                    }
+                                 },
+                                 "required": [
+                                    "code",
+                                    "message",
+                                    "timestamp",
+                                    "requestId"
+                                 ]
+                              }
+                           },
+                           "required": [
+                              "success",
+                              "error"
+                           ]
+                        }
+                     }
+                  }
+               }
+            }
+         }
+      },
+      "/api/pins/{id}/audio-url": {
+         "get": {
+            "tags": [
+               "Pins"
+            ],
+            "summary": "音声URL取得",
+            "description": "ピンの音声ファイルの署名付きURLを取得（1時間有効）",
+            "parameters": [
+               {
+                  "schema": {
+                     "type": "string",
+                     "format": "uuid"
+                  },
+                  "required": true,
+                  "name": "id",
+                  "in": "path"
+               }
+            ],
+            "responses": {
+               "200": {
+                  "description": "音声の署名付きURL",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "success": {
+                                 "type": "boolean",
+                                 "enum": [
+                                    true
+                                 ]
+                              },
+                              "data": {
+                                 "type": "object",
+                                 "properties": {
+                                    "url": {
+                                       "type": "string"
+                                    },
+                                    "expiresAt": {
+                                       "type": "string"
+                                    }
+                                 },
+                                 "required": [
+                                    "url",
+                                    "expiresAt"
                                  ]
                               }
                            },
