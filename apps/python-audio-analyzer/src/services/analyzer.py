@@ -6,13 +6,14 @@ YAMNetClassifierとAudioProcessorを統合した音響分析サービス。
 """
 
 import time
-from typing import Dict, List, Optional, Union, Any
 from pathlib import Path
+from typing import Any
+
 import structlog
 from pydantic import BaseModel, Field
 
 from ..models.yamnet_wrapper import YAMNetManager
-from .audio_processor import AudioProcessor, ProcessedAudio, AudioMetadata
+from .audio_processor import AudioMetadata, AudioProcessor, ProcessedAudio
 
 logger = structlog.get_logger(__name__)
 
@@ -36,8 +37,8 @@ class EnvironmentAnalysis(BaseModel):
     """
 
     primary_type: str = Field(..., description="主要環境タイプ")
-    type_scores: Dict[str, float] = Field(..., description="環境タイプ別信頼度")
-    description: Optional[str] = Field(None, description="環境の説明")
+    type_scores: dict[str, float] = Field(..., description="環境タイプ別信頼度")
+    description: str | None = Field(None, description="環境の説明")
 
 
 class AnalysisResult(BaseModel):
@@ -47,13 +48,13 @@ class AnalysisResult(BaseModel):
     音響分析の完全な結果を表現します。
     """
 
-    classifications: List[ClassificationResult] = Field(
+    classifications: list[ClassificationResult] = Field(
         ..., description="分類結果リスト"
     )
     environment: EnvironmentAnalysis = Field(..., description="環境分析結果")
     audio_metadata: AudioMetadata = Field(..., description="音声メタデータ")
-    processing_info: Dict[str, Any] = Field(..., description="処理情報")
-    performance_metrics: Dict[str, float] = Field(..., description="パフォーマンス指標")
+    processing_info: dict[str, Any] = Field(..., description="処理情報")
+    performance_metrics: dict[str, float] = Field(..., description="パフォーマンス指標")
     timestamp: float = Field(default_factory=time.time, description="分析実行時刻")
 
 
@@ -131,10 +132,10 @@ class AudioAnalyzer:
         except Exception as e:
             self._analyzer_stats["failed_analyses"] += 1
             logger.error("Audio analysis failed", url=audio_url, error=str(e))
-            raise RuntimeError(f"Audio analysis failed: {e}")
+            raise RuntimeError(f"Audio analysis failed: {e}") from e
 
     async def analyze_audio_from_bytes(
-        self, audio_bytes: bytes, filename_hint: Optional[str] = None, top_k: int = 5
+        self, audio_bytes: bytes, filename_hint: str | None = None, top_k: int = 5
     ) -> AnalysisResult:
         """
         バイナリデータから音声を分析
@@ -188,10 +189,10 @@ class AudioAnalyzer:
         except Exception as e:
             self._analyzer_stats["failed_analyses"] += 1
             logger.error("Audio analysis from bytes failed", error=str(e))
-            raise RuntimeError(f"Audio analysis failed: {e}")
+            raise RuntimeError(f"Audio analysis failed: {e}") from e
 
     async def analyze_audio_from_file(
-        self, file_path: Union[str, Path], top_k: int = 5
+        self, file_path: str | Path, top_k: int = 5
     ) -> AnalysisResult:
         """
         ファイルから音声を分析
@@ -246,7 +247,7 @@ class AudioAnalyzer:
                 file_path=str(file_path),
                 error=str(e),
             )
-            raise RuntimeError(f"Audio analysis failed: {e}")
+            raise RuntimeError(f"Audio analysis failed: {e}") from e
 
     async def _perform_analysis(
         self, processed_audio: ProcessedAudio, top_k: int
@@ -310,10 +311,10 @@ class AudioAnalyzer:
 
         except Exception as e:
             logger.error("YAMNet analysis failed", error=str(e))
-            raise RuntimeError(f"YAMNet analysis failed: {e}")
+            raise RuntimeError(f"YAMNet analysis failed: {e}") from e
 
     def _generate_environment_description(
-        self, primary_env: str, env_scores: Dict[str, float]
+        self, primary_env: str, env_scores: dict[str, float]
     ) -> str:
         """
         環境タイプの説明を生成
@@ -347,7 +348,7 @@ class AudioAnalyzer:
 
         return base_description
 
-    def get_analyzer_stats(self) -> Dict[str, Any]:
+    def get_analyzer_stats(self) -> dict[str, Any]:
         """
         分析統計を取得
 
@@ -371,7 +372,7 @@ class AudioAnalyzer:
 
         return stats
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """
         サービスのヘルスチェック
 
@@ -392,7 +393,7 @@ class AudioAnalyzer:
             logger.info("Health check passed", health_info=health_info)
             return health_info
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             health_info = {
                 "status": "unhealthy",
                 "error": str(e),

@@ -6,13 +6,13 @@ POST /analyze/audio、GET /health、バリデーション、エラーハンド�
 """
 
 import time
-from typing import Optional
+
 import structlog
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Request, Depends
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, HttpUrl, validator
 
-from ..services.analyzer import AudioAnalyzer, AnalysisResult
+from ..services.analyzer import AnalysisResult, AudioAnalyzer
 
 logger = structlog.get_logger(__name__)
 
@@ -59,7 +59,7 @@ class HealthResponse(BaseModel):
     service: str = Field(..., description="サービス名")
     version: str = Field(..., description="バージョン")
     timestamp: float = Field(default_factory=time.time, description="チェック時刻")
-    details: Optional[dict] = Field(None, description="詳細情報")
+    details: dict | None = Field(None, description="詳細情報")
 
 
 class ErrorResponse(BaseModel):
@@ -71,9 +71,9 @@ class ErrorResponse(BaseModel):
 
     error: str = Field(..., description="エラーコード")
     message: str = Field(..., description="エラーメッセージ")
-    details: Optional[dict] = Field(None, description="エラー詳細")
+    details: dict | None = Field(None, description="エラー詳細")
     timestamp: float = Field(default_factory=time.time, description="エラー発生時刻")
-    request_id: Optional[str] = Field(None, description="リクエストID")
+    request_id: str | None = Field(None, description="リクエストID")
 
 
 # 依存関係注入用の関数
@@ -157,7 +157,7 @@ async def analyze_audio_url(
 
     except Exception as e:
         logger.error("Audio analysis failed", request_id=request_id, error=str(e))
-        raise HTTPException(status_code=500, detail=f"Analysis failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {e}") from e
 
 
 @router.post(
@@ -247,7 +247,9 @@ async def analyze_audio_upload(
         logger.error(
             "Audio upload analysis failed", request_id=request_id, error=str(e)
         )
-        raise HTTPException(status_code=500, detail=f"Upload analysis failed: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Upload analysis failed: {e}"
+        ) from e
 
 
 @router.get(
@@ -295,7 +297,7 @@ async def health_check(
             details={"error": str(e)},
         )
 
-        raise HTTPException(status_code=503, detail=error_response.dict())
+        raise HTTPException(status_code=503, detail=error_response.dict()) from e
 
 
 @router.get(
@@ -326,7 +328,7 @@ async def get_analysis_stats(
 
     except Exception as e:
         logger.error("Failed to get analysis stats", error=str(e))
-        raise HTTPException(status_code=500, detail=f"Failed to get stats: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get stats: {e}") from e
 
 
 # エラーハンドラー（FastAPIアプリに追加される）

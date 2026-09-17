@@ -13,8 +13,8 @@ os.environ.setdefault("NUMBA_CACHE_DIR", "/tmp/numba_cache")
 os.environ.setdefault("LIBROSA_CACHE_DIR", "/tmp/librosa_cache")
 # Numbaのキャッシュ関連の警告を抑制
 os.environ.setdefault("NUMBA_DISABLE_PERFORMANCE_WARNINGS", "1")
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
 
 import structlog
 from fastapi import FastAPI, HTTPException
@@ -25,10 +25,10 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
     sys.path.insert(0, current_dir)
 
-from .api.routes import router as api_router, http_exception_handler  # noqa: E402
-from .models.yamnet_wrapper import YAMNetManager  # noqa: E402
-from .services.analyzer import AudioAnalyzer  # noqa: E402
-
+from .api.routes import http_exception_handler
+from .api.routes import router as api_router
+from .models.yamnet_wrapper import YAMNetManager
+from .services.analyzer import AudioAnalyzer
 
 # Configure structured logging
 structlog.configure(
@@ -53,7 +53,7 @@ logger = structlog.get_logger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     """Manage application lifecycle."""
     logger.info("Starting Sonory Audio Analyzer service")
 
