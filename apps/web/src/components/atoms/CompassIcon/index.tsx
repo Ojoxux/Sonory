@@ -1,6 +1,6 @@
 "use client"
 
-import { animate, motion, useMotionValue } from "framer-motion"
+import { animate, motion, useMotionValue } from "motion/react"
 import { useRef } from "react"
 import type { CompassIconProps } from "./types"
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { AnimatePresence, motion } from "framer-motion"
+import { AnimatePresence, motion } from "motion/react"
 import { formatConfidence } from "../PrimaryResult/utils"
 import { useAccordionToggle } from "./hooks"
 import type { OtherResultsAccordionProps } from "./types"

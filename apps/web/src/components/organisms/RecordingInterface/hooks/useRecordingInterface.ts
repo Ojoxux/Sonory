@@ -1,6 +1,6 @@
 "use client"
 
-import type { PanInfo } from "framer-motion"
+import type { PanInfo } from "motion/react"
 import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react"
 import { useRecorderStore } from "../../../../store/useRecorderStore"
 import { useMicrophonePermission } from "@/hooks/useMicrophonePermission"

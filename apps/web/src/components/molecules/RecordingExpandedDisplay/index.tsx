@@ -1,6 +1,6 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion } from "motion/react"
 import { RecordingControls } from "../RecordingControls"
 import { RecordingHeader } from "../RecordingHeader"
 import { RecordingTimer } from "../RecordingTimer"

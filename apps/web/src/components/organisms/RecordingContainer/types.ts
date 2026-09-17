@@ -1,4 +1,4 @@
-import type { PanInfo } from "framer-motion"
+import type { PanInfo } from "motion/react"
 import type { MutableRefObject, ReactNode } from "react"
 
 /**

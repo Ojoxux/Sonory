@@ -1,6 +1,6 @@
 "use client"
 
-import { AnimatePresence } from "framer-motion"
+import { AnimatePresence } from "motion/react"
 import { Toast } from "@/components/atoms/Toast"
 import { useToastStore } from "@/store/useToastStore"
 
