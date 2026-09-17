@@ -106,7 +106,7 @@ export function MapComponent({
          if (pinId) {
             // 選択されたピンを見つけて音声再生用に設定
             const selectedPin = pins.find((pin) => pin.id === pinId)
-            if (selectedPin?.isPersisted && selectedPin.audioData?.url) {
+            if (selectedPin?.isPersisted) {
                setPlayingPin(selectedPin)
             }
          }

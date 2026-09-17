@@ -91,6 +91,13 @@ export const rateLimits = {
    // ピン取得: 100リクエスト/分
    getPins: rateLimit({ name: "getPins", windowMs: 60 * 1000, max: 100 }),
 
+   // ピン音声URL取得: 60リクエスト/分
+   getAudioUrl: rateLimit({
+      name: "getAudioUrl",
+      windowMs: 60 * 1000,
+      max: 60,
+   }),
+
    // ピン作成: 20リクエスト/分
    createPin: rateLimit({ name: "createPin", windowMs: 60 * 1000, max: 20 }),
 

@@ -424,7 +424,7 @@ export class PinRepository {
     * @param record - Database record
     * @returns Domain model
     */
-   private async toDomainModel(record: SoundPinRecord): Promise<SoundPinAPI> {
+   private toDomainModel(record: SoundPinRecord): SoundPinAPI {
       const { lat, lng } = this.parseLocationData(record.location)
 
       // AI分析結果を新しいスキーマから取得
@@ -443,43 +443,6 @@ export class PinRepository {
          })
       }
 
-      // Generate signed URL from audio_file_path
-      // audio_file_pathがない場合は、audio_urlからファイルパスを抽出して署名付きURLを生成
-      let audioUrl = record.audio_url
-
-      const filePathToUse =
-         record.audio_file_path || this.extractFilePathFromUrl(record.audio_url)
-
-      if (filePathToUse) {
-         try {
-            const { data: signedData, error: signedError } =
-               await this.adminClient.storage
-                  .from("sonory-audio")
-                  .createSignedUrl(filePathToUse, 604800) // 7 days
-
-            if (!signedError && signedData) {
-               audioUrl = signedData.signedUrl
-               this.logger.info("Generated signed URL from file path", {
-                  recordId: record.id,
-                  filePath: filePathToUse,
-                  requestId: this.requestId,
-               })
-            } else {
-               this.logger.warn("Failed to generate signed URL", {
-                  error: signedError?.message,
-                  recordId: record.id,
-                  requestId: this.requestId,
-               })
-            }
-         } catch (error) {
-            this.logger.error("Error generating signed URL", {
-               error: error instanceof Error ? error.message : String(error),
-               recordId: record.id,
-               requestId: this.requestId,
-            })
-         }
-      }
-
       return {
          id: record.id,
          // user_id は API レスポンスに含めない（api-contract.ts の SoundPinApiSchema 参照）。
@@ -489,7 +452,6 @@ export class PinRepository {
             lng,
          },
          audio: {
-            url: audioUrl,
             duration: record.audio_duration,
             format: record.audio_format,
          },
@@ -605,7 +567,7 @@ export class PinRepository {
             pinId: pinRecord.id,
             requestId: this.requestId,
          })
-         return await this.toDomainModel(pinRecord)
+         return this.toDomainModel(pinRecord)
       } catch (error) {
          this.logger.error("Failed to create pin", {
             error: error instanceof Error ? error.message : String(error),
@@ -642,7 +604,7 @@ export class PinRepository {
             throw error
          }
 
-         return await this.toDomainModel(record)
+         return this.toDomainModel(record)
       } catch (error) {
          this.logger.error("Failed to find pin by ID", {
             error: error instanceof Error ? error.message : String(error),
@@ -655,6 +617,97 @@ export class PinRepository {
             500,
             error instanceof Error ? { message: error.message } : undefined,
          )
+      }
+   }
+
+   /**
+    * 音声URL発行に必要な最小限のフィールドを取得する。
+    * 可視性判定に使う user_id を含むため、通常の findById（ドメインモデル）ではなく
+    * adminClient から直接読む。
+    *
+    * @param id - Pin ID
+    * @returns 見つからなければ null
+    * @throws APIException on database error
+    */
+   async findAudioSource(id: string): Promise<{
+      userId: string | null
+      status: SoundPinRecord["status"]
+      filePath: string | null
+   } | null> {
+      try {
+         const { data, error } = await this.adminClient
+            .from("sound_pins")
+            .select("user_id, status, audio_file_path, audio_url")
+            .eq("id", id)
+            .maybeSingle()
+
+         if (error) {
+            throw error
+         }
+
+         if (!data) {
+            return null
+         }
+
+         const record = data as Pick<
+            SoundPinRecord,
+            "user_id" | "status" | "audio_file_path" | "audio_url"
+         >
+
+         return {
+            userId: record.user_id ?? null,
+            status: record.status,
+            filePath:
+               record.audio_file_path ||
+               this.extractFilePathFromUrl(record.audio_url),
+         }
+      } catch (error) {
+         this.logger.error("Failed to find audio source", {
+            error: error instanceof Error ? error.message : String(error),
+            pinId: id,
+            requestId: this.requestId,
+         })
+         throw new APIException(
+            ERROR_CODES.DATABASE_ERROR,
+            "Failed to find pin",
+            500,
+            error instanceof Error ? { message: error.message } : undefined,
+         )
+      }
+   }
+
+   /**
+    * 音声ファイルの署名付きURLを発行する（1時間有効）
+    *
+    * @param filePath - ストレージ上のファイルパス
+    * @throws APIException 発行に失敗した場合（500）
+    */
+   async createAudioSignedUrl(
+      filePath: string,
+   ): Promise<{ url: string; expiresAt: string }> {
+      const expiresInSeconds = 3600
+      const { data, error } = await this.adminClient.storage
+         .from("sonory-audio")
+         .createSignedUrl(filePath, expiresInSeconds)
+
+      if (error || !data) {
+         this.logger.error("Failed to create signed audio URL", {
+            error: error?.message,
+            filePath,
+            requestId: this.requestId,
+         })
+         throw new APIException(
+            ERROR_CODES.STORAGE_ERROR,
+            "Failed to generate audio URL",
+            500,
+         )
+      }
+
+      return {
+         url: data.signedUrl,
+         expiresAt: new Date(
+            Date.now() + expiresInSeconds * 1000,
+         ).toISOString(),
       }
    }
 
@@ -689,7 +742,7 @@ export class PinRepository {
             pinId: id,
             requestId: this.requestId,
          })
-         return await this.toDomainModel(record)
+         return this.toDomainModel(record)
       } catch (error) {
          this.logger.error("Failed to update pin", {
             error: error instanceof Error ? error.message : String(error),
@@ -796,8 +849,8 @@ export class PinRepository {
          })
 
          // Convert to domain models efficiently
-         return await Promise.all(
-            records.map((record: SoundPinRecord) => this.toDomainModel(record)),
+         return records.map((record: SoundPinRecord) =>
+            this.toDomainModel(record),
          )
       } catch (error) {
          this.logger.error("Failed to find pins within bounds", {
@@ -843,8 +896,8 @@ export class PinRepository {
             throw error
          }
 
-         return await Promise.all(
-            records.map((record: SoundPinRecord) => this.toDomainModel(record)),
+         return records.map((record: SoundPinRecord) =>
+            this.toDomainModel(record),
          )
       } catch (error) {
          this.logger.error("Failed to find nearby pins", {
@@ -886,8 +939,8 @@ export class PinRepository {
             return []
          }
 
-         return await Promise.all(
-            records.map((record: SoundPinRecord) => this.toDomainModel(record)),
+         return records.map((record: SoundPinRecord) =>
+            this.toDomainModel(record),
          )
       } catch (error) {
          this.logger.error("Failed to find pins by user ID", {
@@ -1023,10 +1076,8 @@ export class PinRepository {
          throw error
       }
 
-      const pins = await Promise.all(
-         (records ?? []).map((record: SoundPinRecord) =>
-            this.toDomainModel(record),
-         ),
+      const pins = (records ?? []).map((record: SoundPinRecord) =>
+         this.toDomainModel(record),
       )
 
       return this.applyPostFilters(pins, query)
@@ -1065,10 +1116,8 @@ export class PinRepository {
          throw error
       }
 
-      return await Promise.all(
-         (records ?? []).map((record: SoundPinRecord) =>
-            this.toDomainModel(record),
-         ),
+      return (records ?? []).map((record: SoundPinRecord) =>
+         this.toDomainModel(record),
       )
    }
 

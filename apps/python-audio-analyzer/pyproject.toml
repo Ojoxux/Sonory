@@ -2,36 +2,34 @@
 name = "sonory-audio-analyzer"
 version = "0.1.0"
 description = "YAMNet-based audio analysis service for Sonory"
-authors = [
-    {name = "Sonory Team", email = "team@sonory.app"}
-]
+authors = [{ name = "Sonory Team", email = "team@sonory.app" }]
 requires-python = ">=3.13"
 dependencies = [
-    "fastapi[all]>=0.141.1",
-    "uvicorn[standard]>=0.53.0",
-    "tensorflow>=2.21.0",
-    "tensorflow-hub>=0.16.1",
-    "setuptools<81",
-    "numpy>=2.5.3",
-    "librosa>=0.11.0",
-    "soundfile>=0.14.0",
-    "ffmpeg-python>=0.2.0",
-    "pydantic>=2.13.5",
-    "httpx>=0.28.1",
-    "python-multipart>=0.0.32",
-    "redis>=8.1.0",
-    "structlog>=26.1.0",
+   "fastapi[all]>=0.141.1",
+   "uvicorn[standard]>=0.53.0",
+   "tensorflow>=2.21.0",
+   "tensorflow-hub>=0.16.1",
+   "setuptools<81",
+   "numpy>=2.5.3",
+   "librosa>=0.11.0",
+   "soundfile>=0.14.0",
+   "ffmpeg-python>=0.2.0",
+   "pydantic>=2.13.5",
+   "httpx>=0.28.1",
+   "python-multipart>=0.0.32",
+   "redis>=8.1.0",
+   "structlog>=26.1.0",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=8.4.2,<9.0.0",
-    "pytest-asyncio>=1.4.0",
-    "black>=26.5.1",
-    "isort>=8.0.1",
-    "mypy>=2.3.1",
-    "ruff>=0.16.8,<0.17",
-    "pytest-cov>=7.1.0",
+   "pytest>=8.4.2,<9.0.0",
+   "pytest-asyncio>=1.4.0",
+   "black>=26.5.1",
+   "isort>=8.0.1",
+   "mypy>=2.3.1",
+   "ruff>=0.16.8,<0.17",
+   "pytest-cov>=7.1.0",
 ]
 
 [build-system]
@@ -60,7 +58,13 @@ disallow_untyped_defs = true
 explicit_package_bases = true
 
 [[tool.mypy.overrides]]
-module = ["librosa.*", "soundfile.*", "tensorflow.*", "tensorflow_hub.*", "ffmpeg.*"]
+module = [
+   "librosa.*",
+   "soundfile.*",
+   "tensorflow.*",
+   "tensorflow_hub.*",
+   "ffmpeg.*",
+]
 ignore_missing_imports = true
 
 [tool.ruff]

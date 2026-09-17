@@ -25,7 +25,6 @@ export const AiAnalysisSchema = z.object({
 })
 
 export const SoundPinAudioSchema = z.object({
-   url: z.string(),
    duration: z.number(),
    format: AudioFormatSchema,
 })
@@ -164,6 +163,11 @@ export const SearchPinsQuerySchema = z.object({
 
 export const ReportPinRequestSchema = z.object({
    reason: z.string().min(10).max(1000),
+})
+
+export const PinAudioUrlSchema = z.object({
+   url: z.string(),
+   expiresAt: z.string(),
 })
 
 export const AudioMetadataSchema = z.object({

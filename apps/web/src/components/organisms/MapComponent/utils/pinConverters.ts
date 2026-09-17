@@ -72,7 +72,6 @@ export const convertApiPinToLocal = (apiPin: NearbyPin): SoundPin => {
       latitude: apiPin.location.lat,
       longitude: apiPin.location.lng,
       audioData: {
-         url: apiPin.audio.url,
          recordedAt: new Date(apiPin.createdAt),
          id: apiPin.id,
          blob: new Blob(), // APIピンのblobは空

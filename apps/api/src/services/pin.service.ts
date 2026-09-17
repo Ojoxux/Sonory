@@ -284,6 +284,47 @@ export class PinService extends BaseService {
    }
 
    /**
+    * ピン音声の署名付きURLを取得する
+    *
+    * 見えるピンの条件は一覧と同じ: status='active'、または認証済みユーザーが所有者。
+    * 見えない・存在しないピンは区別せず404にする。
+    *
+    * @param id - Pin ID
+    * @returns 署名付きURLと有効期限
+    * @throws APIException 404（見えない/存在しない）、500（パス不明・発行失敗）
+    */
+   async getAudioUrl(id: string): Promise<{ url: string; expiresAt: string }> {
+      this.log("info", "Getting pin audio url", { pinId: id })
+
+      const source = await this.repository.findAudioSource(id)
+
+      const isOwner =
+         source !== null &&
+         this.userId !== undefined &&
+         source.userId === this.userId
+      const isVisible =
+         source !== null && (source.status === "active" || isOwner)
+
+      if (!source || !isVisible) {
+         throw new APIException(
+            ERROR_CODES.DATABASE_ERROR,
+            "Pin not found",
+            404,
+         )
+      }
+
+      if (!source.filePath) {
+         throw new APIException(
+            ERROR_CODES.STORAGE_ERROR,
+            "Audio file path could not be determined",
+            500,
+         )
+      }
+
+      return this.repository.createAudioSignedUrl(source.filePath)
+   }
+
+   /**
     * Reports a pin for inappropriate content
     *
     * @description

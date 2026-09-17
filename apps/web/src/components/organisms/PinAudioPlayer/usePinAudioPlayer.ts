@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react"
+import { fetchPinAudioUrl } from "@/services/pin-api"
 import type { SoundPin } from "@/store/useSoundPinStore"
 import { formatRecordedAt, formatTime } from "@/utils/dateFormat"
 import type {
@@ -216,16 +217,36 @@ export function usePinAudioPlayer(
 
    // ピンが変更されたときに音声を読み込み
    useEffect(() => {
-      if (pin?.audioData) {
-         const audioUrl =
-            pin.audioData.url ||
-            (pin.audioData.blob
-               ? URL.createObjectURL(pin.audioData.blob)
-               : null)
+      if (!pin?.audioData) {
+         return
+      }
 
-         if (audioUrl) {
-            loadAudio(audioUrl, pin.audioData.duration)
-         }
+      const audioData = pin.audioData
+      let cancelled = false
+
+      if (audioData.url) {
+         loadAudio(audioData.url, audioData.duration)
+      } else if (audioData.blob.size > 0) {
+         loadAudio(URL.createObjectURL(audioData.blob), audioData.duration)
+      } else {
+         // 一覧・作成レスポンスに音声URLが無い（廃止済み）場合は再生時に取得する
+         fetchPinAudioUrl(pin.id)
+            .then((url) => {
+               if (!cancelled) {
+                  loadAudio(url, audioData.duration)
+               }
+            })
+            .catch(() => {
+               if (!cancelled) {
+                  setAudioLoadingStatus("error")
+                  setAudioLoadError("音声の読み込みに失敗しました")
+               }
+            })
+      }
+
+      // ピンが切り替わった・閉じた後に取得が完了しても古いピンの音声を読み込まない
+      return () => {
+         cancelled = true
       }
    }, [pin, loadAudio])
 

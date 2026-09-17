@@ -1,7 +1,10 @@
 {
-	"name": "@sonory/config",
-	"version": "0.1.0",
-	"private": true,
-	"main": "index.js",
-	"files": ["tsconfig.base.json", "tailwind.config.ts"]
+   "name": "@sonory/config",
+   "version": "0.1.0",
+   "private": true,
+   "files": [
+      "tsconfig.base.json",
+      "tailwind.config.ts"
+   ],
+   "main": "index.js"
 }

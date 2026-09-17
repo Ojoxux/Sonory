@@ -42,6 +42,10 @@ export type CreatePinResponse = HonoJsonResponse<"/api/pins", "post">
 export type UploadPinResponse = HonoJsonResponse<"/api/pins/upload", "post">
 export type NearbyPinsResponse = HonoJsonResponse<"/api/pins/nearby", "get">
 export type DeletePinResponse = HonoJsonResponse<"/api/pins/{id}", "delete">
+export type PinAudioUrlResponse = HonoJsonResponse<
+   "/api/pins/{id}/audio-url",
+   "get"
+>
 export type HonoSoundPin = CreatePinResponse["data"]
 export type NearbyPin = NearbyPinsResponse["data"][number]
 
