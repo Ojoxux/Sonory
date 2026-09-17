@@ -220,7 +220,7 @@ Workers 環境では **リクエストごとに JWT が異なる**。
 
 **Git フック（lefthook）**: pre-commit で変更パッケージのみ `oxlint --fix` / `oxfmt` / `tsc --noEmit`
 
-**CI (`.github/workflows/lint.yml`)**: `npm ci` → oxlint → oxfmt → tsc →
+**CI (`.github/workflows/lint.yml`)**: `npm ci` → oxlint → oxfmt → tsc → vitest →
 Python 型生成の検証 → OpenAPI 生成型の整合性検証
 
 ## ローカル起動
