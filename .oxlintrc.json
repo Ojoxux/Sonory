@@ -53,6 +53,14 @@
          "rules": {
             "no-console": ["error", { "allow": ["error", "warn", "debug"] }]
          }
+      },
+      {
+         "files": ["apps/api/src/**"],
+         "rules": { "no-console": "error" }
+      },
+      {
+         "files": ["apps/api/src/utils/logger.ts"],
+         "rules": { "no-console": "off" }
       }
    ]
 }
