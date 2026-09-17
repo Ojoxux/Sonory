@@ -62,12 +62,16 @@ jobs:
       - name: Run tsc
         run: npx turbo type-check
 
-      # 8. shared-types から Python 型が生成できることを検証
+      # 8. テストを実行
+      - name: Run tests
+        run: npx turbo test
+
+      # 9. shared-types から Python 型が生成できることを検証
       - name: Verify Python types generation
         run: |
           npm run build -w @sonory/shared-types
           npm run verify -w @sonory/python-types
 
-      # 9. OpenAPI Spec と生成型の整合性を検証
+      # 10. OpenAPI Spec と生成型の整合性を検証
       - name: Verify generated OpenAPI types
         run: npm run check:generated --workspace=@sonory/shared-types
