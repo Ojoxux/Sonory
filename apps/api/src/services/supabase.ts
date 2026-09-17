@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js"
 import { getSecureSupabaseConfig } from "../config/secrets"
 import type { Env } from "../index"
 import { APIException } from "../middleware/error"
+import { logger } from "../utils/logger"
 
 /**
  * Supabaseクライアントの管理
@@ -52,7 +53,7 @@ export function getSupabaseConfig(env?: Env): SupabaseConfig {
          )
       }
 
-      console.log("✅ Supabase設定をWorkers環境変数から取得しました")
+      logger.info("Supabase設定をWorkers環境変数から取得しました")
       return { url, anonKey, serviceKey } as const
    }
 
@@ -60,12 +61,14 @@ export function getSupabaseConfig(env?: Env): SupabaseConfig {
    if (typeof process !== "undefined" && process.env) {
       try {
          const secureConfig = getSecureSupabaseConfig()
-         console.log("✅ Supabase設定をDocker Secretsから取得しました")
+         logger.info("Supabase設定をDocker Secretsから取得しました")
          return secureConfig
       } catch (error) {
-         console.warn(
-            "⚠️ Docker Secretsからの読み取りに失敗、フォールバックを使用:",
-            error,
+         logger.warn(
+            "Docker Secretsからの読み取りに失敗、フォールバックを使用",
+            {
+               error: error instanceof Error ? error.message : String(error),
+            },
          )
       }
    }
@@ -84,9 +87,7 @@ export function getSupabaseConfig(env?: Env): SupabaseConfig {
       )
    }
 
-   console.log(
-      "⚠️ Supabase設定を環境変数から取得しました（本番環境では非推奨）",
-   )
+   logger.warn("Supabase設定を環境変数から取得しました（本番環境では非推奨）")
    return { url, anonKey, serviceKey } as const
 }
 
@@ -133,9 +134,8 @@ export function getSupabaseAdmin(env?: Env): SupabaseClient {
       )
    }
 
-   console.log("🔄 Supabase管理クライアントを初期化:", {
+   logger.info("Supabase管理クライアントを初期化", {
       url: config.url,
-      keyLength: config.serviceKey.length,
       source:
          typeof process !== "undefined"
             ? "Docker Secrets/Environment"

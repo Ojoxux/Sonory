@@ -2,6 +2,7 @@ import type { APIError } from "@sonory/shared-types"
 import { ERROR_CODES } from "@sonory/shared-types"
 import type { Context } from "hono"
 import { HTTPException } from "hono/http-exception"
+import { logger } from "../utils/logger"
 
 // ERROR_CODESを再エクスポート
 export { ERROR_CODES }
@@ -72,7 +73,10 @@ export const errorHandler = (error: Error, c: Context): Response => {
       })
    }
 
-   console.error("Unhandled error:", error)
+   logger.error("Unhandled error", {
+      error: error.message,
+      stack: error.stack,
+   })
 
    const apiError: APIError = {
       code: ERROR_CODES.INTERNAL_SERVER_ERROR,

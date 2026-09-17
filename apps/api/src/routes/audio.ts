@@ -17,6 +17,7 @@ import { optionalAuth, requireAuth } from "../middleware/auth"
 import { requireInternalDispatch } from "../middleware/internal"
 import { onOpenAPIValidationError } from "../middleware/validation"
 import { AudioService } from "../services/audio.service"
+import { logger } from "../utils/logger"
 
 const app = new OpenAPIHono<{ Bindings: Env; Variables: Variables }>({
    defaultHook: onOpenAPIValidationError,
@@ -493,13 +494,16 @@ app.openapi(analyzeAudioRoute, async (c) => {
          env.ENVIRONMENT === "development" || !env.ENVIRONMENT
 
       if (isDevelopment) {
-         console.log("🔧 開発環境: 同期的にキュー処理を実行します")
+         logger.debug("開発環境: 同期的にキュー処理を実行します")
          await new Promise((resolve) => setTimeout(resolve, 500))
          try {
             const processedCount = await audioService.processAnalysisQueue()
-            console.log("✅ キュー処理完了", { processedCount })
+            logger.debug("キュー処理完了", { processedCount })
          } catch (error) {
-            console.error("❌ 自動キュー処理エラー:", error)
+            logger.error("自動キュー処理エラー", {
+               error: error instanceof Error ? error.message : String(error),
+               stack: error instanceof Error ? error.stack : undefined,
+            })
          }
       }
 

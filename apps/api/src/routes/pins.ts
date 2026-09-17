@@ -20,6 +20,7 @@ import { onOpenAPIValidationError } from "../middleware/validation"
 import { AudioService } from "../services/audio.service"
 import { PinService } from "../services/pin.service"
 import type { Env, Variables } from "../types/api"
+import { logger } from "../utils/logger"
 
 type CreatePinRequest = Parameters<PinService["createPin"]>[0]
 type UpdatePinRequest = Parameters<PinService["updatePin"]>[1]
@@ -358,7 +359,7 @@ app.openapi(uploadPinRoute, async (c) => {
          )
       }
 
-      console.log("音声ファイルアップロード開始:", {
+      logger.info("音声ファイルアップロード開始", {
          fileName: audioFile.name,
          fileSize: audioFile.size,
          fileType: audioFile.type,
@@ -366,7 +367,7 @@ app.openapi(uploadPinRoute, async (c) => {
 
       const uploadResult = await audioService.uploadAudio(audioFile)
 
-      console.log("音声ファイルアップロード完了:", {
+      logger.info("音声ファイルアップロード完了", {
          audioId: uploadResult.audioId,
          audioUrl: uploadResult.audioUrl,
       })
@@ -402,7 +403,7 @@ app.openapi(uploadPinRoute, async (c) => {
 
       const pin = await service.createPin(pinData)
 
-      console.log("AI分析ジョブをキューに投入:", pin.id)
+      logger.info("AI分析ジョブをキューに投入", { pinId: pin.id })
 
       c.executionCtx.waitUntil(
          (async (): Promise<void> => {
@@ -413,7 +414,7 @@ app.openapi(uploadPinRoute, async (c) => {
                   uploadResult.audioFilePath,
                )
 
-               console.log("AI分析ジョブ投入完了:", {
+               logger.info("AI分析ジョブ投入完了", {
                   audioId: uploadResult.audioId,
                   pinId: pin.id,
                })
@@ -422,14 +423,17 @@ app.openapi(uploadPinRoute, async (c) => {
                   c.env.ENVIRONMENT === "development" || !c.env.ENVIRONMENT
 
                if (isDevelopment) {
-                  console.log("開発環境: キュー処理を同期的に実行")
+                  logger.debug("開発環境: キュー処理を同期的に実行")
                   await new Promise((resolve) => setTimeout(resolve, 500))
                   const processedCount =
                      await audioService.processAnalysisQueue()
-                  console.log("キュー処理完了:", { processedCount })
+                  logger.debug("キュー処理完了", { processedCount })
                }
             } catch (error) {
-               console.error("AI分析ジョブ投入エラー:", error)
+               logger.error("AI分析ジョブ投入エラー", {
+                  error: error instanceof Error ? error.message : String(error),
+                  stack: error instanceof Error ? error.stack : undefined,
+               })
             }
          })(),
       )
