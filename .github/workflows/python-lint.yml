@@ -53,15 +53,13 @@ jobs:
       - name: Run Ruff Format Check
         run: python -m ruff format . --check
 
-      # 7. MyPy 型チェック (オプション)
+      # 7. MyPy 型チェック
       - name: Run MyPy Type Check
         run: python -m mypy .
-        continue-on-error: true  # 型チェックエラーがあってもワークフローを継続
 
-      # 8. テスト実行 (将来的にテストが追加された場合)
+      # 8. テスト実行
       - name: Run Tests
         run: python -m pytest
-        continue-on-error: true  # テストがない場合でも継続
 
       # 9. Python OpenAPI Spec が最新であることを検証
       - name: Verify Python OpenAPI spec

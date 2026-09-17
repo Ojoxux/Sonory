@@ -19,7 +19,7 @@ logger = structlog.get_logger(__name__)
 
 
 # Windows環境でのパス問題を解決するための設定
-def setup_tensorflow_hub_cache():
+def setup_tensorflow_hub_cache() -> str:
     """TensorFlow Hubのキャッシュディレクトリを安全な場所に設定"""
     try:
         # 現在のスクリプトディレクトリを取得
@@ -783,7 +783,7 @@ class YAMNetManager:
     アプリケーション全体で共有します。
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """YAMNetManagerを初期化"""
         self.classifier: YAMNetClassifier | None = None
         self._initialized = False
