@@ -30,8 +30,7 @@ export function AccountSection({
          {isAnonymous ? (
             <div className="space-y-3 rounded-xl border border-white/15 bg-white/5 px-4 py-3">
                <p className="text-neutral-300 text-sm leading-relaxed">
-                  Google
-                  アカウントと連携すると、別の端末でも自分のピンを編集・削除できます
+                  別の端末でも、この端末で作ったピンを引き継げます
                </p>
                <button
                   type="button"
@@ -66,14 +65,17 @@ export function AccountSection({
                      </div>
                   </div>
                ) : (
-                  <button
-                     type="button"
-                     onClick={() => setIsConfirmingSignIn(true)}
-                     disabled={isBusy}
-                     className="text-neutral-400 text-sm underline disabled:opacity-50"
-                  >
-                     連携済みのアカウントでログイン
-                  </button>
+                  <p className="text-neutral-400 text-sm">
+                     すでに連携済みですか？{" "}
+                     <button
+                        type="button"
+                        onClick={() => setIsConfirmingSignIn(true)}
+                        disabled={isBusy}
+                        className="underline disabled:opacity-50"
+                     >
+                        ログイン
+                     </button>
+                  </p>
                )}
             </div>
          ) : (

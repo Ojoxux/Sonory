@@ -20,7 +20,7 @@ export function getOAuthRedirectErrorMessage(href: string): string | null {
    }
 
    if (params.get("error_code") === "identity_already_exists") {
-      return "この Google アカウントは既に別のユーザーに連携されています。「連携済みのアカウントでログイン」を使ってください"
+      return "この Google アカウントは既に連携済みです。「すでに連携済みですか？」の「ログイン」から入ってください"
    }
 
    return "Google アカウントでの認証に失敗しました"

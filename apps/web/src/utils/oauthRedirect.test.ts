@@ -13,7 +13,7 @@ describe("getOAuthRedirectErrorMessage", () => {
       const message = getOAuthRedirectErrorMessage(
          "http://localhost:3000/?error=server_error&error_code=identity_already_exists",
       )
-      expect(message).toContain("既に別のユーザーに連携されています")
+      expect(message).toContain("既に連携済みです")
    })
 
    it("ハッシュに付いたエラーも拾う", () => {
