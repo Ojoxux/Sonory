@@ -12,7 +12,6 @@ import { useBrowserGeolocation } from "./hooks/useBrowserGeolocation"
 import { useLocationIntegration } from "./hooks/useLocationIntegration"
 import { useLocationStorage } from "./hooks/useLocationStorage"
 import { useMapBoundsManager } from "./hooks/useMapBoundsManager"
-import { useMapboxInitialization } from "./hooks/useMapboxInitialization"
 import { useMapCentering } from "./hooks/useMapCentering"
 import {
    getInitialCamera,
@@ -197,9 +196,6 @@ export function useMapComponent({
       }),
       [mapboxPosition, customPosition, savedPosition, position],
    )
-
-   // Mapbox初期化
-   useMapboxInitialization()
 
    // 環境設定
    const { currentLighting, updateLightingAndShadows } = useMapEnvironment({
