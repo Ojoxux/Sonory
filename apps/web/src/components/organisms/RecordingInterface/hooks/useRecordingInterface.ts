@@ -6,7 +6,7 @@ import { useRecorderStore } from "../../../../store/useRecorderStore"
 import { useMicrophonePermission } from "@/hooks/useMicrophonePermission"
 import { showErrorToast } from "@/store/useToastStore"
 // 実際のMediaRecorder APIを使用
-import { useMediaRecorder } from "../../RecordSection/hooks/useMediaRecorder"
+import { useMediaRecorder } from "./useMediaRecorder"
 import { useAsyncWaveform } from "./useAsyncWaveform"
 
 /**

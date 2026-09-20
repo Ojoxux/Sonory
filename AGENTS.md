@@ -54,6 +54,16 @@ Hono の `compose` は例外をアプリの `onError` に回すため、外側�
 > **事故:** Biome（lint + format 一体）から oxlint + oxfmt へ移行した際、CI が `lint` のままだった。
 > 未整形のコードが CI を通過していた。現在は CI に `format` を追加済み。
 
+## Tailwind のトークンは `globals.css` の `@theme` に書く
+
+Tailwind v4 は `@config` の宣言が無い限り `tailwind.config.ts` を読まない。
+設定ファイルを置いても無視される。
+
+> **事故:** v3 から v4 へ移した際に `tailwind.config.ts` を残したまま `@config` を書かなかった。
+> `animate-fade-in-down` / `animate-float` / `animate-wave-*` / `shadow-3xl` / `bg-primary-*` は
+> どれも生成されておらず、`AppHeader` の入りのアニメーションは存在しないまま動いていた。
+> 設定ファイルは `apps/web/` と `packages/config/` の2箇所にあり、どちらも死んでいた。
+
 ## DB アクセスは service_role とユーザークライアントを使い分ける
 
 | 用途                   | クライアント               | 理由                                           |
@@ -202,7 +212,7 @@ Workers 環境では **リクエストごとに JWT が異なる**。
 ## スタイリング
 
 - Tailwind のユーティリティを使用。任意値（`[w-100px]` 等）は禁止
-- トークンは `tailwind.config.ts` が単一の情報源
+- トークンは `apps/web/src/app/globals.css` の `@theme` が単一の情報源
 - `prefers-reduced-motion` を尊重
 - モバイルファースト
 

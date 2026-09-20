@@ -138,7 +138,7 @@ const LocationDisplayComponent = function LocationDisplay({
                      className={`h-3 w-3 animate-pulse rounded-full ${isDarkTime ? "bg-white/50" : "bg-gray-400"}`}
                   />
                   <span
-                     className={`font-arial-rounded-mt-pro font-bold text-5xl tracking-tight ${isDarkTime ? "text-white/50" : "text-gray-400"}`}
+                     className={`font-bold text-5xl tracking-tight ${isDarkTime ? "text-white/50" : "text-gray-400"}`}
                   >
                      Loading
                   </span>
@@ -146,7 +146,7 @@ const LocationDisplayComponent = function LocationDisplay({
             ) : (
                <div className="inline-block">
                   <h2
-                     className={`font-arial-rounded-mt-pro font-bold text-6xl tracking-tight ${textColorClass} pb-2 leading-none ${isError ? "text-yellow-500" : ""}`}
+                     className={`font-bold text-6xl tracking-tight ${textColorClass} pb-2 leading-none ${isError ? "text-yellow-500" : ""}`}
                   >
                      {locationName}
                   </h2>
@@ -154,7 +154,7 @@ const LocationDisplayComponent = function LocationDisplay({
                      className={`h-0.5 w-full ${borderColorClass} border-b-2`}
                   />
                   <p
-                     className={`mt-3 font-arial-rounded-mt-pro font-bold text-sm tracking-wide ${isDarkTime ? "text-white/50" : "text-gray-500"}`}
+                     className={`mt-3 font-bold text-sm tracking-wide ${isDarkTime ? "text-white/50" : "text-gray-500"}`}
                   >
                      {latitude?.toFixed(4)}° N, {longitude?.toFixed(4)}° E
                      {isError && (
