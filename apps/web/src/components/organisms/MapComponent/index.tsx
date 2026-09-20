@@ -139,7 +139,11 @@ export function MapComponent({
          />
 
          {/* ユーザーマーカー */}
-         <UserMarker map={map} position={position} />
+         <UserMarker
+            map={map}
+            mapStyleLoaded={mapStyleLoaded}
+            position={position}
+         />
 
          {/* リアルタイム通知センター
          <NotificationCenter
