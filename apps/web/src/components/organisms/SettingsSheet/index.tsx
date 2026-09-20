@@ -22,6 +22,7 @@ export function SettingsSheet({ isOpen, onClose }: SettingsSheetProps) {
    const {
       isMounted,
       notificationSettings,
+      isNotificationOn,
       notificationPermission,
       debugMode,
       handleToggleEnabled,
@@ -73,7 +74,7 @@ export function SettingsSheet({ isOpen, onClose }: SettingsSheetProps) {
                      <h3 className="font-semibold text-lg text-white">通知</h3>
 
                      <SettingToggle
-                        checked={notificationSettings.enabled}
+                        checked={isNotificationOn}
                         onChange={handleToggleEnabled}
                         label="通知"
                         description={
@@ -87,14 +88,14 @@ export function SettingsSheet({ isOpen, onClose }: SettingsSheetProps) {
                         checked={notificationSettings.soundEnabled}
                         onChange={handleToggleSound}
                         label="音"
-                        disabled={!notificationSettings.enabled}
+                        disabled={!isNotificationOn}
                      />
 
                      <SettingToggle
                         checked={notificationSettings.vibrationEnabled}
                         onChange={handleToggleVibration}
                         label="振動"
-                        disabled={!notificationSettings.enabled}
+                        disabled={!isNotificationOn}
                      />
 
                      <label className="flex flex-col gap-1.5 rounded-xl border border-white/15 bg-white/5 px-4 py-3">
@@ -108,7 +109,7 @@ export function SettingsSheet({ isOpen, onClose }: SettingsSheetProps) {
                                  Number(event.target.value),
                               )
                            }
-                           disabled={!notificationSettings.enabled}
+                           disabled={!isNotificationOn}
                            className="rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white disabled:opacity-50"
                         >
                            {MAX_DISTANCE_OPTIONS.map((option) => (

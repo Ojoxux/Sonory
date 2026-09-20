@@ -300,7 +300,7 @@ function triggerVibrationAlert(): void {
  * デフォルトの通知設定
  */
 const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
-   enabled: true,
+   enabled: false,
    soundEnabled: true,
    vibrationEnabled: true,
    maxDistance: 1000, // 1km

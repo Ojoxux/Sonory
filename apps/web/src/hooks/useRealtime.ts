@@ -288,7 +288,7 @@ export function useRealtime(
 export function useMapRealtime(userLocation: LocationData | null) {
    const realtime = useRealtime({
       autoConnect: true,
-      autoRequestPermission: true,
+      autoRequestPermission: false,
       autoSubscribeOnBoundsChange: true,
    })
 
