@@ -66,7 +66,7 @@ export function AppHeader({
       <header className="pointer-events-none fixed top-0 right-0 left-0 z-[50]">
          <div className="flex items-start justify-between p-6">
             {/* 地域名表示とコンパスボタン */}
-            <div className="pointer-events-auto flex animate-fade-in-down flex-col items-start gap-2">
+            <div className="pointer-events-auto flex flex-col items-start gap-2">
                <LocationDisplay
                   latitude={latitude}
                   longitude={longitude}
@@ -82,7 +82,7 @@ export function AppHeader({
             </div>
 
             {/* アクションボタン群 */}
-            <div className="pointer-events-auto flex animate-fade-in-down items-center gap-3">
+            <div className="pointer-events-auto flex items-center gap-3">
                {/* 情報ボタン */}
                <IconButton
                   icon={<MdInfo className="h-5 w-5" />}
