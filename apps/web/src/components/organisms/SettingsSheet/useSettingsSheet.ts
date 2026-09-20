@@ -30,6 +30,7 @@ import {
 export function useSettingsSheet(): {
    isMounted: boolean
    notificationSettings: NotificationSettings
+   isNotificationOn: boolean
    notificationPermission: NotificationPermissionStatus
    debugMode: boolean
    handleToggleEnabled: () => Promise<void>
@@ -60,8 +61,12 @@ export function useSettingsSheet(): {
    const { isAnonymous, email } = useAuthStore()
    const [isAccountBusy, setIsAccountBusy] = useState(false)
 
+   // 設定だけ ON でもブラウザで許可されていなければ届かないので、両方そろって初めて ON と見せる
+   const isNotificationOn =
+      notificationSettings.enabled && notificationPermission === "granted"
+
    const handleToggleEnabled = useCallback(async (): Promise<void> => {
-      if (notificationSettings.enabled) {
+      if (isNotificationOn) {
          updateNotificationSettings({ enabled: false })
          return
       }
@@ -74,7 +79,7 @@ export function useSettingsSheet(): {
       } else {
          showErrorToast("通知を許可できませんでした")
       }
-   }, [notificationSettings.enabled, updateNotificationSettings])
+   }, [isNotificationOn, updateNotificationSettings])
 
    const handleToggleSound = useCallback((): void => {
       updateNotificationSettings({
@@ -131,6 +136,7 @@ export function useSettingsSheet(): {
    return {
       isMounted,
       notificationSettings,
+      isNotificationOn,
       notificationPermission,
       debugMode,
       handleToggleEnabled,
