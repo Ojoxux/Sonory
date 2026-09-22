@@ -42,8 +42,8 @@ export function AccountSection({
                </button>
 
                {isConfirmingSignIn ? (
-                  <div className="space-y-2 rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-3 py-2">
-                     <p className="text-sm text-yellow-300 leading-relaxed">
+                  <div className="space-y-2 rounded-lg border border-warn-500/30 bg-warn-500/10 px-3 py-2">
+                     <p className="text-sm text-warn-300 leading-relaxed">
                         この端末で作ったピンは、ログイン後に編集・削除できなくなります
                      </p>
                      <div className="flex gap-2">

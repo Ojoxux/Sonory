@@ -22,12 +22,12 @@ import type { ToastProps } from "./types"
 export function Toast({ message, onDismiss }: ToastProps) {
    return (
       <motion.div
-         className="pointer-events-auto flex w-full max-w-sm items-start gap-1 rounded-xl border border-red-500/30 bg-red-500/10 p-4 backdrop-blur-sm"
+         className="pointer-events-auto flex w-full max-w-sm items-start gap-1 rounded-xl border border-danger-500/30 bg-danger-500/10 p-4 backdrop-blur-sm"
          initial={{ opacity: 0, y: -16, scale: 0.95 }}
          animate={{ opacity: 1, y: 0, scale: 1 }}
          exit={{ opacity: 0, scale: 0.95 }}
       >
-         <span className="flex-1 text-red-300 text-sm leading-relaxed">
+         <span className="flex-1 text-danger-300 text-sm leading-relaxed">
             {message}
          </span>
          <CloseButton onClick={onDismiss} ariaLabel="通知を閉じる" />

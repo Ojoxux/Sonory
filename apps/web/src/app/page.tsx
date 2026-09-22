@@ -70,14 +70,14 @@ export default function Home(): ReactElement {
             </script>
          </Head>
          <div className="relative h-screen w-screen overflow-hidden">
-            <div className="pointer-events-auto absolute inset-0 z-0">
+            <div className="pointer-events-auto absolute inset-0 z-map">
                <MapComponent
                   onGeolocationReady={handleGeolocationReady}
                   onReturnToLocationReady={handleReturnToLocationReady}
                   onBearingChange={handleBearingChange}
                />
             </div>
-            <div className="pointer-events-none absolute inset-0 z-10">
+            <div className="pointer-events-none absolute inset-0 z-overlay">
                <UIOverlay
                   onSettingsClick={handleSettingsClick}
                   onAppInfoClick={handleAppInfoClick}

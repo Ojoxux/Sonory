@@ -25,7 +25,7 @@ export function SettingToggle({
    disabled = false,
    className = "",
 }: SettingToggleProps) {
-   const trackColor = checked ? "bg-green-500" : "bg-white/20"
+   const trackColor = checked ? "bg-done-500" : "bg-white/20"
 
    return (
       <button

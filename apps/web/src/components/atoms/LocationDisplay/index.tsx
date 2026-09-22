@@ -146,7 +146,7 @@ const LocationDisplayComponent = function LocationDisplay({
             ) : (
                <div className="inline-block">
                   <h2
-                     className={`font-bold text-6xl tracking-tight ${textColorClass} pb-2 leading-none ${isError ? "text-yellow-500" : ""}`}
+                     className={`font-bold text-6xl tracking-tight ${textColorClass} pb-2 leading-none ${isError ? "text-warn-500" : ""}`}
                   >
                      {locationName}
                   </h2>
@@ -158,7 +158,7 @@ const LocationDisplayComponent = function LocationDisplay({
                   >
                      {latitude?.toFixed(4)}° N, {longitude?.toFixed(4)}° E
                      {isError && (
-                        <span className="ml-2 text-xs text-yellow-500">
+                        <span className="ml-2 text-xs text-warn-500">
                            (位置情報取得エラー)
                         </span>
                      )}

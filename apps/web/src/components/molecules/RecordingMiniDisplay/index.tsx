@@ -30,7 +30,7 @@ export function RecordingMiniDisplay({
          <motion.div
             className={`relative flex h-14 w-14 touch-manipulation items-center justify-center rounded-full shadow-lg transition-all duration-300 sm:h-16 sm:w-16 ${
                status === "recording"
-                  ? "bg-red-600"
+                  ? "bg-record-600"
                   : status === "completed"
                     ? "bg-gray-400"
                     : "bg-gray-600"
@@ -60,7 +60,7 @@ export function RecordingMiniDisplay({
             {/* 録音中のパルスエフェクト */}
             <PulseEffect
                isActive={status === "recording"}
-               borderColor="border-red-500"
+               borderColor="border-record-500"
             />
          </motion.div>
 

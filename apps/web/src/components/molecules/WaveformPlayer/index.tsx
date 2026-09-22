@@ -50,9 +50,9 @@ export function WaveformPlayer({
    if (error) {
       return (
          <div
-            className={`flex h-32 items-center justify-center rounded-lg bg-red-50 ${className}`}
+            className={`flex h-32 items-center justify-center rounded-lg border border-danger-500/30 bg-danger-500/10 ${className}`}
          >
-            <p className="text-red-600">エラー: {error.message}</p>
+            <p className="text-danger-300 text-sm">エラー: {error.message}</p>
          </div>
       )
    }

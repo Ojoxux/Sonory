@@ -26,18 +26,18 @@ export function PrimaryResult({ result }: PrimaryResultProps) {
          initial={{ opacity: 0, scale: 0.95 }}
          animate={{ opacity: 1, scale: 1 }}
          transition={{ delay: 0.1 }}
-         className="rounded-xl border border-green-500/30 bg-green-500/10 p-4 backdrop-blur-sm"
+         className="rounded-xl border border-done-500/30 bg-done-500/10 p-4 backdrop-blur-sm"
       >
          <div className="mb-1.5 flex items-center justify-between">
-            <span className="font-semibold text-base text-green-300">
+            <span className="font-semibold text-base text-done-300">
                {result.label}
             </span>
-            <span className="font-mono font-semibold text-green-400 text-sm">
+            <span className="font-mono font-semibold text-done-400 text-sm">
                {formatConfidence(result.confidence)}
             </span>
          </div>
-         <div className="flex items-center gap-1.5 text-green-300/60 text-xs">
-            <span className="inline-block h-1 w-1 animate-pulse rounded-full bg-green-400" />
+         <div className="flex items-center gap-1.5 text-done-300/60 text-xs">
+            <span className="inline-block h-1 w-1 animate-pulse rounded-full bg-done-400" />
             最も可能性が高い
          </div>
       </motion.div>

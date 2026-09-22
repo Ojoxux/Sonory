@@ -24,11 +24,11 @@ export function FallbackWarning({ fallbackUsed }: FallbackWarningProps) {
 
    return (
       <motion.div
-         className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4 backdrop-blur-sm"
+         className="rounded-xl border border-warn-500/30 bg-warn-500/10 p-4 backdrop-blur-sm"
          initial={{ opacity: 0, scale: 0.9 }}
          animate={{ opacity: 1, scale: 1 }}
       >
-         <span className="text-sm text-yellow-300 leading-relaxed">
+         <span className="text-sm text-warn-300 leading-relaxed">
             ⚠️ オフライン分析結果を表示中
          </span>
       </motion.div>

@@ -38,7 +38,7 @@ export function RecordingHeader({
             <BlinkingIndicator
                isActive={isRecording}
                size="w-2 h-2"
-               color="bg-red-500"
+               color="bg-record-500"
             />
             <span className="font-medium text-base text-gray-900 sm:text-lg">
                録音中

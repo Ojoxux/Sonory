@@ -30,13 +30,13 @@ export function EnvironmentInfo({ environment }: EnvironmentInfoProps) {
 
    return (
       <motion.div
-         className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-4 backdrop-blur-sm"
+         className="rounded-xl border border-accent-500/30 bg-accent-500/10 p-4 backdrop-blur-sm"
          initial={{ opacity: 0, scale: 0.9 }}
          animate={{ opacity: 1, scale: 1 }}
       >
          <div className="flex items-center gap-2">
-            <MdPublic className="h-5 w-5 text-blue-400" />
-            <span className="text-blue-300 text-sm">
+            <MdPublic className="h-5 w-5 text-accent-400" />
+            <span className="text-accent-300 text-sm">
                {environment.description || environment.primary_type}
             </span>
          </div>

@@ -126,14 +126,14 @@ export function PinAudioPlayer({ pin, onClose }: PinAudioPlayerProps) {
                            <motion.div
                               initial={{ opacity: 0, x: -20 }}
                               animate={{ opacity: 1, x: 0 }}
-                              className="flex items-center justify-between rounded-lg border border-yellow-500/30 bg-yellow-500/20 p-3 backdrop-blur-sm"
+                              className="flex items-center justify-between rounded-lg border border-warn-500/30 bg-warn-500/20 p-3 backdrop-blur-sm"
                            >
-                              <span className="font-medium text-yellow-300">
+                              <span className="font-medium text-warn-300">
                                  {pin.environment === "unknown"
                                     ? "未分類"
                                     : pin.environment}
                               </span>
-                              <span className="text-sm text-yellow-400">
+                              <span className="text-sm text-warn-400">
                                  {Math.round(pin.primaryConfidence * 100)}%
                               </span>
                            </motion.div>
@@ -142,11 +142,11 @@ export function PinAudioPlayer({ pin, onClose }: PinAudioPlayerProps) {
 
                      {pin.environment && (
                         <motion.div
-                           className="mb-4 rounded-lg border border-blue-500/30 bg-blue-500/20 p-4 backdrop-blur-sm"
+                           className="mb-4 rounded-lg border border-accent-500/30 bg-accent-500/20 p-4 backdrop-blur-sm"
                            initial={{ opacity: 0, scale: 0.9 }}
                            animate={{ opacity: 1, scale: 1 }}
                         >
-                           <span className="font-medium text-blue-300">
+                           <span className="font-medium text-accent-300">
                               環境: {pin.environment}
                            </span>
                         </motion.div>
@@ -156,11 +156,11 @@ export function PinAudioPlayer({ pin, onClose }: PinAudioPlayerProps) {
                   {/* 音声再生エラー */}
                   {audioLoadError && (
                      <motion.div
-                        className="mb-4 rounded-lg border border-red-500/30 bg-red-500/20 p-4 backdrop-blur-sm"
+                        className="mb-4 rounded-lg border border-danger-500/30 bg-danger-500/20 p-4 backdrop-blur-sm"
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                      >
-                        <span className="font-medium text-red-300">
+                        <span className="font-medium text-danger-300">
                            エラー: {audioLoadError}
                         </span>
                      </motion.div>

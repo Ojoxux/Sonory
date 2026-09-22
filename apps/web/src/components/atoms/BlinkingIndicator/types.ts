@@ -21,7 +21,7 @@ export interface BlinkingIndicatorProps {
 
    /**
     * インジケーターの色クラス
-    * @default 'bg-red-500'
+    * @default 'bg-record-500'
     */
    color?: string
 }

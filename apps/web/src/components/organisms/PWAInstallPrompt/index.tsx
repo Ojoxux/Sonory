@@ -33,7 +33,7 @@ const TEXT_CONTENT = {
 const CSS_CLASSES = {
    /** コンテナのベースクラス */
    CONTAINER_BASE:
-      "fixed top-6 left-0 right-0 z-[200] pointer-events-none flex justify-center",
+      "fixed top-6 left-0 right-0 z-prompt pointer-events-none flex justify-center",
    /** プロンプトのベースクラス */
    PROMPT_BASE:
       "pointer-events-auto bg-black text-white shadow-lg backdrop-blur-lg cursor-pointer transition-all duration-300 ease-out",

@@ -5,10 +5,67 @@
    --foreground: #171717;
 }
 
+@theme {
+   /* 既定の曲線は弱い。ease-in は出だしが遅れて鈍く見えるため生成させない */
+   --ease-in: initial;
+   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+   --transition-duration-press: 140ms;
+   --transition-duration-hint: 160ms;
+   --transition-duration-menu: 200ms;
+   --transition-duration-sheet: 320ms;
+
+   /* ページ直下の2層と、オーバーレイ内の前後関係。シートはポータルで body 直下に出る */
+   --z-index-map: 0;
+   --z-index-overlay: 10;
+   --z-index-chrome: 50;
+   --z-index-panel: 110;
+   --z-index-prompt: 200;
+}
+
+/* 状態色は色相ではなく役割で指定する。面は 500/10、線は 500/30、文字は 300 */
 @theme inline {
    --color-background: var(--background);
    --color-foreground: var(--foreground);
    --font-arial-rounded-mt-pro: var(--font-arial-rounded-mt-pro);
+
+   --color-accent-300: var(--color-blue-300);
+   --color-accent-400: var(--color-blue-400);
+   --color-accent-500: var(--color-blue-500);
+   --color-accent-600: var(--color-blue-600);
+   --color-accent-700: var(--color-blue-700);
+
+   --color-record-300: var(--color-red-300);
+   --color-record-400: var(--color-red-400);
+   --color-record-500: var(--color-red-500);
+   --color-record-600: var(--color-red-600);
+   --color-record-700: var(--color-red-700);
+
+   --color-danger-300: var(--color-red-300);
+   --color-danger-400: var(--color-red-400);
+   --color-danger-500: var(--color-red-500);
+   --color-danger-600: var(--color-red-600);
+   --color-danger-700: var(--color-red-700);
+
+   --color-analyze-300: var(--color-purple-300);
+   --color-analyze-400: var(--color-purple-400);
+   --color-analyze-500: var(--color-purple-500);
+   --color-analyze-600: var(--color-purple-600);
+   --color-analyze-700: var(--color-purple-700);
+
+   --color-done-300: var(--color-green-300);
+   --color-done-400: var(--color-green-400);
+   --color-done-500: var(--color-green-500);
+   --color-done-600: var(--color-green-600);
+   --color-done-700: var(--color-green-700);
+
+   --color-warn-300: var(--color-yellow-300);
+   --color-warn-400: var(--color-yellow-400);
+   --color-warn-500: var(--color-yellow-500);
+   --color-warn-600: var(--color-yellow-600);
+   --color-warn-700: var(--color-yellow-700);
 }
 
 @media (prefers-color-scheme: dark) {

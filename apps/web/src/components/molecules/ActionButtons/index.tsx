@@ -40,7 +40,7 @@ export function ActionButtons({
       return (
          <motion.button
             onClick={onClose}
-            className="w-full touch-manipulation rounded-xl bg-blue-600 px-4 py-3 font-semibold text-sm text-white transition-all duration-200 active:bg-blue-700"
+            className="w-full touch-manipulation rounded-xl bg-accent-600 px-4 py-3 font-semibold text-sm text-white transition-all duration-200 active:bg-accent-700"
             whileTap={{ scale: 0.98 }}
          >
             閉じる
@@ -59,7 +59,7 @@ export function ActionButtons({
             className={`flex-1 touch-manipulation rounded-xl px-4 py-3 font-semibold text-sm text-white transition-all duration-200 ${
                isDisabled
                   ? "cursor-not-allowed bg-gray-600/60"
-                  : "bg-green-600 active:bg-green-700"
+                  : "bg-done-600 active:bg-done-700"
             }`}
             whileTap={isDisabled ? {} : { scale: 0.98 }}
          >

@@ -55,7 +55,7 @@ export function PlaybackControls({
                disabled={!isReady}
                className={`flex h-16 w-16 items-center justify-center rounded-full transition-all duration-300 ${
                   isReady
-                     ? "bg-blue-600 text-white hover:bg-blue-700"
+                     ? "bg-accent-600 text-white hover:bg-accent-700"
                      : "cursor-not-allowed bg-gray-600 text-gray-400"
                }`}
                whileHover={isReady ? { scale: 1.05 } : {}}
@@ -103,7 +103,7 @@ export function PlaybackControls({
             aria-valuenow={currentTime}
          >
             <div
-               className="h-2 rounded-full bg-blue-500"
+               className="h-2 rounded-full bg-accent-500"
                style={{
                   width: `${progressPercentage}%`,
                   transition:
