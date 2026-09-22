@@ -1,7 +1,7 @@
 "use client"
 
-import { motion } from "motion/react"
-import { MdStop } from "react-icons/md"
+import { clsx } from "clsx"
+import { Square } from "lucide-react"
 import { PulseEffect } from "../../atoms/PulseEffect"
 import { WaveformDisplay } from "../WaveformDisplay"
 import type { RecordingMiniDisplayProps } from "./types"
@@ -10,7 +10,7 @@ import type { RecordingMiniDisplayProps } from "./types"
  * 録音ミニ表示コンポーネント
  *
  * @description
- * 録音インターフェースの非展開時に表示されるミニ表示コンポーネント
+ * 録音シートを収納しているときに見える1行。停止ボタン・波形・経過時間を並べる
  *
  * @param status 録音状態
  * @param recordingTime 録音時間
@@ -23,75 +23,56 @@ export function RecordingMiniDisplay({
    recordingTime,
    waveformData,
    formatTime,
+   onStop,
 }: RecordingMiniDisplayProps) {
+   const isRecording = status === "recording"
+
    return (
       <div className="flex h-16 items-center justify-between">
-         {/* 録音ボタン */}
-         <motion.div
-            className={`relative flex h-14 w-14 touch-manipulation items-center justify-center rounded-full shadow-lg transition-all duration-300 sm:h-16 sm:w-16 ${
-               status === "recording"
-                  ? "bg-record-600"
-                  : status === "completed"
-                    ? "bg-gray-400"
-                    : "bg-gray-600"
-            }
-        `}
+         <button
+            type="button"
+            onClick={onStop}
+            disabled={!isRecording}
+            aria-label="録音を停止"
+            className={clsx(
+               "relative grid size-14 shrink-0 touch-manipulation place-items-center rounded-full text-white transition duration-press ease-out focus-visible:outline-2 focus-visible:outline-white/60 focus-visible:outline-offset-2 not-disabled:active:scale-97 sm:size-16",
+               isRecording ? "bg-record-600" : "bg-white/10",
+            )}
          >
-            {status === "recording" ? (
-               <MdStop className="h-6 w-6 text-white sm:h-8 sm:w-8" />
-            ) : status === "completed" ? (
-               <motion.div
-                  className="h-6 w-6 rounded-full border-3 border-white border-t-transparent sm:h-8 sm:w-8"
-                  animate={{ rotate: 360 }}
-                  transition={{
-                     duration: 1,
-                     repeat: Number.POSITIVE_INFINITY,
-                     ease: "linear",
-                  }}
+            {isRecording ? (
+               <Square
+                  aria-hidden="true"
+                  className="size-5 fill-current sm:size-6"
                />
             ) : (
-               <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="h-5 w-5 rounded-full bg-white sm:h-6 sm:w-6"
-               />
+               <span className="size-6 animate-spin rounded-full border-2 border-white border-t-transparent sm:size-8" />
             )}
 
-            {/* 録音中のパルスエフェクト */}
             <PulseEffect
-               isActive={status === "recording"}
+               isActive={isRecording}
                borderColor="border-record-500"
             />
-         </motion.div>
+         </button>
 
-         {/* 波形表示 */}
          <div className="mx-3 flex-1 sm:mx-6">
             <WaveformDisplay
-               isRecording={status === "recording"}
+               isRecording={isRecording}
                isCompleted={status === "completed"}
                recordingTime={recordingTime}
                waveformData={waveformData}
                height={48}
-               className="h-12"
-               waveColor="#000000"
-               backgroundColor="#f3f4f6"
-               key={`mini-${status}-${recordingTime}`}
+               className="h-12 text-white"
             />
          </div>
 
-         {/* タイマー */}
-         <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="min-w-[90px] text-right sm:min-w-[100px]"
-         >
-            <div className="font-medium font-mono text-gray-900 text-xl sm:text-2xl">
+         <div className="min-w-24 text-right">
+            <div className="font-medium font-mono text-white text-xl tabular-nums sm:text-2xl">
                {formatTime(recordingTime)}
             </div>
-            <div className="text-gray-500 text-xs">
-               {status === "recording" ? "録音中" : "完了"}
+            <div className="text-neutral-400 text-xs">
+               {isRecording ? "録音中" : "完了"}
             </div>
-         </motion.div>
+         </div>
       </div>
    )
 }

@@ -15,7 +15,7 @@ export interface RippleEffectProps {
 
    /**
     * ボーダーの色クラス
-    * @default 'border-gray-400'
+    * @default 'border-white/40'
     */
    borderColor?: string
 

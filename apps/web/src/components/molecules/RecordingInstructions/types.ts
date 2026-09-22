@@ -11,11 +11,6 @@ export interface RecordingInstructionsProps {
    instructionItems: string[]
 
    /**
-    * 閉じるアニメーション中かどうか
-    */
-   isClosing: boolean
-
-   /**
     * 同意済みかどうか
     */
    isAgreed: boolean
