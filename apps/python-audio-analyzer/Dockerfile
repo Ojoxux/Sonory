@@ -1,9 +1,9 @@
-# syntax=docker/dockerfile:1
+# syntax=docker/dockerfile:1@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32
 # Multi-stage build for Python audio analyzer
 # Use specific version for security
-FROM python:3.13-slim AS base
+FROM python:3.13-slim@sha256:8d9d0b8bcf6506481eae4907c18f5e3e7902e629f5f6d684f9e7c32e85e3ddf0 AS base
 
-COPY --from=ghcr.io/astral-sh/uv:0.11.16 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.11.16@sha256:440fd6477af86a2f1b38080c539f1672cd22acb1b1a47e321dba5158ab08864d /uv /uvx /bin/
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \

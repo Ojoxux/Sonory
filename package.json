@@ -17,13 +17,13 @@
       "@sonory/utils": "*"
    },
    "devDependencies": {
-      "@types/node": "^24.13.4",
-      "concurrently": "^10.0.5",
-      "lefthook": "^2.1.12",
-      "oxfmt": "^0.67.0",
-      "oxlint": "^1.82.0",
-      "turbo": "^2.10.12",
-      "typescript": "^5.9.3"
+      "@types/node": "24.13.4",
+      "concurrently": "10.0.5",
+      "lefthook": "2.1.12",
+      "oxfmt": "0.67.0",
+      "oxlint": "1.82.0",
+      "turbo": "2.10.12",
+      "typescript": "5.9.3"
    },
    "packageManager": "npm@10.9.4"
 }
