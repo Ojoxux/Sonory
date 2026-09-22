@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next"
 import localFont from "next/font/local"
+import { Toaster } from "@/components/atoms/Toaster"
 import "./globals.css"
 import { Providers } from "./providers"
 
@@ -158,6 +159,7 @@ export default function RootLayout({
             className={`${arialRoundedMTPro.variable} touch-manipulation antialiased`}
          >
             <Providers>{children}</Providers>
+            <Toaster />
          </body>
       </html>
    )
