@@ -54,15 +54,11 @@ export function SoundPinIcon({
    return (
       <div className="relative">
          {/* メインピンボタン */}
-         <motion.button
+         {/* 反応は CSS で付ける。hover: はホバーできる端末でだけ効く */}
+         <button
             type="button"
             onClick={onClick}
-            className={`relative z-10 flex items-center justify-center ${currentSize.container}
-               ${currentVariant.bg}
-               ${currentVariant.shadow} ${currentVariant.border} cursor-pointer touch-manipulation rounded-full transition-all duration-300 hover:scale-110 active:scale-95 ${className}
-            `}
-            whileHover={animated ? { scale: 1.1 } : {}}
-            whileTap={animated ? { scale: 0.95 } : {}}
+            className={`relative z-10 flex items-center justify-center ${currentSize.container} ${currentVariant.bg} ${currentVariant.shadow} ${currentVariant.border} cursor-pointer touch-manipulation rounded-full ${animated ? "transition-transform duration-press ease-out hover:scale-105 active:scale-97" : ""} ${className}`}
             aria-label={`音声録音地点: ${primaryLabel || "未分類"}${
                primaryConfidence != null
                   ? ` (信頼度: ${(primaryConfidence * 100).toFixed(0)}%)`
@@ -79,7 +75,7 @@ export function SoundPinIcon({
             {/* 分析中のパルス効果 */}
             {variant === "analyzing" && animated && (
                <motion.div
-                  className="absolute inset-0 rounded-full bg-orange-200/30"
+                  className="pointer-events-none absolute inset-0 rounded-full bg-orange-200/30"
                   animate={{
                      scale: [1, 1.2, 1],
                      opacity: [0.5, 0, 0.5],
@@ -91,17 +87,12 @@ export function SoundPinIcon({
                   }}
                />
             )}
-         </motion.button>
+         </button>
 
          {/* 選択状態のリング */}
          {variant === "active" && (
             <motion.div
-               className="absolute inset-0 rounded-full border-2 border-green-400"
-               style={{
-                  left: "50%",
-                  top: "50%",
-                  transform: "translate(-50%, -50%)",
-               }}
+               className="pointer-events-none absolute inset-0 rounded-full border-2 border-green-400"
                animate={{
                   scale: [1, 1.3, 1],
                   opacity: [0.8, 0.3, 0.8],

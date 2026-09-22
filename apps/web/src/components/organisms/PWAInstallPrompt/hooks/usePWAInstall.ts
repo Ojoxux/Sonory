@@ -10,8 +10,8 @@ const ANIMATION_DELAYS = {
    DEBUG_EXPAND: 800,
    /** 通常モードでの展開遅延 */
    NORMAL_EXPAND: 1000,
-   /** 閉じるアニメーション遅延 */
-   CLOSE_ANIMATION: 500,
+   /** 閉じるアニメーション遅延。プロンプトの `duration-menu` に合わせる */
+   CLOSE_ANIMATION: 200,
 } as const
 
 /** イベント名 */

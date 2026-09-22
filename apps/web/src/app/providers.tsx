@@ -1,6 +1,7 @@
 "use client"
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { MotionConfig } from "motion/react"
 import type { PropsWithChildren } from "react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
@@ -86,6 +87,9 @@ export function Providers({ children }: PropsWithChildren) {
    }, [])
 
    return (
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+         {/* OS のモーション軽減が有効なら位置と拡大の動きを止め、不透明度だけ残す */}
+         <MotionConfig reducedMotion="user">{children}</MotionConfig>
+      </QueryClientProvider>
    )
 }

@@ -29,7 +29,7 @@ const variantConfig = {
       bg: "",
       border: "",
       shadow: "",
-      icon: "text-gray-800",
+      icon: "text-neutral-800",
    },
    active: {
       bg: "",
