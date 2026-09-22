@@ -2,6 +2,7 @@
 
 import { motion } from "motion/react"
 import { Sheet } from "react-modal-sheet"
+import { Button } from "@/components/atoms/Button"
 import { WaveformPlayer } from "../../../molecules/WaveformPlayer"
 import type { AudioReviewViewProps } from "./types"
 
@@ -79,22 +80,16 @@ export function AudioReviewView({
                   </div>
 
                   <div className="flex gap-3">
-                     <motion.button
-                        onClick={onCancel}
-                        className="flex-1 touch-manipulation rounded-xl border border-white/10 bg-white/10 px-4 py-3 font-semibold text-white shadow-[0_4px_20px_rgba(255,255,255,0.1)] backdrop-blur-sm transition-all duration-300 hover:bg-white/20 hover:shadow-[0_8px_32px_rgba(255,255,255,0.2)]"
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                     >
+                     <Button onClick={onCancel} className="flex-1">
                         キャンセル
-                     </motion.button>
-                     <motion.button
+                     </Button>
+                     <Button
+                        intent="accent"
                         onClick={onContinue}
-                        className="flex-1 touch-manipulation rounded-xl border border-accent-500/30 bg-accent-600/80 px-4 py-3 font-semibold text-white shadow-[0_4px_20px_rgba(59,130,246,0.4)] backdrop-blur-sm transition-all duration-300 hover:bg-accent-600 hover:shadow-[0_8px_32px_rgba(59,130,246,0.6)]"
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
+                        className="flex-1"
                      >
                         続ける
-                     </motion.button>
+                     </Button>
                   </div>
                </motion.div>
             </Sheet.Content>

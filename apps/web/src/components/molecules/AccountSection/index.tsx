@@ -1,10 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import { Button } from "@/components/atoms/Button"
 import type { AccountSectionProps } from "./types"
-
-const BUTTON_CLASS =
-   "w-full rounded-xl bg-white/90 px-4 py-3 font-semibold text-black text-sm transition-colors hover:bg-white disabled:opacity-50"
 
 /**
  * 設定シートのアカウント欄
@@ -32,14 +30,9 @@ export function AccountSection({
                <p className="text-neutral-300 text-sm leading-relaxed">
                   別の端末でも、この端末で作ったピンを引き継げます
                </p>
-               <button
-                  type="button"
-                  onClick={onLink}
-                  disabled={isBusy}
-                  className={BUTTON_CLASS}
-               >
+               <Button intent="accent" block onClick={onLink} disabled={isBusy}>
                   Google アカウントと連携
-               </button>
+               </Button>
 
                {isConfirmingSignIn ? (
                   <div className="space-y-2 rounded-lg border border-warn-500/30 bg-warn-500/10 px-3 py-2">
@@ -47,21 +40,22 @@ export function AccountSection({
                         この端末で作ったピンは、ログイン後に編集・削除できなくなります
                      </p>
                      <div className="flex gap-2">
-                        <button
-                           type="button"
+                        <Button
+                           intent="accent"
+                           size="sm"
                            onClick={onSignIn}
                            disabled={isBusy}
-                           className="flex-1 rounded-lg bg-white/90 px-3 py-2 font-semibold text-black text-sm disabled:opacity-50"
+                           className="flex-1"
                         >
                            ログインする
-                        </button>
-                        <button
-                           type="button"
+                        </Button>
+                        <Button
+                           size="sm"
                            onClick={() => setIsConfirmingSignIn(false)}
-                           className="flex-1 rounded-lg border border-white/15 px-3 py-2 text-sm text-white"
+                           className="flex-1"
                         >
                            やめる
-                        </button>
+                        </Button>
                      </div>
                   </div>
                ) : (
@@ -83,14 +77,9 @@ export function AccountSection({
                <p className="text-sm text-white">
                   {email ?? "Google アカウント"} で連携中
                </p>
-               <button
-                  type="button"
-                  onClick={onSignOut}
-                  disabled={isBusy}
-                  className="w-full rounded-xl border border-white/15 px-4 py-3 text-sm text-white disabled:opacity-50"
-               >
+               <Button block onClick={onSignOut} disabled={isBusy}>
                   ログアウト
-               </button>
+               </Button>
             </div>
          )}
       </section>
