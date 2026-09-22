@@ -28,7 +28,7 @@ export const CloseButton = memo(function CloseButton({
       <button
          type="button"
          onClick={onClick}
-         className="flex-shrink-0 p-2 text-gray-400 transition-colors hover:text-white"
+         className="flex-shrink-0 touch-manipulation p-2 text-neutral-400 transition duration-press ease-out hover:text-white active:scale-97"
          aria-label={ariaLabel}
       >
          <MdClose className="h-4 w-4" />
