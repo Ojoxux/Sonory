@@ -12,8 +12,6 @@ export type AnalysisResult = {
  * OtherResultsAccordion コンポーネントのProps
  */
 export type OtherResultsAccordionProps = {
-   /** 分析結果の配列（最初の要素が主要結果） */
-   results: AnalysisResult[]
-   /** フルハイト表示かどうか */
-   isFullHeight: boolean
+   /** 主要結果を除いた候補 */
+   results: readonly AnalysisResult[]
 }

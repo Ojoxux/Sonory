@@ -36,7 +36,5 @@ export interface UsePinAudioPlayerReturn {
    handleSeek: (event: React.MouseEvent<HTMLDivElement>) => void
    handleClose: () => void
    progressPercentage: number
-   isOtherResultsOpen: boolean
-   toggleOtherResults: () => void
    formatConfidence: (confidence: number) => string
 }

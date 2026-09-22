@@ -78,10 +78,7 @@ export function AnalysisResultsView({
 
                   <PrimaryResult result={results[0]} />
 
-                  <OtherResultsAccordion
-                     results={results}
-                     isFullHeight={true}
-                  />
+                  <OtherResultsAccordion results={results.slice(1, 3)} />
                </div>
             )}
 

@@ -2,6 +2,7 @@
 
 import { type ReactElement, useState } from "react"
 import { Button } from "@/components/atoms/Button"
+import { OtherResultsAccordion } from "@/components/molecules/OtherResultsAccordion"
 import {
    Sheet,
    SheetBody,
@@ -10,7 +11,6 @@ import {
 } from "@/components/molecules/Sheet"
 import { SoundWaveBackground } from "../../atoms/SoundWaveBackground"
 import { DebugInfo } from "./DebugInfo"
-import { OtherResults } from "./OtherResults"
 import { PlaybackControls } from "./PlaybackControls"
 import { PrimaryResult } from "./PrimaryResult"
 import type { PinAudioPlayerProps } from "./types"
@@ -54,8 +54,6 @@ export function PinAudioPlayer({
       handleSeek,
       handleClose,
       progressPercentage,
-      isOtherResultsOpen,
-      toggleOtherResults,
       formatConfidence,
    } = usePinAudioPlayer(pin, () => setOpen(false))
 
@@ -88,14 +86,9 @@ export function PinAudioPlayer({
                               formatConfidence={formatConfidence}
                            />
 
-                           {pin.classificationResults.length > 1 && (
-                              <OtherResults
-                                 results={pin.classificationResults.slice(1)}
-                                 isOpen={isOtherResultsOpen}
-                                 toggle={toggleOtherResults}
-                                 formatConfidence={formatConfidence}
-                              />
-                           )}
+                           <OtherResultsAccordion
+                              results={pin.classificationResults.slice(1)}
+                           />
                         </div>
                      ) : (
                         <div className="mb-4 flex items-center justify-between rounded-xl border border-warn-500/30 bg-warn-500/10 p-3">
