@@ -37,7 +37,7 @@ services:
 
   # Redis for caching
   redis:
-    image: redis:7.2-alpine3.19
+    image: redis:7.2-alpine3.19@sha256:8f157725f8eee31e65a8d4765f1f986d76aedc1a0503345dfb63a2b1b5a441ee
     ports:
       - "127.0.0.1:6379:6379"
     environment:
