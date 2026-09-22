@@ -83,6 +83,11 @@
          "automerge": true
       },
       {
+         "description": "base-ui は RC のため、どの更新も破壊的になりうる。Dependency Dashboard で承認したものだけ PR にする",
+         "matchPackageNames": ["@base-ui-components/react"],
+         "dependencyDashboardApproval": true
+      },
+      {
          "description": "メジャー更新は Dependency Dashboard で承認したものだけ PR にする",
          "matchUpdateTypes": ["major"],
          "dependencyDashboardApproval": true

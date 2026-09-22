@@ -111,3 +111,11 @@ body {
    touch-action: manipulation;
    -webkit-tap-highlight-color: transparent;
 }
+
+/* 黒ガラス。シートとパネルの地。枠の太さは使う側で付ける（例: glass border-t） */
+@utility glass {
+   background-color: color-mix(in oklab, var(--color-black) 95%, transparent);
+   border-color: color-mix(in oklab, var(--color-white) 10%, transparent);
+   -webkit-backdrop-filter: blur(var(--blur-xl));
+   backdrop-filter: blur(var(--blur-xl));
+}
