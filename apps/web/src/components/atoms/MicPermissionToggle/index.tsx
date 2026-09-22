@@ -28,9 +28,9 @@ export function MicPermissionToggle({
    const isLocked = isGranted || state === "requesting"
 
    const trackColor = isGranted
-      ? "bg-green-500"
+      ? "bg-done-500"
       : isDenied
-        ? "bg-red-500/60"
+        ? "bg-danger-500/60"
         : "bg-white/20"
 
    return (
@@ -58,7 +58,7 @@ export function MicPermissionToggle({
                </span>
                <span
                   id="mic-permission-description"
-                  className={`text-xs ${isDenied ? "text-red-300" : "text-neutral-300"}`}
+                  className={`text-xs ${isDenied ? "text-danger-300" : "text-neutral-300"}`}
                >
                   {MIC_PERMISSION_DESCRIPTIONS[state]}
                </span>

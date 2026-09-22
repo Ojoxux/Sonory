@@ -19,7 +19,7 @@ import type { PulseEffectProps } from "./types"
 export function PulseEffect({
    isActive,
    className = "",
-   borderColor = "border-red-500",
+   borderColor = "border-record-500",
    size = "inset-0",
 }: PulseEffectProps) {
    // 各インスタンス独自のランダムタイミング

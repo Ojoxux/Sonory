@@ -63,7 +63,7 @@ export function AppHeader({
       : "bg-black/10 hover:bg-black/20"
 
    return (
-      <header className="pointer-events-none fixed top-0 right-0 left-0 z-[50]">
+      <header className="pointer-events-none fixed top-0 right-0 left-0 z-chrome">
          <div className="flex items-start justify-between p-6">
             {/* 地域名表示とコンパスボタン */}
             <div className="pointer-events-auto flex flex-col items-start gap-2">

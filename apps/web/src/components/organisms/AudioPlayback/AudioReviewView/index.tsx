@@ -89,7 +89,7 @@ export function AudioReviewView({
                      </motion.button>
                      <motion.button
                         onClick={onContinue}
-                        className="flex-1 touch-manipulation rounded-xl border border-blue-500/30 bg-blue-600/80 px-4 py-3 font-semibold text-white shadow-[0_4px_20px_rgba(59,130,246,0.4)] backdrop-blur-sm transition-all duration-300 hover:bg-blue-600 hover:shadow-[0_8px_32px_rgba(59,130,246,0.6)]"
+                        className="flex-1 touch-manipulation rounded-xl border border-accent-500/30 bg-accent-600/80 px-4 py-3 font-semibold text-white shadow-[0_4px_20px_rgba(59,130,246,0.4)] backdrop-blur-sm transition-all duration-300 hover:bg-accent-600 hover:shadow-[0_8px_32px_rgba(59,130,246,0.6)]"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                      >

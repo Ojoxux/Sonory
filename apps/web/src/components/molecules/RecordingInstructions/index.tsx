@@ -146,7 +146,7 @@ export function RecordingInstructions({
                {/* 位置情報が無いとピンを配置できない。録音し終えてから気づかせない */}
                {!hasPosition && (
                   <motion.div
-                     className="relative z-10 mb-4 rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-4 py-3"
+                     className="relative z-10 mb-4 rounded-xl border border-warn-500/30 bg-warn-500/10 px-4 py-3"
                      initial={{ opacity: 0, y: 30 }}
                      animate={
                         isClosing ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }
@@ -157,7 +157,7 @@ export function RecordingInstructions({
                            : { delay: 1.35, duration: 0.6 }
                      }
                   >
-                     <span className="text-sm text-yellow-300 leading-relaxed">
+                     <span className="text-sm text-warn-300 leading-relaxed">
                         位置情報を取得できていません。録音はできますが、ピンは配置できません
                      </span>
                   </motion.div>

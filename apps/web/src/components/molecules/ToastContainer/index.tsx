@@ -21,7 +21,7 @@ export function ToastContainer() {
    const { toasts, removeToast } = useToastStore()
 
    return (
-      <div className="pointer-events-none fixed inset-x-0 top-20 z-50 flex flex-col items-center gap-2 px-4">
+      <div className="pointer-events-none fixed inset-x-0 top-20 z-chrome flex flex-col items-center gap-2 px-4">
          <AnimatePresence>
             {toasts.map((toast) => (
                <Toast

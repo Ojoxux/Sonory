@@ -39,7 +39,7 @@ export function ConfirmButton({
             disabled={isLocked}
             className={`pointer-events-auto w-full rounded-xl px-6 py-3 font-semibold text-sm transition-all duration-300 ${
                isConfirmed
-                  ? "bg-green-500 text-white shadow-[0_4px_20px_rgba(34,197,94,0.4)]"
+                  ? "bg-done-500 text-white shadow-[0_4px_20px_rgba(34,197,94,0.4)]"
                   : isDisabled
                     ? "bg-white/30 text-black/50"
                     : "bg-white/90 text-black hover:bg-white hover:shadow-[0_4px_20px_rgba(255,255,255,0.3)]"

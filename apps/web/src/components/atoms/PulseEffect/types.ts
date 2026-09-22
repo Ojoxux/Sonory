@@ -15,7 +15,7 @@ export interface PulseEffectProps {
 
    /**
     * ボーダーの色クラス
-    * @default 'border-red-500'
+    * @default 'border-record-500'
     */
    borderColor?: string
 

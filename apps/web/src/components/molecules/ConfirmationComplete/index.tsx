@@ -45,14 +45,14 @@ export function ConfirmationComplete({
                {/* 背景の円 - クローズ時は早めに非表示 */}
                <motion.div
                   {...circleAnim}
-                  className="absolute inset-0 h-20 w-20 rounded-full bg-green-500/10"
+                  className="absolute inset-0 h-20 w-20 rounded-full bg-done-500/10"
                />
                {/* チェックマーク */}
                <div className="relative z-10 flex h-20 w-20 items-center justify-center">
                   <motion.svg
                      {...iconAnim}
                      aria-label="確認完了マーク"
-                     className="h-10 w-10 text-green-500"
+                     className="h-10 w-10 text-done-500"
                      fill="none"
                      viewBox="0 0 24 24"
                      stroke="currentColor"

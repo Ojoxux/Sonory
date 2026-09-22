@@ -54,8 +54,7 @@ export function RecordingInterface({
 
    return (
       <div
-         className={`pointer-events-auto fixed right-0 bottom-0 left-0 ${className}`}
-         style={{ zIndex: status !== "idle" && isExpanded ? 110 : 50 }}
+         className={`pointer-events-auto fixed right-0 bottom-0 left-0 ${status !== "idle" && isExpanded ? "z-panel" : "z-chrome"} ${className}`}
       >
          {/* 初期状態の録音ボタン（録音していない時のみ表示） */}
          <AnimatePresence>

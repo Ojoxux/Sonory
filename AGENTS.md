@@ -213,6 +213,8 @@ Workers 環境では **リクエストごとに JWT が異なる**。
 
 - Tailwind のユーティリティを使用。任意値（`[w-100px]` 等）は禁止
 - トークンは `apps/web/src/app/globals.css` の `@theme` が単一の情報源
+- 状態色は色相ではなく役割で書く（`accent` / `record` / `danger` / `analyze` / `done` / `warn`）。例: `bg-danger-500/10`
+- 画面全体の重なりは `z-map` / `z-overlay` / `z-chrome` / `z-panel` / `z-prompt` を使い、数値を直書きしない
 - `prefers-reduced-motion` を尊重
 - モバイルファースト
 

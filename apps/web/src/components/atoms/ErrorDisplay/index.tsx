@@ -30,11 +30,11 @@ export function ErrorDisplay({
 
    return (
       <motion.div
-         className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 backdrop-blur-sm"
+         className="rounded-xl border border-danger-500/30 bg-danger-500/10 p-4 backdrop-blur-sm"
          initial={{ opacity: 0, scale: 0.9 }}
          animate={{ opacity: 1, scale: 1 }}
       >
-         <span className="text-red-300 text-sm leading-relaxed">
+         <span className="text-danger-300 text-sm leading-relaxed">
             {pinCreationError || uploadError || error?.message}
          </span>
       </motion.div>

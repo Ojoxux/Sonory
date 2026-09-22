@@ -20,7 +20,7 @@ export function BlinkingIndicator({
    isActive,
    className = "",
    size = "w-2 h-2",
-   color = "bg-red-500",
+   color = "bg-record-500",
 }: BlinkingIndicatorProps) {
    // 各インスタンス独自のランダムタイミング
    const [delay] = useState(() => 100 + Math.random() * 400) // 100-500msのランダム遅延
