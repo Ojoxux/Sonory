@@ -2,6 +2,7 @@
 
 import { motion } from "motion/react"
 import { Sheet } from "react-modal-sheet"
+import { Button } from "@/components/atoms/Button"
 import { SoundWaveBackground } from "../../atoms/SoundWaveBackground"
 import { DebugInfo } from "./DebugInfo"
 import { OtherResults } from "./OtherResults"
@@ -186,14 +187,9 @@ export function PinAudioPlayer({ pin, onClose }: PinAudioPlayerProps) {
                   </div>
 
                   {/* 閉じるボタン */}
-                  <motion.button
-                     onClick={handleClose}
-                     className="w-full touch-manipulation rounded-xl border border-white/10 bg-white/10 px-4 py-3 font-semibold text-white shadow-[0_4px_20px_rgba(255,255,255,0.1)] backdrop-blur-sm transition-all duration-300 hover:bg-white/20 hover:shadow-[0_8px_32px_rgba(255,255,255,0.2)]"
-                     whileHover={{ scale: 1.02 }}
-                     whileTap={{ scale: 0.98 }}
-                  >
+                  <Button block onClick={handleClose}>
                      閉じる
-                  </motion.button>
+                  </Button>
                </div>
             </Sheet.Content>
          </Sheet.Container>

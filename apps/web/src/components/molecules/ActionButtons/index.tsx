@@ -1,6 +1,6 @@
 "use client"
 
-import { motion } from "motion/react"
+import { Button } from "@/components/atoms/Button"
 import type { ActionButtonsProps } from "./types"
 import { getButtonText, shouldDisableButton } from "./utils"
 
@@ -38,13 +38,9 @@ export function ActionButtons({
    // 結果がない場合は閉じるボタンだけ表示
    if (!hasResults) {
       return (
-         <motion.button
-            onClick={onClose}
-            className="w-full touch-manipulation rounded-xl bg-accent-600 px-4 py-3 font-semibold text-sm text-white transition-all duration-200 active:bg-accent-700"
-            whileTap={{ scale: 0.98 }}
-         >
+         <Button intent="accent" block onClick={onClose}>
             閉じる
-         </motion.button>
+         </Button>
       )
    }
 
@@ -53,25 +49,17 @@ export function ActionButtons({
 
    return (
       <>
-         <motion.button
+         <Button
+            intent="done"
             onClick={onPlacePin}
             disabled={isDisabled}
-            className={`flex-1 touch-manipulation rounded-xl px-4 py-3 font-semibold text-sm text-white transition-all duration-200 ${
-               isDisabled
-                  ? "cursor-not-allowed bg-gray-600/60"
-                  : "bg-done-600 active:bg-done-700"
-            }`}
-            whileTap={isDisabled ? {} : { scale: 0.98 }}
+            className="flex-1"
          >
             {buttonText}
-         </motion.button>
-         <motion.button
-            onClick={onClose}
-            className="flex-1 touch-manipulation rounded-xl border border-white/10 bg-white/5 px-4 py-3 font-semibold text-sm text-white transition-all duration-200 active:bg-white/10"
-            whileTap={{ scale: 0.98 }}
-         >
+         </Button>
+         <Button onClick={onClose} className="flex-1">
             閉じる
-         </motion.button>
+         </Button>
       </>
    )
 }

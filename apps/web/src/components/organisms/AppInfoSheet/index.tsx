@@ -1,6 +1,7 @@
 "use client"
 
 import { Sheet } from "react-modal-sheet"
+import { buttonVariants } from "@/components/atoms/Button/utils"
 import { useIsMounted } from "@/hooks/useIsMounted"
 import { APP_DESCRIPTION, LIBRARY_CREDITS, REPOSITORY_URL } from "./constants"
 import type { AppInfoSheetProps } from "./types"
@@ -73,7 +74,7 @@ export function AppInfoSheet({ isOpen, onClose }: AppInfoSheetProps) {
                      href={REPOSITORY_URL}
                      target="_blank"
                      rel="noopener noreferrer"
-                     className="block w-full touch-manipulation rounded-xl border border-white/10 bg-white/10 px-4 py-3 text-center font-semibold text-white shadow-[0_4px_20px_rgba(255,255,255,0.1)] backdrop-blur-sm transition-all duration-300 hover:bg-white/20"
+                     className={buttonVariants({ block: true })}
                   >
                      リポジトリを見る
                   </a>
