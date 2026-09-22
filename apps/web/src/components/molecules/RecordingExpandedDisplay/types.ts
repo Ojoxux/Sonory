@@ -10,8 +10,4 @@ export interface RecordingExpandedDisplayProps {
    waveformData: number[]
    /** 時間フォーマット関数 */
    formatTime: (seconds: number) => string
-   /** キャンセル時のコールバック */
-   onCancel: () => void
-   /** 次へボタンクリック時のコールバック */
-   onNext: () => void
 }

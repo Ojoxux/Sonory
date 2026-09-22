@@ -1,5 +1,4 @@
-import type { PanInfo } from "motion/react"
-import type { MutableRefObject, ReactNode } from "react"
+import type { ReactNode } from "react"
 
 /**
  * RecordingContainerコンポーネントのProps型定義
@@ -16,20 +15,7 @@ export interface RecordingContainerProps {
    isExpanded: boolean
 
    /**
-    * ドラッグ制約用のref
+    * ドラッグやハンドルの押下で展開状態が変わったときのコールバック
     */
-   constraintsRef: MutableRefObject<HTMLDivElement | null>
-
-   /**
-    * ドラッグ終了時のコールバック
-    */
-   onDragEnd: (
-      _event: MouseEvent | TouchEvent | PointerEvent,
-      info: PanInfo,
-   ) => void
-
-   /**
-    * 展開/折りたたみ切り替え時のコールバック
-    */
-   onToggleExpand: () => void
+   onExpandedChange: (isExpanded: boolean) => void
 }

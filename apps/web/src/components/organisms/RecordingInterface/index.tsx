@@ -1,12 +1,14 @@
 "use client"
 
-import { AnimatePresence, motion } from "motion/react"
+import { AnimatePresence, MotionConfig, motion } from "motion/react"
 import { RecordingExpandedDisplay } from "../../molecules/RecordingExpandedDisplay"
+import { RecordingHeader } from "../../molecules/RecordingHeader"
 import { RecordingInitialState } from "../../molecules/RecordingInitialState"
 import { RecordingInstructions } from "../../molecules/RecordingInstructions"
 import { RecordingMiniDisplay } from "../../molecules/RecordingMiniDisplay"
 import { AudioPlayback } from "../AudioPlayback"
 import { RecordingContainer } from "../RecordingContainer"
+import { CROSSFADE, RECORD_BUTTON_MOTION } from "./constants"
 import { useRecordingInterface } from "./hooks/useRecordingInterface"
 import type { RecordingInterfaceProps } from "./types"
 
@@ -32,11 +34,9 @@ export function RecordingInterface({
       status,
       recordingTime,
       showInstructions,
-      isClosing,
       showPlayback,
       isAgreed,
       showConfirmationComplete,
-      constraintsRef,
       instructionsRef,
       waveformData,
       audioData,
@@ -48,77 +48,94 @@ export function RecordingInterface({
       handleStop,
       handleClosePlayback,
       formatTime,
-      handleDragEnd,
       instructionItems,
    } = useRecordingInterface(onExpandedChange)
 
    return (
-      <div
-         className={`pointer-events-auto fixed right-0 bottom-0 left-0 ${status !== "idle" && isExpanded ? "z-panel" : "z-chrome"} ${className}`}
-      >
-         {/* 初期状態の録音ボタン（録音していない時のみ表示） */}
-         <AnimatePresence>
-            {status === "idle" && (
-               <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 20 }}
-                  className="-translate-x-1/2 safe-bottom absolute bottom-6 left-1/2 transform"
-               >
-                  {!showInstructions ? (
-                     <RecordingInitialState onClick={handleRecord} />
-                  ) : (
-                     <RecordingInstructions
-                        instructionItems={instructionItems}
-                        isClosing={isClosing}
-                        isAgreed={isAgreed}
-                        showConfirmationComplete={showConfirmationComplete}
-                        microphonePermission={microphonePermission}
-                        hasPosition={!!currentPosition}
-                        onRequestMicrophonePermission={
-                           handleRequestMicrophonePermission
-                        }
-                        onAgree={handleAgree}
-                        onStartRecording={handleStartRecording}
-                        instructionsRef={instructionsRef}
-                     />
+      <>
+         {/* 位置を動かすアニメーションは OS のモーション軽減設定に従って止める（不透明度は残る） */}
+         <MotionConfig reducedMotion="user">
+            <div
+               className={`pointer-events-none fixed inset-x-0 bottom-0 z-chrome ${className}`}
+            >
+               <AnimatePresence initial={false}>
+                  {status === "idle" && !showInstructions && (
+                     <motion.div
+                        key="record-button"
+                        {...RECORD_BUTTON_MOTION}
+                        className="safe-bottom pointer-events-auto absolute bottom-11 left-1/2 -translate-x-1/2"
+                     >
+                        <RecordingInitialState onClick={handleRecord} />
+                     </motion.div>
                   )}
-               </motion.div>
-            )}
-         </AnimatePresence>
 
-         {/* 録音中のUI */}
-         <AnimatePresence>
-            {status !== "idle" && (
-               <RecordingContainer
-                  isExpanded={isExpanded}
-                  constraintsRef={constraintsRef}
-                  onDragEnd={handleDragEnd}
-                  onToggleExpand={() => setIsExpanded(!isExpanded)}
-               >
-                  {/* ミニマム表示（非展開時のみ表示） */}
-                  {!isExpanded ? (
-                     <RecordingMiniDisplay
-                        status={status}
-                        recordingTime={recordingTime}
-                        waveformData={waveformData}
-                        formatTime={formatTime}
-                     />
-                  ) : (
+                  {status === "idle" && showInstructions && (
+                     <div
+                        key="instructions"
+                        className="safe-bottom absolute inset-x-0 bottom-11 flex justify-center px-4 *:pointer-events-auto"
+                     >
+                        <RecordingInstructions
+                           instructionItems={instructionItems}
+                           isAgreed={isAgreed}
+                           showConfirmationComplete={showConfirmationComplete}
+                           microphonePermission={microphonePermission}
+                           hasPosition={!!currentPosition}
+                           onRequestMicrophonePermission={
+                              handleRequestMicrophonePermission
+                           }
+                           onAgree={handleAgree}
+                           onStartRecording={handleStartRecording}
+                           instructionsRef={instructionsRef}
+                        />
+                     </div>
+                  )}
+               </AnimatePresence>
+            </div>
+
+            <AnimatePresence>
+               {status !== "idle" && (
+                  <RecordingContainer
+                     key="recording-sheet"
+                     isExpanded={isExpanded}
+                     onExpandedChange={setIsExpanded}
+                  >
+                     <div className="relative h-16 shrink-0">
+                        <AnimatePresence initial={false}>
+                           <motion.div
+                              key={isExpanded ? "header" : "mini"}
+                              {...CROSSFADE}
+                              className="absolute inset-0 px-4 sm:px-6"
+                           >
+                              {isExpanded ? (
+                                 <RecordingHeader
+                                    isRecording={status === "recording"}
+                                    onCancel={handleStop}
+                                    onNext={handleStop}
+                                 />
+                              ) : (
+                                 <RecordingMiniDisplay
+                                    status={status}
+                                    recordingTime={recordingTime}
+                                    waveformData={waveformData}
+                                    formatTime={formatTime}
+                                    onStop={handleStop}
+                                 />
+                              )}
+                           </motion.div>
+                        </AnimatePresence>
+                     </div>
+
                      <RecordingExpandedDisplay
                         status={status}
                         recordingTime={recordingTime}
                         waveformData={waveformData}
                         formatTime={formatTime}
-                        onCancel={handleStop}
-                        onNext={handleStop}
                      />
-                  )}
-               </RecordingContainer>
-            )}
-         </AnimatePresence>
+                  </RecordingContainer>
+               )}
+            </AnimatePresence>
+         </MotionConfig>
 
-         {/* 音声再生モーダル */}
          <AnimatePresence>
             {showPlayback && audioData && (
                <AudioPlayback
@@ -128,6 +145,6 @@ export function RecordingInterface({
                />
             )}
          </AnimatePresence>
-      </div>
+      </>
    )
 }

@@ -10,4 +10,6 @@ export interface RecordingMiniDisplayProps {
    waveformData: number[]
    /** 時間フォーマット関数 */
    formatTime: (seconds: number) => string
+   /** 停止ボタンクリック時のコールバック */
+   onStop: () => void
 }
