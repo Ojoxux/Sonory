@@ -1,7 +1,8 @@
 "use client"
 
-import { animate, motion, useMotionValue } from "motion/react"
+import { animate, motion, useMotionValue, useReducedMotion } from "motion/react"
 import { useRef } from "react"
+import { DURATION, EASE_OUT } from "@/utils/motion"
 import type { CompassIconProps } from "./types"
 
 /**
@@ -50,6 +51,7 @@ function shouldStartAnimation(
  * @param angleDiff 角度の差分
  * @param threshold 閾値
  * @param targetRotationRef ターゲット角度の参照
+ * @param instant アニメーションせずに即座に回す（モーション軽減時）
  */
 function handleRotationAnimation(
    rotation: ReturnType<typeof useMotionValue<number>>,
@@ -57,8 +59,9 @@ function handleRotationAnimation(
    angleDiff: number,
    threshold: number,
    targetRotationRef: React.MutableRefObject<number | null>,
+   instant: boolean,
 ): void {
-   if (Math.abs(angleDiff) > threshold) {
+   if (Math.abs(angleDiff) > threshold && !instant) {
       // 現在アニメーション中のターゲットと異なる場合のみ新しいアニメーションを開始
       // これにより冪等性を確保し、同じターゲットへの連続アニメーション実行を防ぐ
       if (
@@ -71,8 +74,8 @@ function handleRotationAnimation(
       ) {
          // アニメーションで滑らかに回転
          animate(rotation, newRotation, {
-            duration: 0.3,
-            ease: "easeOut",
+            duration: DURATION.menu,
+            ease: EASE_OUT,
             // アニメーション完了時にターゲット参照をクリア
             onComplete: () => {
                targetRotationRef.current = null
@@ -118,6 +121,8 @@ export function CompassIcon({
    const targetRotationRef = useRef<number | null>(null)
    // 角度変化の閾値（この値以下の変化は無視する）
    const ROTATION_THRESHOLD = 0.5
+   // animate() で直接回すため MotionConfig の reducedMotion が効かない
+   const shouldReduceMotion = useReducedMotion()
 
    // 最短経路で回転するための処理
    // ベアリングは浮動小数点なので、45.00001 → 45.00002 のような無視してよい変化でもアニメーションが発火してしまう。
@@ -145,6 +150,7 @@ export function CompassIcon({
          angleDiff,
          ROTATION_THRESHOLD,
          targetRotationRef,
+         shouldReduceMotion === true,
       )
 
       // 前回の角度を更新
