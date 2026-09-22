@@ -1,4 +1,3 @@
-import { motion } from "motion/react"
 import { MdPause, MdPlayArrow } from "react-icons/md"
 import type { PlaybackControlsProps } from "./types"
 
@@ -48,18 +47,14 @@ export function PlaybackControls({
    const isReady = audioLoadingStatus === "ready"
 
    return (
-      <div className="rounded-lg border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
+      <div className="rounded-xl border border-white/10 bg-white/5 p-4">
          <div className="mb-4 flex items-center justify-center">
-            <motion.button
+            <button
+               type="button"
                onClick={togglePlayback}
                disabled={!isReady}
-               className={`flex h-16 w-16 items-center justify-center rounded-full transition-all duration-300 ${
-                  isReady
-                     ? "bg-accent-600 text-white hover:bg-accent-700"
-                     : "cursor-not-allowed bg-gray-600 text-gray-400"
-               }`}
-               whileHover={isReady ? { scale: 1.05 } : {}}
-               whileTap={isReady ? { scale: 0.95 } : {}}
+               aria-label={playbackState === "playing" ? "一時停止" : "再生"}
+               className="flex h-16 w-16 touch-manipulation items-center justify-center rounded-full bg-accent-600 text-white transition duration-press ease-out hover:bg-accent-500 not-disabled:active:scale-97 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-neutral-500"
             >
                {audioLoadingStatus === "loading" ? (
                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-white" />
@@ -68,7 +63,7 @@ export function PlaybackControls({
                ) : (
                   <MdPlayArrow className="h-8 w-8" />
                )}
-            </motion.button>
+            </button>
          </div>
 
          <div className="text-center text-neutral-300 text-sm">

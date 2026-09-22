@@ -19,9 +19,9 @@ export function DebugInfo({ pin }: DebugInfoProps) {
    if (process.env.NODE_ENV === "production") return null
 
    return (
-      <div className="mb-4 rounded-lg border border-purple-500/30 bg-purple-500/20 p-3 text-xs">
-         <div className="mb-2 font-medium text-purple-300">デバッグ情報:</div>
-         <div className="space-y-1 text-purple-200">
+      <div className="mb-4 rounded-xl border border-white/10 bg-white/5 p-3 text-xs">
+         <div className="mb-2 font-medium text-white">デバッグ情報:</div>
+         <div className="space-y-1 text-neutral-300">
             <div>Pin ID: {pin.id}</div>
             <div>Primary Label: {pin.primaryLabel}</div>
             <div>Environment: {pin.environment}</div>
@@ -30,8 +30,8 @@ export function DebugInfo({ pin }: DebugInfoProps) {
                <span
                   className={`font-semibold ${
                      pin.classificationResults.length > 1
-                        ? "text-green-300"
-                        : "text-yellow-300"
+                        ? "text-done-300"
+                        : "text-warn-300"
                   }`}
                >
                   {pin.classificationResults.length}件

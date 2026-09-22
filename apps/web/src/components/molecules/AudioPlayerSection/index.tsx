@@ -21,12 +21,10 @@ export function AudioPlayerSection({ audioData }: AudioPlayerSectionProps) {
    return (
       <div className="space-y-2">
          <h3 className="font-semibold text-base text-white/80">録音音声</h3>
-         <div className="rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm">
+         <div className="rounded-xl border border-white/10 bg-white/5 p-3">
             <WaveformPlayer
                audioData={audioData}
                height={80}
-               waveColor="#9ca3af"
-               progressColor="#dc2626"
                className="w-full"
             />
          </div>
