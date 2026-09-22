@@ -1,9 +1,9 @@
 import { useCallback, useState } from "react"
+import { toast } from "sonner"
 import type { AudioData } from "@/store/types"
 import { useInferenceStore } from "@/store/useInferenceStore"
 import { useRecorderStore } from "@/store/useRecorderStore"
 import { useSoundPinStore } from "@/store/useSoundPinStore"
-import { showErrorToast } from "@/store/useToastStore"
 import type { LocationData } from "./types"
 
 /**
@@ -104,7 +104,7 @@ export const useAudioProcessing = () => {
                   "アップロードに失敗しました。オフライン分析を実行します:",
                   uploadError,
                )
-               showErrorToast(
+               toast.error(
                   uploadError instanceof Error
                      ? `音声のアップロードに失敗しました: ${uploadError.message}`
                      : "音声のアップロードに失敗しました",

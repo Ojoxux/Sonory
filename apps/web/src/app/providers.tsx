@@ -3,9 +3,9 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { PropsWithChildren } from "react"
 import { useEffect, useState } from "react"
+import { toast } from "sonner"
 import { ensureAnonymousSession, getSupabaseClient } from "@/services/supabase"
 import { useAuthStore } from "@/store/useAuthStore"
-import { showErrorToast } from "@/store/useToastStore"
 import { initializeNotifications } from "@/utils/notifications"
 import {
    getOAuthRedirectErrorMessage,
@@ -51,7 +51,7 @@ export function Providers({ children }: PropsWithChildren) {
    useEffect(() => {
       const redirectError = getOAuthRedirectErrorMessage(window.location.href)
       if (redirectError) {
-         showErrorToast(redirectError)
+         toast.error(redirectError)
          window.history.replaceState(
             window.history.state,
             "",

@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useState } from "react"
+import { toast } from "sonner"
 import { useIsMounted } from "@/hooks/useIsMounted"
 import {
    linkGoogleAccount,
@@ -11,7 +12,6 @@ import { useAuthStore } from "@/store/useAuthStore"
 import { useDebugStore } from "@/store/useDebugStore"
 import type { NotificationSettings } from "@/store/useRealtimeStore"
 import { useRealtimeStore } from "@/store/useRealtimeStore"
-import { showErrorToast } from "@/store/useToastStore"
 import type { NotificationPermissionStatus } from "@/utils/notifications"
 import {
    getNotificationPermission,
@@ -77,7 +77,7 @@ export function useSettingsSheet(): {
       if (granted) {
          updateNotificationSettings({ enabled: true })
       } else {
-         showErrorToast("通知を許可できませんでした")
+         toast.error("通知を許可できませんでした")
       }
    }, [isNotificationOn, updateNotificationSettings])
 
@@ -110,7 +110,7 @@ export function useSettingsSheet(): {
          setIsAccountBusy(true)
          const error = await start()
          if (error) {
-            showErrorToast("Google アカウントでの認証を開始できませんでした")
+            toast.error("Google アカウントでの認証を開始できませんでした")
             setIsAccountBusy(false)
          }
       },

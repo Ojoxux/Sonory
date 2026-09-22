@@ -1,7 +1,6 @@
 "use client"
 
 import { AppHeader } from "@/components/molecules/AppHeader"
-import { ToastContainer } from "@/components/molecules/ToastContainer"
 import { AppInfoSheet } from "@/components/organisms/AppInfoSheet"
 import { PWAInstallPrompt } from "@/components/organisms/PWAInstallPrompt"
 import { RecordingInterface } from "@/components/organisms/RecordingInterface"
@@ -40,9 +39,6 @@ export function UIOverlay({
 }: UIOverlayProps) {
    return (
       <>
-         {/* エラートースト */}
-         <ToastContainer />
-
          {/* ヘッダー（常に表示） */}
          <AppHeader
             onSettingsClick={onSettingsClick}

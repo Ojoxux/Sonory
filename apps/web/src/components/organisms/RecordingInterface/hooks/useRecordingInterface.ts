@@ -3,8 +3,8 @@
 import type { PanInfo } from "motion/react"
 import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react"
 import { useRecorderStore } from "../../../../store/useRecorderStore"
+import { toast } from "sonner"
 import { useMicrophonePermission } from "@/hooks/useMicrophonePermission"
-import { showErrorToast } from "@/store/useToastStore"
 // 実際のMediaRecorder APIを使用
 import { useMediaRecorder } from "./useMediaRecorder"
 import { useAsyncWaveform } from "./useAsyncWaveform"
@@ -196,7 +196,7 @@ export function useRecordingInterface(
          console.error("録音の開始に失敗しました:", error)
          setStatus("idle")
          setShowInstructions(false)
-         showErrorToast(
+         toast.error(
             getMicrophoneErrorMessage(error, "録音の開始に失敗しました"),
          )
       }
@@ -208,7 +208,7 @@ export function useRecordingInterface(
       try {
          await requestMicrophonePermission()
       } catch (error) {
-         showErrorToast(
+         toast.error(
             getMicrophoneErrorMessage(error, "マイクを準備できませんでした"),
          )
       }
