@@ -28,7 +28,6 @@ export function usePinAudioPlayer(
    )
    const [currentTime, setCurrentTime] = useState<number>(0)
    const [duration, setDuration] = useState<number>(0)
-   const isMounted = true
    const progressBarRef = useRef<HTMLDivElement>(null)
    const animationFrameRef = useRef<number | null>(null)
 
@@ -314,7 +313,6 @@ export function usePinAudioPlayer(
       audioLoadError,
       currentTime: safeCurrentTime,
       duration: safeDuration,
-      isMounted,
       progressBarRef,
       formatRecordedAt,
       formatTime,
