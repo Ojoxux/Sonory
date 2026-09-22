@@ -33,21 +33,25 @@ const TEXT_CONTENT = {
 const CSS_CLASSES = {
    /** コンテナのベースクラス */
    CONTAINER_BASE:
-      "fixed top-6 left-0 right-0 z-prompt pointer-events-none flex justify-center",
-   /** プロンプトのベースクラス */
+      "fixed top-6 left-0 right-0 z-prompt pointer-events-none flex justify-center px-4",
+   /** プロンプトのベースクラス。出るときも消えるときも上から */
    PROMPT_BASE:
-      "pointer-events-auto bg-black text-white shadow-lg backdrop-blur-lg cursor-pointer transition-all duration-300 ease-out",
+      "pointer-events-auto touch-manipulation rounded-2xl bg-black text-white shadow-lg backdrop-blur-lg cursor-pointer transition duration-menu ease-out starting:-translate-y-4 starting:opacity-0",
    /** デバッグ時のボーダー */
    DEBUG_BORDER: "border border-blue-500",
    /** 展開時のスタイル */
-   EXPANDED: "rounded-2xl w-[95%] max-w-96 px-5 py-4 scale-100",
-   /** 縮小時のスタイル */
-   COLLAPSED: "rounded-2xl w-auto max-w-none px-4 py-2 scale-90 hover:scale-95",
+   EXPANDED: "w-full max-w-96 px-5 py-4",
+   /** 縮小時のスタイル。中にボタンが無いときだけ全体を押し込む */
+   COLLAPSED: "px-4 py-2 active:scale-97",
    /** 非表示時のスタイル */
-   HIDDEN: "opacity-0 translate-y-[-20px] scale-75",
+   HIDDEN: "pointer-events-none opacity-0 -translate-y-4",
    /** 表示時のスタイル */
    VISIBLE: "opacity-100 translate-y-0",
 } as const
+
+/** 展開・縮小で中身が入れ替わるときのフェード */
+const CONTENT_FADE =
+   "transition-opacity duration-menu ease-out starting:opacity-0"
 
 /**
  * プロンプトコンテナのスタイルを生成する関数
@@ -80,12 +84,12 @@ const ExpandedContent = memo(function ExpandedContent({
    onDismiss: () => void
 }) {
    return (
-      <div className="min-w-0 flex-1 overflow-hidden">
+      <div className={`min-w-0 flex-1 overflow-hidden ${CONTENT_FADE}`}>
          <h3 className="mb-1 font-semibold text-sm text-white">
             {isDebugActive ? TEXT_CONTENT.DEBUG_PREFIX : ""}
             {TEXT_CONTENT.INSTALL_TITLE}
          </h3>
-         <p className="mb-3 text-gray-300 text-xs leading-relaxed">
+         <p className="mb-3 text-neutral-300 text-xs leading-relaxed">
             {TEXT_CONTENT.INSTALL_DESCRIPTION}
          </p>
 
@@ -119,7 +123,7 @@ const CollapsedContent = memo(function CollapsedContent({
    isDebugActive: boolean
 }) {
    return (
-      <span className="whitespace-nowrap font-medium text-xs">
+      <span className={`whitespace-nowrap font-medium text-xs ${CONTENT_FADE}`}>
          {isDebugActive ? TEXT_CONTENT.DEBUG_PREFIX : ""}
          {TEXT_CONTENT.COLLAPSED_TEXT}
       </span>
@@ -172,7 +176,7 @@ export const PWAInstallPrompt = memo(function PWAInstallPrompt({
    onDismiss,
 }: PWAInstallPromptProps) {
    const { debugMode } = useDebugStore()
-   const promptRef = useRef<HTMLButtonElement>(null)
+   const promptRef = useRef<HTMLDivElement>(null)
    const checkIfInstalled = useCheckIfInstalled()
 
    // PWAインストール状態を管理
@@ -239,7 +243,7 @@ export const PWAInstallPrompt = memo(function PWAInstallPrompt({
    return (
       <div className={`${CSS_CLASSES.CONTAINER_BASE} ${className}`}>
          <div
-            ref={promptRef as unknown as React.RefObject<HTMLDivElement>}
+            ref={promptRef}
             onClick={handlePromptClick}
             className={getPromptContainerClassName(
                isDebugActive,
@@ -252,9 +256,6 @@ export const PWAInstallPrompt = memo(function PWAInstallPrompt({
                if (e.key === "Enter" || e.key === " ") {
                   handlePromptClick()
                }
-            }}
-            style={{
-               boxShadow: "0 4px 30px rgba(0, 0, 0, 0.2)",
             }}
             aria-label={TEXT_CONTENT.INSTALL_TITLE}
          >
