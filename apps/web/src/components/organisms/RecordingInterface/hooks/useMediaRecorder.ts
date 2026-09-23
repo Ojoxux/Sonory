@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from "react"
 import type { AudioData } from "../../../../store/types"
+import { RECORDING_DURATION_SECONDS } from "../constants"
 import { useRecorderStore } from "../../../../store/useRecorderStore"
 
 /**
@@ -82,6 +83,7 @@ function handleRecordingStop(
    streamRef: React.MutableRefObject<MediaStream | null>,
    setAudioData: (data: AudioData) => void,
    setIsRecording: (recording: boolean) => void,
+   setStream: (stream: MediaStream | null) => void,
 ): void {
    const elapsedTime = calculateElapsedTime(recordingStartTimeRef)
 
@@ -96,6 +98,7 @@ function handleRecordingStop(
    setAudioData(audioData)
    setIsRecording(false)
    stopStream(streamRef)
+   setStream(null)
 }
 
 /**
@@ -119,6 +122,8 @@ function handleRecordingStop(
 export function useMediaRecorder() {
    const [isRecording, setIsRecording] = useState<boolean>(false)
    const [error, setError] = useState<Error | null>(null)
+   // 波形を描くために、録音中だけストリームを外へ渡す
+   const [stream, setStream] = useState<MediaStream | null>(null)
 
    const mediaRecorderRef = useRef<MediaRecorder | null>(null)
    const streamRef = useRef<MediaStream | null>(null)
@@ -158,6 +163,7 @@ export function useMediaRecorder() {
          })
 
          streamRef.current = stream
+         setStream(stream)
          chunksRef.current = []
 
          // MediaRecorderを初期化
@@ -188,6 +194,7 @@ export function useMediaRecorder() {
                streamRef,
                setAudioData,
                setIsRecording,
+               setStream,
             )
          }
 
@@ -218,8 +225,9 @@ export function useMediaRecorder() {
                mediaRecorderRef.current.state === "recording"
             ) {
                // 10秒に満たない場合は、10秒まで待つ
-               if (elapsedTime < 10) {
-                  const remainingTime = (10 - elapsedTime) * 1000
+               if (elapsedTime < RECORDING_DURATION_SECONDS) {
+                  const remainingTime =
+                     (RECORDING_DURATION_SECONDS - elapsedTime) * 1000
                   autoStopTimerRef.current = setTimeout(
                      stopRecordingAtTime,
                      remainingTime,
@@ -231,7 +239,10 @@ export function useMediaRecorder() {
             }
          }
 
-         autoStopTimerRef.current = setTimeout(stopRecordingAtTime, 10000) // 10秒 = 10000ms
+         autoStopTimerRef.current = setTimeout(
+            stopRecordingAtTime,
+            RECORDING_DURATION_SECONDS * 1000,
+         )
       } catch (err) {
          const error =
             err instanceof Error ? err : new Error("録音の開始に失敗しました")
@@ -304,6 +315,7 @@ export function useMediaRecorder() {
       }
 
       chunksRef.current = []
+      setStream(null)
       setIsRecording(false)
       setError(null)
    }, [])
@@ -314,6 +326,7 @@ export function useMediaRecorder() {
       pauseRecording,
       resumeRecording,
       cleanup,
+      stream,
       isRecording,
       error,
       isSupported: typeof window !== "undefined" && !!window.MediaRecorder,
