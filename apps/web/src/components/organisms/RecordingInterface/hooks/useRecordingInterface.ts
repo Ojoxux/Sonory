@@ -6,8 +6,9 @@ import { CONFIRM_HOLD_MS } from "../../../molecules/RecordingInstructions/consta
 import { toast } from "sonner"
 import { useMicrophonePermission } from "@/hooks/useMicrophonePermission"
 // 実際のMediaRecorder APIを使用
+import { RECORDING_DURATION_SECONDS } from "../constants"
 import { useMediaRecorder } from "./useMediaRecorder"
-import { useAsyncWaveform } from "./useAsyncWaveform"
+import { useMicrophoneLevels } from "./useMicrophoneLevels"
 
 /**
  * マイク周りの失敗をユーザーに伝わる文言に変換する
@@ -49,14 +50,15 @@ export function useRecordingInterface(
    const {
       startRecording,
       stopRecording,
+      stream,
       error: recordingError,
    } = useMediaRecorder()
    const { audioData } = useRecorderStore()
    const { state: microphonePermission, request: requestMicrophonePermission } =
       useMicrophonePermission()
 
-   // 非同期波形データフック
-   const waveformData = useAsyncWaveform(status === "recording")
+   // マイク入力から実際の音量を集める
+   const levels = useMicrophoneLevels(stream, RECORDING_DURATION_SECONDS)
 
    // 外部クリック検知用のref
    const instructionsRef = useRef<HTMLDivElement>(null)
@@ -114,7 +116,7 @@ export function useRecordingInterface(
             (currentTime - recordingStartTimeRef.current) / 1000
 
          // 時間表示は最大10秒でクリップ
-         setRecordingTime(Math.min(elapsedTime, 10))
+         setRecordingTime(Math.min(elapsedTime, RECORDING_DURATION_SECONDS))
 
          // MediaRecorderが自動的に10秒で停止するため、
          // ここでの手動停止は不要
@@ -266,7 +268,7 @@ export function useRecordingInterface(
       showConfirmationComplete,
       setShowConfirmationComplete,
       instructionsRef,
-      waveformData,
+      levels,
       audioData,
       microphonePermission,
       handleRecord,

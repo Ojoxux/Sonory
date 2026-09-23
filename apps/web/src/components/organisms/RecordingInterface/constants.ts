@@ -1,5 +1,8 @@
 import { DURATION, EASE_OUT } from "@/utils/motion"
 
+/** 1回の録音の長さ。MediaRecorder の自動停止も波形の横軸もこれに合わせる */
+export const RECORDING_DURATION_SECONDS = 10
+
 /** 録音ボタン。確認カードと入れ替わるので、消えるときは出るより速く */
 export const RECORD_BUTTON_MOTION = {
    initial: { opacity: 0, scale: 0.95 },
