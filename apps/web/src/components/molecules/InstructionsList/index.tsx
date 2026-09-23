@@ -1,8 +1,7 @@
 "use client"
 
-import { motion } from "motion/react"
 import { InstructionItem } from "../../atoms/InstructionItem"
-import { REVEAL_VARIANTS } from "../RecordingInstructions/constants"
+import { revealDelay } from "../RecordingInstructions/constants"
 import type { InstructionsListProps } from "./types"
 
 /**
@@ -10,21 +9,27 @@ import type { InstructionsListProps } from "./types"
  *
  * @description
  * 録音前の確認事項を一覧表示するコンポーネント。
- * 各項目は親の `staggerChildren` に乗って順に出る
+ * 各項目は `reveal` で順に出る
  *
  * @param items 確認事項の配列
+ * @param startStep 何番目から順に出すか
  * @param className 追加のCSSクラス
  */
 export function InstructionsList({
    items,
+   startStep = 0,
    className = "",
 }: InstructionsListProps) {
    return (
       <ul className={`mb-6 space-y-3 ${className}`}>
-         {items.map((item) => (
-            <motion.li key={item} variants={REVEAL_VARIANTS}>
+         {items.map((item, index) => (
+            <li
+               key={item}
+               className="reveal"
+               style={revealDelay(startStep + index)}
+            >
                <InstructionItem text={item} />
-            </motion.li>
+            </li>
          ))}
       </ul>
    )

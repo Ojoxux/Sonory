@@ -6,7 +6,7 @@ import { MicPermissionToggle } from "../../atoms/MicPermissionToggle"
 import { ConfirmationComplete } from "../ConfirmationComplete"
 import { InstructionsList } from "../InstructionsList"
 import { SlideToStart } from "../SlideToStart"
-import { CARD_VARIANTS, COMPLETE_VARIANTS, REVEAL_VARIANTS } from "./constants"
+import { CARD_VARIANTS, revealDelay } from "./constants"
 import type { RecordingInstructionsProps } from "./types"
 
 /**
@@ -14,6 +14,7 @@ import type { RecordingInstructionsProps } from "./types"
  *
  * @description
  * 録音前に表示する説明と確認事項を表示するコンポーネント。
+ * カード自体の出入りは motion、中身の段階表示は CSS の `reveal` が受け持つ。
  * 閉じるアニメーションは親の `AnimatePresence` が `exit` で流す
  *
  * @param instructionItems 説明項目の配列
@@ -48,23 +49,20 @@ export function RecordingInstructions({
       >
          {!showConfirmationComplete ? (
             <>
-               <motion.div
-                  variants={REVEAL_VARIANTS}
-                  className="mb-4 text-center"
-               >
+               <div className="reveal mb-4 text-center" style={revealDelay(0)}>
                   <h3 className="mb-2 font-bold text-lg tracking-tight">
                      録音前の確認
                   </h3>
                   <p className="text-base text-neutral-200 leading-relaxed">
                      以下の項目をご確認ください
                   </p>
-               </motion.div>
+               </div>
 
-               <InstructionsList items={instructionItems} />
+               <InstructionsList items={instructionItems} startStep={1} />
 
-               <motion.div
-                  variants={REVEAL_VARIANTS}
-                  className="flex flex-col gap-4"
+               <div
+                  className="reveal flex flex-col gap-4"
+                  style={revealDelay(instructionItems.length + 1)}
                >
                   {/* 位置情報が無いとピンを配置できない。録音し終えてから気づかせない */}
                   {!hasPosition && (
@@ -85,19 +83,16 @@ export function RecordingInstructions({
                      isConfirmed={isAgreed}
                      isDisabled={microphonePermission !== "granted"}
                   />
-               </motion.div>
+               </div>
             </>
          ) : (
-            <motion.div
-               initial="hidden"
-               animate="shown"
-               variants={COMPLETE_VARIANTS}
-            >
+            <>
                <ConfirmationComplete />
-               <motion.div variants={REVEAL_VARIANTS}>
+
+               <div className="reveal" style={revealDelay(2)}>
                   <SlideToStart onComplete={onStartRecording} text="録音開始" />
-               </motion.div>
-            </motion.div>
+               </div>
+            </>
          )}
       </motion.div>
    )

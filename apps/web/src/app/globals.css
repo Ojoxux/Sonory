@@ -84,7 +84,8 @@ body {
 /* アクセシビリティ: モーション軽減設定を尊重 */
 @media (prefers-reduced-motion: reduce) {
    .animate-pulse,
-   .animate-spin {
+   .animate-spin,
+   .reveal {
       animation: none;
    }
 }
@@ -118,4 +119,17 @@ body {
    border-color: color-mix(in oklab, var(--color-white) 10%, transparent);
    -webkit-backdrop-filter: blur(var(--blur-xl));
    backdrop-filter: blur(var(--blur-xl));
+}
+
+/* 段階表示。基準は見えている状態にし、アニメーションはそこへ至る演出としてだけ足す。
+   JS の状態遷移に依存させると、止まったときに中身が永久に見えなくなる */
+@keyframes reveal {
+   from {
+      opacity: 0;
+      transform: translateY(8px);
+   }
+}
+
+@utility reveal {
+   animation: reveal var(--transition-duration-menu) var(--ease-out) backwards;
 }
