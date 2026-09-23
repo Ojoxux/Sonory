@@ -35,6 +35,24 @@ describe("useMicrophonePermission", () => {
       expect(result.current.takeStream()).toBeNull()
    })
 
+   it("手放したあとは許可済みと言わない", async () => {
+      // Permissions API が無い環境（Firefox / Safari）では、手放した時点で分からなくなる
+      stubMicrophone()
+      const { result } = renderHook(() => useMicrophonePermission())
+
+      await act(async () => {
+         await result.current.request()
+      })
+      expect(result.current.state).toBe("granted")
+
+      await act(async () => {
+         result.current.release()
+      })
+
+      // ここで「許可済み」のままにすると、録音開始時に不意にダイアログが出る
+      expect(result.current.state).toBe("unknown")
+   })
+
    it("録音せずに閉じたらマイクを止める", async () => {
       const { stop } = stubMicrophone()
       const { result } = renderHook(() => useMicrophonePermission())

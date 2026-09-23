@@ -179,19 +179,20 @@ export function useRecordingInterface(
 
    const handleStartRecording = async () => {
       try {
-         setStatus("recording")
-         setRecordingTime(0)
-         setShowInstructions(false)
-         // 確認関連の状態をリセット
-         setIsAgreed(false)
-         setShowConfirmationComplete(false)
-
          // 前回のaudioDataをクリア（新しい録音のため）
          const { resetRecording } = useRecorderStore.getState()
          resetRecording()
 
-         // 確認画面で開いたストリームをそのまま渡す
+         // マイクが開くまで画面を録音中にしない。許可を求めている間に
+         // 録音が始まったように見せない。確認画面で開いたストリームがあれば待ちは無い
          await startRecording(takeMicrophoneStream())
+
+         setRecordingTime(0)
+         setStatus("recording")
+         setShowInstructions(false)
+         // 確認関連の状態をリセット
+         setIsAgreed(false)
+         setShowConfirmationComplete(false)
 
          // MediaRecorderレベルで10秒タイマーが設定されているため、
          // ここでは追加のタイマーは不要

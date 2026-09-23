@@ -15,6 +15,10 @@ import {
  * @description
  * 許可のときに開いたストリームは止めずに保持し、`takeStream` で録音へ渡す。
  * Firefox は許可を保存しないため、ここで止めると録音開始時にもう一度ダイアログが出る。
+ *
+ * 「許可済み」と言えるのは、ストリームを保持しているあいだか、ブラウザが許可を
+ * 保存している場合（Chromium 系の Permissions API が granted を返す）だけ。
+ * 手放したあとに表示だけ残すと、録音開始時に不意にダイアログが出る。
  * `request` は拒否された場合も例外を投げ直す。呼び出し側で文言を出し分けるため
  */
 export function useMicrophonePermission(): {
@@ -23,47 +27,42 @@ export function useMicrophonePermission(): {
    takeStream: () => MediaStream | null
    release: () => void
 } {
-   const [queried, setQueried] = useState<MicrophonePermissionState>("unknown")
+   const [queried, setQueried] =
+      useState<Exclude<MicrophonePermissionState, "requesting">>("unknown")
+   const [requesting, setRequesting] = useState(false)
    const [hasStream, setHasStream] = useState(false)
    const streamRef = useRef<MediaStream | null>(null)
 
-   useEffect(() => {
-      let cancelled = false
-
-      void getMicrophonePermissionState().then((initial) => {
-         if (!cancelled && initial !== "unknown") {
-            setQueried(initial)
-         }
-      })
-
-      return () => {
-         cancelled = true
-      }
+   const refreshQueried = useCallback((): void => {
+      void getMicrophonePermissionState().then(setQueried)
    }, [])
+
+   useEffect(refreshQueried, [refreshQueried])
 
    const release = useCallback((): void => {
       stopStream(streamRef.current)
       streamRef.current = null
       setHasStream(false)
-   }, [])
+      // ブラウザが許可を保存しているかは環境による。表示は問い合わせ直した結果に戻す
+      refreshQueried()
+   }, [refreshQueried])
 
    // 画面から消えたらマイクを閉じる。使用中の表示を残さない
-   useEffect(() => release, [release])
+   useEffect(() => () => stopStream(streamRef.current), [])
 
    const request = useCallback(async (): Promise<void> => {
-      setQueried("requesting")
+      setRequesting(true)
       try {
          const stream = await requestMicrophoneStream()
          streamRef.current = stream
          setHasStream(true)
-         setQueried("granted")
       } catch (error) {
-         setQueried(
-            error instanceof Error && error.name === "NotAllowedError"
-               ? "denied"
-               : "unknown",
-         )
+         if (error instanceof Error && error.name === "NotAllowedError") {
+            setQueried("denied")
+         }
          throw error
+      } finally {
+         setRequesting(false)
       }
    }, [])
 
@@ -75,8 +74,11 @@ export function useMicrophonePermission(): {
       return isStreamLive(stream) ? stream : null
    }, [])
 
-   // ストリームを持っているあいだは、問い合わせ結果に関わらず準備できている
-   const state = hasStream ? "granted" : queried
+   const state: MicrophonePermissionState = hasStream
+      ? "granted"
+      : requesting
+        ? "requesting"
+        : queried
 
    return { state, request, takeStream, release }
 }
