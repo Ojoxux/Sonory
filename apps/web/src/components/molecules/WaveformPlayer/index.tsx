@@ -3,6 +3,7 @@
 import { MdPause, MdPlayArrow } from "react-icons/md"
 import type { WaveformPlayerProps } from "./types"
 import { useWaveformPlayer } from "./useWaveformPlayer"
+import { PROGRESS_COLOR, WAVE_COLOR } from "./constants"
 import { formatTime } from "./utils"
 
 /**
@@ -13,8 +14,8 @@ import { formatTime } from "./utils"
 export function WaveformPlayer({
    audioData,
    height = 128,
-   waveColor = "#1f2937",
-   progressColor = "#dc2626",
+   waveColor = WAVE_COLOR,
+   progressColor = PROGRESS_COLOR,
    className = "",
    onReady,
    onFinish,
@@ -40,9 +41,9 @@ export function WaveformPlayer({
    if (!audioData) {
       return (
          <div
-            className={`flex h-32 items-center justify-center rounded-lg bg-gray-100 ${className}`}
+            className={`flex h-32 items-center justify-center rounded-lg bg-white/5 ${className}`}
          >
-            <p className="text-gray-500">音声データがありません</p>
+            <p className="text-neutral-400 text-sm">音声データがありません</p>
          </div>
       )
    }
@@ -61,17 +62,12 @@ export function WaveformPlayer({
       <div className={`w-full ${className}`}>
          {/* 波形表示 */}
          <div
-            className="relative w-full overflow-hidden rounded-lg bg-gray-50"
+            className="relative w-full overflow-hidden rounded-lg bg-white/5"
             style={{ height: `${height}px` }}
          >
-            {/* WaveSurfer */}
             <div
                ref={containerRef}
                className="absolute inset-0 h-full w-full"
-               style={{
-                  // WaveSurferの進捗バーを滑らかに
-                  transition: isPlaying ? "none" : "all 0.2s ease-out",
-               }}
             />
          </div>
 
@@ -81,7 +77,7 @@ export function WaveformPlayer({
                type="button"
                onClick={togglePlayPause}
                disabled={isLoading || !isInitialized}
-               className="flex h-12 w-12 touch-manipulation items-center justify-center rounded-full bg-gray-900 text-white transition-colors hover:bg-gray-800 disabled:bg-gray-400"
+               className="flex h-12 w-12 touch-manipulation items-center justify-center rounded-full bg-white/10 text-white transition duration-press ease-out hover:bg-white/15 not-disabled:active:scale-97 disabled:cursor-not-allowed disabled:opacity-50"
                aria-label={isPlaying ? "一時停止" : "再生"}
             >
                {isLoading ? (
@@ -93,7 +89,7 @@ export function WaveformPlayer({
                )}
             </button>
 
-            <div className="flex items-center gap-2 font-mono text-gray-600 text-sm">
+            <div className="flex items-center gap-2 font-mono text-neutral-400 text-sm">
                <span>
                   {formatTime(Number.isFinite(currentTime) ? currentTime : 0)}
                </span>

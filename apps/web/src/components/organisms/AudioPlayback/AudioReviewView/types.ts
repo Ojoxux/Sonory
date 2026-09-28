@@ -7,8 +7,6 @@ import type { AudioData } from "@/store/types"
  * 録音確認画面のProps
  */
 export type AudioReviewViewProps = {
-   /** シートの開閉状態 */
-   isOpen: boolean
    /** 再生する音声データ */
    audioData: AudioData
    /** 録音日時のフォーマット済み文字列 */

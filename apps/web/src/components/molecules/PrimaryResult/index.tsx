@@ -1,6 +1,5 @@
 "use client"
 
-import { motion } from "motion/react"
 import type { PrimaryResultProps } from "./types"
 import { formatConfidence } from "./utils"
 
@@ -22,12 +21,7 @@ import { formatConfidence } from "./utils"
  */
 export function PrimaryResult({ result }: PrimaryResultProps) {
    return (
-      <motion.div
-         initial={{ opacity: 0, scale: 0.95 }}
-         animate={{ opacity: 1, scale: 1 }}
-         transition={{ delay: 0.1 }}
-         className="rounded-xl border border-done-500/30 bg-done-500/10 p-4 backdrop-blur-sm"
-      >
+      <div className="rounded-xl border border-done-500/30 bg-done-500/10 p-4">
          <div className="mb-1.5 flex items-center justify-between">
             <span className="font-semibold text-base text-done-300">
                {result.label}
@@ -40,6 +34,6 @@ export function PrimaryResult({ result }: PrimaryResultProps) {
             <span className="inline-block h-1 w-1 animate-pulse rounded-full bg-done-400" />
             最も可能性が高い
          </div>
-      </motion.div>
+      </div>
    )
 }

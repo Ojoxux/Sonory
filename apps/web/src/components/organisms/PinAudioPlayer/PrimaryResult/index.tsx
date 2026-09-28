@@ -1,4 +1,3 @@
-import { motion } from "motion/react"
 import type { PrimaryResultProps } from "./types"
 
 /**
@@ -6,7 +5,7 @@ import type { PrimaryResultProps } from "./types"
  *
  * @description
  * 音声分類の最も可能性が高い結果を強調表示します。
- * 緑色のスタイリングとアニメーションで視覚的に目立たせます。
+ * 完了色の面で視覚的に目立たせます。
  *
  * @param result - 表示する分類結果（ラベルと信頼度）
  * @param formatConfidence - 信頼度を表示形式にフォーマットする関数
@@ -26,12 +25,7 @@ export function PrimaryResult({
    const displayLabel = result.label === "unknown" ? "未分類" : result.label
 
    return (
-      <motion.div
-         initial={{ opacity: 0, scale: 0.95 }}
-         animate={{ opacity: 1, scale: 1 }}
-         transition={{ delay: 0.1 }}
-         className="rounded-xl border border-done-500/30 bg-done-500/10 p-4 backdrop-blur-sm"
-      >
+      <div className="rounded-xl border border-done-500/30 bg-done-500/10 p-4">
          <div className="mb-1.5 flex items-center justify-between">
             <span className="font-semibold text-base text-done-300">
                {displayLabel}
@@ -44,6 +38,6 @@ export function PrimaryResult({
             <span className="inline-block h-1 w-1 animate-pulse rounded-full bg-done-400" />
             最も可能性が高い
          </div>
-      </motion.div>
+      </div>
    )
 }

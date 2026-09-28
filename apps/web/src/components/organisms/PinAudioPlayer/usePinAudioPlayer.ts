@@ -28,7 +28,6 @@ export function usePinAudioPlayer(
    )
    const [currentTime, setCurrentTime] = useState<number>(0)
    const [duration, setDuration] = useState<number>(0)
-   const isMounted = true
    const progressBarRef = useRef<HTMLDivElement>(null)
    const animationFrameRef = useRef<number | null>(null)
 
@@ -297,12 +296,6 @@ export function usePinAudioPlayer(
          ? Math.min(100, (safeCurrentTime / safeDuration) * 100)
          : 0
 
-   // その他の候補アコーディオンの開閉状態
-   const [isOtherResultsOpen, setIsOtherResultsOpen] = useState(false)
-   // その他の候補アコーディオンのトグル
-   const toggleOtherResults = useCallback(() => {
-      setIsOtherResultsOpen((prev) => !prev)
-   }, [])
    // 信頼度をパーセンテージでフォーマット
    const formatConfidence = useCallback((confidence: number): string => {
       return `${Math.round(confidence * 100)}%`
@@ -314,7 +307,6 @@ export function usePinAudioPlayer(
       audioLoadError,
       currentTime: safeCurrentTime,
       duration: safeDuration,
-      isMounted,
       progressBarRef,
       formatRecordedAt,
       formatTime,
@@ -322,8 +314,6 @@ export function usePinAudioPlayer(
       handleSeek,
       handleClose,
       progressPercentage,
-      isOtherResultsOpen,
-      toggleOtherResults,
       formatConfidence,
    }
 }

@@ -1,7 +1,6 @@
 "use client"
 
-import { motion } from "motion/react"
-import { Sheet } from "react-modal-sheet"
+import type { ReactElement } from "react"
 import { ErrorDisplay } from "@/components/atoms/ErrorDisplay"
 import { FallbackWarning } from "@/components/atoms/FallbackWarning"
 import { ActionButtons } from "@/components/molecules/ActionButtons"
@@ -9,6 +8,7 @@ import { AudioPlayerSection } from "@/components/molecules/AudioPlayerSection"
 import { EnvironmentInfo } from "@/components/molecules/EnvironmentInfo"
 import { OtherResultsAccordion } from "@/components/molecules/OtherResultsAccordion"
 import { PrimaryResult } from "@/components/molecules/PrimaryResult"
+import { SheetHeader } from "@/components/molecules/Sheet"
 import type { AnalysisResultsViewProps } from "./types"
 
 /**
@@ -16,9 +16,8 @@ import type { AnalysisResultsViewProps } from "./types"
  *
  * @description
  * AI分析の結果を表示し、マップへのピン配置または閉じる操作を提供
- * エラー状態やフォールバック状態の表示も含む
+ * エラー状態やフォールバック状態の表示も含む。`AudioPlayback` のシートの中身として描画する
  *
- * @param isOpen シートの開閉状態
  * @param audioData 音声データ
  * @param results AI分析結果
  * @param error エラーメッセージ
@@ -34,7 +33,6 @@ import type { AnalysisResultsViewProps } from "./types"
  * @example
  * ```tsx
  * <AnalysisResultsView
- *   isOpen={true}
  *   audioData={audioData}
  *   results={results}
  *   onPlacePin={handlePlacePin}
@@ -44,7 +42,6 @@ import type { AnalysisResultsViewProps } from "./types"
  * ```
  */
 export function AnalysisResultsView({
-   isOpen,
    audioData,
    results,
    error,
@@ -56,76 +53,49 @@ export function AnalysisResultsView({
    onClose,
    pinCreationStatus = "idle",
    hasPosition,
-}: AnalysisResultsViewProps) {
+}: AnalysisResultsViewProps): ReactElement {
    return (
-      <Sheet
-         isOpen={isOpen}
-         onClose={onClose}
-         snapPoints={[0, 1]}
-         initialSnap={1}
-         detent="content"
-      >
-         <Sheet.Container className="border-t! border-white/10! bg-black/95! shadow-2xl! backdrop-blur-xl!">
-            <Sheet.Header className="bg-transparent!">
-               <div className="flex flex-col items-center px-6 pt-4 pb-4">
-                  <div className="mb-3 h-1 w-12 rounded-full bg-white/20" />
-                  <h2 className="font-bold text-white text-xl">AI分析結果</h2>
-                  <p className="mt-2 text-neutral-400 text-sm">
-                     音声を分析した結果を表示しています
-                  </p>
+      <>
+         <SheetHeader
+            title="AI分析結果"
+            description="音声を分析した結果を表示しています"
+         />
+
+         <div className="space-y-4 px-6">
+            <ErrorDisplay
+               error={error}
+               uploadError={uploadError}
+               pinCreationError={pinCreationError}
+            />
+
+            <FallbackWarning fallbackUsed={fallbackUsed || false} />
+
+            {results.length > 0 && results[0] && (
+               <div className="space-y-3">
+                  <h3 className="font-semibold text-base text-white/80">
+                     検出された音
+                  </h3>
+
+                  <PrimaryResult result={results[0]} />
+
+                  <OtherResultsAccordion results={results.slice(1, 3)} />
                </div>
-            </Sheet.Header>
+            )}
 
-            <Sheet.Content className="overflow-y-auto! bg-transparent!">
-               <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                  className="min-h-0 space-y-4 px-6"
-               >
-                  <ErrorDisplay
-                     error={error}
-                     uploadError={uploadError}
-                     pinCreationError={pinCreationError}
-                  />
+            <EnvironmentInfo environment={backendAnalysisResult?.environment} />
 
-                  <FallbackWarning fallbackUsed={fallbackUsed || false} />
+            <AudioPlayerSection audioData={audioData} />
 
-                  {results.length > 0 && results[0] && (
-                     <div className="space-y-3">
-                        <h3 className="font-semibold text-base text-white/80">
-                           検出された音
-                        </h3>
-
-                        <PrimaryResult result={results[0]} />
-
-                        <OtherResultsAccordion
-                           results={results}
-                           isFullHeight={true}
-                        />
-                     </div>
-                  )}
-
-                  <EnvironmentInfo
-                     environment={backendAnalysisResult?.environment}
-                  />
-
-                  <AudioPlayerSection audioData={audioData} />
-
-                  <div className="flex gap-2.5 pt-1 pb-6">
-                     <ActionButtons
-                        hasResults={results.length > 0}
-                        pinCreationStatus={pinCreationStatus}
-                        hasPosition={hasPosition}
-                        onPlacePin={onPlacePin}
-                        onClose={onClose}
-                     />
-                  </div>
-               </motion.div>
-            </Sheet.Content>
-         </Sheet.Container>
-
-         <Sheet.Backdrop className="bg-black/50! backdrop-blur-sm!" />
-      </Sheet>
+            <div className="flex gap-2.5 pt-1 pb-6">
+               <ActionButtons
+                  hasResults={results.length > 0}
+                  pinCreationStatus={pinCreationStatus}
+                  hasPosition={hasPosition}
+                  onPlacePin={onPlacePin}
+                  onClose={onClose}
+               />
+            </div>
+         </div>
+      </>
    )
 }

@@ -23,7 +23,7 @@ const LocationDisplayComponent = function LocationDisplay({
    latitude,
    longitude,
    className = "",
-   debugTimeOverride = null,
+   isDarkTime = false,
 }: LocationDisplayProps) {
    // 座標を丸めてキャッシュキーを生成（精度を下げてキャッシュヒット率を上げる）
    const roundedLat = useMemo(
@@ -34,15 +34,6 @@ const LocationDisplayComponent = function LocationDisplay({
       () => (longitude ? Math.round(longitude * 500) / 500 : null),
       [longitude],
    )
-
-   // 時間帯をチェック
-   const isDarkTime = useMemo(() => {
-      const EVENING_START_HOUR = 17
-      const MORNING_END_HOUR = 5
-      const hour =
-         debugTimeOverride !== null ? debugTimeOverride : new Date().getHours()
-      return hour >= EVENING_START_HOUR || hour < MORNING_END_HOUR
-   }, [debugTimeOverride])
 
    // クエリキーを安定化
    const queryKey = useMemo(
@@ -107,15 +98,9 @@ const LocationDisplayComponent = function LocationDisplay({
       networkMode: "online",
    })
 
-   // 時間帯に応じたスタイル
-   const textColorClass = useMemo(
-      () => (isDarkTime ? "text-white" : "text-gray-900"),
-      [isDarkTime],
-   )
-   const borderColorClass = useMemo(
-      () => (isDarkTime ? "border-white" : "border-gray-900"),
-      [isDarkTime],
-   )
+   const textColorClass = isDarkTime ? "text-white" : "text-neutral-900"
+   const borderColorClass = isDarkTime ? "border-white" : "border-neutral-900"
+   const mutedColorClass = isDarkTime ? "text-white/50" : "text-neutral-500"
 
    // 位置情報がない場合は何も表示しない
    const hasValidPosition = useMemo(
@@ -130,15 +115,15 @@ const LocationDisplayComponent = function LocationDisplay({
    return (
       <div className={`relative ${className}`}>
          <div
-            className={`transition-all duration-500 ${isLoading ? "opacity-50" : "opacity-100"}`}
+            className={`transition-opacity duration-menu ease-out ${isLoading ? "opacity-50" : "opacity-100"}`}
          >
             {isLoading ? (
                <div className="flex items-center gap-3">
                   <div
-                     className={`h-3 w-3 animate-pulse rounded-full ${isDarkTime ? "bg-white/50" : "bg-gray-400"}`}
+                     className={`h-3 w-3 animate-pulse rounded-full ${isDarkTime ? "bg-white/50" : "bg-neutral-400"}`}
                   />
                   <span
-                     className={`font-bold text-5xl tracking-tight ${isDarkTime ? "text-white/50" : "text-gray-400"}`}
+                     className={`font-bold text-5xl tracking-tight ${isDarkTime ? "text-white/50" : "text-neutral-400"}`}
                   >
                      Loading
                   </span>
@@ -154,7 +139,7 @@ const LocationDisplayComponent = function LocationDisplay({
                      className={`h-0.5 w-full ${borderColorClass} border-b-2`}
                   />
                   <p
-                     className={`mt-3 font-bold text-sm tracking-wide ${isDarkTime ? "text-white/50" : "text-gray-500"}`}
+                     className={`mt-3 font-bold text-sm tracking-wide ${mutedColorClass}`}
                   >
                      {latitude?.toFixed(4)}° N, {longitude?.toFixed(4)}° E
                      {isError && (

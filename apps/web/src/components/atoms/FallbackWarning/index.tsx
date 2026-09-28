@@ -1,6 +1,6 @@
 "use client"
 
-import { motion } from "motion/react"
+import { TriangleAlert } from "lucide-react"
 import type { FallbackWarningProps } from "./types"
 
 /**
@@ -23,14 +23,11 @@ export function FallbackWarning({ fallbackUsed }: FallbackWarningProps) {
    }
 
    return (
-      <motion.div
-         className="rounded-xl border border-warn-500/30 bg-warn-500/10 p-4 backdrop-blur-sm"
-         initial={{ opacity: 0, scale: 0.9 }}
-         animate={{ opacity: 1, scale: 1 }}
-      >
+      <div className="flex items-center gap-2 rounded-xl border border-warn-500/30 bg-warn-500/10 p-4">
+         <TriangleAlert aria-hidden="true" className="h-4 w-4 text-warn-300" />
          <span className="text-sm text-warn-300 leading-relaxed">
-            ⚠️ オフライン分析結果を表示中
+            オフライン分析結果を表示中
          </span>
-      </motion.div>
+      </div>
    )
 }

@@ -1,90 +1,61 @@
 "use client"
 
-import { AnimatePresence, motion } from "motion/react"
+import { Collapsible } from "@base-ui-components/react/collapsible"
+import { ChevronDown } from "lucide-react"
+import type { ReactElement } from "react"
 import { formatConfidence } from "../PrimaryResult/utils"
-import { useAccordionToggle } from "./hooks"
 import type { OtherResultsAccordionProps } from "./types"
 
 /**
- * その他の候補アコーディオンコンポーネント
+ * 主要結果以外の分類候補を折りたたんで出す
  *
- * @description
- * 主要結果以外のAI分析候補を折りたたみ表示する
- * 2位と3位の候補を表示（最大2件）
- *
- * @param results 分析結果の配列
- * @param isFullHeight フルハイト表示かどうか
+ * @param results 主要結果を除いた候補。空なら何も描画しない
  *
  * @example
  * ```tsx
- * <OtherResultsAccordion
- *   results={[
- *     { label: "犬の吠え声", confidence: 0.85 },
- *     { label: "猫の鳴き声", confidence: 0.12 },
- *     { label: "鳥のさえずり", confidence: 0.03 }
- *   ]}
- *   isFullHeight={true}
- * />
+ * <OtherResultsAccordion results={results.slice(1)} />
  * ```
  */
 export function OtherResultsAccordion({
    results,
-   isFullHeight,
-}: OtherResultsAccordionProps) {
-   const { isOpen, toggle } = useAccordionToggle()
-
-   if (results.length <= 1 || !isFullHeight) {
+}: OtherResultsAccordionProps): ReactElement | null {
+   if (results.length === 0) {
       return null
    }
 
    return (
-      <div className="overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm">
-         <button
-            type="button"
-            onClick={toggle}
-            aria-expanded={isOpen}
-            aria-label="その他の候補を表示"
-            className="flex w-full items-center justify-between p-3 text-left transition-colors hover:bg-white/5"
-         >
+      <Collapsible.Root className="overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm">
+         <Collapsible.Trigger className="group flex w-full touch-manipulation select-none items-center justify-between p-3 text-left transition duration-press ease-out focus-visible:outline-2 focus-visible:outline-white/60 focus-visible:-outline-offset-2 hover:bg-white/5 active:scale-97">
             <span className="font-medium text-white/60 text-xs">
-               その他の候補 ({results.length - 1}件)
+               その他の候補 ({results.length}件)
             </span>
-            <motion.span
-               animate={{ rotate: isOpen ? 180 : 0 }}
-               transition={{ duration: 0.2 }}
-               className="text-sm text-white/60"
-            >
-               ▼
-            </motion.span>
-         </button>
+            <ChevronDown
+               aria-hidden="true"
+               className="size-4 text-white/60 transition-transform duration-menu ease-out group-data-panel-open:rotate-180"
+            />
+         </Collapsible.Trigger>
 
-         <AnimatePresence initial={false}>
-            {isOpen && (
-               <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2, ease: "easeInOut" }}
-                  className="overflow-hidden"
-               >
-                  <div className="space-y-2 px-3 pb-3">
-                     {results.slice(1, 3).map((result, index) => (
-                        <div
-                           key={`${result.label}-${index + 1}`}
-                           className="flex items-center justify-between py-1"
-                        >
-                           <span className="text-neutral-300 text-sm">
-                              {result.label}
-                           </span>
-                           <span className="font-mono text-neutral-400 text-xs">
-                              {formatConfidence(result.confidence)}
-                           </span>
-                        </div>
-                     ))}
-                  </div>
-               </motion.div>
-            )}
-         </AnimatePresence>
-      </div>
+         {/* Tailwind に height だけを対象にする transition が無いため style で指定する */}
+         <Collapsible.Panel
+            className="h-(--collapsible-panel-height) overflow-hidden duration-menu ease-out motion-reduce:duration-0 data-ending-style:h-0 data-starting-style:h-0"
+            style={{ transitionProperty: "height" }}
+         >
+            <ul className="space-y-2 px-3 pb-3">
+               {results.map((result, index) => (
+                  <li
+                     key={`${result.label}-${index}`}
+                     className="flex items-center justify-between py-1"
+                  >
+                     <span className="text-neutral-300 text-sm">
+                        {result.label === "unknown" ? "未分類" : result.label}
+                     </span>
+                     <span className="font-mono text-neutral-400 text-xs">
+                        {formatConfidence(result.confidence)}
+                     </span>
+                  </li>
+               ))}
+            </ul>
+         </Collapsible.Panel>
+      </Collapsible.Root>
    )
 }

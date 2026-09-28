@@ -17,6 +17,7 @@
 "use client"
 
 import mapboxgl from "mapbox-gl"
+import { MotionConfig } from "motion/react"
 import { useCallback, useEffect, useMemo, useRef } from "react"
 import { createRoot, type Root } from "react-dom/client"
 import { ClusterBadge } from "@/components/atoms/ClusterBadge"
@@ -120,19 +121,27 @@ export function SoundPinMarkers({
                     ? "analyzing"
                     : "default"
 
+               // マーカーは別の React ルートなので、Providers の MotionConfig が届かない
                root.render(
-                  <SoundPinIcon
-                     size="medium"
-                     variant={iconVariant}
-                     onClick={handleClick}
-                     animated={true}
-                     primaryLabel={pin.primaryLabel}
-                     primaryConfidence={pin.primaryConfidence}
-                  />,
+                  <MotionConfig reducedMotion="user">
+                     <SoundPinIcon
+                        size="medium"
+                        variant={iconVariant}
+                        onClick={handleClick}
+                        animated={true}
+                        primaryLabel={pin.primaryLabel}
+                        primaryConfidence={pin.primaryConfidence}
+                     />
+                  </MotionConfig>,
                )
             } else {
                root.render(
-                  <ClusterBadge count={cluster.count} onClick={handleClick} />,
+                  <MotionConfig reducedMotion="user">
+                     <ClusterBadge
+                        count={cluster.count}
+                        onClick={handleClick}
+                     />
+                  </MotionConfig>,
                )
             }
 

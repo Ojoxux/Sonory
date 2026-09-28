@@ -6,13 +6,14 @@ import { CompassButton } from "@/components/atoms/CompassButton"
 import { IconButton } from "@/components/atoms/IconButton"
 import { LocationDisplay } from "@/components/atoms/LocationDisplay"
 import type { AppHeaderProps } from "./types"
+import { isNightHour } from "./utils"
 
 /**
  * アプリケーションヘッダーコンポーネント
  *
  * @description
  * 現在地の地域名と設定ボタンを含むヘッダーMoleculeコンポーネント
- * 時間帯に応じてアイコンの色も変更
+ * 地図が暗い時間帯は白系、明るい時間帯は黒系の文字とアイコンにする
  *
  * @param onSettingsClick 設定ボタンがクリックされた時のコールバック
  * @param onAppInfoClick アプリ情報ボタンがクリックされた時のコールバック
@@ -21,7 +22,6 @@ import type { AppHeaderProps } from "./types"
  * @param mapBearing マップのbearing（回転角度）
  * @param onCompassClick コンパスボタンがクリックされた時のコールバック
  * @param debugTimeOverride デバッグ用時間オーバーライド（時間のみ0-23）
- * @param mapBearing マップのbearing（回転角度）
  *
  * @example
  * ```tsx
@@ -38,42 +38,37 @@ export function AppHeader({
    onCompassClick,
    latitude,
    longitude,
-   debugTimeOverride,
+   debugTimeOverride = null,
    mapBearing,
 }: AppHeaderProps) {
-   const [isDarkTime, setIsDarkTime] = useState(false)
+   // サーバーとクライアントで時刻がずれるため、時刻はマウント後に読む
+   const [currentHour, setCurrentHour] = useState<number | null>(null)
 
-   // 時間帯をチェック（6時〜18時を明るい時間帯とする）
    useEffect(() => {
-      const checkTimeOfDay = () => {
-         const hour = new Date().getHours()
-         setIsDarkTime(hour < 6 || hour >= 18)
-      }
-
-      checkTimeOfDay()
-      const interval = setInterval(checkTimeOfDay, 60000) // 1分ごとに更新
-
+      const update = (): void => setCurrentHour(new Date().getHours())
+      update()
+      const interval = setInterval(update, 60000)
       return () => clearInterval(interval)
    }, [])
 
-   // 時間帯に応じたアイコンカラー
-   const iconColorClass = isDarkTime ? "text-white" : "text-gray-900"
-   const iconBgClass = isDarkTime
-      ? "bg-white/10 hover:bg-white/20"
-      : "bg-black/10 hover:bg-black/20"
+   const hour = debugTimeOverride ?? currentHour
+   const isDarkTime = hour !== null && isNightHour(hour)
+
+   const iconClass = isDarkTime
+      ? "bg-white/10 text-white hover:bg-white/20"
+      : "bg-black/10 text-neutral-900 hover:bg-black/20"
 
    return (
       <header className="pointer-events-none fixed top-0 right-0 left-0 z-chrome">
          <div className="flex items-start justify-between p-6">
-            {/* 地域名表示とコンパスボタン */}
-            <div className="pointer-events-auto flex flex-col items-start gap-2">
+            {/* 入りは初回の描画だけ。右のグループを少し遅らせる */}
+            <div className="pointer-events-auto flex flex-col items-start gap-2 transition duration-menu ease-out starting:-translate-y-2 starting:opacity-0">
                <LocationDisplay
                   latitude={latitude}
                   longitude={longitude}
-                  debugTimeOverride={debugTimeOverride}
+                  isDarkTime={isDarkTime}
                />
 
-               {/* コンパスボタン */}
                <CompassButton
                   onClick={onCompassClick}
                   mapBearing={mapBearing}
@@ -81,22 +76,19 @@ export function AppHeader({
                />
             </div>
 
-            {/* アクションボタン群 */}
-            <div className="pointer-events-auto flex items-center gap-3">
-               {/* 情報ボタン */}
+            <div className="pointer-events-auto flex items-center gap-3 transition delay-40 duration-menu ease-out starting:-translate-y-2 starting:opacity-0">
                <IconButton
                   icon={<MdInfo className="h-5 w-5" />}
                   ariaLabel="アプリ情報"
                   onClick={onAppInfoClick}
-                  className={`${iconBgClass} ${iconColorClass} backdrop-blur-sm`}
+                  className={`${iconClass} backdrop-blur-sm`}
                />
 
-               {/* 設定ボタン */}
                <IconButton
                   icon={<MdSettings className="h-5 w-5" />}
                   ariaLabel="設定"
                   onClick={onSettingsClick}
-                  className={`${iconBgClass} ${iconColorClass} backdrop-blur-sm`}
+                  className={`${iconClass} backdrop-blur-sm`}
                />
             </div>
          </div>

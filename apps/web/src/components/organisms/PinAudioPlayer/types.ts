@@ -29,7 +29,6 @@ export interface UsePinAudioPlayerReturn {
    audioLoadError: string | null
    currentTime: number
    duration: number
-   isMounted: boolean
    progressBarRef: React.RefObject<HTMLDivElement | null>
    formatRecordedAt: (date: Date) => string
    formatTime: (seconds: number) => string
@@ -37,7 +36,5 @@ export interface UsePinAudioPlayerReturn {
    handleSeek: (event: React.MouseEvent<HTMLDivElement>) => void
    handleClose: () => void
    progressPercentage: number
-   isOtherResultsOpen: boolean
-   toggleOtherResults: () => void
    formatConfidence: (confidence: number) => string
 }
