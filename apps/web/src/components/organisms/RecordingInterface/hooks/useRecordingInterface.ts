@@ -54,8 +54,12 @@ export function useRecordingInterface(
       error: recordingError,
    } = useMediaRecorder()
    const { audioData } = useRecorderStore()
-   const { state: microphonePermission, request: requestMicrophonePermission } =
-      useMicrophonePermission()
+   const {
+      state: microphonePermission,
+      request: requestMicrophonePermission,
+      takeStream: takeMicrophoneStream,
+      release: releaseMicrophoneStream,
+   } = useMicrophonePermission()
 
    // マイク入力から実際の音量を集める
    const levels = useMicrophoneLevels(stream, RECORDING_DURATION_SECONDS)
@@ -69,10 +73,12 @@ export function useRecordingInterface(
    // 閉じるアニメーションは AnimatePresence の exit が受け持つので、状態は即座に戻す
    const handleCloseInstructions = useCallback(() => {
       if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current)
+      // 録音せずに閉じたらマイクを閉じる。使用中の表示を残さない
+      releaseMicrophoneStream()
       setShowInstructions(false)
       setIsAgreed(false)
       setShowConfirmationComplete(false)
-   }, [])
+   }, [releaseMicrophoneStream])
 
    // 外部クリック検知
    useEffect(() => {
@@ -173,18 +179,20 @@ export function useRecordingInterface(
 
    const handleStartRecording = async () => {
       try {
-         setStatus("recording")
-         setRecordingTime(0)
-         setShowInstructions(false)
-         // 確認関連の状態をリセット
-         setIsAgreed(false)
-         setShowConfirmationComplete(false)
-
          // 前回のaudioDataをクリア（新しい録音のため）
          const { resetRecording } = useRecorderStore.getState()
          resetRecording()
 
-         await startRecording()
+         // マイクが開くまで画面を録音中にしない。許可を求めている間に
+         // 録音が始まったように見せない。確認画面で開いたストリームがあれば待ちは無い
+         await startRecording(takeMicrophoneStream())
+
+         setRecordingTime(0)
+         setStatus("recording")
+         setShowInstructions(false)
+         // 確認関連の状態をリセット
+         setIsAgreed(false)
+         setShowConfirmationComplete(false)
 
          // MediaRecorderレベルで10秒タイマーが設定されているため、
          // ここでは追加のタイマーは不要

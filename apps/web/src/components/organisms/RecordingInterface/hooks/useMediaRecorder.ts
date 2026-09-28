@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from "react"
 import type { AudioData } from "../../../../store/types"
+import { isStreamLive, requestMicrophoneStream } from "@/utils/microphone"
 import { RECORDING_DURATION_SECONDS } from "../constants"
 import { useRecorderStore } from "../../../../store/useRecorderStore"
 
@@ -140,117 +141,121 @@ export function useMediaRecorder() {
    /**
     * 録音を開始します
     *
+    * @param grantedStream 確認画面で開いたストリーム。渡すと開き直さない
+    *
     * @throws {Error} マイクアクセス許可が得られない場合
     * @throws {Error} MediaRecorderがサポートされていない場合
     */
-   const startRecording = useCallback(async (): Promise<void> => {
-      try {
-         setError(null)
+   const startRecording = useCallback(
+      async (grantedStream?: MediaStream | null): Promise<void> => {
+         try {
+            setError(null)
 
-         // MediaRecorderのサポート確認
-         if (typeof window === "undefined" || !window.MediaRecorder) {
-            throw new Error("MediaRecorderがサポートされていません")
-         }
-
-         // マイクアクセス許可を取得
-         const stream = await navigator.mediaDevices.getUserMedia({
-            audio: {
-               echoCancellation: true,
-               noiseSuppression: true,
-               autoGainControl: true,
-               sampleRate: 44100,
-            },
-         })
-
-         streamRef.current = stream
-         setStream(stream)
-         chunksRef.current = []
-
-         // MediaRecorderを初期化
-         const mediaRecorder = new MediaRecorder(stream, {
-            mimeType: MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-               ? "audio/webm;codecs=opus"
-               : MediaRecorder.isTypeSupported("audio/mp4")
-                 ? "audio/mp4"
-                 : "audio/webm",
-         })
-
-         mediaRecorderRef.current = mediaRecorder
-
-         // データ取得イベント
-         mediaRecorder.ondataavailable = (event: BlobEvent): void => {
-            if (event.data.size > 0) {
-               chunksRef.current.push(event.data)
+            // MediaRecorderのサポート確認
+            if (typeof window === "undefined" || !window.MediaRecorder) {
+               throw new Error("MediaRecorderがサポートされていません")
             }
-         }
 
-         // 録音停止イベント
-         mediaRecorder.onstop = (): void => {
-            handleRecordingStop(
-               mediaRecorder,
-               chunksRef,
-               autoStopTimerRef,
-               recordingStartTimeRef,
-               streamRef,
-               setAudioData,
-               setIsRecording,
-               setStream,
-            )
-         }
+            // 確認画面で開いたものがあれば使い回す。開き直すと Firefox が
+            // もう一度許可ダイアログを出す
+            const existing = grantedStream ?? null
+            const stream = isStreamLive(existing)
+               ? existing
+               : await requestMicrophoneStream()
 
-         // エラーイベント
-         mediaRecorder.onerror = (event: Event): void => {
-            const errorEvent = event as ErrorEvent
-            setError(new Error(`録音エラー: ${errorEvent.message}`))
-            setIsRecording(false)
-         }
+            streamRef.current = stream
+            setStream(stream)
+            chunksRef.current = []
 
-         // 録音開始時刻を記録
-         recordingStartTimeRef.current = performance.now()
+            // MediaRecorderを初期化
+            const mediaRecorder = new MediaRecorder(stream, {
+               mimeType: MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+                  ? "audio/webm;codecs=opus"
+                  : MediaRecorder.isTypeSupported("audio/mp4")
+                    ? "audio/mp4"
+                    : "audio/webm",
+            })
 
-         // 録音開始（1秒ごとにデータを取得）
-         mediaRecorder.start(1000) // 1000msごとにデータを取得
-         setIsRecording(true)
-         storeStartRecording()
+            mediaRecorderRef.current = mediaRecorder
 
-         // 確実に10秒後に停止するタイマー（少し余裕を持たせる）
-         const stopRecordingAtTime = () => {
-            const currentTime = performance.now()
-            const elapsedTime = recordingStartTimeRef.current
-               ? (currentTime - recordingStartTimeRef.current) / 1000
-               : 0
-
-            if (
-               mediaRecorderRef.current &&
-               mediaRecorderRef.current.state === "recording"
-            ) {
-               // 10秒に満たない場合は、10秒まで待つ
-               if (elapsedTime < RECORDING_DURATION_SECONDS) {
-                  const remainingTime =
-                     (RECORDING_DURATION_SECONDS - elapsedTime) * 1000
-                  autoStopTimerRef.current = setTimeout(
-                     stopRecordingAtTime,
-                     remainingTime,
-                  )
-                  return
+            // データ取得イベント
+            mediaRecorder.ondataavailable = (event: BlobEvent): void => {
+               if (event.data.size > 0) {
+                  chunksRef.current.push(event.data)
                }
-
-               mediaRecorderRef.current.stop()
             }
-         }
 
-         autoStopTimerRef.current = setTimeout(
-            stopRecordingAtTime,
-            RECORDING_DURATION_SECONDS * 1000,
-         )
-      } catch (err) {
-         const error =
-            err instanceof Error ? err : new Error("録音の開始に失敗しました")
-         setError(error)
-         setIsRecording(false)
-         throw error
-      }
-   }, [setAudioData, storeStartRecording])
+            // 録音停止イベント
+            mediaRecorder.onstop = (): void => {
+               handleRecordingStop(
+                  mediaRecorder,
+                  chunksRef,
+                  autoStopTimerRef,
+                  recordingStartTimeRef,
+                  streamRef,
+                  setAudioData,
+                  setIsRecording,
+                  setStream,
+               )
+            }
+
+            // エラーイベント
+            mediaRecorder.onerror = (event: Event): void => {
+               const errorEvent = event as ErrorEvent
+               setError(new Error(`録音エラー: ${errorEvent.message}`))
+               setIsRecording(false)
+            }
+
+            // 録音開始時刻を記録
+            recordingStartTimeRef.current = performance.now()
+
+            // 録音開始（1秒ごとにデータを取得）
+            mediaRecorder.start(1000) // 1000msごとにデータを取得
+            setIsRecording(true)
+            storeStartRecording()
+
+            // 確実に10秒後に停止するタイマー（少し余裕を持たせる）
+            const stopRecordingAtTime = () => {
+               const currentTime = performance.now()
+               const elapsedTime = recordingStartTimeRef.current
+                  ? (currentTime - recordingStartTimeRef.current) / 1000
+                  : 0
+
+               if (
+                  mediaRecorderRef.current &&
+                  mediaRecorderRef.current.state === "recording"
+               ) {
+                  // 10秒に満たない場合は、10秒まで待つ
+                  if (elapsedTime < RECORDING_DURATION_SECONDS) {
+                     const remainingTime =
+                        (RECORDING_DURATION_SECONDS - elapsedTime) * 1000
+                     autoStopTimerRef.current = setTimeout(
+                        stopRecordingAtTime,
+                        remainingTime,
+                     )
+                     return
+                  }
+
+                  mediaRecorderRef.current.stop()
+               }
+            }
+
+            autoStopTimerRef.current = setTimeout(
+               stopRecordingAtTime,
+               RECORDING_DURATION_SECONDS * 1000,
+            )
+         } catch (err) {
+            const error =
+               err instanceof Error
+                  ? err
+                  : new Error("録音の開始に失敗しました")
+            setError(error)
+            setIsRecording(false)
+            throw error
+         }
+      },
+      [setAudioData, storeStartRecording],
+   )
 
    /**
     * 録音を停止します
