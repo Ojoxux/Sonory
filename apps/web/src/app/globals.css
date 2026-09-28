@@ -23,6 +23,7 @@
    --z-index-chrome: 50;
    --z-index-panel: 110;
    --z-index-prompt: 200;
+   --z-index-sheet: 300;
 }
 
 /* 状態色は色相ではなく役割で指定する。面は 500/10、線は 500/30、文字は 300 */

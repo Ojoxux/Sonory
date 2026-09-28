@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 import type { AudioData } from "@/store/types"
 import { useInferenceStore } from "@/store/useInferenceStore"
@@ -233,4 +233,32 @@ export const usePinPlacement = () => {
       pinCreationError,
       clearPinCreationState,
    }
+}
+
+/**
+ * 要素の高さを追いかけるフック
+ *
+ * @description
+ * シートの中身を差し替えたときに高さを数値で補間するために使う。
+ * 中身はポータル越しに遅れてマウントされるので、ref ではなくコールバック ref で要素を受け取る
+ *
+ * @returns 対象に渡すコールバック ref と、測れるまでは "auto" の高さ
+ */
+export const useElementHeight = (): {
+   ref: (element: HTMLDivElement | null) => void
+   height: number | "auto"
+} => {
+   const [element, setElement] = useState<HTMLDivElement | null>(null)
+   const [height, setHeight] = useState<number | "auto">("auto")
+
+   useEffect(() => {
+      if (!element) return
+      const observer = new ResizeObserver(([entry]) => {
+         if (entry) setHeight(entry.contentRect.height)
+      })
+      observer.observe(element)
+      return () => observer.disconnect()
+   }, [element])
+
+   return { ref: setElement, height }
 }

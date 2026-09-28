@@ -1,8 +1,13 @@
 "use client"
 
-import { Sheet } from "react-modal-sheet"
+import type { ReactElement } from "react"
 import { buttonVariants } from "@/components/atoms/Button/utils"
-import { useIsMounted } from "@/hooks/useIsMounted"
+import {
+   Sheet,
+   SheetBody,
+   SheetContent,
+   SheetHeader,
+} from "@/components/molecules/Sheet"
 import { APP_DESCRIPTION, LIBRARY_CREDITS, REPOSITORY_URL } from "./constants"
 import type { AppInfoSheetProps } from "./types"
 
@@ -18,34 +23,16 @@ const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || "0.0.0"
  * @param isOpen シートの開閉状態
  * @param onClose 閉じるときのコールバック
  */
-export function AppInfoSheet({ isOpen, onClose }: AppInfoSheetProps) {
-   const isMounted = useIsMounted()
-
-   if (!isMounted) {
-      return null
-   }
-
+export function AppInfoSheet({
+   isOpen,
+   onClose,
+}: AppInfoSheetProps): ReactElement {
    return (
-      <Sheet
-         isOpen={isOpen}
-         onClose={onClose}
-         detent="content"
-         snapPoints={[0, 1]}
-         initialSnap={1}
-         tweenConfig={{ ease: "easeInOut", duration: 0.3 }}
-      >
-         <Sheet.Container className="border-t! border-white/10! bg-black/95! shadow-2xl! backdrop-blur-xl!">
-            <Sheet.Header className="bg-transparent!">
-               <div className="flex flex-col items-center px-6 pt-4 pb-2">
-                  <div className="mb-2 h-1 w-12 rounded-full bg-white/20" />
-                  <h2 className="font-bold text-white text-xl">Sonory</h2>
-                  <p className="mt-1 text-neutral-400 text-xs">
-                     v{APP_VERSION}
-                  </p>
-               </div>
-            </Sheet.Header>
+      <Sheet open={isOpen} onClose={onClose}>
+         <SheetContent>
+            <SheetHeader title="Sonory" description={`v${APP_VERSION}`} />
 
-            <Sheet.Content className="bg-transparent!">
+            <SheetBody>
                <div className="space-y-6 px-6 pb-6">
                   <p className="text-neutral-300 text-sm">{APP_DESCRIPTION}</p>
 
@@ -79,10 +66,8 @@ export function AppInfoSheet({ isOpen, onClose }: AppInfoSheetProps) {
                      リポジトリを見る
                   </a>
                </div>
-            </Sheet.Content>
-         </Sheet.Container>
-
-         <Sheet.Backdrop onTap={onClose} />
+            </SheetBody>
+         </SheetContent>
       </Sheet>
    )
 }

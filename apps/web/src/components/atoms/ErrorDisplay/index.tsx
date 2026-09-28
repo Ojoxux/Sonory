@@ -1,6 +1,5 @@
 "use client"
 
-import { motion } from "motion/react"
 import type { ErrorDisplayProps } from "./types"
 
 /**
@@ -29,14 +28,13 @@ export function ErrorDisplay({
    }
 
    return (
-      <motion.div
-         className="rounded-xl border border-danger-500/30 bg-danger-500/10 p-4 backdrop-blur-sm"
-         initial={{ opacity: 0, scale: 0.9 }}
-         animate={{ opacity: 1, scale: 1 }}
+      <div
+         role="alert"
+         className="rounded-xl border border-danger-500/30 bg-danger-500/10 p-4"
       >
          <span className="text-danger-300 text-sm leading-relaxed">
             {pinCreationError || uploadError || error?.message}
          </span>
-      </motion.div>
+      </div>
    )
 }

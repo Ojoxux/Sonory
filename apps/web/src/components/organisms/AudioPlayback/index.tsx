@@ -1,11 +1,14 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { AnimatePresence, motion } from "motion/react"
+import { type ReactElement, useEffect, useState } from "react"
+import { Sheet, SheetBody, SheetContent } from "@/components/molecules/Sheet"
 import { formatRecordedAt } from "@/utils/dateFormat"
 import { AIAnalyzingView } from "./AIAnalyzingView"
 import { AnalysisResultsView } from "./AnalysisResultsView"
 import { AudioReviewView } from "./AudioReviewView"
-import { useAudioProcessing, usePinPlacement } from "./hooks"
+import { VIEW_HIDDEN, VIEW_SHOWN, VIEW_SWAP_TRANSITION } from "./constants"
+import { useAudioProcessing, useElementHeight, usePinPlacement } from "./hooks"
 import type { AudioPlaybackProps } from "./types"
 
 /**
@@ -17,17 +20,17 @@ type ViewState = "audio-review" | "ai-analyzing" | "results"
  * 録音完了後の音声処理オーケストレーターコンポーネント
  *
  * @description
- * 録音完了後の3つの画面状態を管理するオーケストレーター：
+ * 録音完了後の3つの画面状態を1枚のシートの中で切り替える：
  * 1. 録音確認画面（AudioReviewView）
  * 2. AI分析中画面（AIAnalyzingView）
  * 3. AI分析結果画面（AnalysisResultsView）
  *
- * ビジネスロジックはカスタムフック（useAudioProcessing, usePinPlacement）に委譲し、
- * このコンポーネントは状態管理と画面遷移のみを担当する
+ * シートは開いたまま中身だけをクロスフェードし、高さの差も補間する。
+ * マウントと同時に開き、閉じるアニメーションが終わってから `onClose` を呼ぶ。
+ * ビジネスロジックはカスタムフック（useAudioProcessing, usePinPlacement）に委譲する
  *
  * @param audioData 再生する音声データ
- * @param onClose 閉じるボタンが押されたときのコールバック
- * @param className クラス名
+ * @param onClose シートが閉じきったときのコールバック
  * @param currentPosition 現在の位置情報（ピン表示用）
  *
  * @example
@@ -43,8 +46,7 @@ export function AudioPlayback({
    audioData,
    onClose,
    currentPosition,
-}: AudioPlaybackProps) {
-   // カスタムフックで状態とロジックを管理
+}: AudioPlaybackProps): ReactElement | null {
    const {
       processAudio,
       analysisMessage,
@@ -67,6 +69,8 @@ export function AudioPlayback({
    } = usePinPlacement()
 
    const [viewState, setViewState] = useState<ViewState>("audio-review")
+   const [open, setOpen] = useState(true)
+   const { ref: contentRef, height: contentHeight } = useElementHeight()
 
    /**
     * 続けるボタンのクリックハンドラー
@@ -74,10 +78,8 @@ export function AudioPlayback({
    const handleContinue = async (): Promise<void> => {
       if (!audioData) return
 
-      // AI分析画面に遷移
       setViewState("ai-analyzing")
 
-      // 音声処理を実行
       const result = await processAudio(audioData, currentPosition)
 
       // バリデーションエラーの場合は録音確認画面に戻る
@@ -86,7 +88,6 @@ export function AudioPlayback({
          return
       }
 
-      // 結果画面に遷移
       setViewState("results")
    }
 
@@ -106,17 +107,13 @@ export function AudioPlayback({
          fallbackUsed,
       )
 
-      // 成功時は閉じる
       if (result.success) {
-         onClose()
+         setOpen(false)
       }
    }
 
-   /**
-    * キャンセル・閉じるボタンのクリックハンドラー
-    */
    const handleClose = (): void => {
-      onClose()
+      setOpen(false)
    }
 
    // コンポーネントがマウントされたときに状態をクリア
@@ -124,7 +121,6 @@ export function AudioPlayback({
       clearResults()
       clearUploadState()
       clearPinCreationState()
-      setViewState("audio-review")
       setAnalysisMessage("音声を分析中...")
    }, [
       clearResults,
@@ -138,41 +134,66 @@ export function AudioPlayback({
    }
 
    return (
-      <>
-         {/* 音声確認画面 */}
-         {viewState === "audio-review" && (
-            <AudioReviewView
-               isOpen={true}
-               audioData={audioData}
-               formattedDate={formatRecordedAt(audioData.recordedAt)}
-               onContinue={handleContinue}
-               onCancel={handleClose}
-            />
-         )}
+      // MEMO: AI分析中に閉じられると困るので、分析中はドラッグ・背景タップ・Esc を無効にする
+      <Sheet
+         open={open}
+         onClose={handleClose}
+         dismissible={viewState !== "ai-analyzing"}
+         onExited={onClose}
+      >
+         <SheetContent>
+            <SheetBody>
+               <motion.div
+                  initial={false}
+                  animate={{ height: contentHeight }}
+                  transition={VIEW_SWAP_TRANSITION}
+                  className="overflow-hidden"
+               >
+                  <div ref={contentRef} className="relative">
+                     <AnimatePresence mode="popLayout" initial={false}>
+                        <motion.div
+                           key={viewState}
+                           initial={VIEW_HIDDEN}
+                           animate={VIEW_SHOWN}
+                           exit={VIEW_HIDDEN}
+                           transition={VIEW_SWAP_TRANSITION}
+                        >
+                           {viewState === "audio-review" && (
+                              <AudioReviewView
+                                 audioData={audioData}
+                                 formattedDate={formatRecordedAt(
+                                    audioData.recordedAt,
+                                 )}
+                                 onContinue={handleContinue}
+                                 onCancel={handleClose}
+                              />
+                           )}
 
-         {/* AI分析中画面 */}
-         {/* MEMO: AI分析中に閉じられると困るので、onCloseを使用しない */}
-         {viewState === "ai-analyzing" && (
-            <AIAnalyzingView isOpen={true} message={analysisMessage} />
-         )}
+                           {viewState === "ai-analyzing" && (
+                              <AIAnalyzingView message={analysisMessage} />
+                           )}
 
-         {/* AI分析結果画面 */}
-         {viewState === "results" && (
-            <AnalysisResultsView
-               isOpen={true}
-               audioData={audioData}
-               results={results}
-               error={error}
-               uploadError={uploadError}
-               pinCreationError={pinCreationError}
-               fallbackUsed={fallbackUsed}
-               backendAnalysisResult={backendAnalysisResult}
-               onPlacePin={handlePlacePin}
-               onClose={handleClose}
-               pinCreationStatus={pinCreationStatus}
-               hasPosition={!!currentPosition}
-            />
-         )}
-      </>
+                           {viewState === "results" && (
+                              <AnalysisResultsView
+                                 audioData={audioData}
+                                 results={results}
+                                 error={error}
+                                 uploadError={uploadError}
+                                 pinCreationError={pinCreationError}
+                                 fallbackUsed={fallbackUsed}
+                                 backendAnalysisResult={backendAnalysisResult}
+                                 onPlacePin={handlePlacePin}
+                                 onClose={handleClose}
+                                 pinCreationStatus={pinCreationStatus}
+                                 hasPosition={!!currentPosition}
+                              />
+                           )}
+                        </motion.div>
+                     </AnimatePresence>
+                  </div>
+               </motion.div>
+            </SheetBody>
+         </SheetContent>
+      </Sheet>
    )
 }
