@@ -215,6 +215,8 @@ Workers 環境では **リクエストごとに JWT が異なる**。
 - トークンは `apps/web/src/app/globals.css` の `@theme` が単一の情報源
 - 状態色は色相ではなく役割で書く（`accent` / `record` / `danger` / `analyze` / `done` / `warn`）。例: `bg-danger-500/10`
 - 画面全体の重なりは `z-map` / `z-overlay` / `z-chrome` / `z-panel` / `z-prompt` を使い、数値を直書きしない
+- シートとパネルの地は `glass` ユーティリティを使う
+- motion に渡すイージングと時間は `apps/web/src/utils/motion.ts` から取る。CSS で書けるものは CSS で書く
 - `prefers-reduced-motion` を尊重
 - モバイルファースト
 
