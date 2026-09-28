@@ -1,6 +1,6 @@
 "use client"
 
-import { motion } from "motion/react"
+import { motion, useReducedMotion } from "motion/react"
 import { useEffect, useState } from "react"
 import type { RippleEffectProps } from "./types"
 
@@ -19,13 +19,14 @@ import type { RippleEffectProps } from "./types"
 export function RippleEffect({
    isActive,
    className = "",
-   borderColor = "border-gray-400",
+   borderColor = "border-white/40",
    size = "inset-0",
 }: RippleEffectProps) {
    // 各インスタンス独自のランダムタイミング
    const [delay] = useState(() => 300 + Math.random() * 600) // 300-900msのランダム遅延
    const [duration] = useState(() => 1500 + Math.random() * 800) // 1.5-2.3秒の可変時間
    const [isAnimating, setIsAnimating] = useState(false)
+   const shouldReduceMotion = useReducedMotion()
 
    useEffect(() => {
       if (isActive) {
@@ -40,11 +41,11 @@ export function RippleEffect({
       setIsAnimating(false)
    }, [isActive, delay])
 
-   if (!isAnimating) return null
+   if (!isAnimating || shouldReduceMotion) return null
 
    return (
       <motion.div
-         className={`absolute ${size} rounded-full border-2 ${borderColor} will-change-transform ${className}`}
+         className={`pointer-events-none absolute ${size} rounded-full border-2 ${borderColor} will-change-transform ${className}`}
          initial={{ scale: 1, opacity: 0 }}
          animate={{
             scale: [1, 1.3, 1],

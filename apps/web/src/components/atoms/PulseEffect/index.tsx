@@ -1,6 +1,6 @@
 "use client"
 
-import { motion } from "motion/react"
+import { motion, useReducedMotion } from "motion/react"
 import { useEffect, useState } from "react"
 import type { PulseEffectProps } from "./types"
 
@@ -22,10 +22,11 @@ export function PulseEffect({
    borderColor = "border-record-500",
    size = "inset-0",
 }: PulseEffectProps) {
-   // 各インスタンス独自のランダムタイミング
-   const [delay] = useState(() => Math.random() * 800) // 0-800msのランダム遅延
+   // 各インスタンス独自のランダムタイミング。録音中の合図なので出だしは待たせない
+   const [delay] = useState(() => Math.random() * 150)
    const [duration] = useState(() => 1200 + Math.random() * 600) // 1.2-1.8秒の可変時間
    const [isAnimating, setIsAnimating] = useState(false)
+   const shouldReduceMotion = useReducedMotion()
 
    useEffect(() => {
       if (isActive) {
@@ -40,15 +41,15 @@ export function PulseEffect({
       setIsAnimating(false)
    }, [isActive, delay])
 
-   if (!isAnimating) return null
+   if (!isAnimating || shouldReduceMotion) return null
 
    return (
       <motion.div
-         className={`absolute ${size} rounded-full border-2 ${borderColor} will-change-transform ${className}`}
+         className={`pointer-events-none absolute ${size} rounded-full border-2 ${borderColor} will-change-transform ${className}`}
          initial={{ scale: 1, opacity: 0 }}
          animate={{
-            scale: [1, 1.4, 1],
-            opacity: [0, 0.7, 0],
+            scale: [1, 1.4],
+            opacity: [0.7, 0],
          }}
          transition={{
             duration: duration / 1000, // ミリ秒を秒に変換

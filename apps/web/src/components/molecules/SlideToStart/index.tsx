@@ -1,16 +1,31 @@
 "use client"
 
-import { motion, useMotionValue, useTransform } from "motion/react"
+import { clsx } from "clsx"
+import { ArrowRight } from "lucide-react"
+import {
+   animate,
+   motion,
+   type PanInfo,
+   useMotionValue,
+   useTransform,
+} from "motion/react"
 import { useEffect, useRef, useState } from "react"
-import { MdArrowForward } from "react-icons/md"
+import { DURATION, EASE_OUT } from "@/utils/motion"
 import { DropRippleEffect } from "../../atoms/DropRippleEffect"
+import {
+   COMPLETE_DISTANCE_RATIO,
+   FLICK_MIN_DISTANCE_RATIO,
+   FLICK_VELOCITY,
+   KNOB_TRAVEL_INSET,
+} from "./constants"
 import type { SlideToStartProps } from "./types"
 
 /**
  * スライドして開始するコンポーネント
  *
  * @description
- * ドラッグ操作で特定のアクションを実行するスライドバー
+ * ドラッグ操作で特定のアクションを実行するスライドバー。
+ * 端まで引くか、素早く弾けば完了する。波紋は `onComplete` と同時に出す
  *
  * @param onComplete スライド完了時のコールバック
  * @param disabled 無効状態
@@ -24,19 +39,18 @@ export function SlideToStart({
    className = "",
 }: SlideToStartProps) {
    const containerRef = useRef<HTMLDivElement>(null)
+   const dragStartedAt = useRef(0)
+   const isCompleted = useRef(false)
    const [slideDistance, setSlideDistance] = useState(160)
    const [showDropEffect, setShowDropEffect] = useState(false)
    const x = useMotionValue(0)
    const opacity = useTransform(x, [0, slideDistance], [1, 0])
 
-   // コンテナの幅を取得して安全な可動域を計算
    useEffect(() => {
       const updateSlideDistance = () => {
          if (containerRef.current) {
-            const containerWidth = containerRef.current.offsetWidth
-            // コンテナ幅 - 左右パディング(8px) - スライダーボタン幅(64px) - 安全マージン(4px)
-            const safeDistance = containerWidth - 8 - 64 - 0.5
-            setSlideDistance(Math.max(safeDistance, 50)) // 最小50px
+            const travel = containerRef.current.offsetWidth - KNOB_TRAVEL_INSET
+            setSlideDistance(Math.max(travel, 50))
          }
       }
 
@@ -45,87 +59,69 @@ export function SlideToStart({
       return () => window.removeEventListener("resize", updateSlideDistance)
    }, [])
 
-   const resetSlider = () => {
-      x.set(0)
-   }
+   const handleDragEnd = (
+      _event: MouseEvent | TouchEvent | PointerEvent,
+      info: PanInfo,
+   ) => {
+      if (disabled || isCompleted.current) return
 
-   const handleSlideComplete = () => {
-      // 雫エフェクトを発動
-      setShowDropEffect(true)
+      const offset = Math.max(info.offset.x, 0)
+      const elapsed = Math.max(performance.now() - dragStartedAt.current, 1)
+      const isFlick =
+         offset / elapsed > FLICK_VELOCITY &&
+         offset >= slideDistance * FLICK_MIN_DISTANCE_RATIO
 
-      // 波紋エフェクトが完了してから画面遷移（2.5秒後）
-      setTimeout(() => {
+      if (offset >= slideDistance * COMPLETE_DISTANCE_RATIO || isFlick) {
+         isCompleted.current = true
+         animate(x, slideDistance, { duration: DURATION.press, ease: EASE_OUT })
+         setShowDropEffect(true)
          onComplete()
-      }, 2500)
+         return
+      }
 
-      // エフェクト完了後にリセット
-      setTimeout(() => {
-         setShowDropEffect(false)
-      }, 3000)
+      animate(x, 0, { duration: DURATION.menu, ease: EASE_OUT })
    }
 
    return (
-      <div className={`mb-4 ${className}`}>
-         <div
-            ref={containerRef}
-            className={`relative isolate h-14 w-full rounded-full p-1 transition-all duration-300 ${
-               !disabled
-                  ? "bg-white shadow-[0_8px_24px_rgba(255,255,255,0.4)]"
-                  : "cursor-not-allowed bg-neutral-700"
-            }
-        `}
-         >
-            {/* 雫の波紋エフェクト */}
-            <DropRippleEffect
-               isActive={showDropEffect}
-               color="white"
-               size="medium"
-            />
+      <div
+         ref={containerRef}
+         className={clsx(
+            "relative isolate h-14 w-full rounded-full p-1",
+            disabled ? "cursor-not-allowed bg-neutral-700" : "bg-white",
+            className,
+         )}
+      >
+         <DropRippleEffect isActive={showDropEffect} color="white" />
 
-            <motion.div
-               drag={!disabled ? "x" : false}
-               dragConstraints={{ left: 0, right: slideDistance }}
-               dragElastic={{ left: 0, right: 0 }}
-               dragMomentum={false}
-               dragTransition={{
-                  bounceStiffness: 600,
-                  bounceDamping: 20,
-                  power: 0.3,
-                  timeConstant: 200,
-               }}
-               onDragEnd={(_, info) => {
-                  if (
-                     !disabled &&
-                     (info.offset.x >= slideDistance * 0.98 ||
-                        info.velocity.x > 500)
-                  ) {
-                     handleSlideComplete()
-                  } else {
-                     resetSlider()
-                  }
-               }}
-               whileTap={!disabled ? { scale: 1.05 } : {}}
-               style={{ x }}
-               className={`relative z-10 grid h-full w-16 place-items-center rounded-full ${
-                  !disabled
-                     ? "cursor-grab bg-black active:cursor-grabbing"
-                     : "cursor-not-allowed bg-neutral-600"
-               }
-          `}
-            >
-               <MdArrowForward
-                  className={`h-5 w-5 transition-colors duration-300 ${!disabled ? "text-white" : "text-neutral-400"}
-            `}
-               />
-            </motion.div>
-            <motion.p
-               style={{ opacity }}
-               className={`-translate-y-1/2 absolute top-1/2 right-5 font-semibold text-sm tracking-tight transition-colors duration-300 ${!disabled ? "text-black" : "text-neutral-400"}
-          `}
-            >
-               {text}
-            </motion.p>
-         </div>
+         <motion.div
+            drag={disabled ? false : "x"}
+            dragConstraints={{ left: 0, right: slideDistance }}
+            dragElastic={0}
+            dragMomentum={false}
+            onDragStart={() => {
+               dragStartedAt.current = performance.now()
+            }}
+            onDragEnd={handleDragEnd}
+            whileTap={disabled ? {} : { scale: 0.97 }}
+            style={{ x }}
+            className={clsx(
+               "relative z-10 grid h-full w-16 place-items-center rounded-full",
+               disabled
+                  ? "cursor-not-allowed bg-neutral-600 text-neutral-400"
+                  : "cursor-grab bg-black text-white active:cursor-grabbing",
+            )}
+         >
+            <ArrowRight aria-hidden="true" className="size-5" />
+         </motion.div>
+         <motion.p
+            style={{ opacity }}
+            className={clsx(
+               "-translate-y-1/2 absolute top-1/2 right-5 font-semibold text-sm tracking-tight",
+               disabled ? "text-neutral-400" : "text-black",
+            )}
+         >
+            {text}
+         </motion.p>
       </div>
    )
 }

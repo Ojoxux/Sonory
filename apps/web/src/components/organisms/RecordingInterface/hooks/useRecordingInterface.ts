@@ -1,8 +1,8 @@
 "use client"
 
-import type { PanInfo } from "motion/react"
 import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react"
 import { useRecorderStore } from "../../../../store/useRecorderStore"
+import { CONFIRM_HOLD_MS } from "../../../molecules/RecordingInstructions/constants"
 import { toast } from "sonner"
 import { useMicrophonePermission } from "@/hooks/useMicrophonePermission"
 // 実際のMediaRecorder APIを使用
@@ -40,7 +40,6 @@ export function useRecordingInterface(
    )
    const [recordingTime, setRecordingTime] = useState(0)
    const [showInstructions, setShowInstructions] = useState(false)
-   const [isClosing, setIsClosing] = useState(false)
    const [showPlayback, setShowPlayback] = useState(false)
    const [isAgreed, setIsAgreed] = useState(false)
    const [showConfirmationComplete, setShowConfirmationComplete] =
@@ -55,7 +54,6 @@ export function useRecordingInterface(
    const { audioData } = useRecorderStore()
    const { state: microphonePermission, request: requestMicrophonePermission } =
       useMicrophonePermission()
-   const constraintsRef = useRef<HTMLDivElement>(null)
 
    // 非同期波形データフック
    const waveformData = useAsyncWaveform(status === "recording")
@@ -63,17 +61,16 @@ export function useRecordingInterface(
    // 外部クリック検知用のref
    const instructionsRef = useRef<HTMLDivElement>(null)
 
-   // 外部クリック検知ハンドラー（useEffectより前に定義）
+   // 確認済み → 確認完了の切り替え待ち。閉じたときに取り消す
+   const confirmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+   // 閉じるアニメーションは AnimatePresence の exit が受け持つので、状態は即座に戻す
    const handleCloseInstructions = useCallback(() => {
-      setIsClosing(true)
-      // アニメーション完了後に状態をリセット
-      setTimeout(() => {
-         setShowInstructions(false)
-         setIsClosing(false)
-         setIsAgreed(false)
-         setShowConfirmationComplete(false)
-      }, 1200) // クローズアニメーションの時間に合わせる（0.6 + 0.6 = 1.2秒）
-   }, []) // setState関数は既にメモ化されているため依存配列は空
+      if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current)
+      setShowInstructions(false)
+      setIsAgreed(false)
+      setShowConfirmationComplete(false)
+   }, [])
 
    // 外部クリック検知
    useEffect(() => {
@@ -88,14 +85,11 @@ export function useRecordingInterface(
          }
       }
 
-      // イベントリスナーを追加（少し遅延させて、開くアニメーション中のクリックを無視）
-      const timeoutId = setTimeout(() => {
-         document.addEventListener("mousedown", handleClickOutside)
-         document.addEventListener("touchstart", handleClickOutside)
-      }, 300)
+      // 開いたタップの mousedown / touchstart は click より前に済んでいるので、すぐ登録してよい
+      document.addEventListener("mousedown", handleClickOutside)
+      document.addEventListener("touchstart", handleClickOutside)
 
       return () => {
-         clearTimeout(timeoutId)
          document.removeEventListener("mousedown", handleClickOutside)
          document.removeEventListener("touchstart", handleClickOutside)
       }
@@ -216,10 +210,10 @@ export function useRecordingInterface(
 
    const handleAgree = () => {
       setIsAgreed(true)
-      // 確認ボタンのアニメーション完了まで待ってから確認完了画面を表示
-      setTimeout(() => {
+      // 「確認済み」を一瞬見せてから確認完了画面に切り替える
+      confirmTimerRef.current = setTimeout(() => {
          setShowConfirmationComplete(true)
-      }, 1200)
+      }, CONFIRM_HOLD_MS)
    }
 
    const handleStop = async () => {
@@ -244,24 +238,12 @@ export function useRecordingInterface(
       return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}.${milliseconds.toString().padStart(2, "0")}`
    }
 
-   const handleDragEnd = (
-      _event: MouseEvent | TouchEvent | PointerEvent,
-      info: PanInfo,
-   ) => {
-      if (info.offset.y < -50) {
-         setIsExpanded(true)
-      } else if (info.offset.y > 50) {
-         setIsExpanded(false)
-      }
-   }
-
    const handleClosePlayback = () => {
       setShowPlayback(false)
       // 次回の録音のために確認関連の状態をリセット
       setIsAgreed(false)
       setShowConfirmationComplete(false)
       setShowInstructions(false)
-      setIsClosing(false)
    }
 
    const instructionItems = [
@@ -279,13 +261,10 @@ export function useRecordingInterface(
       recordingTime,
       showInstructions,
       setShowInstructions,
-      isClosing,
-      setIsClosing,
       showPlayback,
       isAgreed,
       showConfirmationComplete,
       setShowConfirmationComplete,
-      constraintsRef,
       instructionsRef,
       waveformData,
       audioData,
@@ -298,7 +277,6 @@ export function useRecordingInterface(
       handleClosePlayback,
       handleCloseInstructions,
       formatTime,
-      handleDragEnd,
       instructionItems,
       recordingError,
    }

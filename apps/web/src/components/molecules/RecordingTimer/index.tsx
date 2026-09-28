@@ -1,6 +1,3 @@
-"use client"
-
-import { motion } from "motion/react"
 import type { RecordingTimerProps } from "./types"
 
 /**
@@ -14,15 +11,8 @@ import type { RecordingTimerProps } from "./types"
  */
 export function RecordingTimer({ time, formatTime }: RecordingTimerProps) {
    return (
-      <motion.div
-         initial={{ scale: 0.8, opacity: 0 }}
-         animate={{ scale: 1, opacity: 1 }}
-         transition={{ delay: 0.1 }}
-         className="mt-8 mb-8 sm:mt-10 sm:mb-10"
-      >
-         <div className="font-light font-mono text-6xl text-gray-900 tracking-wider sm:text-7xl lg:text-8xl">
-            {formatTime(time)}
-         </div>
-      </motion.div>
+      <div className="my-8 font-light font-mono text-6xl text-white tabular-nums tracking-wider sm:my-10 sm:text-7xl lg:text-8xl">
+         {formatTime(time)}
+      </div>
    )
 }

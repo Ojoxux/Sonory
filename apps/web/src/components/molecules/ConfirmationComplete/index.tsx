@@ -1,98 +1,48 @@
 "use client"
 
+import { Check } from "lucide-react"
 import { motion } from "motion/react"
+import { REVEAL_VARIANTS } from "../RecordingInstructions/constants"
 import type { ConfirmationCompleteProps } from "./types"
-import {
-   getCheckmarkContainerAnimation,
-   getCheckmarkIconAnimation,
-   getCheckmarkPathAnimation,
-   getCircleBackgroundAnimation,
-   getContainerAnimation,
-   getMessageAnimation,
-   getParagraphAnimation,
-} from "./utils"
 
 /**
  * 確認完了画面コンポーネント
  *
  * @description
- * 確認事項の確認完了後に表示される画面
+ * 確認事項の確認完了後に表示される画面。
+ * 子は親の `staggerChildren` に乗って順に出る
  *
  * @param className 追加のCSSクラス
- * @param isClosing クローズアニメーション中かどうか
  */
-
 export function ConfirmationComplete({
    className = "",
-   isClosing = false,
 }: ConfirmationCompleteProps) {
-   const containerAnim = getContainerAnimation(isClosing)
-   const checkmarkContainerAnim = getCheckmarkContainerAnimation(isClosing)
-   const circleAnim = getCircleBackgroundAnimation(isClosing)
-   const iconAnim = getCheckmarkIconAnimation(isClosing)
-   const pathAnim = getCheckmarkPathAnimation(isClosing)
-   const messageAnim = getMessageAnimation(isClosing)
-   const paragraphAnim = getParagraphAnimation(isClosing)
-
    return (
-      <motion.div
-         {...containerAnim}
-         className={`flex flex-col items-center justify-center px-4 py-4 ${className}`}
+      <div
+         className={`flex flex-col items-center justify-center p-4 ${className}`}
       >
-         {/* 大きなチェックマーク - Appleスタイル */}
-         <motion.div {...checkmarkContainerAnim} className="mb-4">
-            <div className="relative">
-               {/* 背景の円 - クローズ時は早めに非表示 */}
-               <motion.div
-                  {...circleAnim}
-                  className="absolute inset-0 h-20 w-20 rounded-full bg-done-500/10"
-               />
-               {/* チェックマーク */}
-               <div className="relative z-10 flex h-20 w-20 items-center justify-center">
-                  <motion.svg
-                     {...iconAnim}
-                     aria-label="確認完了マーク"
-                     className="h-10 w-10 text-done-500"
-                     fill="none"
-                     viewBox="0 0 24 24"
-                     stroke="currentColor"
-                     strokeWidth={2}
-                  >
-                     <title>確認完了マーク</title>
-                     <motion.path
-                        {...pathAnim}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M5 13l4 4L19 7"
-                     />
-                  </motion.svg>
-               </div>
-            </div>
+         <motion.div
+            variants={REVEAL_VARIANTS}
+            className="mb-4 grid size-20 place-items-center rounded-full bg-done-500/10"
+         >
+            <Check
+               aria-label="確認完了"
+               className="size-10 text-done-400"
+               strokeWidth={2}
+            />
          </motion.div>
 
-         {/* メッセージ - Appleスタイルのタイポグラフィ */}
-         <motion.div {...messageAnim} className="max-w-sm text-center">
-            <motion.h2
-               className="mb-2 font-semibold text-white text-xl leading-tight tracking-tight"
-               style={{
-                  fontFamily:
-                     '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-               }}
-            >
+         <motion.div
+            variants={REVEAL_VARIANTS}
+            className="max-w-sm text-center"
+         >
+            <h2 className="mb-2 font-semibold text-white text-xl leading-tight tracking-tight">
                さあ、録音を始めましょう！
-            </motion.h2>
-
-            <motion.p
-               {...paragraphAnim}
-               className="font-normal text-neutral-300 text-sm leading-relaxed"
-               style={{
-                  fontFamily:
-                     '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-               }}
-            >
+            </h2>
+            <p className="text-neutral-300 text-sm leading-relaxed">
                下のスライダーを右にドラッグして録音を開始してください
-            </motion.p>
+            </p>
          </motion.div>
-      </motion.div>
+      </div>
    )
 }

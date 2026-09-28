@@ -1,6 +1,7 @@
 "use client"
 
 import { BlinkingIndicator } from "../../atoms/BlinkingIndicator"
+import { Button } from "../../atoms/Button"
 import type { RecordingHeaderProps } from "./types"
 
 /**
@@ -19,39 +20,25 @@ export function RecordingHeader({
    onNext,
 }: RecordingHeaderProps) {
    return (
-      <div className="relative flex items-center justify-between px-6 py-4 pb-2 sm:px-8 sm:pb-3">
-         {!isRecording ? (
-            <button
-               type="button"
-               onClick={onCancel}
-               className="touch-manipulation font-medium text-base text-gray-600 transition-colors hover:text-gray-900 sm:text-lg"
-            >
-               キャンセル
-            </button>
-         ) : (
-            <div className="touch-manipulation font-medium text-base text-gray-400 sm:text-lg">
-               キャンセル
-            </div>
-         )}
+      <div className="relative flex h-16 items-center justify-between">
+         <Button size="sm" onClick={onCancel} disabled={isRecording}>
+            キャンセル
+         </Button>
 
-         <div className="-translate-x-1/2 absolute left-1/2 flex transform items-center gap-2">
+         <div className="-translate-x-1/2 pointer-events-none absolute left-1/2 flex items-center gap-2">
             <BlinkingIndicator
                isActive={isRecording}
-               size="w-2 h-2"
+               size="size-2"
                color="bg-record-500"
             />
-            <span className="font-medium text-base text-gray-900 sm:text-lg">
+            <span className="font-medium text-base text-white sm:text-lg">
                録音中
             </span>
          </div>
 
-         <button
-            type="button"
-            onClick={onNext}
-            className="touch-manipulation font-medium text-base text-gray-900 transition-colors hover:text-gray-700 sm:text-lg"
-         >
+         <Button intent="accent" size="sm" onClick={onNext}>
             次へ
-         </button>
+         </Button>
       </div>
    )
 }

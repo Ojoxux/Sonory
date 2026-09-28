@@ -2,43 +2,30 @@
 
 import { motion } from "motion/react"
 import { InstructionItem } from "../../atoms/InstructionItem"
+import { REVEAL_VARIANTS } from "../RecordingInstructions/constants"
 import type { InstructionsListProps } from "./types"
 
 /**
  * 確認事項リストコンポーネント
  *
  * @description
- * 録音前の確認事項を一覧表示するコンポーネント
- * 各アイテムを順次アニメーション表示する
+ * 録音前の確認事項を一覧表示するコンポーネント。
+ * 各項目は親の `staggerChildren` に乗って順に出る
  *
  * @param items 確認事項の配列
- * @param isClosing 閉じるアニメーション中かどうか
  * @param className 追加のCSSクラス
  */
-
 export function InstructionsList({
    items,
-   isClosing,
    className = "",
 }: InstructionsListProps) {
    return (
-      <motion.div
-         className={`relative z-10 mb-6 space-y-3 ${className}`}
-         animate={
-            isClosing ? { opacity: 0, scale: 0.9 } : { opacity: 1, scale: 1 }
-         }
-         transition={
-            isClosing ? { duration: 0.2 } : { duration: 0.3, delay: 1.2 }
-         }
-      >
-         {items.map((item, index) => (
-            <InstructionItem
-               key={item}
-               text={item}
-               index={index}
-               isClosing={isClosing}
-            />
+      <ul className={`mb-6 space-y-3 ${className}`}>
+         {items.map((item) => (
+            <motion.li key={item} variants={REVEAL_VARIANTS}>
+               <InstructionItem text={item} />
+            </motion.li>
          ))}
-      </motion.div>
+      </ul>
    )
 }

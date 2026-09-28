@@ -6,23 +6,17 @@ import { MicPermissionToggle } from "../../atoms/MicPermissionToggle"
 import { ConfirmationComplete } from "../ConfirmationComplete"
 import { InstructionsList } from "../InstructionsList"
 import { SlideToStart } from "../SlideToStart"
+import { CARD_VARIANTS, COMPLETE_VARIANTS, REVEAL_VARIANTS } from "./constants"
 import type { RecordingInstructionsProps } from "./types"
-import {
-   getClosingAnimation,
-   getClosingTransition,
-   getInitialAnimation,
-   getOpeningAnimation,
-   getOpeningTransition,
-} from "./utils"
 
 /**
  * 録音前の説明・確認コンポーネント
  *
  * @description
- * 録音前に表示する説明と確認事項を表示するコンポーネント
+ * 録音前に表示する説明と確認事項を表示するコンポーネント。
+ * 閉じるアニメーションは親の `AnimatePresence` が `exit` で流す
  *
  * @param instructionItems 説明項目の配列
- * @param isClosing 閉じるアニメーション中かどうか
  * @param isAgreed 同意済みかどうか
  * @param showConfirmationComplete 確認完了画面を表示するかどうか
  * @param microphonePermission マイク権限の状態
@@ -34,7 +28,6 @@ import {
  */
 export function RecordingInstructions({
    instructionItems,
-   isClosing,
    isAgreed,
    showConfirmationComplete,
    microphonePermission,
@@ -44,168 +37,67 @@ export function RecordingInstructions({
    onStartRecording,
    instructionsRef,
 }: RecordingInstructionsProps) {
-   const initialAnim = getInitialAnimation()
-   const animate = isClosing ? getClosingAnimation() : getOpeningAnimation()
-   const transition = isClosing
-      ? getClosingTransition()
-      : getOpeningTransition()
-
    return (
       <motion.div
          ref={instructionsRef}
-         initial={initialAnim}
-         animate={animate}
-         transition={transition}
-         className="relative mx-auto mb-5 flex max-w-sm flex-col overflow-hidden border border-neutral-600/30 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.5)] backdrop-blur-xl sm:p-6"
-         style={{
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-            maxHeight: "80vh",
-            willChange: "transform, width, height, background-color",
-            transform: "translate3d(0, 0, 0)",
-            backfaceVisibility: "hidden",
-            WebkitFontSmoothing: "antialiased",
-         }}
+         variants={CARD_VARIANTS}
+         initial="hidden"
+         animate="shown"
+         exit="exit"
+         className="glass relative flex w-full max-w-sm origin-bottom flex-col overflow-hidden rounded-4xl border p-4 text-white shadow-2xl sm:p-6"
       >
-         {/* シンプルなグロー効果 */}
-         <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={
-               isClosing
-                  ? { opacity: 0, scale: 0.95 }
-                  : {
-                       opacity: [0, 0.3, 0.1],
-                       scale: [0.95, 1.05, 1],
-                    }
-            }
-            transition={{
-               duration: isClosing ? 0.3 : 1.0,
-               delay: isClosing ? 0 : 0.1,
-               ease: [0.4, 0, 0.2, 1],
-            }}
-            className="absolute inset-0 rounded-4xl bg-linear-to-br from-neutral-400/10 to-neutral-600/10 blur-xl"
-            style={{
-               willChange: "transform, opacity",
-               transform: "translate3d(0, 0, 0)",
-            }}
-         />
-
-         {/* ヘッダー（確認事項表示時のみ） */}
-         {!showConfirmationComplete && (
-            <motion.div
-               initial={{ opacity: 0, y: -30, scale: 0.8 }}
-               animate={
-                  isClosing
-                     ? { opacity: 0, scale: 0.8 }
-                     : {
-                          opacity: 1,
-                          y: 0,
-                          scale: [0.8, 1.1, 1],
-                       }
-               }
-               transition={
-                  isClosing
-                     ? { duration: 0.2 }
-                     : {
-                          delay: 0.8,
-                          duration: 0.8,
-                          ease: [0.68, -0.55, 0.265, 1.55],
-                       }
-               }
-               className="relative z-10 mb-4 text-center"
-            >
-               <motion.h3
-                  initial={{ letterSpacing: "0.1em" }}
-                  animate={{
-                     letterSpacing: ["0.1em", "0.2em", "0.05em"],
-                  }}
-                  transition={{ duration: 1, delay: 1 }}
-                  className="mb-2 font-bold text-lg text-white tracking-tight"
-               >
-                  録音前の確認
-               </motion.h3>
-               <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: [0, 1] }}
-                  transition={{ delay: 1.2, duration: 0.6 }}
-                  className="font-normal text-base text-neutral-200 leading-relaxed"
-               >
-                  以下の項目をご確認ください
-               </motion.p>
-            </motion.div>
-         )}
-
-         {/* 確認事項リスト */}
          {!showConfirmationComplete ? (
             <>
-               <InstructionsList
-                  items={instructionItems}
-                  isClosing={isClosing}
-               />
-
-               {/* 位置情報が無いとピンを配置できない。録音し終えてから気づかせない */}
-               {!hasPosition && (
-                  <motion.div
-                     className="relative z-10 mb-4 rounded-xl border border-warn-500/30 bg-warn-500/10 px-4 py-3"
-                     initial={{ opacity: 0, y: 30 }}
-                     animate={
-                        isClosing ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }
-                     }
-                     transition={
-                        isClosing
-                           ? { duration: 0.2 }
-                           : { delay: 1.35, duration: 0.6 }
-                     }
-                  >
-                     <span className="text-sm text-warn-300 leading-relaxed">
-                        位置情報を取得できていません。録音はできますが、ピンは配置できません
-                     </span>
-                  </motion.div>
-               )}
-
-               {/* マイク許可トグル（確認ボタンの前提） */}
-               <MicPermissionToggle
-                  state={microphonePermission}
-                  onRequest={onRequestMicrophonePermission}
-                  isClosing={isClosing}
-               />
-
-               {/* 確認ボタン */}
-               <ConfirmButton
-                  onClick={onAgree}
-                  isConfirmed={isAgreed}
-                  isDisabled={microphonePermission !== "granted"}
-                  isClosing={isClosing}
-               />
-            </>
-         ) : (
-            <>
-               {/* 確認完了画面 */}
-               <ConfirmationComplete isClosing={isClosing} />
-
-               {/* スライドバー（確認完了後のみ表示） */}
                <motion.div
-                  initial={{ opacity: 0, y: 50, scale: 0.8 }}
-                  animate={{
-                     opacity: 1,
-                     y: 0,
-                     scale: [0.8, 1.1, 1],
-                  }}
-                  transition={{
-                     delay: 1.2,
-                     duration: 0.8,
-                     ease: [0.68, -0.55, 0.265, 1.55],
-                  }}
-                  className="relative z-10 w-full"
+                  variants={REVEAL_VARIANTS}
+                  className="mb-4 text-center"
                >
-                  <SlideToStart
-                     onComplete={onStartRecording}
-                     disabled={false}
-                     text="録音開始"
-                     className="px-0"
+                  <h3 className="mb-2 font-bold text-lg tracking-tight">
+                     録音前の確認
+                  </h3>
+                  <p className="text-base text-neutral-200 leading-relaxed">
+                     以下の項目をご確認ください
+                  </p>
+               </motion.div>
+
+               <InstructionsList items={instructionItems} />
+
+               <motion.div
+                  variants={REVEAL_VARIANTS}
+                  className="flex flex-col gap-4"
+               >
+                  {/* 位置情報が無いとピンを配置できない。録音し終えてから気づかせない */}
+                  {!hasPosition && (
+                     <div className="rounded-xl border border-warn-500/30 bg-warn-500/10 px-4 py-3">
+                        <span className="text-sm text-warn-300 leading-relaxed">
+                           位置情報を取得できていません。録音はできますが、ピンは配置できません
+                        </span>
+                     </div>
+                  )}
+
+                  <MicPermissionToggle
+                     state={microphonePermission}
+                     onRequest={onRequestMicrophonePermission}
+                  />
+
+                  <ConfirmButton
+                     onClick={onAgree}
+                     isConfirmed={isAgreed}
+                     isDisabled={microphonePermission !== "granted"}
                   />
                </motion.div>
             </>
+         ) : (
+            <motion.div
+               initial="hidden"
+               animate="shown"
+               variants={COMPLETE_VARIANTS}
+            >
+               <ConfirmationComplete />
+               <motion.div variants={REVEAL_VARIANTS}>
+                  <SlideToStart onComplete={onStartRecording} text="録音開始" />
+               </motion.div>
+            </motion.div>
          )}
       </motion.div>
    )

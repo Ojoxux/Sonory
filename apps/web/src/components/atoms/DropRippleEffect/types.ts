@@ -1,12 +1,4 @@
 /**
- * 雫が落ちるような波紋エフェクトコンポーネントの型定義
- *
- * @description
- * スライダー完了時に右端から雫が落ちて波紋が広がるエフェクトの
- * Propsを管理します。
- */
-
-/**
  * 波紋の色の種類
  */
 export type RippleColor = "blue" | "white" | "green" | "red"
