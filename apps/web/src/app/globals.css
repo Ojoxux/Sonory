@@ -84,8 +84,21 @@ body {
 /* アクセシビリティ: モーション軽減設定を尊重 */
 @media (prefers-reduced-motion: reduce) {
    .animate-pulse,
-   .animate-spin {
+   .animate-spin,
+   .animate-ping,
+   .animate-bounce {
       animation: none;
+   }
+
+   /* 位置・大きさ・回転は即座に切り替え、不透明度と色の遷移だけ残す。
+      ライブラリが属性セレクタで当てる遷移（Vaul など）はこれより詳細度が高く、上書きしない */
+   *,
+   ::before,
+   ::after {
+      transition-property:
+         color, background-color, border-color, outline-color,
+         text-decoration-color, fill, stroke, opacity, box-shadow, filter,
+         backdrop-filter;
    }
 }
 

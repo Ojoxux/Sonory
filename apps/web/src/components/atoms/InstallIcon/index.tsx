@@ -21,9 +21,9 @@ export const InstallIcon = memo(function InstallIcon({
    isExpanded,
 }: InstallIconProps): ReactElement {
    return (
-      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white transition-all duration-300">
+      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white">
          <MdInstallMobile
-            className={`h-4 w-4 text-black transition-transform duration-300 ${
+            className={`h-4 w-4 text-black transition-transform duration-menu ease-out ${
                isExpanded ? "scale-110" : "scale-100"
             }`}
          />
