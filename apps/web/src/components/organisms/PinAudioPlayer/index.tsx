@@ -3,9 +3,9 @@
 import { motion } from "motion/react"
 import { Sheet } from "react-modal-sheet"
 import { Button } from "@/components/atoms/Button"
+import { OtherResultsAccordion } from "@/components/molecules/OtherResultsAccordion"
 import { SoundWaveBackground } from "../../atoms/SoundWaveBackground"
 import { DebugInfo } from "./DebugInfo"
-import { OtherResults } from "./OtherResults"
 import { PlaybackControls } from "./PlaybackControls"
 import { PrimaryResult } from "./PrimaryResult"
 import type { PinAudioPlayerProps } from "./types"
@@ -46,8 +46,6 @@ export function PinAudioPlayer({ pin, onClose }: PinAudioPlayerProps) {
       handleSeek,
       handleClose,
       progressPercentage,
-      isOtherResultsOpen,
-      toggleOtherResults,
       formatConfidence,
    } = usePinAudioPlayer(pin, onClose)
 
@@ -113,14 +111,9 @@ export function PinAudioPlayer({ pin, onClose }: PinAudioPlayerProps) {
                               formatConfidence={formatConfidence}
                            />
 
-                           {pin.classificationResults.length > 1 && (
-                              <OtherResults
-                                 results={pin.classificationResults.slice(1)}
-                                 isOpen={isOtherResultsOpen}
-                                 toggle={toggleOtherResults}
-                                 formatConfidence={formatConfidence}
-                              />
-                           )}
+                           <OtherResultsAccordion
+                              results={pin.classificationResults.slice(1)}
+                           />
                         </div>
                      ) : (
                         <div className="mb-4">

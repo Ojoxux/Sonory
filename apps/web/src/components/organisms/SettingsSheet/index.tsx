@@ -1,6 +1,7 @@
 "use client"
 
 import { Sheet } from "react-modal-sheet"
+import { Select } from "@/components/atoms/Select"
 import { SettingToggle } from "@/components/atoms/SettingToggle"
 import { AccountSection } from "@/components/molecules/AccountSection"
 import { MAX_DISTANCE_OPTIONS } from "./constants"
@@ -98,27 +99,18 @@ export function SettingsSheet({ isOpen, onClose }: SettingsSheetProps) {
                         disabled={!isNotificationOn}
                      />
 
-                     <label className="flex flex-col gap-1.5 rounded-xl border border-white/15 bg-white/5 px-4 py-3">
+                     <div className="flex items-center justify-between gap-3 rounded-xl border border-white/15 bg-white/5 px-4 py-3">
                         <span className="font-semibold text-sm text-white">
                            通知範囲
                         </span>
-                        <select
+                        <Select
+                           label="通知範囲"
                            value={notificationSettings.maxDistance}
-                           onChange={(event) =>
-                              handleMaxDistanceChange(
-                                 Number(event.target.value),
-                              )
-                           }
+                           onValueChange={handleMaxDistanceChange}
+                           options={MAX_DISTANCE_OPTIONS}
                            disabled={!isNotificationOn}
-                           className="rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white disabled:opacity-50"
-                        >
-                           {MAX_DISTANCE_OPTIONS.map((option) => (
-                              <option key={option.value} value={option.value}>
-                                 {option.label}
-                              </option>
-                           ))}
-                        </select>
-                     </label>
+                        />
+                     </div>
                   </section>
 
                   <section className="space-y-3">
