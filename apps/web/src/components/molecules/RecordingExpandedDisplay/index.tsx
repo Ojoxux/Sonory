@@ -13,13 +13,13 @@ import type { RecordingExpandedDisplayProps } from "./types"
  *
  * @param status 録音状態
  * @param recordingTime 録音時間
- * @param waveformData 波形データ
+ * @param levels 区間ごとの音量
  * @param formatTime 時間フォーマット関数
  */
 export function RecordingExpandedDisplay({
    status,
    recordingTime,
-   waveformData,
+   levels,
    formatTime,
 }: RecordingExpandedDisplayProps) {
    return (
@@ -32,7 +32,7 @@ export function RecordingExpandedDisplay({
                   isRecording={status === "recording"}
                   isCompleted={status === "completed"}
                   recordingTime={recordingTime}
-                  waveformData={waveformData}
+                  levels={levels}
                   height={160}
                   className="h-40 text-white"
                />

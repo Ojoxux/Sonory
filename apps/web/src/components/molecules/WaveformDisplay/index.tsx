@@ -1,20 +1,16 @@
 "use client"
 
 import { useCallback, useEffect, useEffectEvent, useRef } from "react"
+import { BAR_GAP, BAR_WIDTH, IDLE_BAR_ALPHA } from "./constants"
 import type { WaveformDisplayProps } from "./types"
-
-// 固定のバー設定（定数）
-const FIXED_BAR_WIDTH = 4
-const FIXED_BAR_GAP = 2
-const TOTAL_BAR_WIDTH = FIXED_BAR_WIDTH + FIXED_BAR_GAP
-/** まだ録音していない位置のバーの濃さ */
-const IDLE_BAR_ALPHA = 0.2
+import { barCount, barValues, slotCount } from "./utils"
 
 /**
  * 波形表示コンポーネント
  *
  * @description
- * Canvas APIを使用したリアルタイム波形表示。
+ * 幅いっぱいを録音時間の全体として描く。バー1本は一定の時間を受け持ち、
+ * その区間で実際に録れた音量になる。まだ録音していない位置は薄いバーで示す。
  * バーは `currentColor` で塗る（`className` の `text-*` で色を決める）。背景は透過。
  * 録音位置の線は canvas ではなく `record` の要素を `transform` で動かす
  *
@@ -22,7 +18,7 @@ const IDLE_BAR_ALPHA = 0.2
  * @param recordingTime 録音時間
  * @param maxDuration 最大録音時間
  * @param height 波形の高さ
- * @param waveformData 波形データ
+ * @param levels 区間ごとの音量（0〜1）
  * @param className クラス名
  * @param isCompleted 録音完了かどうか
  *
@@ -31,7 +27,7 @@ const IDLE_BAR_ALPHA = 0.2
  * <WaveformDisplay
  *   isRecording={true}
  *   recordingTime={5.5}
- *   waveformData={[50, 60, 45, 70]}
+ *   levels={[0.2, 0.6, 0.4]}
  *   className="text-white"
  * />
  * ```
@@ -41,7 +37,7 @@ export function WaveformDisplay({
    recordingTime,
    maxDuration = 10,
    height = 128,
-   waveformData = [],
+   levels = [],
    className = "",
    isCompleted = false,
 }: WaveformDisplayProps) {
@@ -86,30 +82,25 @@ export function WaveformDisplay({
       ctx.clearRect(0, 0, width, canvasHeight)
       ctx.fillStyle = barColorRef.current
 
-      const maxBars = Math.floor(width / TOTAL_BAR_WIDTH)
-      const isRecordingComplete =
-         isCompleted || (!isRecording && recordingTime > 0)
+      const bars = barCount(width)
+      const values = barValues(levels, bars, slotCount(maxDuration))
 
-      for (let i = 0; i < maxBars; i++) {
-         const x = i * TOTAL_BAR_WIDTH
-         const dataIndex = Math.max(0, waveformData.length - maxBars + i)
-         const value = waveformData[dataIndex]
-         const hasData = value !== undefined
+      values.forEach((value, index) => {
+         const barHeight =
+            value === undefined
+               ? canvasHeight * 0.1
+               : Math.max(2, value * canvasHeight * 0.8)
 
-         const barHeight = hasData
-            ? Math.max(2, (value / 100) * canvasHeight * 0.8)
-            : canvasHeight * 0.1
-         const y = (canvasHeight - barHeight) / 2
-         const barPosition = (x + FIXED_BAR_WIDTH / 2) / width
-         const isFilled =
-            hasData &&
-            (isRecordingComplete || (isRecording && barPosition <= progress))
-
-         ctx.globalAlpha = isFilled ? 1 : IDLE_BAR_ALPHA
-         ctx.fillRect(x, y, FIXED_BAR_WIDTH, barHeight)
-      }
+         ctx.globalAlpha = value === undefined ? IDLE_BAR_ALPHA : 1
+         ctx.fillRect(
+            index * (BAR_WIDTH + BAR_GAP),
+            (canvasHeight - barHeight) / 2,
+            BAR_WIDTH,
+            barHeight,
+         )
+      })
       ctx.globalAlpha = 1
-   }, [waveformData, isRecording, isCompleted, recordingTime, progress])
+   }, [levels, maxDuration])
 
    const redraw = useEffectEvent(draw)
 
@@ -141,6 +132,7 @@ export function WaveformDisplay({
             style={{ height: `${height}px` }}
          />
          {isRecording &&
+            !isCompleted &&
             recordingTime > 0 && (
                // 全幅の枠ごと進捗ぶん右へずらし、左端の線を録音位置に合わせる
                <div

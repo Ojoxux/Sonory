@@ -14,14 +14,14 @@ import type { RecordingMiniDisplayProps } from "./types"
  *
  * @param status 録音状態
  * @param recordingTime 録音時間
- * @param waveformData 波形データ
+ * @param levels 区間ごとの音量
  * @param formatTime 時間フォーマット関数
  * @param onStop 停止ボタンクリック時のコールバック
  */
 export function RecordingMiniDisplay({
    status,
    recordingTime,
-   waveformData,
+   levels,
    formatTime,
    onStop,
 }: RecordingMiniDisplayProps) {
@@ -59,7 +59,7 @@ export function RecordingMiniDisplay({
                isRecording={isRecording}
                isCompleted={status === "completed"}
                recordingTime={recordingTime}
-               waveformData={waveformData}
+               levels={levels}
                height={48}
                className="h-12 text-white"
             />

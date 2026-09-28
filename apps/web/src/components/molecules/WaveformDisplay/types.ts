@@ -25,10 +25,10 @@ export interface WaveformDisplayProps {
    height?: number
 
    /**
-    * 波形データ（0-100の値の配列）
+    * 先頭から順に並んだ区間ごとの音量（0〜1）。`SLOT_MS` ごとに1つ
     * @default []
     */
-   waveformData?: number[]
+   levels?: readonly number[]
 
    /**
     * 追加のCSSクラス名。バーの色は `text-*` で指定する

@@ -38,7 +38,7 @@ export function RecordingInterface({
       isAgreed,
       showConfirmationComplete,
       instructionsRef,
-      waveformData,
+      levels,
       audioData,
       microphonePermission,
       handleRecord,
@@ -116,7 +116,7 @@ export function RecordingInterface({
                                  <RecordingMiniDisplay
                                     status={status}
                                     recordingTime={recordingTime}
-                                    waveformData={waveformData}
+                                    levels={levels}
                                     formatTime={formatTime}
                                     onStop={handleStop}
                                  />
@@ -128,7 +128,7 @@ export function RecordingInterface({
                      <RecordingExpandedDisplay
                         status={status}
                         recordingTime={recordingTime}
-                        waveformData={waveformData}
+                        levels={levels}
                         formatTime={formatTime}
                      />
                   </RecordingContainer>
