@@ -17,7 +17,7 @@
 
 import { motion } from "motion/react"
 import type { ReactElement } from "react"
-import { FaBug, FaChevronDown, FaChevronUp } from "react-icons/fa"
+import { Bug, ChevronDown, ChevronUp } from "lucide-react"
 import { useInferenceStore } from "@/store/useInferenceStore"
 import { useRecorderStore } from "@/store/useRecorderStore"
 import { DebugTabSelector } from "./tabs/DebugTabSelector"
@@ -85,7 +85,7 @@ export function DebugPanel({
          {/* ヘッダー */}
          <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-               <FaBug className="text-yellow-400" />
+               <Bug aria-hidden="true" className="size-4 text-yellow-400" />
                <span className="font-bold">Debug Panel</span>
             </div>
             <button
@@ -93,7 +93,11 @@ export function DebugPanel({
                onClick={toggleExpanded}
                className="rounded p-1 transition-colors hover:bg-white/10"
             >
-               {isExpanded ? <FaChevronDown /> : <FaChevronUp />}
+               {isExpanded ? (
+                  <ChevronDown aria-hidden="true" className="size-4" />
+               ) : (
+                  <ChevronUp aria-hidden="true" className="size-4" />
+               )}
             </button>
          </div>
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { MdPublic } from "react-icons/md"
+import { Globe } from "lucide-react"
 import type { EnvironmentInfoProps } from "./types"
 
 /**
@@ -30,7 +30,7 @@ export function EnvironmentInfo({ environment }: EnvironmentInfoProps) {
    return (
       <div className="rounded-xl border border-accent-500/30 bg-accent-500/10 p-4">
          <div className="flex items-center gap-2">
-            <MdPublic className="h-5 w-5 text-accent-400" />
+            <Globe aria-hidden="true" className="size-5 text-accent-400" />
             <span className="text-accent-300 text-sm">
                {environment.description || environment.primary_type}
             </span>

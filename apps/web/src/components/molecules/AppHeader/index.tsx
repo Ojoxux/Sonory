@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { MdInfo, MdSettings } from "react-icons/md"
+import { Info, Settings } from "lucide-react"
 import { CompassButton } from "@/components/atoms/CompassButton"
 import { IconButton } from "@/components/atoms/IconButton"
 import { LocationDisplay } from "@/components/atoms/LocationDisplay"
@@ -78,14 +78,14 @@ export function AppHeader({
 
             <div className="pointer-events-auto flex items-center gap-3 transition delay-40 duration-menu ease-out starting:-translate-y-2 starting:opacity-0">
                <IconButton
-                  icon={<MdInfo className="h-5 w-5" />}
+                  icon={<Info aria-hidden="true" className="size-5" />}
                   ariaLabel="アプリ情報"
                   onClick={onAppInfoClick}
                   className={`${iconClass} backdrop-blur-sm`}
                />
 
                <IconButton
-                  icon={<MdSettings className="h-5 w-5" />}
+                  icon={<Settings aria-hidden="true" className="size-5" />}
                   ariaLabel="設定"
                   onClick={onSettingsClick}
                   className={`${iconClass} backdrop-blur-sm`}

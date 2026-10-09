@@ -1,6 +1,6 @@
 "use client"
 
-import { MdPause, MdPlayArrow } from "react-icons/md"
+import { Pause, Play } from "lucide-react"
 import type { WaveformPlayerProps } from "./types"
 import { useWaveformPlayer } from "./useWaveformPlayer"
 import { PROGRESS_COLOR, WAVE_COLOR } from "./constants"
@@ -83,9 +83,9 @@ export function WaveformPlayer({
                {isLoading ? (
                   <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
                ) : isPlaying ? (
-                  <MdPause className="h-6 w-6" />
+                  <Pause aria-hidden="true" className="size-6 fill-current" />
                ) : (
-                  <MdPlayArrow className="h-6 w-6" />
+                  <Play aria-hidden="true" className="size-6 fill-current" />
                )}
             </button>
 

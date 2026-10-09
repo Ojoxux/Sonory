@@ -16,10 +16,10 @@ import type { IconButtonProps } from "./types"
  *
  * @example
  * ```tsx
- * import { MdSettings } from 'react-icons/md'
+ * import { Settings } from 'lucide-react'
  *
  * <IconButton
- *   icon={<MdSettings className="w-5 h-5" />}
+ *   icon={<Settings className="size-5" />}
  *   ariaLabel="設定"
  *   onClick={() => console.log('設定ボタンがクリックされました')}
  * />
