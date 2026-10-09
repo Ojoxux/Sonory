@@ -33,8 +33,8 @@ export const USER_LOCATION_LAYERS: CircleLayerSpecification[] = [
          "circle-color": LOCATION_COLOR,
          "circle-opacity": 0.15,
          "circle-stroke-color": LOCATION_COLOR,
-         "circle-stroke-opacity": 0.35,
-         "circle-stroke-width": 1,
+         "circle-stroke-opacity": 0.5,
+         "circle-stroke-width": 2,
          // 実際の半径は測位精度から算出して差し替える
          "circle-radius": 0,
       },
@@ -65,9 +65,9 @@ export const USER_LOCATION_LAYERS: CircleLayerSpecification[] = [
          "circle-pitch-scale": "viewport",
          "circle-emissive-strength": 1,
          "circle-color": LOCATION_COLOR,
-         "circle-radius": 10,
+         "circle-radius": 11,
          "circle-stroke-color": RING_COLOR,
-         "circle-stroke-width": 4,
+         "circle-stroke-width": 6,
       },
    },
 ]
