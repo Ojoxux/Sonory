@@ -16,6 +16,10 @@ const SHADOW_COLOR = "#0f172a"
  *
  * `circle-pitch-alignment: "map"` で地面に伏せて描くため、地図を傾けると楕円になる。
  * ドットと影は `circle-pitch-scale: "viewport"` を併用し、遠近で大きさが変わらないようにする。
+ *
+ * Standard Style はカスタムレイヤーにも照明を当てる。`circle-emissive-strength` の既定は 0 で、
+ * 夜の lightPreset では色が沈んで黒く見える。現在地は時刻によらず同じ色で読めるべきなので
+ * 自ら光らせる。影だけは環境光に従わせる。
  */
 export const USER_LOCATION_LAYERS: CircleLayerSpecification[] = [
    {
@@ -25,6 +29,7 @@ export const USER_LOCATION_LAYERS: CircleLayerSpecification[] = [
       slot: "top",
       paint: {
          "circle-pitch-alignment": "map",
+         "circle-emissive-strength": 1,
          "circle-color": LOCATION_COLOR,
          "circle-opacity": 0.15,
          "circle-stroke-color": LOCATION_COLOR,
@@ -58,6 +63,7 @@ export const USER_LOCATION_LAYERS: CircleLayerSpecification[] = [
       paint: {
          "circle-pitch-alignment": "map",
          "circle-pitch-scale": "viewport",
+         "circle-emissive-strength": 1,
          "circle-color": LOCATION_COLOR,
          "circle-radius": 10,
          "circle-stroke-color": RING_COLOR,
