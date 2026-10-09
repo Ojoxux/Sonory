@@ -17,7 +17,7 @@
 
 import { motion } from "motion/react"
 import { memo } from "react"
-import { HiMiniSpeakerWave } from "react-icons/hi2"
+import { Volume2 } from "lucide-react"
 import { DURATION, EASE_OUT } from "@/utils/motion"
 import type { ClusterBadgeProps, ClusterBadgeSize } from "./types"
 
@@ -91,7 +91,7 @@ export const ClusterBadge = memo<ClusterBadgeProps>(function ClusterBadge({
             onClick={handleClick}
             aria-label={`${count}個のピンが集まったクラスタ`}
          >
-            <HiMiniSpeakerWave
+            <Volume2
                className={`${currentSize.icon} flex-shrink-0`}
                aria-hidden="true"
             />

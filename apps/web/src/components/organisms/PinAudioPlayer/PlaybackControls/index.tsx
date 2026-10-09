@@ -1,4 +1,4 @@
-import { MdPause, MdPlayArrow } from "react-icons/md"
+import { Pause, Play } from "lucide-react"
 import type { PlaybackControlsProps } from "./types"
 
 /**
@@ -59,9 +59,9 @@ export function PlaybackControls({
                {audioLoadingStatus === "loading" ? (
                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-white" />
                ) : playbackState === "playing" ? (
-                  <MdPause className="h-8 w-8" />
+                  <Pause aria-hidden="true" className="size-8 fill-current" />
                ) : (
-                  <MdPlayArrow className="h-8 w-8" />
+                  <Play aria-hidden="true" className="size-8 fill-current" />
                )}
             </button>
          </div>

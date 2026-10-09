@@ -4,7 +4,7 @@
 
 import type { ReactElement } from "react"
 import { memo } from "react"
-import { MdClose } from "react-icons/md"
+import { X } from "lucide-react"
 
 export interface CloseButtonProps {
    /** クリック時の処理 */
@@ -31,7 +31,7 @@ export const CloseButton = memo(function CloseButton({
          className="flex-shrink-0 touch-manipulation p-2 text-neutral-400 transition duration-press ease-out hover:text-white active:scale-97"
          aria-label={ariaLabel}
       >
-         <MdClose className="h-4 w-4" />
+         <X aria-hidden="true" className="size-4" />
       </button>
    )
 })
