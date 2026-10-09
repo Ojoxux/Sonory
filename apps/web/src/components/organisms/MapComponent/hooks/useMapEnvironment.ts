@@ -18,6 +18,7 @@ import type {
    MapboxNonStandardMethods,
    MapboxSetStyleOptions,
 } from "../mapbox.types"
+import { getLightPreset, type LightPreset } from "@/domain/daylight"
 import { applyNightLighting } from "../styles/mapStyles"
 import {
    applyWeatherEffects,
@@ -54,32 +55,11 @@ export type UseMapLightingReturn = {
 const currentWeather: WeatherEffects = defaultWeather
 
 /**
- * 時間からlightPresetを決定する関数
- */
-function getLightPresetFromTime(
-   debugTimeOverride: number | null,
-): "day" | "dawn" | "dusk" | "night" {
-   const currentHour =
-      debugTimeOverride !== null ? debugTimeOverride : new Date().getHours()
-
-   if (currentHour >= 8 && currentHour < 17) {
-      return "day"
-   }
-   if (currentHour >= 22 || currentHour < 4) {
-      return "night"
-   }
-   if (currentHour >= 17 && currentHour < 22) {
-      return "dusk"
-   }
-   return "dawn"
-}
-
-/**
  * Mapbox Standard Style の lightPreset を設定する関数（簡略化版）
  */
 function setMapboxLightPreset(
    map: mapboxgl.Map,
-   lightPreset: "day" | "dawn" | "dusk" | "night",
+   lightPreset: LightPreset,
 ): void {
    try {
       // スタイルが完全に読み込まれているかチェック
@@ -292,7 +272,9 @@ export function useMapEnvironment({
             const { currentTime, currentHour } = getCurrentTimeAndHour()
 
             // 時間ベースでlightPresetを決定
-            const lightPreset = getLightPresetFromTime(debugTimeOverride)
+            const lightPreset = getLightPreset(
+               debugTimeOverride ?? new Date().getHours(),
+            )
             setMapboxLightPreset(targetMap, lightPreset)
 
             // 太陽高度を計算
