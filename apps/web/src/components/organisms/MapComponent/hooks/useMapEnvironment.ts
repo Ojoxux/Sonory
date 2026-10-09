@@ -271,10 +271,8 @@ export function useMapEnvironment({
          try {
             const { currentTime, currentHour } = getCurrentTimeAndHour()
 
-            // 時間ベースでlightPresetを決定
-            const lightPreset = getLightPreset(
-               debugTimeOverride ?? new Date().getHours(),
-            )
+            // 太陽高度と同じ時刻から決める
+            const lightPreset = getLightPreset(currentHour)
             setMapboxLightPreset(targetMap, lightPreset)
 
             // 太陽高度を計算
@@ -305,7 +303,6 @@ export function useMapEnvironment({
       [
          map,
          mapStyleLoaded,
-         debugTimeOverride,
          getCurrentTimeAndHour,
          calculateSunAltitude,
          updateLightingConfig,
