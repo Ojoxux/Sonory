@@ -135,13 +135,9 @@ export function SoundPinMarkers({
                   </MotionConfig>,
                )
             } else {
+               // ClusterBadge は CSS で入るので MotionConfig は不要
                root.render(
-                  <MotionConfig reducedMotion="user">
-                     <ClusterBadge
-                        count={cluster.count}
-                        onClick={handleClick}
-                     />
-                  </MotionConfig>,
+                  <ClusterBadge count={cluster.count} onClick={handleClick} />,
                )
             }
 

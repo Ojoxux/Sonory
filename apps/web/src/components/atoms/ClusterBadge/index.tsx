@@ -15,10 +15,8 @@
 
 "use client"
 
-import { motion } from "motion/react"
 import { memo } from "react"
 import { Volume2 } from "lucide-react"
-import { DURATION, EASE_OUT } from "@/utils/motion"
 import type { ClusterBadgeProps, ClusterBadgeSize } from "./types"
 
 const SIZE_CONFIG = {
@@ -78,28 +76,23 @@ export const ClusterBadge = memo<ClusterBadgeProps>(function ClusterBadge({
       onClick?.()
    }
 
-   // ズームのたびに作り直されるので、入りは短く小さく
+   // 入りは CSS の `reveal` に任せる。マーカーは document に繋がっていない要素へ
+   // 別の React ルートから描かれるため、JS のアニメーションでは不透明度 0 のまま止まる
    return (
-      <motion.div
-         initial={{ opacity: 0, scale: 0.9 }}
-         animate={{ opacity: 1, scale: 1 }}
-         transition={{ duration: DURATION.hint, ease: EASE_OUT }}
+      <button
+         type="button"
+         className={`${currentSize.container} ${variantClass} reveal flex cursor-pointer touch-manipulation items-center justify-center gap-1 rounded-full border-2 border-white font-bold text-white transition-transform duration-press ease-out hover:scale-105 active:scale-97 ${className}`}
+         onClick={handleClick}
+         aria-label={`${count}個のピンが集まったクラスタ`}
       >
-         <button
-            type="button"
-            className={`${currentSize.container} ${variantClass} flex cursor-pointer touch-manipulation items-center justify-center gap-1 rounded-full border-2 border-white font-bold text-white transition-transform duration-press ease-out hover:scale-105 active:scale-97 ${className}`}
-            onClick={handleClick}
-            aria-label={`${count}個のピンが集まったクラスタ`}
-         >
-            <Volume2
-               className={`${currentSize.icon} flex-shrink-0`}
-               aria-hidden="true"
-            />
-            <span className={`${currentSize.text} font-bold leading-none`}>
-               {displayText}
-            </span>
-         </button>
-      </motion.div>
+         <Volume2
+            className={`${currentSize.icon} flex-shrink-0`}
+            aria-hidden="true"
+         />
+         <span className={`${currentSize.text} font-bold leading-none`}>
+            {displayText}
+         </span>
+      </button>
    )
 })
 
