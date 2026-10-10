@@ -4,9 +4,9 @@ import { useEffect, useState } from "react"
 import { Info, Settings } from "lucide-react"
 import { CompassButton } from "@/components/atoms/CompassButton"
 import { IconButton } from "@/components/atoms/IconButton"
+import { isDarkHour } from "@/domain/daylight"
 import { LocationDisplay } from "@/components/atoms/LocationDisplay"
 import type { AppHeaderProps } from "./types"
-import { isNightHour } from "./utils"
 
 /**
  * アプリケーションヘッダーコンポーネント
@@ -52,7 +52,7 @@ export function AppHeader({
    }, [])
 
    const hour = debugTimeOverride ?? currentHour
-   const isDarkTime = hour !== null && isNightHour(hour)
+   const isDarkTime = hour !== null && isDarkHour(hour)
 
    const iconClass = isDarkTime
       ? "bg-white/10 text-white hover:bg-white/20"

@@ -1,6 +1,8 @@
 /**
  * MapComponentのProps型定義
  */
+import type { LightPreset } from "@/domain/daylight"
+
 export type MapComponentProps = {
    /** 位置情報取得関数への参照を受け取るコールバック */
    onGeolocationReady?: (triggerGeolocation: () => void) => void
@@ -25,7 +27,7 @@ export type LocationData = {
  */
 export type MapboxStandardStyleConfig = {
    basemap: {
-      lightPreset: "day" | "dawn" | "dusk" | "night"
+      lightPreset: LightPreset
       showPlaceLabels: boolean
       showPointOfInterestLabels: boolean
       showRoadLabels: boolean

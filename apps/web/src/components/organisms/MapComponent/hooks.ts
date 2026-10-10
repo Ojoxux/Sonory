@@ -19,6 +19,7 @@ import {
 } from "./utils/initialCamera"
 import { useMapControls } from "./hooks/useMapControls"
 import { useMapDebug } from "./hooks/useMapDebug"
+import { getLightPreset } from "@/domain/daylight"
 import { useMapEnvironment } from "./hooks/useMapEnvironment"
 import { useMapNotifications } from "./hooks/useMapNotifications"
 import { useMapState } from "./hooks/useMapState"
@@ -228,33 +229,6 @@ export function useMapComponent({
    })
 
    /**
-    * 初期ライトプリセットを決定
-    */
-   const determineInitialLightPreset = useCallback(
-      (debugTimeOverride: number | null): "day" | "dawn" | "dusk" | "night" => {
-         const currentHour =
-            debugTimeOverride !== null
-               ? debugTimeOverride
-               : new Date().getHours()
-
-         if (currentHour >= 8 && currentHour < 17) {
-            return "day"
-         }
-         if (currentHour >= 22 || currentHour < 4) {
-            return "night"
-         }
-         if (
-            (currentHour >= 17 && currentHour < 22) ||
-            (currentHour >= 4 && currentHour < 8)
-         ) {
-            return "dusk"
-         }
-         return "dawn"
-      },
-      [],
-   )
-
-   /**
     * マップ境界を更新する関数
     */
    const updateMapBounds = useCallback(
@@ -292,8 +266,9 @@ export function useMapComponent({
       mapboxgl.accessToken = mapboxToken
 
       try {
-         const initialLightPreset =
-            determineInitialLightPreset(debugTimeOverride)
+         const initialLightPreset = getLightPreset(
+            debugTimeOverride ?? new Date().getHours(),
+         )
 
          const mapOptions: MapboxMapOptions = {
             container: mapContainerRef.current,
@@ -473,7 +448,6 @@ export function useMapComponent({
       setMapStyleLoaded,
       setGeolocateInitialized,
       setMapBounds,
-      determineInitialLightPreset,
       updateMapBounds,
       resetAutoCentering,
    ]) // 依存関係を追加。mapInitializedRefでガードされているため再初期化は発生しない
